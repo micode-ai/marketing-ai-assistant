@@ -40,7 +40,7 @@
       {$_('common.back')}
     </a>
     <h1 class="text-2xl font-bold text-gray-900 mt-3">{$_('projects.create')}</h1>
-    <p class="text-gray-500 mt-1 text-sm">Add a new project to manage its marketing</p>
+    <p class="text-gray-500 mt-1 text-sm">{$_('projects.createDesc')}</p>
   </div>
 
   {#if error}
@@ -60,12 +60,12 @@
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">{$_('projects.website')}</label>
-          <input type="url" bind:value={websiteUrl} class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 text-sm" placeholder="https://example.com" />
+          <input type="url" bind:value={websiteUrl} class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 text-sm" placeholder={$_('projects.websitePlaceholder')} />
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">{$_('projects.industry')}</label>
           <select bind:value={industry} class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 text-sm">
-            <option value="">Select industry</option>
+            <option value="">{$_('projects.selectIndustry')}</option>
             {#each industries as ind}
               <option value={ind}>{ind}</option>
             {/each}

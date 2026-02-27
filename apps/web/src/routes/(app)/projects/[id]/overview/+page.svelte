@@ -26,13 +26,13 @@
     }
   });
 
-  const quickActions = [
-    { href: 'content', icon: '✍️', title: 'content.title', desc: 'Generate and manage content with AI' },
-    { href: 'campaigns', icon: '🚀', title: 'projects.campaigns', desc: 'Plan and track marketing campaigns' },
-    { href: 'email', icon: '📧', title: 'projects.email', desc: 'Email lists and campaigns' },
-    { href: 'checklists', icon: '✅', title: 'projects.checklists', desc: 'Track marketing tasks' },
-    { href: 'documents', icon: '📄', title: 'projects.documents', desc: 'AI-generated marketing docs' },
-    { href: 'analytics', icon: '📈', title: 'projects.analytics', desc: 'Performance metrics' },
+  $: quickActions = [
+    { href: 'content', icon: '✍️', title: 'content.title', descKey: 'projects.quickActionDescs.content' },
+    { href: 'campaigns', icon: '🚀', title: 'projects.campaigns', descKey: 'projects.quickActionDescs.campaigns' },
+    { href: 'email', icon: '📧', title: 'projects.email', descKey: 'projects.quickActionDescs.email' },
+    { href: 'checklists', icon: '✅', title: 'projects.checklists', descKey: 'projects.quickActionDescs.checklists' },
+    { href: 'documents', icon: '📄', title: 'projects.documents', descKey: 'projects.quickActionDescs.documents' },
+    { href: 'analytics', icon: '📈', title: 'projects.analytics', descKey: 'projects.quickActionDescs.analytics' },
   ];
 </script>
 
@@ -49,7 +49,7 @@
         </div>
       </div>
       <a href="/projects/{projectId}/settings" class="px-3 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
-        ⚙️ Settings
+        ⚙️ {$_('projects.settingsBtn')}
       </a>
     </div>
 
@@ -75,17 +75,17 @@
     <div class="bg-gradient-to-r from-primary-600 to-violet-600 rounded-xl p-5 mb-8 text-white">
       <div class="flex items-center justify-between">
         <div>
-          <h3 class="font-semibold text-lg">🤖 Ask AI Marketing Assistant</h3>
-          <p class="text-primary-100 text-sm mt-1">Get marketing advice, generate content, analyze performance</p>
+          <h3 class="font-semibold text-lg">🤖 {$_('projects.askAI')}</h3>
+          <p class="text-primary-100 text-sm mt-1">{$_('projects.askAIDesc')}</p>
         </div>
         <a href="/ai-chat" class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm font-medium transition backdrop-blur-sm">
-          Open Chat →
+          {$_('projects.openChat')}
         </a>
       </div>
     </div>
 
     <!-- Quick actions grid -->
-    <h2 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
+    <h2 class="text-lg font-semibold text-gray-900 mb-4">{$_('projects.quickActions')}</h2>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {#each quickActions as action}
         <a
@@ -94,7 +94,7 @@
         >
           <div class="text-3xl mb-3">{action.icon}</div>
           <h3 class="font-semibold text-gray-900 group-hover:text-primary-700 transition-colors">{$_(action.title)}</h3>
-          <p class="text-sm text-gray-500 mt-1">{action.desc}</p>
+          <p class="text-sm text-gray-500 mt-1">{$_(action.descKey)}</p>
         </a>
       {/each}
     </div>
