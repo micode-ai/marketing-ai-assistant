@@ -1,0 +1,29 @@
+FROM node:20-alpine AS base
+RUN npm install -g pnpm@9
+WORKDIR /app
+
+FROM base AS deps
+COPY pnpm-workspace.yaml package.json pnpm-lock.yaml* ./
+COPY packages/config/package.json ./packages/config/
+COPY packages/shared-types/package.json ./packages/shared-types/
+COPY packages/database/package.json ./packages/database/
+COPY apps/ai-agent/package.json ./apps/ai-agent/
+RUN pnpm install --frozen-lockfile
+
+FROM base AS builder
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+RUN pnpm --filter=@marketing-ai/database db:generate
+RUN pnpm --filter=@marketing-ai/ai-agent build
+
+FROM node:20-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+
+COPY --from=builder /app/apps/ai-agent/dist ./dist
+COPY --from=builder /app/apps/ai-agent/package.json ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/packages/database/src/generated ./packages/database/src/generated
+
+EXPOSE 3001
+CMD ["node", "dist/index.js"]
