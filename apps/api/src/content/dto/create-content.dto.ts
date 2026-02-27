@@ -1,0 +1,45 @@
+import { IsString, IsEnum, IsOptional, IsArray, IsBoolean, IsDateString } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+
+export class CreateContentDto {
+  @ApiProperty()
+  @IsString()
+  projectId: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  campaignId?: string;
+
+  @ApiProperty()
+  @IsEnum(['SOCIAL_POST', 'BLOG_ARTICLE', 'EMAIL', 'NEWSLETTER', 'AD_COPY', 'LANDING_PAGE'])
+  type: string;
+
+  @ApiProperty()
+  @IsString()
+  title: string;
+
+  @ApiProperty()
+  @IsString()
+  body: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsArray()
+  mediaUrls?: string[];
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsEnum(['TWITTER', 'LINKEDIN', 'FACEBOOK', 'INSTAGRAM', 'GOOGLE'])
+  platform?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsDateString()
+  scheduledAt?: Date;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  aiGenerated?: boolean;
+}
