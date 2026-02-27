@@ -85,12 +85,21 @@
     "step4": "You're all set!",
     "createOrg": "Create Organization",
     "addProject": "Add Project",
+    "addFirstProject": "Add Your First Project",
     "skip": "Skip for now",
-    "finish": "Finish Setup"
+    "finish": "Finish Setup",
+    "projectNamePlaceholder": "My SaaS Product",
+    "projectDescPlaceholder": "What does your product do?",
+    "website": "Website",
+    "industry": "Industry",
+    "selectIndustry": "Select...",
+    "creating": "Creating...",
+    "createAndContinue": "Create Project & Continue →"
   },
   "projects": {
     "title": "Projects",
     "create": "New Project",
+    "createDesc": "Add a new project to manage its marketing",
     "empty": "No projects yet",
     "emptyDesc": "Create your first project to start managing your marketing",
     "name": "Project Name",
@@ -98,9 +107,11 @@
     "description": "Description",
     "descriptionPlaceholder": "What does your project do?",
     "website": "Website URL",
+    "websitePlaceholder": "https://example.com",
     "targetAudience": "Target Audience",
     "targetAudiencePlaceholder": "Who are your ideal customers?",
     "industry": "Industry",
+    "selectIndustry": "Select industry",
     "brandVoice": "Brand Voice",
     "goals": "Marketing Goals",
     "socialLinks": "Social Links",
@@ -123,7 +134,21 @@
     "activeCampaigns": "Active Campaigns",
     "emailSubscribers": "Email Subscribers",
     "completedTasks": "Completed Tasks",
-    "analytics": "Analytics"
+    "analytics": "Analytics",
+    "settingsBtn": "Settings",
+    "askAI": "Ask AI Marketing Assistant",
+    "askAIDesc": "Get marketing advice, generate content, analyze performance",
+    "openChat": "Open Chat →",
+    "quickActions": "Quick Actions",
+    "quickActionDescs": {
+      "content": "Generate and manage content with AI",
+      "campaigns": "Plan and track marketing campaigns",
+      "email": "Email lists and campaigns",
+      "checklists": "Track marketing tasks",
+      "documents": "AI-generated marketing docs",
+      "analytics": "Performance metrics"
+    },
+    "manageDesc": "Manage your marketing projects"
   },
   "content": {
     "title": "Content Studio",
@@ -275,12 +300,14 @@
     "placeholder": "Ask anything about marketing...",
     "send": "Send",
     "clearHistory": "Clear History",
+    "project": "Project",
     "examples": {
       "title": "Try asking:",
       "1": "Create a LinkedIn post for my product launch",
-      "2": "What marketing strategy should I use for B2B SaaS?",
-      "3": "Analyze my email campaign performance",
-      "4": "Generate a content calendar for next month"
+      "2": "Write 5 email subject lines for a re-engagement campaign",
+      "3": "What is the best marketing strategy for B2B SaaS?",
+      "4": "Generate a content calendar for next month",
+      "5": "How do I improve my email open rates?"
     },
     "thinking": "Thinking...",
     "error": "Failed to get a response. Please try again."
@@ -309,12 +336,14 @@
   },
   "billing": {
     "title": "Billing & Subscription",
+    "manageDesc": "Manage your subscription and billing",
     "currentPlan": "Current Plan",
     "freePlan": "Free",
     "proPlan": "Pro",
     "enterprisePlan": "Enterprise",
     "monthly": "/month",
     "upgrade": "Upgrade",
+    "upgradeTo": "Upgrade to {plan}",
     "manage": "Manage Subscription",
     "cancelSubscription": "Cancel Subscription",
     "nextBilling": "Next billing date",
@@ -328,7 +357,39 @@
     "abTesting": "A/B Testing",
     "apiAccess": "API Access",
     "prioritySupport": "Priority Support",
-    "upgradePrompt": "Upgrade to {plan} to unlock this feature"
+    "upgradePrompt": "Upgrade to {plan} to unlock this feature",
+    "trialing": "Free trial",
+    "active": "Active",
+    "renews": "Renews",
+    "currentPlanBtn": "Current Plan",
+    "freeForever": "Free forever",
+    "mostPopular": "Most Popular",
+    "planFeatures": {
+      "free": ["1 project", "50 AI generations/month", "100 emails/month", "1 team member", "Basic checklists"],
+      "pro": ["5 projects", "500 AI generations/month", "5,000 emails/month", "5 team members", "All checklists", "Brand Voice", "A/B Testing"],
+      "enterprise": ["Unlimited projects", "Unlimited AI generations", "50,000 emails/month", "Unlimited team members", "API Access", "Priority Support"]
+    }
+  },
+  "templates": {
+    "subtitle": "Ready-to-use marketing templates powered by AI",
+    "productLaunch": "Product Launch",
+    "productLaunchDesc": "30+ steps to launch your product",
+    "emailCampaign": "Email Campaign",
+    "emailCampaignDesc": "From list to results",
+    "marketingPlan": "Marketing Plan",
+    "marketingPlanDesc": "Quarterly strategy template",
+    "seoAudit": "SEO Audit",
+    "seoAuditDesc": "Technical & content SEO",
+    "socialMediaLaunch": "Social Media Launch",
+    "socialMediaLaunchDesc": "Platform setup & strategy",
+    "performanceReport": "Performance Report",
+    "performanceReportDesc": "Monthly metrics template",
+    "campaignPrep": "Campaign Prep",
+    "campaignPrepDesc": "Pre-launch campaign checklist",
+    "competitiveAnalysis": "Competitive Analysis",
+    "competitiveAnalysisDesc": "Market & competitor research",
+    "checklist": "checklist",
+    "document": "document"
   },
   "errors": {
     "generic": "Something went wrong. Please try again.",

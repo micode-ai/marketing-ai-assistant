@@ -15,12 +15,12 @@
   let loading = false;
   let container: HTMLElement;
 
-  const examples = [
-    'Create a LinkedIn post for my product launch',
-    'Write 5 email subject lines for a re-engagement campaign',
-    'What is the best marketing strategy for B2B SaaS?',
-    'Generate a content calendar for next month',
-    'How do I improve my email open rates?',
+  $: examples = [
+    $_('aiChat.examples.1'),
+    $_('aiChat.examples.2'),
+    $_('aiChat.examples.3'),
+    $_('aiChat.examples.4'),
+    $_('aiChat.examples.5'),
   ];
 
   async function send() {
@@ -58,7 +58,7 @@
     <div>
       <h1 class="text-xl font-bold text-gray-900">{$_('aiChat.title')}</h1>
       {#if $currentProjectStore}
-        <p class="text-xs text-gray-500 mt-0.5">Project: <span class="font-medium text-primary-600">{$currentProjectStore.name}</span></p>
+        <p class="text-xs text-gray-500 mt-0.5">{$_('aiChat.project')}: <span class="font-medium text-primary-600">{$currentProjectStore.name}</span></p>
       {/if}
     </div>
     {#if messages.length > 0}

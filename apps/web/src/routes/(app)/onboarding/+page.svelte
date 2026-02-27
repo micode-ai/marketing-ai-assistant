@@ -43,25 +43,25 @@
 
   <div class="bg-white rounded-2xl border border-gray-200 p-6">
     {#if step === 1}
-      <h2 class="text-lg font-semibold text-gray-900 mb-4">Add Your First Project</h2>
+      <h2 class="text-lg font-semibold text-gray-900 mb-4">{$_('onboarding.addFirstProject')}</h2>
       <div class="space-y-4">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">{$_('projects.name')} *</label>
-          <input type="text" bind:value={projectName} class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 text-sm" placeholder="My SaaS Product" />
+          <input type="text" bind:value={projectName} class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 text-sm" placeholder={$_('onboarding.projectNamePlaceholder')} />
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">{$_('projects.description')}</label>
-          <textarea bind:value={projectDescription} rows="2" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 text-sm resize-none" placeholder="What does your product do?"></textarea>
+          <textarea bind:value={projectDescription} rows="2" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 text-sm resize-none" placeholder={$_('onboarding.projectDescPlaceholder')}></textarea>
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Website</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{$_('onboarding.website')}</label>
             <input type="url" bind:value={projectWebsite} class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 text-sm" placeholder="https://..." />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Industry</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{$_('onboarding.industry')}</label>
             <select bind:value={projectIndustry} class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 text-sm">
-              <option value="">Select...</option>
+              <option value="">{$_('onboarding.selectIndustry')}</option>
               <option>SaaS</option><option>E-commerce</option><option>FinTech</option>
               <option>Agency</option><option>B2B</option><option>Other</option>
             </select>
@@ -70,7 +70,7 @@
       </div>
       <div class="mt-6 flex gap-3">
         <button on:click={createAndContinue} disabled={!projectName || loading} class="flex-1 bg-primary-600 text-white py-2.5 rounded-lg font-medium hover:bg-primary-700 disabled:opacity-50 transition text-sm">
-          {loading ? 'Creating...' : 'Create Project & Continue →'}
+          {loading ? $_('onboarding.creating') : $_('onboarding.createAndContinue')}
         </button>
         <button on:click={() => goto('/dashboard')} class="px-4 py-2.5 text-sm text-gray-500 hover:text-gray-700 transition">
           {$_('onboarding.skip')}
