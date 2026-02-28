@@ -33,7 +33,12 @@ export class AgentService {
   }
 
   async getRunById(id: string) {
-    return this.prisma.agentRun.findUnique({ where: { id } });
+    const run = await this.prisma.agentRun.findUnique({ where: { id } });
+    if (!run) return null;
+    return {
+      ...run,
+      langsmithTraceUrl: run.langsmithTraceUrl ?? null,
+    };
   }
 
   async chat(dto: { projectId?: string; message: string; history?: any[] }) {

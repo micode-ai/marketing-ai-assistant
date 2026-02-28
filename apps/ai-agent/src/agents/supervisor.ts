@@ -1,6 +1,17 @@
+import { Client as LangSmithClient } from 'langsmith';
 import { runContentAgent } from './content-agent';
 import { runChecklistAgent } from './checklist-agent';
 import { runDocumentAgent } from './document-agent';
+
+async function getLangSmithTraceUrl(runId: string): Promise<string | null> {
+  try {
+    const client = new LangSmithClient();
+    const run = await client.getRun(runId);
+    return (run as any)?.url ?? null;
+  } catch {
+    return null;
+  }
+}
 
 interface AgentTaskInput {
   runId: string;
@@ -33,11 +44,18 @@ export async function runAgentTask({ runId, projectId, agentType, input }: Agent
   const duration = Date.now() - startTime;
   console.log(`✅ Agent ${agentType} completed in ${duration}ms`);
 
+  const rawLangsmithRunId = (output['langsmithRunId'] as string) || null;
+  const langsmithTraceUrl = rawLangsmithRunId
+    ? await getLangSmithTraceUrl(rawLangsmithRunId)
+    : null;
+
   return {
     runId,
     output,
     duration,
-    tokensUsed: (output['tokensUsed'] as number) || 0,
-    cost: (output['cost'] as number) || 0,
+    tokensUsed:      (output['tokensUsed'] as number) || 0,
+    cost:            (output['cost'] as number) || 0,
+    langsmithRunId:  rawLangsmithRunId,
+    langsmithTraceUrl,
   };
 }

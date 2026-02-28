@@ -11,3 +11,4 @@ export * from './agent';
 export * from './billing';
 export * from './analytics';
 export * from './api';
+export * from './social';
