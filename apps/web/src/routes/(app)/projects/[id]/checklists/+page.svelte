@@ -59,7 +59,8 @@
   <div class="flex items-center justify-between mb-6">
     <h1 class="text-2xl font-bold text-gray-900">{$_('checklists.title')}</h1>
     <button on:click={() => showModal = true} class="bg-primary-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-700 transition flex items-center gap-2">
-      🤖 {$_('checklists.generateWithAI')}
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" /></svg>
+      {$_('checklists.generateWithAI')}
     </button>
   </div>
 
@@ -67,11 +68,14 @@
     <div class="space-y-4">{#each Array(2) as _}<div class="bg-white rounded-xl border border-gray-200 p-6 h-48 animate-pulse"></div>{/each}</div>
   {:else if checklists.length === 0}
     <div class="flex flex-col items-center justify-center py-20 text-center">
-      <div class="text-5xl mb-4">✅</div>
+      <div class="w-20 h-20 bg-primary-50 rounded-2xl flex items-center justify-center mb-4 mx-auto">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+      </div>
       <h2 class="text-xl font-semibold text-gray-900 mb-2">{$_('checklists.empty')}</h2>
       <p class="text-gray-500 mb-6 max-w-sm">{$_('checklists.emptyDesc')}</p>
-      <button on:click={() => showModal = true} class="bg-primary-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-primary-700 transition">
-        🤖 {$_('checklists.generateWithAI')}
+      <button on:click={() => showModal = true} class="bg-primary-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-primary-700 transition flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" /></svg>
+        {$_('checklists.generateWithAI')}
       </button>
     </div>
   {:else}
@@ -125,12 +129,14 @@
 </div>
 
 {#if showModal}
+  <!-- svelte-ignore a11y_click_events_have_key_events -->
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => showModal = false}>
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
-      <h2 class="text-lg font-semibold mb-4">🤖 {$_('checklists.generateWithAI')}</h2>
+      <h2 class="text-lg font-semibold mb-4">{$_('checklists.generateWithAI')}</h2>
       <div class="mb-6">
-        <label class="block text-sm font-medium text-gray-700 mb-1">{$_('checklists.type')}</label>
-        <select bind:value={form.type} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+        <label for="checklist-type" class="block text-sm font-medium text-gray-700 mb-1">{$_('checklists.type')}</label>
+        <select id="checklist-type" bind:value={form.type} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
           <option value="LAUNCH">{$_('checklists.launch')}</option>
           <option value="WEEKLY">{$_('checklists.weekly')}</option>
           <option value="CAMPAIGN_PREP">{$_('checklists.campaignPrep')}</option>
@@ -141,8 +147,13 @@
         </select>
       </div>
       <div class="flex gap-3">
-        <button on:click={generateWithAI} disabled={creating} class="flex-1 bg-primary-600 text-white py-2.5 rounded-lg font-medium hover:bg-primary-700 disabled:opacity-50 transition text-sm">
-          {creating ? $_('common.loading') : '🤖 ' + $_('checklists.generateWithAI')}
+        <button on:click={generateWithAI} disabled={creating} class="flex-1 bg-primary-600 text-white py-2.5 rounded-lg font-medium hover:bg-primary-700 disabled:opacity-50 transition text-sm flex items-center justify-center gap-2">
+          {#if creating}
+            <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+          {:else}
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" /></svg>
+          {/if}
+          {creating ? $_('common.loading') : $_('checklists.generateWithAI')}
         </button>
         <button on:click={() => showModal = false} class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition text-sm">{$_('common.cancel')}</button>
       </div>
