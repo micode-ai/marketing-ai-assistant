@@ -14,6 +14,7 @@ import { ChecklistsModule } from './checklists/checklists.module';
 import { DocumentsModule } from './documents/documents.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { AgentModule } from './agent/agent.module';
+import { SocialModule } from './social/social.module';
 import { CommonModule } from './common/common.module';
 import { DatabaseModule } from './database/database.module';
 
@@ -41,6 +42,7 @@ import { DatabaseModule } from './database/database.module';
     DocumentsModule,
     AnalyticsModule,
     AgentModule,
+    SocialModule,
   ],
 })
 export class AppModule {}

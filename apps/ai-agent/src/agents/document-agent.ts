@@ -1,19 +1,19 @@
+import { randomUUID } from 'crypto';
+import { StateGraph, Annotation, END, START } from '@langchain/langgraph';
 import { ChatOpenAI } from '@langchain/openai';
 import { HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { prisma } from '../prisma';
+import { extractUsage } from '../lib/costs';
+
+const MODEL = process.env['OPENAI_MODEL'] || 'gpt-4o';
 
 function getModel() {
   return new ChatOpenAI({
-    model: process.env['OPENAI_MODEL'] || 'gpt-4o',
+    model:       MODEL,
     temperature: 0.4,
-    maxTokens: 4096,
-    apiKey: process.env['OPENAI_API_KEY'],
+    maxTokens:   4096,
+    apiKey:      process.env['OPENAI_API_KEY'],
   });
-}
-
-interface DocumentAgentInput {
-  projectId: string;
-  input: Record<string, unknown>;
 }
 
 const documentPrompts: Record<string, string> = {
@@ -73,59 +73,127 @@ Structure:
 7. Content Repurposing Strategy`,
 };
 
-export async function runDocumentAgent({ projectId, input }: DocumentAgentInput) {
+// ── State ─────────────────────────────────────────────────────
+
+const S = Annotation.Root({
+  projectId:         Annotation<string>,
+  input:             Annotation<Record<string, unknown>>,
+  project:           Annotation<any>({ default: () => null, reducer: (_, b) => b }),
+  contentMd:         Annotation<string>({ default: () => '', reducer: (_, b) => b }),
+  wordCount:         Annotation<number>({ default: () => 0,  reducer: (_, b) => b }),
+  savedDocumentId:   Annotation<string>({ default: () => '', reducer: (_, b) => b }),
+  totalInputTokens:  Annotation<number>({ default: () => 0,  reducer: (a, b) => a + b }),
+  totalOutputTokens: Annotation<number>({ default: () => 0,  reducer: (a, b) => a + b }),
+  totalCost:         Annotation<number>({ default: () => 0,  reducer: (a, b) => a + b }),
+});
+
+type State = typeof S.State;
+
+// ── Nodes ─────────────────────────────────────────────────────
+
+async function loadContext(state: State) {
   const project = await prisma.project.findUnique({
-    where: { id: projectId },
-    include: {
-      _count: { select: { campaigns: true, content: true } },
-    },
+    where:   { id: state.projectId },
+    include: { _count: { select: { campaigns: true, content: true } } },
   });
   if (!project) throw new Error('Project not found');
+  return { project };
+}
 
-  const docType = (input['type'] as string) || 'MARKETING_PLAN';
-  const title = (input['title'] as string) || `${docType.replace(/_/g, ' ')} — ${project.name}`;
-  const userId = (input['userId'] as string) || 'system';
-  const extraContext = (input['context'] as string) || '';
+async function generateDocument(state: State) {
+  const docType      = (state.input['type'] as string) || 'MARKETING_PLAN';
+  const extraContext = (state.input['context'] as string) || '';
+  const project      = state.project;
 
-  const prompt = documentPrompts[docType] || documentPrompts['MARKETING_PLAN'];
+  const prompt = documentPrompts[docType] || documentPrompts['MARKETING_PLAN']!;
 
-  const systemContext = `You are a senior marketing consultant creating a professional document in Markdown format.
-
-Company: ${project.name}
-Description: ${project.description || ''}
-Industry: ${project.industry || 'general'}
-Target Audience: ${project.targetAudience || 'general market'}
-Website: ${project.websiteUrl || ''}
-Active Campaigns: ${project._count.campaigns}
-Content Published: ${project._count.content}
-${extraContext ? `\nAdditional Context: ${extraContext}` : ''}
-
-Create a detailed, professional, actionable document. Use Markdown formatting with headers, bullet points, and tables where appropriate.`;
+  const systemContext =
+    `You are a senior marketing consultant creating a professional document in Markdown format.\n\n` +
+    `Company: ${project.name}\n` +
+    `Description: ${project.description || ''}\n` +
+    `Industry: ${project.industry || 'general'}\n` +
+    `Target Audience: ${project.targetAudience || 'general market'}\n` +
+    `Website: ${project.websiteUrl || ''}\n` +
+    `Active Campaigns: ${project._count.campaigns}\n` +
+    `Content Published: ${project._count.content}\n` +
+    (extraContext ? `\nAdditional Context: ${extraContext}\n` : '') +
+    `\nCreate a detailed, professional, actionable document. Use Markdown formatting with headers, bullet points, and tables where appropriate.`;
 
   const response = await getModel().invoke([
     new SystemMessage(systemContext),
     new HumanMessage(prompt),
   ]);
 
+  const { inputTokens, outputTokens, cost } = extractUsage(response, MODEL);
   const contentMd = response.content as string;
+
+  return {
+    contentMd,
+    wordCount:         contentMd.split(/\s+/).length,
+    totalInputTokens:  inputTokens,
+    totalOutputTokens: outputTokens,
+    totalCost:         cost,
+  };
+}
+
+async function saveDocument(state: State) {
+  const docType = (state.input['type'] as string) || 'MARKETING_PLAN';
+  const userId  = (state.input['userId'] as string) || 'system';
+  const title   =
+    (state.input['title'] as string) ||
+    `${docType.replace(/_/g, ' ')} — ${state.project.name}`;
 
   const document = await prisma.document.create({
     data: {
-      projectId,
-      type: docType as any,
+      projectId:    state.projectId,
+      type:         docType as any,
       title,
-      contentMd,
-      content: { generated: true, wordCount: contentMd.split(/\s+/).length },
+      contentMd:    state.contentMd,
+      content:      { generated: true, wordCount: state.wordCount },
       generatedByAi: true,
-      createdBy: userId,
+      createdBy:    userId,
     },
   });
 
+  return { savedDocumentId: document.id };
+}
+
+// ── Graph ─────────────────────────────────────────────────────
+
+const graph = new StateGraph(S)
+  .addNode('loadContext',     loadContext)
+  .addNode('generateDocument', generateDocument)
+  .addNode('saveDocument',    saveDocument)
+  .addEdge(START, 'loadContext')
+  .addEdge('loadContext',      'generateDocument')
+  .addEdge('generateDocument', 'saveDocument')
+  .addEdge('saveDocument', END)
+  .compile();
+
+// ── Public API ────────────────────────────────────────────────
+
+export async function runDocumentAgent({
+  projectId,
+  input,
+}: {
+  projectId: string;
+  input: Record<string, unknown>;
+}) {
+  const langsmithRunId = randomUUID();
+  const result  = await graph.invoke(
+    { projectId, input },
+    { runId: langsmithRunId, runName: 'document-agent' },
+  );
+  const docType = (input['type'] as string) || 'MARKETING_PLAN';
+
   return {
-    documentId: document.id,
-    title,
-    type: docType,
-    contentMd,
-    wordCount: contentMd.split(/\s+/).length,
+    documentId:     result.savedDocumentId,
+    title:          (input['title'] as string) || `${docType.replace(/_/g, ' ')} — ${result.project?.name ?? ''}`,
+    type:           docType,
+    contentMd:      result.contentMd,
+    wordCount:      result.wordCount,
+    tokensUsed:     result.totalInputTokens + result.totalOutputTokens,
+    cost:           result.totalCost,
+    langsmithRunId,
   };
 }

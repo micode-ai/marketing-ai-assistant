@@ -3,6 +3,7 @@
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
   import { api } from '$lib/api/client';
+  import { organizationIdStore } from '$lib/stores/projects';
 
   let contents: any[] = [];
   let loading = true;
@@ -20,6 +21,17 @@
   // Delete confirm state
   let deletingId: string | null = null;
 
+  // LangSmith trace link shown after generation
+  let lastTraceUrl: string | null = null;
+
+  // Publish modal state
+  let publishingContent: any = null;
+  let socialAccounts: any[] = [];
+  let selectedAccountIds: string[] = [];
+  let publishLoading = false;
+  let publishResults: any[] = [];
+  let publishDone = false;
+
   const STATUSES = ['DRAFT', 'REVIEW', 'APPROVED', 'PUBLISHED', 'REJECTED'];
 
   onMount(async () => {
@@ -29,19 +41,20 @@
 
   async function generateContent() {
     generating = true;
+    lastTraceUrl = null;
     try {
       const run = await api.post<{ id: string; status: string }>('/agent/run', { projectId, agentType: 'CONTENT', input: { ...form } });
 
       // Poll until the agent run completes (max 60s)
-      let runStatus = run.status;
+      let finalRun: { status: string; langsmithTraceUrl?: string | null } = run;
       const startTime = Date.now();
-      while (runStatus === 'PENDING' || runStatus === 'RUNNING') {
+      while (finalRun.status === 'PENDING' || finalRun.status === 'RUNNING') {
         if (Date.now() - startTime > 60000) break;
         await new Promise(r => setTimeout(r, 1500));
-        const updated = await api.get<{ status: string }>(`/agent/runs/${run.id}`);
-        runStatus = updated.status;
+        finalRun = await api.get<{ status: string; langsmithTraceUrl?: string | null }>(`/agent/runs/${run.id}`);
       }
 
+      lastTraceUrl = finalRun.langsmithTraceUrl ?? null;
       contents = await api.get<any[]>('/content', { projectId });
       showModal = false;
     } catch(e: any) {
@@ -90,6 +103,48 @@
     }
   }
 
+  async function openPublish(content: any) {
+    publishingContent = content;
+    publishResults = [];
+    publishDone = false;
+    selectedAccountIds = [];
+    try {
+      socialAccounts = await api.get<any[]>('/social/project-accounts', { projectId });
+    } catch (e) {
+      socialAccounts = [];
+    }
+  }
+
+  function toggleAccount(id: string) {
+    if (selectedAccountIds.includes(id)) {
+      selectedAccountIds = selectedAccountIds.filter(a => a !== id);
+    } else {
+      selectedAccountIds = [...selectedAccountIds, id];
+    }
+  }
+
+  async function publishContent() {
+    if (!publishingContent || selectedAccountIds.length === 0) return;
+    publishLoading = true;
+    try {
+      const results = await api.post<any[]>('/social/publish', {
+        contentId: publishingContent.id,
+        socialAccountIds: selectedAccountIds,
+        organizationId: $organizationIdStore,
+      });
+      publishResults = results;
+      publishDone = true;
+      // Update content status in list if published
+      if (results.some((r: any) => r.status === 'PUBLISHED')) {
+        contents = contents.map(c => c.id === publishingContent.id ? { ...c, status: 'PUBLISHED', publishedAt: new Date().toISOString() } : c);
+      }
+    } catch (e: any) {
+      alert(e.message);
+    } finally {
+      publishLoading = false;
+    }
+  }
+
   const statusBadge: Record<string, string> = {
     DRAFT: 'bg-gray-100 text-gray-600',
     REVIEW: 'bg-yellow-100 text-yellow-700',
@@ -128,6 +183,31 @@
       {$_('content.generate')}
     </button>
   </div>
+
+  {#if lastTraceUrl}
+    <div class="mb-4 flex items-center gap-3 px-4 py-3 bg-purple-50 border border-purple-200 rounded-xl text-sm">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-purple-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
+      </svg>
+      <span class="text-purple-700 flex-1">{$_('content.generated')}</span>
+      <a
+        href={lastTraceUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="text-purple-600 font-medium hover:text-purple-800 hover:underline flex items-center gap-1"
+      >
+        LangSmith
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+        </svg>
+      </a>
+      <button on:click={() => lastTraceUrl = null} class="text-purple-400 hover:text-purple-600 cursor-pointer ml-1">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+  {/if}
 
   {#if loading}
     <div class="space-y-3">
@@ -189,6 +269,18 @@
                   <option value={s}>{$_(statusLabel[s])}</option>
                 {/each}
               </select>
+              <!-- Publish button -->
+              {#if content.status === 'APPROVED' || content.status === 'PUBLISHED'}
+                <button
+                  on:click={() => openPublish(content)}
+                  class="text-xs px-3 py-1.5 border border-blue-300 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors duration-150 cursor-pointer flex items-center gap-1"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
+                  </svg>
+                  {$_('social.publish')}
+                </button>
+              {/if}
               <!-- Edit button -->
               <button
                 on:click={() => openEdit(content)}
@@ -338,6 +430,116 @@
           {$_('common.cancel')}
         </button>
       </div>
+    </div>
+  </div>
+{/if}
+
+<!-- Publish modal -->
+{#if publishingContent}
+  <!-- svelte-ignore a11y-click-events-have-key-events -->
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
+  <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => publishingContent = null}>
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+      <div class="p-6 border-b border-gray-100 flex items-center gap-2.5">
+        <div class="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
+          </svg>
+        </div>
+        <div>
+          <h2 class="text-lg font-semibold text-gray-900">{$_('social.publishTo')}</h2>
+          <p class="text-xs text-gray-500">{publishingContent.title}</p>
+        </div>
+      </div>
+
+      {#if publishDone}
+        <!-- Results view -->
+        <div class="p-6 space-y-3">
+          {#each publishResults as result}
+            <div class="flex items-center gap-3 p-3 rounded-xl border {result.status === 'PUBLISHED' ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}">
+              <div class="flex-1">
+                <div class="text-sm font-medium {result.status === 'PUBLISHED' ? 'text-green-800' : 'text-red-800'}">{result.accountName} ({result.platform})</div>
+                {#if result.status === 'PUBLISHED' && result.platformPostUrl}
+                  <a href={result.platformPostUrl} target="_blank" rel="noopener noreferrer" class="text-xs text-blue-600 hover:underline">{$_('social.viewPost')} →</a>
+                {:else if result.error}
+                  <div class="text-xs text-red-600">{result.error}</div>
+                {/if}
+              </div>
+              <span class="text-xs px-2 py-0.5 rounded-full {result.status === 'PUBLISHED' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
+                {$_('social.status.' + result.status)}
+              </span>
+            </div>
+          {/each}
+        </div>
+        <div class="p-6 border-t border-gray-100">
+          <button on:click={() => publishingContent = null} class="w-full py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 text-sm cursor-pointer">
+            {$_('common.close')}
+          </button>
+        </div>
+      {:else if socialAccounts.length === 0}
+        <!-- No accounts connected -->
+        <div class="p-8 text-center">
+          <div class="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
+            </svg>
+          </div>
+          <p class="text-sm font-medium text-gray-700 mb-1">{$_('social.noProjectAccounts')}</p>
+          <p class="text-xs text-gray-500 mb-4">{$_('social.noProjectAccountsDesc')}</p>
+          <a href="/projects/{projectId}/settings" class="inline-block text-sm px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors duration-150">
+            {$_('social.goToProjectSettings')}
+          </a>
+        </div>
+      {:else}
+        <!-- Account selection -->
+        <div class="p-6 space-y-2">
+          <p class="text-sm text-gray-600 mb-3">{$_('social.publishToDesc')}</p>
+          {#each socialAccounts as account}
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <!-- svelte-ignore a11y-no-static-element-interactions -->
+            <div
+              class="flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors duration-150 {selectedAccountIds.includes(account.id) ? 'border-primary-400 bg-primary-50' : 'border-gray-200 hover:bg-gray-50'}"
+              on:click={() => toggleAccount(account.id)}
+            >
+              <input type="checkbox" checked={selectedAccountIds.includes(account.id)} class="w-4 h-4 text-primary-600 rounded border-gray-300 cursor-pointer" readonly />
+              {#if account.profileImageUrl}
+                <img src={account.profileImageUrl} alt={account.accountName} class="w-8 h-8 rounded-full flex-shrink-0" />
+              {:else}
+                <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0 text-xs font-bold text-gray-500">
+                  {account.accountName[0]?.toUpperCase()}
+                </div>
+              {/if}
+              <div class="flex-1 min-w-0">
+                <div class="text-sm font-medium text-gray-900">{account.accountName}</div>
+                <div class="text-xs text-gray-500">{account.platform}</div>
+              </div>
+            </div>
+          {/each}
+        </div>
+        <div class="p-6 border-t border-gray-100 flex gap-3">
+          <button
+            on:click={publishContent}
+            disabled={publishLoading || selectedAccountIds.length === 0}
+            class="flex-1 bg-blue-600 text-white py-2.5 rounded-lg font-medium hover:bg-blue-700 transition-colors duration-150 disabled:opacity-50 text-sm flex items-center justify-center gap-2 cursor-pointer"
+          >
+            {#if publishLoading}
+              <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+              </svg>
+              {$_('social.publishing')}
+            {:else}
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
+              </svg>
+              {$_('social.publish')} ({selectedAccountIds.length})
+            {/if}
+          </button>
+          <button on:click={() => publishingContent = null} class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 text-sm cursor-pointer">
+            {$_('common.cancel')}
+          </button>
+        </div>
+      {/if}
     </div>
   </div>
 {/if}

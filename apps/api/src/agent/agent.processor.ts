@@ -23,15 +23,23 @@ export class AgentQueueProcessor {
         body: JSON.stringify({ runId, projectId, agentType, input }),
       });
 
-      const result = await response.json() as { output?: unknown; tokensUsed?: number; cost?: number };
+      const result = await response.json() as {
+        output?: unknown;
+        tokensUsed?: number;
+        cost?: number;
+        langsmithRunId?: string;
+        langsmithTraceUrl?: string;
+      };
 
       await this.prisma.agentRun.update({
         where: { id: runId },
         data: {
-          status: 'COMPLETED',
-          output: result.output as any || {},
-          tokensUsed: result.tokensUsed,
-          cost: result.cost,
+          status:            'COMPLETED',
+          output:            result.output as any || {},
+          tokensUsed:        result.tokensUsed,
+          cost:              result.cost,
+          langsmithRunId:    result.langsmithRunId,
+          langsmithTraceUrl: result.langsmithTraceUrl,
         },
       });
     } catch (error) {

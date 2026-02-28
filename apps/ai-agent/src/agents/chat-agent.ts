@@ -1,12 +1,15 @@
 import { ChatOpenAI } from '@langchain/openai';
 import { HumanMessage, SystemMessage, AIMessage } from '@langchain/core/messages';
 import { prisma } from '../prisma';
+import { extractUsage } from '../lib/costs';
+
+const MODEL = process.env['OPENAI_MODEL'] || 'gpt-4o';
 
 function getModel() {
   return new ChatOpenAI({
-    model: process.env['OPENAI_MODEL'] || 'gpt-4o',
+    model:       MODEL,
     temperature: 0.7,
-    apiKey: process.env['OPENAI_API_KEY'],
+    apiKey:      process.env['OPENAI_API_KEY'],
   });
 }
 
@@ -75,9 +78,13 @@ Respond in the same language the user writes in (English, Polish, or Russian).`;
 
   const response = await getModel().invoke(messages);
 
+  const { inputTokens, outputTokens, cost } = extractUsage(response, MODEL);
+
   return {
-    message: response.content as string,
-    role: 'assistant',
-    timestamp: new Date().toISOString(),
+    message:    response.content as string,
+    role:       'assistant',
+    timestamp:  new Date().toISOString(),
+    tokensUsed: inputTokens + outputTokens,
+    cost,
   };
 }
