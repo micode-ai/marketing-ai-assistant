@@ -27,12 +27,43 @@
   });
 
   $: quickActions = [
-    { href: 'content', icon: '✍️', title: 'content.title', descKey: 'projects.quickActionDescs.content' },
-    { href: 'campaigns', icon: '🚀', title: 'projects.campaigns', descKey: 'projects.quickActionDescs.campaigns' },
-    { href: 'email', icon: '📧', title: 'projects.email', descKey: 'projects.quickActionDescs.email' },
-    { href: 'checklists', icon: '✅', title: 'projects.checklists', descKey: 'projects.quickActionDescs.checklists' },
-    { href: 'documents', icon: '📄', title: 'projects.documents', descKey: 'projects.quickActionDescs.documents' },
-    { href: 'analytics', icon: '📈', title: 'projects.analytics', descKey: 'projects.quickActionDescs.analytics' },
+    {
+      href: 'content', title: 'content.title', descKey: 'projects.quickActionDescs.content',
+      icon: `<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>`,
+      color: 'text-violet-600 bg-violet-50',
+    },
+    {
+      href: 'campaigns', title: 'projects.campaigns', descKey: 'projects.quickActionDescs.campaigns',
+      icon: `<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 006.16-12.12A14.98 14.98 0 009.631 8.41m5.96 5.96a14.926 14.926 0 01-5.841 2.58m-.119-8.54a6 6 0 00-7.381 5.84h4.8m2.581-5.84a14.927 14.927 0 00-2.58 5.84m2.699 2.7c-.103.021-.207.041-.311.06a15.09 15.09 0 01-2.448-2.448 14.9 14.9 0 01.06-.312m-2.24 2.39a4.493 4.493 0 00-1.757 4.306 4.493 4.493 0 004.306-1.758M16.5 9a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" /></svg>`,
+      color: 'text-green-600 bg-green-50',
+    },
+    {
+      href: 'email', title: 'projects.email', descKey: 'projects.quickActionDescs.email',
+      icon: `<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" /></svg>`,
+      color: 'text-blue-600 bg-blue-50',
+    },
+    {
+      href: 'checklists', title: 'projects.checklists', descKey: 'projects.quickActionDescs.checklists',
+      icon: `<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
+      color: 'text-orange-600 bg-orange-50',
+    },
+    {
+      href: 'documents', title: 'projects.documents', descKey: 'projects.quickActionDescs.documents',
+      icon: `<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>`,
+      color: 'text-slate-600 bg-slate-50',
+    },
+    {
+      href: 'analytics', title: 'projects.analytics', descKey: 'projects.quickActionDescs.analytics',
+      icon: `<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" /></svg>`,
+      color: 'text-pink-600 bg-pink-50',
+    },
+  ];
+
+  $: stats = [
+    { labelKey: 'projects.totalContent', value: summary?.contentCount ?? '—', icon: `<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" /></svg>`, color: 'bg-blue-50 text-blue-600' },
+    { labelKey: 'projects.activeCampaigns', value: summary?.campaignCount ?? '—', icon: `<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 006.16-12.12A14.98 14.98 0 009.631 8.41m5.96 5.96a14.926 14.926 0 01-5.841 2.58m-.119-8.54a6 6 0 00-7.381 5.84h4.8m2.581-5.84a14.927 14.927 0 00-2.58 5.84m2.699 2.7c-.103.021-.207.041-.311.06a15.09 15.09 0 01-2.448-2.448 14.9 14.9 0 01.06-.312m-2.24 2.39a4.493 4.493 0 00-1.757 4.306 4.493 4.493 0 004.306-1.758M16.5 9a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" /></svg>`, color: 'bg-green-50 text-green-600' },
+    { labelKey: 'projects.emailSubscribers', value: summary?.subscriberCount ?? '—', icon: `<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" /></svg>`, color: 'bg-purple-50 text-purple-600' },
+    { labelKey: 'projects.completedTasks', value: summary?.checklistItems ?? '—', icon: `<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`, color: 'bg-orange-50 text-orange-600' },
   ];
 </script>
 
@@ -40,45 +71,56 @@
   {#if $currentProjectStore}
     <div class="flex items-start justify-between mb-6">
       <div class="flex items-center gap-4">
-        <div class="w-14 h-14 bg-gradient-to-br from-primary-400 to-primary-700 rounded-2xl flex items-center justify-center text-white font-bold text-2xl">
+        <div class="w-14 h-14 bg-gradient-to-br from-primary-400 to-primary-700 rounded-2xl flex items-center justify-center text-white font-bold text-2xl flex-shrink-0">
           {$currentProjectStore.name.charAt(0)}
         </div>
         <div>
           <h1 class="text-2xl font-bold text-gray-900">{$currentProjectStore.name}</h1>
-          <p class="text-sm text-gray-500 mt-0.5">{$currentProjectStore.industry || ''} {$currentProjectStore.websiteUrl ? '· ' + $currentProjectStore.websiteUrl : ''}</p>
+          <p class="text-sm text-gray-500 mt-0.5">{$currentProjectStore.industry || ''}{$currentProjectStore.websiteUrl ? ' · ' + $currentProjectStore.websiteUrl : ''}</p>
         </div>
       </div>
-      <a href="/projects/{projectId}/settings" class="px-3 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
-        ⚙️ {$_('projects.settingsBtn')}
+      <a href="/projects/{projectId}/settings" class="px-3 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-150 flex items-center gap-1.5 cursor-pointer">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+        {$_('projects.settingsBtn')}
       </a>
     </div>
 
     <!-- Stats -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-      {#each [
-        { label: $_('projects.totalContent'), value: summary?.contentCount ?? '—', icon: '📝', color: 'bg-blue-50 text-blue-600' },
-        { label: $_('projects.activeCampaigns'), value: summary?.campaignCount ?? '—', icon: '🚀', color: 'bg-green-50 text-green-600' },
-        { label: $_('projects.emailSubscribers'), value: summary?.subscriberCount ?? '—', icon: '📧', color: 'bg-purple-50 text-purple-600' },
-        { label: $_('projects.completedTasks'), value: summary?.checklistItems ?? '—', icon: '✅', color: 'bg-orange-50 text-orange-600' },
-      ] as stat}
-        <div class="bg-white rounded-xl border border-gray-200 p-4">
+      {#each stats as stat}
+        <div class="bg-white rounded-xl border border-gray-200 p-4 border-t-4
+          {stat.color.includes('blue') ? 'border-t-blue-400' :
+           stat.color.includes('green') ? 'border-t-green-400' :
+           stat.color.includes('purple') ? 'border-t-purple-400' : 'border-t-orange-400'}">
           <div class="flex items-center justify-between mb-3">
-            <div class="w-9 h-9 {stat.color} rounded-lg flex items-center justify-center text-lg">{stat.icon}</div>
+            <div class="w-9 h-9 {stat.color} rounded-lg flex items-center justify-center flex-shrink-0">
+              {@html stat.icon}
+            </div>
           </div>
           <div class="text-2xl font-bold text-gray-900">{loading ? '...' : stat.value}</div>
-          <div class="text-xs text-gray-500 mt-1">{stat.label}</div>
+          <div class="text-xs text-gray-500 mt-1">{$_(stat.labelKey)}</div>
         </div>
       {/each}
     </div>
 
     <!-- AI Chat CTA -->
     <div class="bg-gradient-to-r from-primary-600 to-violet-600 rounded-xl p-5 mb-8 text-white">
-      <div class="flex items-center justify-between">
-        <div>
-          <h3 class="font-semibold text-lg">🤖 {$_('projects.askAI')}</h3>
-          <p class="text-primary-100 text-sm mt-1">{$_('projects.askAIDesc')}</p>
+      <div class="flex items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
+            </svg>
+          </div>
+          <div>
+            <h3 class="font-semibold text-base">{$_('projects.askAI')}</h3>
+            <p class="text-primary-100 text-sm mt-0.5">{$_('projects.askAIDesc')}</p>
+          </div>
         </div>
-        <a href="/ai-chat" class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm font-medium transition backdrop-blur-sm">
+        <a href="/ai-chat" class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-150 backdrop-blur-sm whitespace-nowrap flex-shrink-0 cursor-pointer">
           {$_('projects.openChat')}
         </a>
       </div>
@@ -90,10 +132,12 @@
       {#each quickActions as action}
         <a
           href="/projects/{projectId}/{action.href}"
-          class="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md hover:border-primary-200 transition-all group"
+          class="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md hover:border-primary-200 transition-all duration-150 group cursor-pointer"
         >
-          <div class="text-3xl mb-3">{action.icon}</div>
-          <h3 class="font-semibold text-gray-900 group-hover:text-primary-700 transition-colors">{$_(action.title)}</h3>
+          <div class="w-11 h-11 {action.color} rounded-xl flex items-center justify-center mb-3 transition-colors duration-150">
+            {@html action.icon}
+          </div>
+          <h3 class="font-semibold text-gray-900 group-hover:text-primary-700 transition-colors duration-150">{$_(action.title)}</h3>
           <p class="text-sm text-gray-500 mt-1">{$_(action.descKey)}</p>
         </a>
       {/each}

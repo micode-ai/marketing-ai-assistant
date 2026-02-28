@@ -66,13 +66,28 @@
       <div>
         <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">{$_('billing.currentPlan')}</p>
         <p class="text-2xl font-bold text-gray-900 mt-1">{subscription.plan}</p>
-        <p class="text-sm text-gray-500 mt-1">
-          {subscription.status === 'trialing' ? '🎁 ' + $_('billing.trialing') : '✅ ' + $_('billing.active')} ·
-          {$_('billing.renews')} {new Date(subscription.currentPeriodEnd).toLocaleDateString()}
+        <p class="text-sm text-gray-500 mt-1 flex items-center gap-1.5 flex-wrap">
+          {#if subscription.status === 'trialing'}
+            <span class="inline-flex items-center gap-1 text-amber-600">
+              <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" />
+              </svg>
+              {$_('billing.trialing')}
+            </span>
+          {:else}
+            <span class="inline-flex items-center gap-1 text-green-600">
+              <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+              </svg>
+              {$_('billing.active')}
+            </span>
+          {/if}
+          <span class="text-gray-300">·</span>
+          <span>{$_('billing.renews')} {new Date(subscription.currentPeriodEnd).toLocaleDateString()}</span>
         </p>
       </div>
       {#if subscription.plan !== 'FREE'}
-        <button on:click={openPortal} class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 transition">
+        <button on:click={openPortal} class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors duration-150 cursor-pointer">
           {$_('billing.manage')}
         </button>
       {/if}
@@ -81,7 +96,7 @@
 
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
     {#each plans as plan}
-      <div class="bg-white rounded-xl border-2 {plan.border} p-6 relative {plan.badgeKey ? 'ring-2 ring-primary-400 ring-offset-2' : ''}">
+      <div class="bg-white rounded-xl border-2 {plan.border} p-6 relative hover:shadow-lg transition-shadow duration-200 {plan.badgeKey ? 'ring-2 ring-primary-400 ring-offset-2' : ''}">
         {#if plan.badgeKey}
           <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-primary-600 text-white text-xs font-bold px-3 py-1 rounded-full">{$_(plan.badgeKey)}</div>
         {/if}
@@ -101,7 +116,7 @@
         {#if !loading && subscription?.plan === plan.id}
           <div class="w-full py-2 text-center text-sm text-gray-400 border border-gray-200 rounded-lg">{$_('billing.currentPlanBtn')}</div>
         {:else if plan.id !== 'FREE'}
-          <button on:click={() => checkout(plan.id)} class="w-full py-2.5 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition">
+          <button on:click={() => checkout(plan.id)} class="w-full py-2.5 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors duration-150 cursor-pointer">
             {$_('billing.upgradeTo', { values: { plan: $_(plan.nameKey) } })}
           </button>
         {:else}

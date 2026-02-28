@@ -62,20 +62,24 @@
       {/if}
     </div>
     {#if messages.length > 0}
-      <button on:click={() => messages = []} class="text-xs text-gray-400 hover:text-gray-600 transition">{$_('aiChat.clearHistory')}</button>
+      <button on:click={() => messages = []} class="text-xs text-gray-400 hover:text-gray-600 transition-colors duration-150 cursor-pointer">{$_('aiChat.clearHistory')}</button>
     {/if}
   </div>
 
   <div bind:this={container} class="flex-1 overflow-y-auto p-6 space-y-4">
     {#if messages.length === 0}
       <div class="flex flex-col items-center justify-center h-full text-center py-12">
-        <div class="w-16 h-16 bg-primary-100 rounded-2xl flex items-center justify-center text-3xl mb-4">🤖</div>
+        <div class="w-16 h-16 bg-primary-100 rounded-2xl flex items-center justify-center mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z" />
+          </svg>
+        </div>
         <h2 class="text-xl font-semibold text-gray-900 mb-1">{$_('aiChat.title')}</h2>
         <p class="text-gray-500 mb-8 max-w-sm text-sm">{$_('aiChat.examples.title')}</p>
         <div class="flex flex-col gap-2 w-full max-w-md">
           {#each examples as ex}
             <button on:click={() => { input = ex; send(); }}
-              class="text-sm px-4 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 transition text-left">
+              class="text-sm px-4 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 transition-colors duration-150 text-left cursor-pointer">
               {ex}
             </button>
           {/each}
@@ -85,7 +89,11 @@
       {#each messages as msg}
         <div class="flex {msg.role === 'user' ? 'justify-end' : 'justify-start'} gap-3">
           {#if msg.role === 'assistant'}
-            <div class="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center text-sm flex-shrink-0 mt-1">🤖</div>
+            <div class="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+              </svg>
+            </div>
           {/if}
           <div class="max-w-2xl">
             <div class="{msg.role === 'user' ? 'bg-primary-600 text-white rounded-2xl rounded-tr-sm' : 'bg-white border border-gray-200 text-gray-800 rounded-2xl rounded-tl-sm'} px-4 py-3 shadow-sm">
@@ -97,12 +105,16 @@
       {/each}
       {#if loading}
         <div class="flex justify-start gap-3">
-          <div class="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center text-sm">🤖</div>
+          <div class="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+            </svg>
+          </div>
           <div class="bg-white border border-gray-200 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm">
             <div class="flex gap-1 items-center h-5">
-              <div class="w-2 h-2 bg-gray-300 rounded-full animate-bounce" style="animation-delay:0ms"></div>
-              <div class="w-2 h-2 bg-gray-300 rounded-full animate-bounce" style="animation-delay:150ms"></div>
-              <div class="w-2 h-2 bg-gray-300 rounded-full animate-bounce" style="animation-delay:300ms"></div>
+              <div class="w-2 h-2 bg-primary-300 rounded-full animate-bounce" style="animation-delay:0ms"></div>
+              <div class="w-2 h-2 bg-primary-300 rounded-full animate-bounce" style="animation-delay:150ms"></div>
+              <div class="w-2 h-2 bg-primary-300 rounded-full animate-bounce" style="animation-delay:300ms"></div>
             </div>
           </div>
         </div>
@@ -122,7 +134,8 @@
       <button
         on:click={send}
         disabled={loading || !input.trim()}
-        class="bg-primary-600 text-white p-3 rounded-xl hover:bg-primary-700 transition disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+        aria-label={$_('aiChat.send')}
+        class="bg-primary-600 text-white p-3 rounded-xl hover:bg-primary-700 transition-colors duration-150 disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0 cursor-pointer"
       >
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
