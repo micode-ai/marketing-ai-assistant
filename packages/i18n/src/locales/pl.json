@@ -166,8 +166,27 @@
     "published": "Opublikowano",
     "rejected": "Odrzucono",
     "aiGenerated": "Wygenerowano przez AI",
+    "topic": "Temat",
+    "topicPlaceholder": "Premiera produktu, funkcje, korzyści...",
+    "tone": "Ton",
+    "tones": {
+      "professional": "Profesjonalny",
+      "casual": "Swobodny",
+      "inspiring": "Inspirujący",
+      "informative": "Informacyjny",
+      "humorous": "Humorystyczny"
+    },
+    "length": "Długość",
+    "lengths": {
+      "short": "Krótki",
+      "medium": "Średni",
+      "long": "Długi"
+    },
+    "generating": "Generowanie treści...",
     "empty": "Brak treści",
-    "emptyDesc": "Utwórz lub wygeneruj swoją pierwszą treść"
+    "emptyDesc": "Utwórz lub wygeneruj swoją pierwszą treść",
+    "deleteContent": "Usuń treść",
+    "confirmDelete": "Czy na pewno chcesz usunąć tę treść? Tej operacji nie można cofnąć."
   },
   "campaigns": {
     "title": "Kampanie",
@@ -280,12 +299,12 @@
     "clearHistory": "Wyczyść historię",
     "project": "Projekt",
     "examples": {
-      "title": "Spróbuj zapytać:",
       "1": "Utwórz post na LinkedIn o premierze produktu",
       "2": "Napisz 5 tematów e-maili do kampanii reaktywacyjnej",
       "3": "Jaka jest najlepsza strategia marketingowa dla B2B SaaS?",
       "4": "Wygeneruj kalendarz treści na następny miesiąc",
-      "5": "Jak poprawić wskaźnik otwarć e-maili?"
+      "5": "Jak poprawić wskaźnik otwarć e-maili?",
+      "title": "Spróbuj zapytać:"
     },
     "thinking": "Myślę...",
     "error": "Nie udało się uzyskać odpowiedzi. Spróbuj ponownie."
@@ -332,9 +351,30 @@
     "freeForever": "Zawsze bezpłatny",
     "mostPopular": "Najpopularniejszy",
     "planFeatures": {
-      "free": ["1 projekt", "50 generacji AI/miesiąc", "100 emaili/miesiąc", "1 członek zespołu", "Podstawowe listy kontrolne"],
-      "pro": ["5 projektów", "500 generacji AI/miesiąc", "5 000 emaili/miesiąc", "5 członków zespołu", "Wszystkie listy kontrolne", "Głos marki", "Testy A/B"],
-      "enterprise": ["Nieograniczone projekty", "Nieograniczone generacje AI", "50 000 emaili/miesiąc", "Nieograniczona liczba członków", "Dostęp API", "Priorytetowe wsparcie"]
+      "free": [
+        "1 projekt",
+        "50 generacji AI/miesiąc",
+        "100 emaili/miesiąc",
+        "1 członek zespołu",
+        "Podstawowe listy kontrolne"
+      ],
+      "pro": [
+        "5 projektów",
+        "500 generacji AI/miesiąc",
+        "5 000 emaili/miesiąc",
+        "5 członków zespołu",
+        "Wszystkie listy kontrolne",
+        "Głos marki",
+        "Testy A/B"
+      ],
+      "enterprise": [
+        "Nieograniczone projekty",
+        "Nieograniczone generacje AI",
+        "50 000 emaili/miesiąc",
+        "Nieograniczona liczba członków",
+        "Dostęp API",
+        "Priorytetowe wsparcie"
+      ]
     }
   },
   "templates": {
