@@ -4,6 +4,7 @@ import { ChatOpenAI } from '@langchain/openai';
 import { HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { prisma } from '../prisma';
 import { extractUsage } from '../lib/costs';
+import { getLanguageInstruction } from '../lib/language';
 
 const MODEL = process.env['OPENAI_MODEL'] || 'gpt-4o';
 
@@ -103,6 +104,7 @@ async function loadContext(state: State) {
 async function generateDocument(state: State) {
   const docType      = (state.input['type'] as string) || 'MARKETING_PLAN';
   const extraContext = (state.input['context'] as string) || '';
+  const language     = state.input['language'] as string | undefined;
   const project      = state.project;
 
   const prompt = documentPrompts[docType] || documentPrompts['MARKETING_PLAN']!;
@@ -117,7 +119,8 @@ async function generateDocument(state: State) {
     `Active Campaigns: ${project._count.campaigns}\n` +
     `Content Published: ${project._count.content}\n` +
     (extraContext ? `\nAdditional Context: ${extraContext}\n` : '') +
-    `\nCreate a detailed, professional, actionable document. Use Markdown formatting with headers, bullet points, and tables where appropriate.`;
+    `\nCreate a detailed, professional, actionable document. Use Markdown formatting with headers, bullet points, and tables where appropriate.` +
+    getLanguageInstruction(language);
 
   const response = await getModel().invoke([
     new SystemMessage(systemContext),

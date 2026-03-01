@@ -1,4 +1,4 @@
-import { IsOptional, IsBoolean, IsString, IsEnum, IsDateString } from 'class-validator';
+import { IsOptional, IsBoolean, IsString, IsEnum, IsDateString, IsArray } from 'class-validator';
 
 export class UpdateChecklistItemDto {
   @IsOptional()
@@ -20,4 +20,8 @@ export class UpdateChecklistItemDto {
   @IsOptional()
   @IsDateString()
   dueDate?: Date;
+
+  @IsOptional()
+  @IsArray()
+  chatMessages?: Array<{ role: string; content: string }>;
 }

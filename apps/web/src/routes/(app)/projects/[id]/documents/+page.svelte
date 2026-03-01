@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { _ } from 'svelte-i18n';
+  import { _, locale } from 'svelte-i18n';
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
   import { api } from '$lib/api/client';
@@ -19,7 +19,7 @@
   async function generateDocument() {
     generating = true;
     try {
-      await api.post('/agent/run', { projectId, agentType: 'DOCUMENT', input: { type: form.type, title: form.title || undefined } });
+      await api.post('/agent/run', { projectId, agentType: 'DOCUMENT', input: { type: form.type, title: form.title || undefined, language: $locale } });
       documents = await api.get<any[]>('/documents', { projectId });
       showModal = false;
     } catch (e: any) { alert(e.message); }
