@@ -18,7 +18,7 @@ export class EmailService {
   }
 
   async createAccount(organizationId: string, dto: any) {
-    const encrypted = this.encryptCredentials({ user: dto.smtpUser, password: dto.smtpPassword });
+    const encrypted = this.encryptCredentials({ user: dto.smtpUser || '', password: dto.smtpPassword || dto.apiKey || '' });
     return this.prisma.emailAccount.create({
       data: {
         organizationId,
@@ -34,22 +34,63 @@ export class EmailService {
     });
   }
 
+  async deleteAccount(id: string) {
+    return this.prisma.emailAccount.delete({ where: { id } });
+  }
+
+  async testConnection(id: string) {
+    const account = await this.prisma.emailAccount.findUnique({ where: { id } });
+    if (!account) throw new NotFoundException('Email account not found');
+
+    if (account.provider === 'RESEND') {
+      const creds = this.decryptCredentials(account.encryptedCredentials || '');
+      const resend = new Resend(creds.password || this.config.get('RESEND_API_KEY') || '');
+      try {
+        await resend.domains.list();
+        return { ok: true };
+      } catch (err: any) {
+        throw new Error(`Resend API key is invalid: ${err.message}`);
+      }
+    } else {
+      const creds = this.decryptCredentials(account.encryptedCredentials || '');
+      const transporter = nodemailer.createTransport({
+        host: account.smtpHost || '',
+        port: account.smtpPort || 587,
+        secure: account.smtpPort === 465,
+        auth: { user: creds.user, pass: creds.password },
+      });
+      try {
+        await transporter.verify();
+        return { ok: true };
+      } catch (err: any) {
+        throw new Error(`SMTP connection failed: ${err.message}`);
+      }
+    }
+  }
+
   async findAllLists(projectId: string) {
     return this.prisma.emailList.findMany({
       where: { projectId },
       include: { _count: { select: { subscribers: true } } },
+      orderBy: { createdAt: 'desc' },
     });
   }
 
   async createList(dto: any) {
-    return this.prisma.emailList.create({ data: { projectId: dto.projectId, name: dto.name, description: dto.description } });
+    return this.prisma.emailList.create({
+      data: { projectId: dto.projectId, name: dto.name, description: dto.description },
+    });
+  }
+
+  async deleteList(id: string) {
+    return this.prisma.emailList.delete({ where: { id } });
   }
 
   async addSubscriber(listId: string, dto: any) {
     const subscriber = await this.prisma.emailSubscriber.upsert({
       where: { listId_email: { listId, email: dto.email } },
       create: { listId, email: dto.email, name: dto.name, status: 'ACTIVE' },
-      update: { status: 'ACTIVE' },
+      update: { status: 'ACTIVE', name: dto.name },
     });
     await this.prisma.emailList.update({
       where: { id: listId },
@@ -58,10 +99,29 @@ export class EmailService {
     return subscriber;
   }
 
-  async getSubscribers(listId: string) {
+  async getSubscribers(listId: string, all = false) {
     return this.prisma.emailSubscriber.findMany({
-      where: { listId, status: 'ACTIVE' },
+      where: { listId, ...(all ? {} : { status: 'ACTIVE' }) },
+      orderBy: { subscribedAt: 'desc' },
     });
+  }
+
+  async removeSubscriber(listId: string, subscriberId: string) {
+    const subscriber = await this.prisma.emailSubscriber.findFirst({
+      where: { id: subscriberId, listId },
+    });
+    if (!subscriber) throw new NotFoundException('Subscriber not found');
+
+    await this.prisma.emailSubscriber.delete({ where: { id: subscriberId } });
+
+    if (subscriber.status === 'ACTIVE') {
+      await this.prisma.emailList.update({
+        where: { id: listId },
+        data: { subscriberCount: { decrement: 1 } },
+      });
+    }
+
+    return { success: true };
   }
 
   async unsubscribe(token: string) {
@@ -73,7 +133,36 @@ export class EmailService {
     });
   }
 
+  async findCampaignsByProject(projectId: string) {
+    return this.prisma.emailCampaign.findMany({
+      where: { list: { projectId } },
+      include: {
+        list: { select: { name: true } },
+        emailAccount: { select: { email: true, displayName: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   async sendCampaign(dto: any) {
+    let campaignId = dto.campaignId as string | undefined;
+
+    // Auto-create a Campaign record when sending standalone (not linked to a campaign)
+    if (!campaignId) {
+      const list = await this.prisma.emailList.findUnique({ where: { id: dto.listId } });
+      if (!list) throw new NotFoundException('Email list not found');
+
+      const campaign = await this.prisma.campaign.create({
+        data: {
+          projectId: list.projectId,
+          name: dto.subject,
+          type: 'EMAIL',
+          status: 'ACTIVE',
+        },
+      });
+      campaignId = campaign.id;
+    }
+
     const account = await this.prisma.emailAccount.findUnique({ where: { id: dto.emailAccountId } });
     if (!account) throw new NotFoundException('Email account not found');
 
@@ -83,7 +172,7 @@ export class EmailService {
 
     const emailCampaign = await this.prisma.emailCampaign.create({
       data: {
-        campaignId: dto.campaignId,
+        campaignId,
         emailAccountId: dto.emailAccountId,
         listId: dto.listId,
         subject: dto.subject,
@@ -97,7 +186,10 @@ export class EmailService {
     for (const subscriber of subscribers) {
       try {
         const unsubUrl = `${this.config.get('API_URL')}/api/email/unsubscribe/${subscriber.unsubscribeToken}`;
-        const html = dto.html.replace('{{unsubscribe_url}}', unsubUrl).replace('{{email}}', subscriber.email);
+        const html = dto.html
+          .replace(/\{\{unsubscribe_url\}\}/g, unsubUrl)
+          .replace(/\{\{email\}\}/g, subscriber.email)
+          .replace(/\{\{name\}\}/g, subscriber.name || subscriber.email);
 
         if (account.provider === 'RESEND') {
           await this.resend.emails.send({
@@ -124,7 +216,11 @@ export class EmailService {
 
     await this.prisma.emailCampaign.update({
       where: { id: emailCampaign.id },
-      data: { status: 'sent', sentAt: new Date(), stats: { sent, opens: 0, clicks: 0, bounces: 0, unsubscribes: 0 } },
+      data: {
+        status: 'sent',
+        sentAt: new Date(),
+        stats: { sent, opens: 0, clicks: 0, bounces: 0, unsubscribes: 0 },
+      },
     });
 
     return { sent, total: subscribers.length };
@@ -140,6 +236,7 @@ export class EmailService {
   }
 
   private decryptCredentials(encrypted: string): any {
+    if (!encrypted || !encrypted.includes(':')) return { user: '', password: '' };
     const [ivHex, data] = encrypted.split(':');
     const key = Buffer.from(this.config.get('ENCRYPTION_KEY') || '0'.repeat(64), 'hex');
     const iv = Buffer.from(ivHex, 'hex');
