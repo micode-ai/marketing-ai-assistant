@@ -44,6 +44,8 @@ export class TrackingController {
       'Content-Type': 'image/gif',
       'Content-Length': String(TRANSPARENT_GIF.length),
       'Cache-Control': 'no-store, no-cache, must-revalidate, private',
+      'Access-Control-Allow-Origin': '*',
+      'Cross-Origin-Resource-Policy': 'cross-origin',
       Pragma: 'no-cache',
     });
     res.end(TRANSPARENT_GIF);
@@ -60,6 +62,8 @@ export class TrackingController {
       'Content-Type': 'image/gif',
       'Content-Length': String(TRANSPARENT_GIF.length),
       'Cache-Control': 'no-store, no-cache, must-revalidate, private',
+      'Access-Control-Allow-Origin': '*',
+      'Cross-Origin-Resource-Policy': 'cross-origin',
     });
     res.end(TRANSPARENT_GIF);
   }
@@ -83,7 +87,11 @@ export class TrackingController {
   @ApiExcludeEndpoint()
   getSnippet(@Param('trackingId') trackingId: string, @Res() res: Response) {
     const snippet = this.trackingService.generateSnippet(trackingId);
-    res.set('Content-Type', 'text/javascript');
+    res.set({
+      'Content-Type': 'text/javascript',
+      'Access-Control-Allow-Origin': '*',
+      'Cross-Origin-Resource-Policy': 'cross-origin',
+    });
     res.send(snippet);
   }
 }

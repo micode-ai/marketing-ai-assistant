@@ -8,7 +8,13 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  app.use(helmet());
+  app.use((req: any, res: any, next: any) => {
+    // Skip helmet for tracking endpoints — they must be loadable cross-origin
+    if (req.url.startsWith('/api/t/')) {
+      return next();
+    }
+    return helmet()(req, res, next);
+  });
   app.use(compression());
 
   app.enableCors({
