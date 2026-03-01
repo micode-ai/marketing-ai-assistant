@@ -12,7 +12,7 @@ async function bootstrap() {
   app.use(compression());
 
   app.enableCors({
-    origin: process.env.WEB_URL || 'http://localhost:5173',
+    origin: true,
     credentials: true,
   });
 

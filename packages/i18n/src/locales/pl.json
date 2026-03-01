@@ -569,5 +569,17 @@
     "forbidden": "Odmowa dostępu",
     "validation": "Sprawdź swoje dane i spróbuj ponownie",
     "networkError": "Błąd sieci. Sprawdź połączenie."
+  },
+  "tracking": {
+    "title": "Śledzenie strony",
+    "description": "Dodaj ten fragment kodu do swojej strony, aby śledzić odwiedzających, odsłony i konwersje",
+    "trackingId": "ID śledzenia",
+    "snippet": "Fragment kodu śledzenia",
+    "copySnippet": "Kopiuj fragment",
+    "copyHint": "Wklej to przed </head> na każdej stronie swojej witryny",
+    "customEvents": "Zdarzenia niestandardowe",
+    "customEventsDesc": "Śledź zdarzenia: mktai('event', 'button_click', {label: 'signup'})",
+    "conversions": "Konwersje",
+    "conversionsDesc": "Śledź konwersje: mktai('conversion', 'purchase', {value: 99})"
   }
 }

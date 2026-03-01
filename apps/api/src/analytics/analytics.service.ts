@@ -1,8 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../database/prisma.service';
 
 @Injectable()
 export class AnalyticsService {
+  private readonly logger = new Logger(AnalyticsService.name);
+
   constructor(private prisma: PrismaService) {}
 
   async getMetrics(projectId: string, days: number | string = 30) {
@@ -81,5 +84,93 @@ export class AnalyticsService {
       }),
     ]);
     return { contentCount, campaignCount, subscriberCount, checklistItems };
+  }
+
+  @Cron('0 1 * * *')
+  async aggregateDailyMetrics() {
+    this.logger.log('Starting daily metrics aggregation...');
+
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    yesterday.setHours(0, 0, 0, 0);
+
+    const today = new Date(yesterday);
+    today.setDate(today.getDate() + 1);
+
+    const projects = await this.prisma.project.findMany({
+      where: { status: 'ACTIVE' },
+      select: { id: true },
+    });
+
+    for (const project of projects) {
+      try {
+        await this.aggregateForProject(project.id, yesterday, today);
+      } catch (err) {
+        this.logger.error(`Failed to aggregate metrics for project ${project.id}:`, err);
+      }
+    }
+
+    this.logger.log(`Daily metrics aggregation completed for ${projects.length} projects.`);
+  }
+
+  private async aggregateForProject(projectId: string, dayStart: Date, dayEnd: Date) {
+    const events = await this.prisma.analyticsEvent.findMany({
+      where: {
+        projectId,
+        timestamp: { gte: dayStart, lt: dayEnd },
+      },
+    });
+
+    if (events.length === 0) return;
+
+    const uniqueSessions = new Set<string>();
+    let pageViews = 0;
+    let conversions = 0;
+    let emailOpens = 0;
+    let emailClicks = 0;
+    let socialEngagements = 0;
+
+    for (const event of events) {
+      const meta = event.metadata as any;
+      const sessionKey = meta?.sessionId || meta?.ip || event.id;
+
+      switch (event.type) {
+        case 'PAGE_VIEW':
+          pageViews++;
+          uniqueSessions.add(sessionKey);
+          break;
+        case 'CONVERSION':
+          conversions++;
+          uniqueSessions.add(sessionKey);
+          break;
+        case 'EMAIL_OPEN':
+          emailOpens++;
+          break;
+        case 'EMAIL_CLICK':
+          emailClicks++;
+          break;
+        case 'SOCIAL_ENGAGEMENT':
+          socialEngagements++;
+          break;
+      }
+    }
+
+    const metrics = {
+      visitors: uniqueSessions.size,
+      pageViews,
+      leads: 0,
+      conversions,
+      emailsSent: 0,
+      emailOpens,
+      emailClicks,
+      socialReach: 0,
+      socialEngagements,
+    };
+
+    await this.prisma.dailyMetrics.upsert({
+      where: { projectId_date: { projectId, date: dayStart } },
+      update: { metrics },
+      create: { projectId, date: dayStart, metrics },
+    });
   }
 }

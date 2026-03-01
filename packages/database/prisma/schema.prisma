@@ -260,6 +260,7 @@ model Subscription {
 model Project {
   id             String        @id @default(cuid())
   organizationId String
+  trackingId     String?       @unique @default(cuid())
   name           String
   description    String?
   websiteUrl     String?
@@ -605,6 +606,7 @@ model AnalyticsEvent {
 
   @@index([projectId])
   @@index([timestamp])
+  @@index([projectId, type, timestamp])
   @@map("analytics_events")
 }
 
