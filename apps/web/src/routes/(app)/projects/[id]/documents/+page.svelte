@@ -3,68 +3,303 @@
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
   import { api } from '$lib/api/client';
+  import { marked } from 'marked';
+
+  marked.setOptions({ breaks: true, gfm: true });
+
+  function renderMarkdown(text: string): string {
+    return marked.parse(text, { async: false }) as string;
+  }
 
   let documents: any[] = [];
   let loading = true;
-  let showModal = false;
-  let generating = false;
   $: projectId = $page.params['id'];
-  let form = { type: 'MARKETING_PLAN', title: '' };
+
+  // AI generation
+  let showGenerateModal = false;
+  let generating = false;
+  let generateForm = { type: 'MARKETING_PLAN', title: '' };
+  let lastTraceUrl: string | null = null;
+
+  // Manual creation
+  let showCreateModal = false;
+  let creating = false;
+  let createForm = { type: 'MARKETING_PLAN', title: '', contentMd: '' };
+
+  // View
+  let viewingDocument: any = null;
+
+  // Edit
+  let editingDocument: any = null;
+  let editForm = { title: '', contentMd: '' };
+  let editSaving = false;
+
+  // Delete
+  let deletingId: string | null = null;
+
+  const DOC_TYPES = [
+    'MARKETING_PLAN', 'REPORT', 'COMPETITIVE_ANALYSIS',
+    'BRAND_GUIDELINES', 'CONTENT_CALENDAR', 'PROPOSAL', 'PRESENTATION',
+  ];
+
+  const typeLabels: Record<string, string> = {
+    MARKETING_PLAN: 'documents.marketingPlan',
+    REPORT: 'documents.report',
+    COMPETITIVE_ANALYSIS: 'documents.competitiveAnalysis',
+    BRAND_GUIDELINES: 'documents.brandGuidelines',
+    CONTENT_CALENDAR: 'documents.contentCalendar',
+    PROPOSAL: 'documents.proposal',
+    PRESENTATION: 'documents.presentation',
+  };
 
   onMount(async () => {
     documents = await api.get<any[]>('/documents', { projectId });
     loading = false;
   });
 
+  // --- AI Generation with polling ---
   async function generateDocument() {
     generating = true;
+    lastTraceUrl = null;
     try {
-      await api.post('/agent/run', { projectId, agentType: 'DOCUMENT', input: { type: form.type, title: form.title || undefined, language: $locale } });
+      const run = await api.post<{ id: string; status: string }>('/agent/run', {
+        projectId,
+        agentType: 'DOCUMENT',
+        input: { type: generateForm.type, title: generateForm.title || undefined, language: $locale },
+      });
+
+      let finalRun: { status: string; error?: string; langsmithTraceUrl?: string | null } = run;
+      const startTime = Date.now();
+      while (finalRun.status === 'PENDING' || finalRun.status === 'RUNNING') {
+        if (Date.now() - startTime > 90000) break;
+        await new Promise(r => setTimeout(r, 2000));
+        finalRun = await api.get<{ status: string; error?: string; langsmithTraceUrl?: string | null }>(`/agent/runs/${run.id}`);
+      }
+
+      if (finalRun.status === 'FAILED') {
+        throw new Error(finalRun.error || 'Document generation failed');
+      }
+
+      lastTraceUrl = finalRun.langsmithTraceUrl ?? null;
       documents = await api.get<any[]>('/documents', { projectId });
-      showModal = false;
-    } catch (e: any) { alert(e.message); }
-    finally { generating = false; }
+      showGenerateModal = false;
+      generateForm = { type: 'MARKETING_PLAN', title: '' };
+    } catch (e: any) {
+      alert(e.message);
+    } finally {
+      generating = false;
+    }
   }
 
-  const icons: Record<string, string> = {
-    MARKETING_PLAN: '📊', REPORT: '📈', COMPETITIVE_ANALYSIS: '🔍',
-    BRAND_GUIDELINES: '🎨', CONTENT_CALENDAR: '📅', PROPOSAL: '📋', PRESENTATION: '🖥️',
-  };
+  // --- Manual creation ---
+  async function createDocument() {
+    if (!createForm.title.trim()) return;
+    creating = true;
+    try {
+      const doc = await api.post<any>('/documents', {
+        projectId,
+        type: createForm.type,
+        title: createForm.title,
+        contentMd: createForm.contentMd || undefined,
+        generatedByAi: false,
+      });
+      documents = [doc, ...documents];
+      showCreateModal = false;
+      createForm = { type: 'MARKETING_PLAN', title: '', contentMd: '' };
+    } catch (e: any) {
+      alert(e.message);
+    } finally {
+      creating = false;
+    }
+  }
+
+  // --- View ---
+  function openView(doc: any) {
+    viewingDocument = doc;
+  }
+
+  // --- Edit ---
+  function openEdit(doc: any) {
+    editingDocument = doc;
+    editForm = { title: doc.title, contentMd: doc.contentMd || '' };
+    viewingDocument = null;
+  }
+
+  async function saveEdit() {
+    if (!editingDocument) return;
+    editSaving = true;
+    try {
+      const updated = await api.put<any>(`/documents/${editingDocument.id}`, {
+        title: editForm.title,
+        contentMd: editForm.contentMd,
+      });
+      documents = documents.map(d => d.id === updated.id ? { ...d, ...updated } : d);
+      editingDocument = null;
+    } catch (e: any) {
+      alert(e.message);
+    } finally {
+      editSaving = false;
+    }
+  }
+
+  // --- Delete ---
+  async function deleteDocument(id: string) {
+    try {
+      await api.delete(`/documents/${id}`);
+      documents = documents.filter(d => d.id !== id);
+      if (viewingDocument?.id === id) viewingDocument = null;
+    } catch (e: any) {
+      alert(e.message);
+    } finally {
+      deletingId = null;
+    }
+  }
 </script>
 
 <div class="p-6">
+  <!-- Header -->
   <div class="flex items-center justify-between mb-6">
     <h1 class="text-2xl font-bold text-gray-900">{$_('documents.title')}</h1>
-    <button on:click={() => showModal = true} class="bg-primary-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-700 transition flex items-center gap-2">
-      🤖 {$_('documents.generate')}
-    </button>
-  </div>
-
-  {#if loading}
-    <div class="grid grid-cols-2 gap-4">{#each Array(3) as _}<div class="bg-white rounded-xl border border-gray-200 h-28 animate-pulse"></div>{/each}</div>
-  {:else if documents.length === 0}
-    <div class="flex flex-col items-center justify-center py-20 text-center">
-      <div class="text-5xl mb-4">📄</div>
-      <h2 class="text-xl font-semibold text-gray-900 mb-2">{$_('documents.empty')}</h2>
-      <p class="text-gray-500 mb-6">{$_('documents.emptyDesc')}</p>
-      <button on:click={() => showModal = true} class="bg-primary-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-primary-700 transition">
-        🤖 {$_('documents.generate')}
+    <div class="flex items-center gap-2">
+      <button
+        on:click={() => showCreateModal = true}
+        class="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors duration-150 flex items-center gap-2 cursor-pointer"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+        </svg>
+        {$_('documents.create')}
+      </button>
+      <button
+        on:click={() => showGenerateModal = true}
+        class="bg-primary-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors duration-150 flex items-center gap-2 cursor-pointer"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
+        </svg>
+        {$_('documents.generate')}
       </button>
     </div>
+  </div>
+
+  <!-- LangSmith trace banner -->
+  {#if lastTraceUrl}
+    <div class="mb-4 flex items-center gap-3 px-4 py-3 bg-purple-50 border border-purple-200 rounded-xl text-sm">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-purple-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
+      </svg>
+      <span class="text-purple-700 flex-1">{$_('documents.generated')}</span>
+      <a
+        href={lastTraceUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="text-purple-600 font-medium hover:text-purple-800 hover:underline flex items-center gap-1"
+      >
+        LangSmith
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+        </svg>
+      </a>
+      <button on:click={() => lastTraceUrl = null} class="text-purple-400 hover:text-purple-600 cursor-pointer ml-1">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+  {/if}
+
+  <!-- Loading -->
+  {#if loading}
+    <div class="space-y-3">
+      {#each Array(3) as _}
+        <div class="bg-white rounded-xl border border-gray-200 p-5 animate-pulse h-24"></div>
+      {/each}
+    </div>
+
+  <!-- Empty state -->
+  {:else if documents.length === 0}
+    <div class="flex flex-col items-center justify-center py-20 text-center">
+      <div class="w-20 h-20 bg-primary-50 rounded-2xl flex items-center justify-center mb-6">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+        </svg>
+      </div>
+      <h2 class="text-xl font-semibold text-gray-900 mb-2">{$_('documents.empty')}</h2>
+      <p class="text-gray-500 mb-6">{$_('documents.emptyDesc')}</p>
+      <div class="flex items-center gap-3">
+        <button
+          on:click={() => showCreateModal = true}
+          class="border border-gray-300 text-gray-700 px-5 py-3 rounded-xl font-medium hover:bg-gray-50 transition-colors duration-150 flex items-center gap-2 cursor-pointer"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+          </svg>
+          {$_('documents.create')}
+        </button>
+        <button
+          on:click={() => showGenerateModal = true}
+          class="bg-primary-600 text-white px-5 py-3 rounded-xl font-medium hover:bg-primary-700 transition-colors duration-150 flex items-center gap-2 cursor-pointer"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
+          </svg>
+          {$_('documents.generate')}
+        </button>
+      </div>
+    </div>
+
+  <!-- Document list -->
   {:else}
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="space-y-3">
       {#each documents as doc}
-        <div class="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-sm transition cursor-pointer hover:border-primary-200">
-          <div class="flex items-start gap-4">
-            <div class="text-3xl">{icons[doc.type] || '📄'}</div>
-            <div class="flex-1 min-w-0">
-              <h3 class="font-semibold text-gray-900 truncate">{doc.title}</h3>
-              <div class="flex items-center gap-2 mt-1.5">
-                <span class="text-xs text-gray-400">{doc.type.replace(/_/g, ' ')}</span>
-                {#if doc.generatedByAi}<span class="text-xs bg-purple-50 text-purple-600 px-1.5 py-0.5 rounded">🤖 AI</span>{/if}
-                <span class="text-xs text-gray-400">v{doc.version}</span>
+        <!-- svelte-ignore a11y_click_events_have_key_events -->
+        <!-- svelte-ignore a11y_no_static_element_interactions -->
+        <div
+          class="bg-white rounded-xl border border-gray-200 border-l-4 border-l-primary-400 p-5 hover:shadow-sm transition-shadow duration-150 cursor-pointer"
+          on:click={() => openView(doc)}
+        >
+          <div class="flex items-start justify-between gap-4">
+            <div class="flex items-start gap-4 flex-1 min-w-0">
+              <div class="w-10 h-10 rounded-lg bg-primary-50 flex items-center justify-center flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                </svg>
               </div>
-              <p class="text-xs text-gray-400 mt-1">{new Date(doc.createdAt).toLocaleDateString()}</p>
+              <div class="flex-1 min-w-0">
+                <h3 class="font-medium text-gray-900 truncate">{doc.title}</h3>
+                <div class="flex flex-wrap items-center gap-1.5 mt-1.5">
+                  <span class="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded font-medium">{$_(typeLabels[doc.type] || 'documents.proposal')}</span>
+                  <span class="text-xs text-gray-400">{$_('documents.version')} {doc.version}</span>
+                  {#if doc.generatedByAi}
+                    <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 bg-purple-50 text-purple-600 rounded">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
+                      </svg>
+                      AI
+                    </span>
+                  {/if}
+                </div>
+                <p class="text-xs text-gray-400 mt-1">{new Date(doc.createdAt).toLocaleDateString()}</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <!-- Edit button -->
+              <button
+                on:click|stopPropagation={() => openEdit(doc)}
+                class="text-xs px-3 py-1.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 cursor-pointer"
+              >
+                {$_('common.edit')}
+              </button>
+              <!-- Delete button -->
+              <button
+                on:click|stopPropagation={() => deletingId = doc.id}
+                class="text-xs px-2 py-1.5 border border-red-200 text-red-500 rounded-lg hover:bg-red-50 transition-colors duration-150 cursor-pointer"
+                title={$_('documents.deleteDocument')}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                </svg>
+              </button>
             </div>
           </div>
         </div>
@@ -73,31 +308,272 @@
   {/if}
 </div>
 
-{#if showModal}
-  <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => showModal = false}>
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
-      <h2 class="text-lg font-semibold mb-4">🤖 {$_('documents.generate')}</h2>
-      <div class="space-y-4 mb-6">
+<!-- Generate with AI modal -->
+{#if showGenerateModal}
+  <!-- svelte-ignore a11y_click_events_have_key_events -->
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
+  <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => showGenerateModal = false}>
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+      <div class="p-6 border-b border-gray-100 flex items-center gap-2.5">
+        <div class="w-8 h-8 bg-primary-50 rounded-lg flex items-center justify-center flex-shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
+          </svg>
+        </div>
+        <h2 class="text-lg font-semibold text-gray-900">{$_('documents.generate')}</h2>
+      </div>
+      <div class="p-6 space-y-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">{$_('documents.type')}</label>
-          <select bind:value={form.type} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
-            <option value="MARKETING_PLAN">{$_('documents.marketingPlan')}</option>
-            <option value="REPORT">{$_('documents.report')}</option>
-            <option value="COMPETITIVE_ANALYSIS">{$_('documents.competitiveAnalysis')}</option>
-            <option value="BRAND_GUIDELINES">{$_('documents.brandGuidelines')}</option>
-            <option value="CONTENT_CALENDAR">{$_('documents.contentCalendar')}</option>
+          <label for="gen-type" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('documents.type')}</label>
+          <select id="gen-type" bind:value={generateForm.type} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+            {#each DOC_TYPES as t}
+              <option value={t}>{$_(typeLabels[t])}</option>
+            {/each}
           </select>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Custom Title ({$_('common.optional')})</label>
-          <input type="text" bind:value={form.title} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="Leave blank for auto-title" />
+          <label for="gen-title" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('documents.customTitle')} <span class="text-gray-400 font-normal">({$_('common.optional')})</span></label>
+          <input id="gen-title" type="text" bind:value={generateForm.title} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" placeholder={$_('documents.customTitlePlaceholder')} />
         </div>
       </div>
-      <div class="flex gap-3">
-        <button on:click={generateDocument} disabled={generating} class="flex-1 bg-primary-600 text-white py-2.5 rounded-lg font-medium hover:bg-primary-700 disabled:opacity-50 transition text-sm">
-          {generating ? '⏳ ' + $_('documents.generating') : '🤖 ' + $_('documents.generate')}
+      <div class="p-6 border-t border-gray-100 flex gap-3">
+        <button
+          on:click={generateDocument}
+          disabled={generating}
+          class="flex-1 bg-primary-600 text-white py-2.5 rounded-lg font-medium hover:bg-primary-700 transition-colors duration-150 disabled:opacity-50 text-sm flex items-center justify-center gap-2 cursor-pointer"
+        >
+          {#if generating}
+            <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+            </svg>
+            {$_('documents.generating')}
+          {:else}
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
+            </svg>
+            {$_('documents.generate')}
+          {/if}
         </button>
-        <button on:click={() => showModal = false} class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition text-sm">{$_('common.cancel')}</button>
+        <button on:click={() => showGenerateModal = false} class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 text-sm cursor-pointer">
+          {$_('common.cancel')}
+        </button>
+      </div>
+    </div>
+  </div>
+{/if}
+
+<!-- Create document modal -->
+{#if showCreateModal}
+  <!-- svelte-ignore a11y_click_events_have_key_events -->
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
+  <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => showCreateModal = false}>
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
+      <div class="p-6 border-b border-gray-100 flex items-center gap-2.5">
+        <div class="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center flex-shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+          </svg>
+        </div>
+        <h2 class="text-lg font-semibold text-gray-900">{$_('documents.create')}</h2>
+      </div>
+      <div class="p-6 space-y-4">
+        <div>
+          <label for="create-title" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('documents.titleLabel')}</label>
+          <input id="create-title" type="text" bind:value={createForm.title} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" placeholder={$_('documents.titlePlaceholder')} />
+        </div>
+        <div>
+          <label for="create-type" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('documents.type')}</label>
+          <select id="create-type" bind:value={createForm.type} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+            {#each DOC_TYPES as t}
+              <option value={t}>{$_(typeLabels[t])}</option>
+            {/each}
+          </select>
+        </div>
+        <div>
+          <label for="create-content" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('content.title')} <span class="text-gray-400 font-normal">({$_('common.optional')})</span></label>
+          <textarea
+            id="create-content"
+            bind:value={createForm.contentMd}
+            rows="8"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+            placeholder={$_('documents.contentPlaceholder')}
+          ></textarea>
+        </div>
+      </div>
+      <div class="p-6 border-t border-gray-100 flex gap-3">
+        <button
+          on:click={createDocument}
+          disabled={creating || !createForm.title.trim()}
+          class="flex-1 bg-primary-600 text-white py-2.5 rounded-lg font-medium hover:bg-primary-700 transition-colors duration-150 disabled:opacity-50 text-sm flex items-center justify-center gap-2 cursor-pointer"
+        >
+          {#if creating}
+            <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+            </svg>
+          {/if}
+          {$_('documents.create')}
+        </button>
+        <button on:click={() => showCreateModal = false} class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 text-sm cursor-pointer">
+          {$_('common.cancel')}
+        </button>
+      </div>
+    </div>
+  </div>
+{/if}
+
+<!-- View document modal -->
+{#if viewingDocument}
+  <!-- svelte-ignore a11y_click_events_have_key_events -->
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
+  <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => viewingDocument = null}>
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+      <div class="p-6 border-b border-gray-100 flex items-start justify-between flex-shrink-0">
+        <div class="flex items-start gap-3 flex-1 min-w-0">
+          <div class="w-10 h-10 rounded-lg bg-primary-50 flex items-center justify-center flex-shrink-0 mt-0.5">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+            </svg>
+          </div>
+          <div class="flex-1 min-w-0">
+            <h2 class="text-lg font-semibold text-gray-900 truncate">{viewingDocument.title}</h2>
+            <div class="flex flex-wrap items-center gap-1.5 mt-1">
+              <span class="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded font-medium">{$_(typeLabels[viewingDocument.type] || 'documents.proposal')}</span>
+              <span class="text-xs text-gray-400">{$_('documents.version')} {viewingDocument.version}</span>
+              {#if viewingDocument.generatedByAi}
+                <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 bg-purple-50 text-purple-600 rounded">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
+                  </svg>
+                  {$_('documents.aiGenerated')}
+                </span>
+              {/if}
+              <span class="text-xs text-gray-400">{new Date(viewingDocument.createdAt).toLocaleDateString()}</span>
+            </div>
+          </div>
+        </div>
+        <button on:click={() => viewingDocument = null} class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors duration-150 cursor-pointer flex-shrink-0 ml-4">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <div class="flex-1 overflow-y-auto p-6">
+        {#if viewingDocument.contentMd}
+          <div class="prose prose-sm prose-gray max-w-none">
+            {@html renderMarkdown(viewingDocument.contentMd)}
+          </div>
+        {:else}
+          <div class="text-center py-12 text-gray-400">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+            </svg>
+            <p>{$_('documents.emptyDesc')}</p>
+          </div>
+        {/if}
+      </div>
+      <div class="p-4 border-t border-gray-100 flex items-center justify-end gap-2 flex-shrink-0">
+        <button
+          on:click={() => openEdit(viewingDocument)}
+          class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors duration-150 cursor-pointer flex items-center gap-2"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
+          </svg>
+          {$_('common.edit')}
+        </button>
+        <button
+          on:click={() => { deletingId = viewingDocument.id; }}
+          class="px-4 py-2 border border-red-200 text-red-500 rounded-lg text-sm font-medium hover:bg-red-50 transition-colors duration-150 cursor-pointer flex items-center gap-2"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+          </svg>
+          {$_('common.delete')}
+        </button>
+      </div>
+    </div>
+  </div>
+{/if}
+
+<!-- Edit document modal -->
+{#if editingDocument}
+  <!-- svelte-ignore a11y_click_events_have_key_events -->
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
+  <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => editingDocument = null}>
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl">
+      <div class="p-6 border-b border-gray-100 flex items-center gap-2.5">
+        <div class="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
+          </svg>
+        </div>
+        <h2 class="text-lg font-semibold text-gray-900">{$_('documents.editDocument')}</h2>
+      </div>
+      <div class="p-6 space-y-4">
+        <div>
+          <label for="edit-title" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('documents.titleLabel')}</label>
+          <input id="edit-title" type="text" bind:value={editForm.title} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
+        </div>
+        <div>
+          <label for="edit-content" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('content.title')}</label>
+          <textarea
+            id="edit-content"
+            bind:value={editForm.contentMd}
+            rows="16"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+            placeholder={$_('documents.contentPlaceholder')}
+          ></textarea>
+        </div>
+      </div>
+      <div class="p-6 border-t border-gray-100 flex gap-3">
+        <button
+          on:click={saveEdit}
+          disabled={editSaving}
+          class="flex-1 bg-primary-600 text-white py-2.5 rounded-lg font-medium hover:bg-primary-700 transition-colors duration-150 disabled:opacity-50 text-sm flex items-center justify-center gap-2 cursor-pointer"
+        >
+          {#if editSaving}
+            <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+            </svg>
+          {/if}
+          {$_('common.save')}
+        </button>
+        <button on:click={() => editingDocument = null} class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 text-sm cursor-pointer">
+          {$_('common.cancel')}
+        </button>
+      </div>
+    </div>
+  </div>
+{/if}
+
+<!-- Delete confirmation modal -->
+{#if deletingId}
+  <!-- svelte-ignore a11y_click_events_have_key_events -->
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
+  <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => deletingId = null}>
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
+      <div class="p-6">
+        <div class="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+          </svg>
+        </div>
+        <h2 class="text-lg font-semibold text-gray-900 mb-2">{$_('documents.deleteDocument')}</h2>
+        <p class="text-sm text-gray-500 mb-6">{$_('documents.confirmDelete')}</p>
+        <div class="flex gap-3">
+          <button
+            on:click={() => deleteDocument(deletingId!)}
+            class="flex-1 bg-red-600 text-white py-2.5 rounded-lg font-medium hover:bg-red-700 transition-colors duration-150 text-sm cursor-pointer"
+          >
+            {$_('common.delete')}
+          </button>
+          <button on:click={() => deletingId = null} class="flex-1 px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 text-sm cursor-pointer">
+            {$_('common.cancel')}
+          </button>
+        </div>
       </div>
     </div>
   </div>

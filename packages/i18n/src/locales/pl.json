@@ -353,7 +353,17 @@
     "aiGenerated": "Wygenerowano przez AI",
     "empty": "Brak dokumentów",
     "emptyDesc": "Utwórz lub wygeneruj swój pierwszy dokument",
-    "generating": "Generowanie dokumentu..."
+    "generating": "Generowanie dokumentu...",
+    "editDocument": "Edytuj dokument",
+    "deleteDocument": "Usuń dokument",
+    "confirmDelete": "Czy na pewno chcesz usunąć ten dokument? Tej operacji nie można cofnąć.",
+    "viewDocument": "Wyświetl dokument",
+    "titleLabel": "Tytuł",
+    "titlePlaceholder": "Wprowadź tytuł dokumentu...",
+    "contentPlaceholder": "Napisz treść dokumentu w formacie Markdown...",
+    "generated": "Dokument wygenerowany pomyślnie!",
+    "customTitle": "Własny tytuł",
+    "customTitlePlaceholder": "Pozostaw puste dla automatycznego tytułu"
   },
   "aiChat": {
     "title": "Chat AI",

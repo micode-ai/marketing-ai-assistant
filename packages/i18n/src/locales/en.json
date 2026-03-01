@@ -362,7 +362,17 @@
     "aiGenerated": "AI Generated",
     "empty": "No documents yet",
     "emptyDesc": "Create or generate your first document",
-    "generating": "Generating document..."
+    "generating": "Generating document...",
+    "editDocument": "Edit Document",
+    "deleteDocument": "Delete Document",
+    "confirmDelete": "Are you sure you want to delete this document? This action cannot be undone.",
+    "viewDocument": "View Document",
+    "titleLabel": "Title",
+    "titlePlaceholder": "Enter document title...",
+    "contentPlaceholder": "Write your document content in Markdown...",
+    "generated": "Document generated successfully!",
+    "customTitle": "Custom Title",
+    "customTitlePlaceholder": "Leave blank for auto-title"
   },
   "aiChat": {
     "title": "AI Chat",
