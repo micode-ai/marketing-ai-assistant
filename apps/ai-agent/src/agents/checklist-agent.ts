@@ -4,11 +4,12 @@ import { ChatOpenAI } from '@langchain/openai';
 import { HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { prisma } from '../prisma';
 import { extractUsage } from '../lib/costs';
+import { getLanguageInstruction } from '../lib/language';
 
 const MODEL = process.env['OPENAI_MODEL'] || 'gpt-4o';
 
-function getModel(temperature: number) {
-  return new ChatOpenAI({ model: MODEL, temperature, apiKey: process.env['OPENAI_API_KEY'] });
+function getModel(temperature: number, maxTokens?: number) {
+  return new ChatOpenAI({ model: MODEL, temperature, maxTokens, apiKey: process.env['OPENAI_API_KEY'] });
 }
 
 type ChecklistItemData = {
@@ -36,16 +37,28 @@ const typeLabels: Record<string, string> = {
 
 const JSON_FORMAT = `{
   "name": "checklist name",
-  "description": "brief description",
+  "description": "brief checklist description",
   "items": [
     {
-      "title": "action item",
-      "description": "what to do and why",
+      "title": "short action item title (5-8 words)",
+      "description": "MUST be a detailed mini-guide of 5-8 sentences...",
       "priority": "LOW|MEDIUM|HIGH|CRITICAL",
       "order": 1
     }
   ]
 }`;
+
+const DESCRIPTION_EXAMPLE =
+  `EXAMPLE of a good item description (this level of detail is REQUIRED for every item):\n` +
+  `"Set up Google Analytics 4 and conversion tracking" → ` +
+  `"Create a GA4 property at analytics.google.com and install the tracking code via Google Tag Manager. ` +
+  `Configure key conversion events: form submissions, button clicks, page scroll depth, and video views. ` +
+  `Set up custom audiences based on user behavior (e.g., visited pricing page but didn't convert). ` +
+  `Link GA4 to Google Ads and Search Console for cross-platform attribution. ` +
+  `Create a custom dashboard with widgets for: daily active users, conversion rate by source, ` +
+  `top landing pages by bounce rate, and funnel visualization from first visit to purchase. ` +
+  `Set up weekly automated email reports to stakeholders. ` +
+  `Common mistake: not enabling Enhanced Measurement — turn it on to auto-track outbound clicks, site search, and file downloads."`;
 
 // ── State ─────────────────────────────────────────────────────
 
@@ -76,13 +89,21 @@ async function loadContext(state: State) {
 async function generateChecklist(state: State) {
   const checklistType = (state.input['type'] as string) || 'LAUNCH';
   const context       = (state.input['context'] as string) || '';
+  const language      = state.input['language'] as string | undefined;
   const project       = state.project;
 
-  const response = await getModel(0.3).invoke([
+  const response = await getModel(0.3, 8192).invoke([
     new SystemMessage(
-      `You are a senior marketing consultant creating detailed checklists.\n` +
+      `You are a senior marketing consultant who creates extremely detailed, actionable checklists.\n` +
       `Respond with ONLY valid JSON, no markdown, no explanations.\n\n` +
-      `JSON format:\n${JSON_FORMAT}`,
+      `JSON format:\n${JSON_FORMAT}\n\n` +
+      `${DESCRIPTION_EXAMPLE}\n\n` +
+      `RULES:\n` +
+      `- Each "description" MUST be 5-8 detailed sentences (NOT 1-2 generic sentences)\n` +
+      `- Include: specific tools/platforms by name, exact steps to execute, metrics to track, common mistakes to avoid\n` +
+      `- Write as a practical guide that someone can follow step-by-step without additional research\n` +
+      `- Generic descriptions like "Research the market to understand your audience" are FORBIDDEN — be specific` +
+      getLanguageInstruction(language),
     ),
     new HumanMessage(
       `Create a comprehensive ${typeLabels[checklistType] || checklistType} checklist for:\n` +
@@ -91,7 +112,8 @@ async function generateChecklist(state: State) {
       `Industry: ${project.industry || 'general'}\n` +
       `Target Audience: ${project.targetAudience || 'general'}\n` +
       (context ? `Additional context: ${context}\n` : '') +
-      `\nInclude 10-15 specific, actionable items. Mark critical items appropriately.`,
+      `\nInclude 10-15 specific, actionable items. Mark critical items appropriately.\n` +
+      `Remember: each item description must be a detailed mini-guide (5-8 sentences) with specific tools, steps, and metrics.`,
     ),
   ]);
 

@@ -44,14 +44,15 @@ export class ChecklistsService {
   }
 
   async updateItem(itemId: string, dto: UpdateChecklistItemDto, userId: string) {
+    const data: Record<string, any> = { ...dto };
+    if (dto.priority !== undefined) data.priority = dto.priority as any;
+    if (dto.isCompleted !== undefined) {
+      data.completedAt = dto.isCompleted ? new Date() : null;
+      data.completedBy = dto.isCompleted ? userId : null;
+    }
     return this.prisma.checklistItem.update({
       where: { id: itemId },
-      data: {
-        ...dto,
-        priority: dto.priority as any,
-        completedAt: dto.isCompleted ? new Date() : null,
-        completedBy: dto.isCompleted ? userId : null,
-      },
+      data,
     });
   }
 

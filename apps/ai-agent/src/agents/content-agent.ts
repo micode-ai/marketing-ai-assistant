@@ -4,6 +4,7 @@ import { ChatOpenAI } from '@langchain/openai';
 import { HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { prisma } from '../prisma';
 import { extractUsage } from '../lib/costs';
+import { getLanguageInstruction } from '../lib/language';
 
 const MODEL = process.env['OPENAI_MODEL'] || 'gpt-4o';
 
@@ -58,13 +59,15 @@ async function loadContext(state: State) {
     { short: '100-150 words', medium: '200-300 words', long: '400-600 words' }[length] ??
     '200-300 words';
 
+  const language = (input['language'] as string) || undefined;
+
   const systemPrompt = `You are an expert marketing copywriter for ${project.name}.
 Brand: ${project.name} — ${project.description || ''}
 Target Audience: ${project.targetAudience || 'general audience'}
 Industry: ${project.industry || 'general'}
 Brand Voice: ${JSON.stringify(brandVoice) || 'professional and engaging'}
 
-Create compelling content that resonates with the target audience.`;
+Create compelling content that resonates with the target audience.${getLanguageInstruction(language)}`;
 
   const userPrompt = `Create a ${contentType.replace(/_/g, ' ').toLowerCase()}${platform ? ` for ${platform}` : ''}.
 Topic: ${topic || 'key product benefits and value proposition'}

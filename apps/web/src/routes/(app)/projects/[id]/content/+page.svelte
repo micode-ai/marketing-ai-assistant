@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { _ } from 'svelte-i18n';
+  import { _, locale } from 'svelte-i18n';
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
   import { api } from '$lib/api/client';
@@ -43,7 +43,7 @@
     generating = true;
     lastTraceUrl = null;
     try {
-      const run = await api.post<{ id: string; status: string }>('/agent/run', { projectId, agentType: 'CONTENT', input: { ...form } });
+      const run = await api.post<{ id: string; status: string }>('/agent/run', { projectId, agentType: 'CONTENT', input: { ...form, language: $locale } });
 
       // Poll until the agent run completes (max 60s)
       let finalRun: { status: string; langsmithTraceUrl?: string | null } = run;

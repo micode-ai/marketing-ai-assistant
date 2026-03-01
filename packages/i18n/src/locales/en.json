@@ -295,7 +295,8 @@
     "competitiveAnalysis": "Competitive Analysis",
     "custom": "Custom",
     "empty": "No checklists yet",
-    "emptyDesc": "Create a checklist or generate one with AI"
+    "emptyDesc": "Create a checklist or generate one with AI",
+    "askAI": "Ask AI about this task..."
   },
   "documents": {
     "title": "Documents",

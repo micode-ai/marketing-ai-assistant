@@ -512,6 +512,7 @@ model ChecklistItem {
 
   checklist   Checklist @relation(fields: [checklistId], references: [id], onDelete: Cascade)
   completedByUser User? @relation("CompletedBy", fields: [completedBy], references: [id])
+  chatMessages Json? // Array of { role: 'user' | 'assistant', content: string }
 
   @@index([checklistId])
   @@map("checklist_items")

@@ -12,10 +12,11 @@
     "lint": "eslint src --ext .svelte,.ts"
   },
   "dependencies": {
-    "@marketing-ai/shared-types": "workspace:*",
     "@marketing-ai/i18n": "workspace:*",
-    "svelte-i18n": "^4.0.1",
+    "@marketing-ai/shared-types": "workspace:*",
     "clsx": "^2.1.1",
+    "marked": "^17.0.3",
+    "svelte-i18n": "^4.0.1",
     "tailwind-merge": "^2.6.0"
   },
   "devDependencies": {
