@@ -7,6 +7,8 @@ COPY pnpm-workspace.yaml package.json pnpm-lock.yaml* ./
 COPY packages/config/package.json ./packages/config/
 COPY packages/shared-types/package.json ./packages/shared-types/
 COPY packages/i18n/package.json ./packages/i18n/
+COPY packages/database/package.json ./packages/database/
+COPY packages/email-templates/package.json ./packages/email-templates/
 COPY apps/web/package.json ./apps/web/
 RUN pnpm install --frozen-lockfile
 
