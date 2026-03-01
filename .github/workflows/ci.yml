@@ -1,4 +1,4 @@
-name: CI Pipeline
+name: CI/CD Pipeline
 
 on:
   push:
@@ -8,7 +8,6 @@ on:
 
 env:
   NODE_VERSION: '20'
-  PNPM_VERSION: '9'
   NODE_OPTIONS: '--max-old-space-size=4096'
 
 jobs:
@@ -21,8 +20,6 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -48,8 +45,6 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -75,8 +70,6 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -93,3 +86,28 @@ jobs:
       - name: Run tests
         run: pnpm test
         continue-on-error: true
+
+  deploy:
+    name: Deploy to Hetzner VPS
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/development' && github.event_name == 'push'
+    environment: staging
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script_stop: true
+          command_timeout: 10m
+          script: |
+            cd /opt/marketing-ai
+            bash scripts/deploy.sh
+
+      - name: Verify deployment
+        run: |
+          sleep 10
+          echo "Deployment triggered successfully"

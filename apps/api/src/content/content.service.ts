@@ -29,7 +29,7 @@ export class ContentService {
     return content;
   }
 
-  async create(dto: CreateContentDto, userId: string) {
+  async create(dto: CreateContentDto, _userId: string) {
     return this.prisma.content.create({
       data: {
         projectId: dto.projectId,

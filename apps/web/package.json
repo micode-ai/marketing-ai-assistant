@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "check": "svelte-check --tsconfig ./tsconfig.json",
     "test": "vitest",
-    "lint": "eslint src --ext .svelte,.ts"
+    "lint": "eslint src"
   },
   "dependencies": {
     "@marketing-ai/i18n": "workspace:*",

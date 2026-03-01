@@ -14,22 +14,44 @@ fi
 
 cd "$APP_DIR"
 
+# Pre-flight: ensure env file exists and has required vars
+if [[ ! -f "$ENV_FILE" ]]; then
+  echo "ERROR: $ENV_FILE not found in $APP_DIR" >&2
+  exit 1
+fi
+if ! grep -q "POSTGRES_PASSWORD=" "$ENV_FILE" || grep -q "POSTGRES_PASSWORD=$" "$ENV_FILE"; then
+  echo "ERROR: POSTGRES_PASSWORD is not set in $ENV_FILE" >&2
+  exit 1
+fi
+
 echo "=== Pulling latest code ==="
 git fetch origin
 git reset --hard origin/development
 
 echo "=== Building containers ==="
-$DC -f "$COMPOSE_FILE" --env-file "$ENV_FILE" build api web ai-agent
+$DC -f "$COMPOSE_FILE" --env-file "$ENV_FILE" --profile migrate build api web ai-agent migrator
 
 echo "=== Starting infrastructure ==="
-$DC -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d postgres redis
-echo "Waiting for database to be ready..."
-sleep 10
+$DC -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d --force-recreate postgres redis
+
+echo "Waiting for postgres to be healthy..."
+for i in $(seq 1 30); do
+  status=$($DC -f "$COMPOSE_FILE" --env-file "$ENV_FILE" ps -q postgres | xargs docker inspect --format='{{.State.Health.Status}}' 2>/dev/null || echo "starting")
+  if [[ "$status" == "healthy" ]]; then
+    echo "Postgres is healthy."
+    break
+  fi
+  if [[ $i -eq 30 ]]; then
+    echo "ERROR: Postgres did not become healthy in time" >&2
+    $DC -f "$COMPOSE_FILE" --env-file "$ENV_FILE" logs postgres
+    exit 1
+  fi
+  echo "  ($i/30) postgres status: $status — waiting 3s..."
+  sleep 3
+done
 
 echo "=== Running database migrations ==="
-$DC -f "$COMPOSE_FILE" --env-file "$ENV_FILE" run --rm \
-  -e DATABASE_URL \
-  api npx prisma migrate deploy --schema /app/packages/database/prisma/schema.prisma
+$DC -f "$COMPOSE_FILE" --env-file "$ENV_FILE" --profile migrate run --rm migrator
 
 echo "=== Starting application services ==="
 $DC -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d

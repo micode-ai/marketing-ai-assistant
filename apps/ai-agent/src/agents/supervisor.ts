@@ -6,7 +6,7 @@ import { runDocumentAgent } from './document-agent';
 async function getLangSmithTraceUrl(runId: string): Promise<string | null> {
   try {
     const client = new LangSmithClient();
-    const run = await client.getRun(runId);
+    const run = await client.readRun(runId);
     return (run as any)?.url ?? null;
   } catch {
     return null;

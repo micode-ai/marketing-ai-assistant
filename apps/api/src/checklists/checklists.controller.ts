@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { ChecklistsService } from './checklists.service';
 import { CreateChecklistDto } from './dto/create-checklist.dto';
 import { UpdateChecklistItemDto } from './dto/update-checklist-item.dto';

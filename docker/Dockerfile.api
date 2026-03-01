@@ -13,22 +13,15 @@ COPY apps/api/package.json ./apps/api/
 RUN pnpm install --frozen-lockfile
 
 FROM base AS builder
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/packages ./packages
+COPY --from=deps /app ./
 COPY . .
 RUN pnpm --filter=@marketing-ai/database db:generate
 RUN pnpm --filter=@marketing-ai/api build
 
-FROM node:20-alpine AS runner
-WORKDIR /app
+FROM builder AS migrator
+CMD ["sh", "-c", "pnpm --filter=@marketing-ai/database db:migrate"]
+
+FROM builder AS runner
 ENV NODE_ENV=production
-
-COPY --from=builder /app/apps/api/dist ./dist
-COPY --from=builder /app/apps/api/package.json ./
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/packages/database/prisma ./packages/database/prisma
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-
 EXPOSE 3000
-CMD ["node", "dist/main"]
+CMD ["node", "apps/api/dist/main"]
