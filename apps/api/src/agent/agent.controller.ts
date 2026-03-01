@@ -11,8 +11,8 @@ export class AgentController {
 
   @Post('run')
   @ApiOperation({ summary: 'Run AI agent task' })
-  runAgent(@Body() dto: { projectId: string; agentType: string; input: Record<string, unknown> }) {
-    return this.agentService.runAgent(dto);
+  runAgent(@Body() dto: { projectId: string; agentType: string; input: Record<string, unknown> }, @CurrentUser() user: any) {
+    return this.agentService.runAgent({ ...dto, userId: user.id });
   }
 
   @Get('runs')

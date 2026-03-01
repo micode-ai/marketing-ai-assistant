@@ -10,17 +10,18 @@ export class AgentService {
     @InjectQueue('agent') private agentQueue: Queue,
   ) {}
 
-  async runAgent(dto: { projectId: string; agentType: string; input: Record<string, unknown> }) {
+  async runAgent(dto: { projectId: string; agentType: string; input: Record<string, unknown>; userId?: string }) {
+    const input = dto.userId ? { ...dto.input, userId: dto.userId } : dto.input;
     const run = await this.prisma.agentRun.create({
       data: {
         projectId: dto.projectId,
         agentType: dto.agentType as any,
         status: 'PENDING',
-        input: dto.input as any,
+        input: input as any,
       },
     });
 
-    await this.agentQueue.add('run', { runId: run.id, ...dto });
+    await this.agentQueue.add('run', { runId: run.id, projectId: dto.projectId, agentType: dto.agentType, input });
     return run;
   }
 
