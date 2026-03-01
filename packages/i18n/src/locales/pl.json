@@ -224,7 +224,15 @@
     "paused": "Wstrzymana",
     "completed": "Zakończona",
     "empty": "Brak kampanii",
-    "emptyDesc": "Utwórz pierwszą kampanię"
+    "emptyDesc": "Utwórz pierwszą kampanię",
+    "editCampaign": "Edytuj kampanię",
+    "deleteCampaign": "Usuń kampanię",
+    "confirmDelete": "Czy na pewno chcesz usunąć tę kampanię? Tej operacji nie można cofnąć.",
+    "contentCount": "{count} treści",
+    "goalsPlaceholder": "Zwiększyć rozpoznawalność marki, generować leady...",
+    "namePlaceholder": "np. Premiera produktu Q2",
+    "saving": "Zapisywanie...",
+    "creating": "Tworzenie..."
   },
   "email": {
     "title": "Email marketing",

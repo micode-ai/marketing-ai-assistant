@@ -226,7 +226,15 @@
     "paused": "Paused",
     "completed": "Completed",
     "empty": "No campaigns yet",
-    "emptyDesc": "Create your first campaign to start marketing"
+    "emptyDesc": "Create your first campaign to start marketing",
+    "editCampaign": "Edit Campaign",
+    "deleteCampaign": "Delete Campaign",
+    "confirmDelete": "Are you sure you want to delete this campaign? This action cannot be undone.",
+    "contentCount": "{count} content items",
+    "goalsPlaceholder": "Increase brand awareness, generate leads, boost engagement...",
+    "namePlaceholder": "e.g. Q2 Product Launch",
+    "saving": "Saving...",
+    "creating": "Creating..."
   },
   "email": {
     "title": "Email Marketing",
