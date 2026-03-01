@@ -1,11 +1,12 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../database/prisma.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 
 @Injectable()
 export class ProjectsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private config: ConfigService) {}
 
   async findAll(organizationId: string) {
     return this.prisma.project.findMany({
@@ -47,6 +48,20 @@ export class ProjectsService {
     if (!project) throw new NotFoundException('Project not found');
     await this.checkAccess(project.organizationId, userId);
     return this.prisma.project.update({ where: { id }, data: { status: 'ARCHIVED' } });
+  }
+
+  async getTrackingInfo(id: string, userId: string) {
+    const project = await this.prisma.project.findUnique({ where: { id } });
+    if (!project) throw new NotFoundException('Project not found');
+    await this.checkAccess(project.organizationId, userId);
+
+    const apiUrl = this.config.get('API_URL') || 'http://localhost:3005';
+    const trackingId = project.trackingId || project.id;
+
+    return {
+      trackingId,
+      snippetUrl: `${apiUrl}/api/t/snippet/${trackingId}`,
+    };
   }
 
   private async checkAccess(organizationId: string, userId: string) {

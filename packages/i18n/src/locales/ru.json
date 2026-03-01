@@ -567,5 +567,17 @@
       "PUBLISHED": "Опубликовано",
       "FAILED": "Ошибка"
     }
+  },
+  "tracking": {
+    "title": "Отслеживание сайта",
+    "description": "Добавьте этот фрагмент кода на свой сайт для отслеживания посетителей, просмотров и конверсий",
+    "trackingId": "ID отслеживания",
+    "snippet": "Фрагмент кода",
+    "copySnippet": "Скопировать код",
+    "copyHint": "Вставьте этот код перед </head> на каждой странице вашего сайта",
+    "customEvents": "Пользовательские события",
+    "customEventsDesc": "Отслеживание событий: mktai('event', 'button_click', {label: 'signup'})",
+    "conversions": "Конверсии",
+    "conversionsDesc": "Отслеживание конверсий: mktai('conversion', 'purchase', {value: 99})"
   }
 }

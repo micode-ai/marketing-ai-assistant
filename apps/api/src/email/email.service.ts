@@ -182,14 +182,36 @@ export class EmailService {
       },
     });
 
+    const list = await this.prisma.emailList.findUnique({ where: { id: dto.listId } });
+    const projectId = list?.projectId || '';
+
     let sent = 0;
     for (const subscriber of subscribers) {
       try {
         const unsubUrl = `${this.config.get('API_URL')}/api/email/unsubscribe/${subscriber.unsubscribeToken}`;
-        const html = dto.html
+        let html = dto.html
           .replace(/\{\{unsubscribe_url\}\}/g, unsubUrl)
           .replace(/\{\{email\}\}/g, subscriber.email)
           .replace(/\{\{name\}\}/g, subscriber.name || subscriber.email);
+
+        // Inject email open tracking pixel
+        const openPixelUrl = this.buildOpenPixelUrl(emailCampaign.id, subscriber.id, projectId);
+        const pixelImg = `<img src="${openPixelUrl}" width="1" height="1" alt="" style="display:none;width:1px;height:1px;border:0;" />`;
+        if (html.includes('</body>')) {
+          html = html.replace('</body>', pixelImg + '</body>');
+        } else {
+          html += pixelImg;
+        }
+
+        // Rewrite links for click tracking (skip unsubscribe and mailto links)
+        html = html.replace(
+          /<a\s([^>]*?)href="(https?:\/\/[^"]+)"([^>]*?)>/gi,
+          (match: string, before: string, url: string, after: string) => {
+            if (url.includes('/unsubscribe/') || url.startsWith('mailto:')) return match;
+            const clickUrl = this.buildClickUrl(emailCampaign.id, subscriber.id, projectId, url);
+            return `<a ${before}href="${clickUrl}"${after}>`;
+          },
+        );
 
         if (account.provider === 'RESEND') {
           await this.resend.emails.send({
@@ -224,6 +246,18 @@ export class EmailService {
     });
 
     return { sent, total: subscribers.length };
+  }
+
+  private buildOpenPixelUrl(emailCampaignId: string, subscriberId: string, projectId: string): string {
+    const apiUrl = this.config.get('API_URL') || 'http://localhost:3005';
+    const id = Buffer.from(JSON.stringify({ ec: emailCampaignId, s: subscriberId, p: projectId })).toString('base64url');
+    return `${apiUrl}/api/t/o/${id}`;
+  }
+
+  private buildClickUrl(emailCampaignId: string, subscriberId: string, projectId: string, originalUrl: string): string {
+    const apiUrl = this.config.get('API_URL') || 'http://localhost:3005';
+    const id = Buffer.from(JSON.stringify({ ec: emailCampaignId, s: subscriberId, p: projectId, url: originalUrl })).toString('base64url');
+    return `${apiUrl}/api/t/c/${id}`;
   }
 
   private encryptCredentials(data: object): string {

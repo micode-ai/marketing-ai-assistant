@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { BullModule } from '@nestjs/bull';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { OrganizationsModule } from './organizations/organizations.module';
@@ -15,6 +16,7 @@ import { DocumentsModule } from './documents/documents.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { AgentModule } from './agent/agent.module';
 import { SocialModule } from './social/social.module';
+import { TrackingModule } from './tracking/tracking.module';
 import { CommonModule } from './common/common.module';
 import { DatabaseModule } from './database/database.module';
 
@@ -28,6 +30,7 @@ import { DatabaseModule } from './database/database.module';
         port: parseInt(process.env.REDIS_PORT || '6380'),
       },
     }),
+    ScheduleModule.forRoot(),
     DatabaseModule,
     CommonModule,
     AuthModule,
@@ -43,6 +46,7 @@ import { DatabaseModule } from './database/database.module';
     AnalyticsModule,
     AgentModule,
     SocialModule,
+    TrackingModule,
   ],
 })
 export class AppModule {}

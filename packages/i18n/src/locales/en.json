@@ -589,5 +589,17 @@
     "forbidden": "Access denied",
     "validation": "Please check your input and try again",
     "networkError": "Network error. Please check your connection."
+  },
+  "tracking": {
+    "title": "Website Tracking",
+    "description": "Add this snippet to your website to track visitors, page views, and conversions",
+    "trackingId": "Tracking ID",
+    "snippet": "Tracking Snippet",
+    "copySnippet": "Copy Snippet",
+    "copyHint": "Paste this before </head> on every page of your website",
+    "customEvents": "Custom Events",
+    "customEventsDesc": "Track custom events: mktai('event', 'button_click', {label: 'signup'})",
+    "conversions": "Conversions",
+    "conversionsDesc": "Track conversions: mktai('conversion', 'purchase', {value: 99})"
   }
 }

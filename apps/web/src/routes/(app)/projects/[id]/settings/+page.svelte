@@ -13,6 +13,9 @@
   let saving = false;
   let saved = false;
 
+  let trackingInfo: { trackingId: string; snippetUrl: string } | null = null;
+  let snippetCopied = false;
+
   const platformIcon: Record<string, string> = {
     LINKEDIN: `<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>`,
     TWITTER: `<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>`,
@@ -30,12 +33,14 @@
   onMount(async () => {
     if (!$organizationIdStore) { loading = false; return; }
     try {
-      const [all, enabled] = await Promise.all([
+      const [all, enabled, tracking] = await Promise.all([
         api.get<any[]>('/social/accounts', { organizationId: $organizationIdStore }),
         api.get<any[]>('/social/project-accounts', { projectId }),
+        api.get<{ trackingId: string; snippetUrl: string }>(`/projects/${projectId}/tracking`),
       ]);
       allAccounts = all;
       enabledIds = new Set(enabled.map((a: any) => a.id));
+      trackingInfo = tracking;
     } catch (e) {
       console.error(e);
     } finally {
@@ -48,6 +53,19 @@
     if (next.has(id)) next.delete(id);
     else next.add(id);
     enabledIds = next;
+  }
+
+  async function copySnippet() {
+    if (!trackingInfo) return;
+    try {
+      const res = await fetch(trackingInfo.snippetUrl);
+      const fullSnippet = await res.text();
+      await navigator.clipboard.writeText(fullSnippet);
+      snippetCopied = true;
+      setTimeout(() => { snippetCopied = false; }, 2500);
+    } catch (e) {
+      console.error('Copy failed:', e);
+    }
   }
 
   async function save() {
@@ -140,6 +158,53 @@
           </span>
         {/if}
       </div>
+    {/if}
+  </div>
+
+  <!-- Website Tracking section -->
+  <div class="bg-white rounded-xl border border-gray-200 p-5 mt-6">
+    <div class="mb-4">
+      <h2 class="text-base font-semibold text-gray-900">{$_('tracking.title')}</h2>
+      <p class="text-sm text-gray-500 mt-0.5">{$_('tracking.description')}</p>
+    </div>
+
+    {#if trackingInfo}
+      <div class="mb-4">
+        <label class="block text-xs font-medium text-gray-600 mb-1">{$_('tracking.trackingId')}</label>
+        <code class="text-sm bg-gray-50 px-3 py-1.5 rounded border border-gray-200 font-mono inline-block">{trackingInfo.trackingId}</code>
+      </div>
+
+      <div class="mb-4">
+        <label class="block text-xs font-medium text-gray-600 mb-1">{$_('tracking.snippet')}</label>
+        <pre class="text-xs bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto max-h-48 whitespace-pre-wrap">&lt;!-- Marketing AI Tracking --&gt;
+&lt;script src="{trackingInfo.snippetUrl}"&gt;&lt;/script&gt;</pre>
+      </div>
+
+      <div class="flex items-center gap-3 mb-5">
+        <button
+          on:click={copySnippet}
+          class="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors duration-150 cursor-pointer flex items-center gap-1.5"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+          </svg>
+          {snippetCopied ? $_('common.copied') : $_('tracking.copySnippet')}
+        </button>
+        <p class="text-xs text-gray-500">{$_('tracking.copyHint')}</p>
+      </div>
+
+      <div class="border-t border-gray-100 pt-4 space-y-3">
+        <div>
+          <h3 class="text-xs font-semibold text-gray-700">{$_('tracking.customEvents')}</h3>
+          <code class="text-xs text-gray-500 font-mono">mktai('event', 'button_click', &#123;label: 'signup'&#125;)</code>
+        </div>
+        <div>
+          <h3 class="text-xs font-semibold text-gray-700">{$_('tracking.conversions')}</h3>
+          <code class="text-xs text-gray-500 font-mono">mktai('conversion', 'purchase', &#123;value: 99&#125;)</code>
+        </div>
+      </div>
+    {:else if !loading}
+      <div class="text-sm text-gray-500">{$_('common.loading')}</div>
     {/if}
   </div>
 </div>

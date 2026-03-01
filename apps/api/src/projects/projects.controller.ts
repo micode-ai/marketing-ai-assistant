@@ -17,6 +17,12 @@ export class ProjectsController {
     return this.projectsService.findAll(organizationId);
   }
 
+  @Get(':id/tracking')
+  @ApiOperation({ summary: 'Get project tracking info' })
+  getTrackingInfo(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.projectsService.getTrackingInfo(id, user.id);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get project by ID' })
   findOne(@Param('id') id: string, @CurrentUser() user: any) {
