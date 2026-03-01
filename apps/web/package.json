@@ -14,6 +14,7 @@
   "dependencies": {
     "@marketing-ai/i18n": "workspace:*",
     "@marketing-ai/shared-types": "workspace:*",
+    "chart.js": "^4.5.1",
     "clsx": "^2.1.1",
     "marked": "^17.0.3",
     "svelte-i18n": "^4.0.1",

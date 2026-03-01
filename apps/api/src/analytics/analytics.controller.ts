@@ -8,6 +8,11 @@ import { AnalyticsService } from './analytics.service';
 export class AnalyticsController {
   constructor(private analyticsService: AnalyticsService) {}
 
+  @Get('metrics/totals')
+  getMetricsTotals(@Query('projectId') projectId: string, @Query('days') days?: number) {
+    return this.analyticsService.getMetricsTotals(projectId, days);
+  }
+
   @Get('metrics')
   getMetrics(@Query('projectId') projectId: string, @Query('days') days?: number) {
     return this.analyticsService.getMetrics(projectId, days);
