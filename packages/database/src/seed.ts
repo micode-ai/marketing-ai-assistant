@@ -128,6 +128,40 @@ async function main() {
     data: { subscriberCount: 2 },
   });
 
+  // Generate 90 days of analytics demo data for ALL projects
+  const allProjects = await prisma.project.findMany({ select: { id: true, name: true } });
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  for (const proj of allProjects) {
+    for (let i = 89; i >= 0; i--) {
+      const date = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
+      const dayFactor = (90 - i) / 90;
+      const weekday = date.getDay();
+      const weekdayFactor = (weekday === 0 || weekday === 6) ? 0.6 : 1.0;
+      const jitter = () => 0.8 + Math.random() * 0.4;
+
+      const visitors = Math.round((120 + dayFactor * 200) * weekdayFactor * jitter());
+      const leads = Math.round(visitors * (0.04 + dayFactor * 0.03) * jitter());
+      const conversions = Math.round(leads * (0.10 + dayFactor * 0.08) * jitter());
+      const emailsSent = Math.round((20 + dayFactor * 80) * jitter());
+      const emailOpens = Math.round(emailsSent * (0.20 + dayFactor * 0.10) * jitter());
+      const emailClicks = Math.round(emailOpens * (0.15 + dayFactor * 0.10) * jitter());
+      const socialReach = Math.round((200 + dayFactor * 600) * weekdayFactor * jitter());
+      const socialEngagements = Math.round(socialReach * (0.03 + dayFactor * 0.02) * jitter());
+
+      await prisma.dailyMetrics.upsert({
+        where: { projectId_date: { projectId: proj.id, date } },
+        update: { metrics: { visitors, leads, conversions, emailsSent, emailOpens, emailClicks, socialReach, socialEngagements } },
+        create: {
+          projectId: proj.id,
+          date,
+          metrics: { visitors, leads, conversions, emailsSent, emailOpens, emailClicks, socialReach, socialEngagements },
+        },
+      });
+    }
+    console.log(`📊 90 days of analytics data seeded for: ${proj.name}`);
+  }
   console.log('✅ Seed completed!');
   console.log(`👤 Demo user: demo@marketingai.app / demo123456`);
   console.log(`🏢 Organization: ${org.name} (${org.slug})`);

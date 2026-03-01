@@ -558,6 +558,30 @@
       "FAILED": "Failed"
     }
   },
+  "analytics": {
+    "title": "Analytics",
+    "subtitle": "Track your marketing performance",
+    "visitors": "Visitors",
+    "leads": "Leads",
+    "conversions": "Conversions",
+    "conversionRate": "Conversion Rate",
+    "emailsSent": "Emails Sent",
+    "emailOpens": "Email Opens",
+    "emailClicks": "Email Clicks",
+    "socialReach": "Social Reach",
+    "socialEngagements": "Social Engagements",
+    "trafficOverview": "Traffic Overview",
+    "emailPerformance": "Email Performance",
+    "socialPerformance": "Social Performance",
+    "conversionFunnel": "Conversion Funnel",
+    "period7": "7 days",
+    "period30": "30 days",
+    "period90": "90 days",
+    "vsLastPeriod": "vs last period",
+    "noChange": "No change",
+    "empty": "No analytics data yet",
+    "emptyDesc": "Analytics data will appear here as your project generates traffic and engagement."
+  },
   "errors": {
     "generic": "Something went wrong. Please try again.",
     "notFound": "Page not found",

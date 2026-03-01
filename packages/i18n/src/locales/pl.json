@@ -538,6 +538,30 @@
       "FAILED": "Błąd"
     }
   },
+  "analytics": {
+    "title": "Analityka",
+    "subtitle": "Śledź wyniki swojego marketingu",
+    "visitors": "Odwiedzający",
+    "leads": "Leady",
+    "conversions": "Konwersje",
+    "conversionRate": "Współczynnik konwersji",
+    "emailsSent": "Wysłane emaile",
+    "emailOpens": "Otwarcia emaili",
+    "emailClicks": "Kliknięcia w emailach",
+    "socialReach": "Zasięg społecznościowy",
+    "socialEngagements": "Interakcje społecznościowe",
+    "trafficOverview": "Przegląd ruchu",
+    "emailPerformance": "Wyniki emaili",
+    "socialPerformance": "Wyniki social media",
+    "conversionFunnel": "Lejek konwersji",
+    "period7": "7 dni",
+    "period30": "30 dni",
+    "period90": "90 dni",
+    "vsLastPeriod": "vs poprzedni okres",
+    "noChange": "Bez zmian",
+    "empty": "Brak danych analitycznych",
+    "emptyDesc": "Dane analityczne pojawią się tutaj, gdy Twój projekt wygeneruje ruch i zaangażowanie."
+  },
   "errors": {
     "generic": "Coś poszło nie tak. Spróbuj ponownie.",
     "notFound": "Nie znaleziono strony",
