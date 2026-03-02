@@ -18,8 +18,10 @@ export class ContentController {
     @Query('type') type?: string,
     @Query('status') status?: string,
     @Query('platform') platform?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
   ) {
-    return this.contentService.findAll(projectId, { type, status, platform });
+    return this.contentService.findAll(projectId, { type, status, platform, from, to });
   }
 
   @Get(':id')
