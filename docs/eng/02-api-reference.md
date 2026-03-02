@@ -1,8 +1,8 @@
 # API Reference
 
-Base URL: `http://localhost:3005/api`
+Base URL: `http://localhost:3000/api`
 
-Swagger UI: `http://localhost:3005/api/docs`
+Swagger UI: `http://localhost:3000/api/docs`
 
 ## Authentication
 
@@ -319,7 +319,7 @@ Create content.
 
 Content types: `SOCIAL_POST`, `BLOG_ARTICLE`, `EMAIL`, `NEWSLETTER`, `AD_COPY`, `LANDING_PAGE`
 Content statuses: `DRAFT`, `REVIEW`, `APPROVED`, `PUBLISHED`, `REJECTED`
-Platforms: `TWITTER`, `LINKEDIN`, `FACEBOOK`, `INSTAGRAM`, `GOOGLE`
+Platforms: `TWITTER`, `LINKEDIN`, `FACEBOOK`, `INSTAGRAM`, `GOOGLE`, `TELEGRAM`
 
 ### PUT `/content/:id` (Protected)
 
@@ -360,6 +360,14 @@ Create email account with encrypted credentials.
 
 Providers: `SMTP`, `RESEND`
 
+### DELETE `/email/accounts/:id` (Protected)
+
+Delete an email account.
+
+### POST `/email/accounts/:id/test` (Protected)
+
+Test email account connection. Verifies SMTP/Resend credentials are valid.
+
 ### GET `/email/lists?projectId=<id>` (Protected)
 
 List email subscriber lists.
@@ -367,6 +375,10 @@ List email subscriber lists.
 ### POST `/email/lists` (Protected)
 
 Create email list.
+
+### DELETE `/email/lists/:id` (Protected)
+
+Delete an email list.
 
 ### GET `/email/lists/:listId/subscribers` (Protected)
 
@@ -385,9 +397,17 @@ Add or upsert a subscriber.
 }
 ```
 
+### DELETE `/email/lists/:listId/subscribers/:subscriberId` (Protected)
+
+Remove a subscriber from a list.
+
 ### GET `/email/unsubscribe/:token` (Public)
 
 Unsubscribe a subscriber via unique token. Sets status to `UNSUBSCRIBED`.
+
+### GET `/email/campaigns?projectId=<id>` (Protected)
+
+List email campaigns for a project.
 
 ### POST `/email/campaigns/send` (Protected)
 
@@ -575,6 +595,10 @@ Chat with AI assistant.
 
 Get project metrics for the last N days.
 
+### GET `/analytics/metrics/totals?projectId=<id>&days=<n>` (Protected)
+
+Get aggregated metric totals for the last N days.
+
 ### GET `/analytics/summary?projectId=<id>` (Protected)
 
 Get project analytics summary.
@@ -593,6 +617,126 @@ Track an analytics event.
 ```
 
 Event types: `PAGE_VIEW`, `EMAIL_OPEN`, `EMAIL_CLICK`, `SOCIAL_ENGAGEMENT`, `CONVERSION`
+
+### POST `/analytics/aggregate?projectId=<id>` (Protected)
+
+Manually trigger analytics aggregation for a project. Computes daily metrics from raw events.
+
+---
+
+## Social Publishing (`/social`)
+
+### GET `/social/accounts` (Protected)
+
+List connected social accounts for the current user's organization.
+
+### POST `/social/accounts` (Protected)
+
+Connect a social account manually by providing credentials.
+
+**Request Body (Twitter):**
+```json
+{
+  "platform": "TWITTER",
+  "accountName": "@mycompany",
+  "accountId": "123456",
+  "appKey": "...",
+  "appSecret": "...",
+  "accessToken": "...",
+  "accessSecret": "..."
+}
+```
+
+**Request Body (Telegram):**
+```json
+{
+  "platform": "TELEGRAM",
+  "accountName": "My Channel",
+  "accountId": "channel_id",
+  "botToken": "...",
+  "chatId": "..."
+}
+```
+
+Platforms:
+- **LINKEDIN** — OAuth 2.0 flow (see OAuth routes below)
+- **TWITTER** — Manual credential entry (appKey, appSecret, accessToken, accessSecret)
+- **FACEBOOK** — OAuth 2.0 flow (see OAuth routes below)
+- **TELEGRAM** — Manual entry (botToken, chatId)
+
+### DELETE `/social/accounts/:id` (Protected)
+
+Disconnect a social account.
+
+### POST `/social/publish` (Protected)
+
+Publish content to one or more social platforms.
+
+**Request Body:**
+```json
+{
+  "contentId": "clx...",
+  "socialAccountIds": ["clx...", "clx..."]
+}
+```
+
+### GET `/social/publications?contentId=<id>` (Protected)
+
+Get publication history for a content item.
+
+### GET `/social/project-accounts?projectId=<id>` (Protected)
+
+Get social accounts linked to a specific project.
+
+### PUT `/social/project-accounts` (Protected)
+
+Link social accounts to a project.
+
+**Request Body:**
+```json
+{
+  "projectId": "clx...",
+  "socialAccountIds": ["clx...", "clx..."]
+}
+```
+
+---
+
+## Tracking (`/t`)
+
+All tracking endpoints are public (no JWT required). The tracking controller is mounted at the `/t` prefix (not `/api/t`).
+
+### POST `/t/event` (Public)
+
+Track a web analytics event.
+
+**Request Body:**
+```json
+{
+  "tid": "tracking-id",
+  "type": "page_view",
+  "url": "https://example.com/page",
+  "referrer": "https://google.com"
+}
+```
+
+Returns `204 No Content`.
+
+### GET `/t/pixel.gif?tid=<trackingId>&url=<url>` (Public)
+
+Tracking pixel for page views. Returns a transparent 1x1 GIF. Used for embedding in websites or emails.
+
+### GET `/t/o/:trackingId` (Public)
+
+Track an email open event. Returns a transparent 1x1 GIF. Embedded as an image in campaign emails.
+
+### GET `/t/c/:trackingId` (Public)
+
+Track an email click event. Decodes the tracking ID to extract the target URL and redirects (302) to it.
+
+### GET `/t/snippet/:trackingId` (Public)
+
+Get a JavaScript tracking snippet for website integration. Returns `Content-Type: text/javascript`. The snippet can be embedded in a website's HTML to automatically track page views.
 
 ---
 

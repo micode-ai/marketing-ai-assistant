@@ -1,8 +1,8 @@
 # Справочник API
 
-Базовый URL: `http://localhost:3005/api`
+Базовый URL: `http://localhost:3000/api`
 
-Swagger UI: `http://localhost:3005/api/docs`
+Swagger UI: `http://localhost:3000/api/docs`
 
 ## Аутентификация
 
@@ -295,6 +295,14 @@ Callback Google OAuth. При успехе перенаправляет на:
 
 Провайдеры: `SMTP`, `RESEND`
 
+### DELETE `/email/accounts/:id` (Защищённый)
+
+Удалить email-аккаунт.
+
+### POST `/email/accounts/:id/test` (Защищённый)
+
+Проверить подключение email-аккаунта.
+
 ### GET `/email/lists?projectId=<id>` (Защищённый)
 
 Список рассылок проекта.
@@ -302,6 +310,10 @@ Callback Google OAuth. При успехе перенаправляет на:
 ### POST `/email/lists` (Защищённый)
 
 Создать список рассылки.
+
+### DELETE `/email/lists/:id` (Защищённый)
+
+Удалить список рассылки.
 
 ### GET `/email/lists/:listId/subscribers` (Защищённый)
 
@@ -311,9 +323,17 @@ Callback Google OAuth. При успехе перенаправляет на:
 
 Добавить или обновить подписчика.
 
+### DELETE `/email/lists/:listId/subscribers/:subscriberId` (Защищённый)
+
+Удалить подписчика.
+
 ### GET `/email/unsubscribe/:token` (Публичный)
 
 Отписка подписчика по уникальному токену.
+
+### GET `/email/campaigns?projectId=<id>` (Защищённый)
+
+Список email-кампаний.
 
 ### POST `/email/campaigns/send` (Защищённый)
 
@@ -333,6 +353,132 @@ Callback Google OAuth. При успехе перенаправляет на:
 Заменяемые плейсхолдеры:
 - `{{unsubscribe_url}}` — уникальная ссылка отписки для каждого подписчика
 - `{{email}}` — email подписчика
+
+---
+
+## Социальные сети (`/social`)
+
+### GET `/social/accounts?organizationId=<id>` (Защищённый)
+
+Список подключённых социальных аккаунтов организации.
+
+### POST `/social/accounts` (Защищённый)
+
+Подключить аккаунт социальной сети вручную.
+
+**Тело запроса (Twitter — ручной ввод):**
+```json
+{
+  "organizationId": "clx...",
+  "platform": "TWITTER",
+  "accountName": "@mycompany",
+  "credentials": {
+    "appKey": "...",
+    "appSecret": "...",
+    "accessToken": "...",
+    "accessSecret": "..."
+  }
+}
+```
+
+**Тело запроса (Telegram — ручной ввод):**
+```json
+{
+  "organizationId": "clx...",
+  "platform": "TELEGRAM",
+  "accountName": "Мой бот",
+  "credentials": {
+    "botToken": "...",
+    "chatId": "..."
+  }
+}
+```
+
+Платформы:
+- `LINKEDIN` — подключение через OAuth 2.0
+- `TWITTER` — ручной ввод учётных данных (appKey, appSecret, accessToken, accessSecret)
+- `FACEBOOK` — подключение через OAuth 2.0
+- `TELEGRAM` — ручной ввод (botToken + chatId)
+
+### DELETE `/social/accounts/:id` (Защищённый)
+
+Отключить социальный аккаунт.
+
+### POST `/social/publish` (Защищённый)
+
+Опубликовать контент в социальных сетях.
+
+**Тело запроса:**
+```json
+{
+  "contentId": "clx...",
+  "socialAccountIds": ["clx...", "clx..."]
+}
+```
+
+### GET `/social/publications?contentId=<id>` (Защищённый)
+
+История публикаций контента.
+
+### GET `/social/project-accounts?projectId=<id>` (Защищённый)
+
+Социальные аккаунты, привязанные к проекту.
+
+### PUT `/social/project-accounts` (Защищённый)
+
+Привязать социальные аккаунты к проекту.
+
+### OAuth маршруты
+
+### GET `/social/auth/linkedin` (Публичный)
+
+Инициирует OAuth 2.0 авторизацию через LinkedIn.
+
+### GET `/social/auth/linkedin/callback` (Публичный)
+
+Callback LinkedIn OAuth.
+
+### GET `/social/auth/facebook` (Публичный)
+
+Инициирует OAuth 2.0 авторизацию через Facebook.
+
+### GET `/social/auth/facebook/callback` (Публичный)
+
+Callback Facebook OAuth.
+
+---
+
+## Отслеживание (`/t`)
+
+### POST `/t/event` (Публичный)
+
+Отследить веб-событие.
+
+**Тело запроса:**
+```json
+{
+  "tid": "tracking-id",
+  "event": "page_view",
+  "url": "https://example.com/page",
+  "metadata": {}
+}
+```
+
+### GET `/t/pixel.gif?tid=<trackingId>&url=<url>` (Публичный)
+
+Пиксель отслеживания (прозрачный GIF 1x1). Используется для отслеживания посещений страниц без JavaScript.
+
+### GET `/t/o/:trackingId` (Публичный)
+
+Отследить открытие email. Возвращает прозрачный пиксель.
+
+### GET `/t/c/:trackingId` (Публичный)
+
+Отследить клик. Перенаправляет на целевой URL после записи события.
+
+### GET `/t/snippet/:trackingId` (Публичный)
+
+JavaScript-сниппет для интеграции на сайт. Возвращает JS-код, который автоматически отслеживает просмотры страниц.
 
 ---
 
@@ -444,6 +590,10 @@ Callback Google OAuth. При успехе перенаправляет на:
 
 Метрики проекта за последние N дней.
 
+### GET `/analytics/metrics/totals?projectId=<id>&days=<n>` (Защищённый)
+
+Агрегированные метрики проекта (суммарные показатели за период).
+
 ### GET `/analytics/summary?projectId=<id>` (Защищённый)
 
 Сводка аналитики проекта.
@@ -453,6 +603,10 @@ Callback Google OAuth. При успехе перенаправляет на:
 Отследить аналитическое событие.
 
 Типы событий: `PAGE_VIEW`, `EMAIL_OPEN`, `EMAIL_CLICK`, `SOCIAL_ENGAGEMENT`, `CONVERSION`
+
+### POST `/analytics/aggregate?projectId=<id>` (Защищённый)
+
+Ручная агрегация аналитики. Запускает пересчёт дневных метрик для проекта.
 
 ---
 

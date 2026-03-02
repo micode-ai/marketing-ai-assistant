@@ -208,7 +208,7 @@ JWT_REFRESH_EXPIRES_IN="7d"
 
 GOOGLE_CLIENT_ID="your-google-client-id"
 GOOGLE_CLIENT_SECRET="your-google-client-secret"
-GOOGLE_CALLBACK_URL="http://localhost:3005/auth/google/callback"
+GOOGLE_CALLBACK_URL="http://localhost:3000/auth/google/callback"
 ```
 
 ## Security Considerations

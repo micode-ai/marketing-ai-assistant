@@ -37,6 +37,13 @@
 - Хранится в колонке `encryptedCredentials`
 - Расшифровывается «на лету» при отправке писем
 
+### API-маршруты аккаунтов
+
+- `GET /email/accounts?organizationId=<id>` — Список email-аккаунтов
+- `POST /email/accounts` — Создать email-аккаунт
+- `DELETE /email/accounts/:id` — Удалить email-аккаунт
+- `POST /email/accounts/:id/test` — Проверить подключение email-аккаунта
+
 ### Статусы аккаунтов
 
 | Статус | Описание |
@@ -44,6 +51,14 @@
 | ACTIVE | Аккаунт готов к отправке |
 | INACTIVE | Аккаунт отключен пользователем |
 | ERROR | Обнаружена ошибка подключения/аутентификации |
+
+## Управление списками рассылки
+
+### API-маршруты списков
+
+- `GET /email/lists?projectId=<id>` — Список рассылок проекта
+- `POST /email/lists` — Создать список рассылки
+- `DELETE /email/lists/:id` — Удалить список рассылки
 
 ## Управление подписчиками
 
@@ -55,6 +70,12 @@
 | UNSUBSCRIBED | Отписался через ссылку отписки |
 | BOUNCED | Доставка письма постоянно не удаётся |
 
+### API-маршруты подписчиков
+
+- `GET /email/lists/:listId/subscribers` — Получить подписчиков списка
+- `POST /email/lists/:listId/subscribers` — Добавить/обновить подписчика
+- `DELETE /email/lists/:listId/subscribers/:subscriberId` — Удалить подписчика
+
 ### Процесс отписки
 
 1. Каждый подписчик получает уникальный `unsubscribeToken` (CUID) при создании
@@ -62,6 +83,13 @@
 3. При отправке плейсхолдер заменяется на: `{API_URL}/email/unsubscribe/{token}`
 4. Нажатие на ссылку вызывает `GET /api/email/unsubscribe/:token` (публичный маршрут)
 5. Статус подписчика устанавливается в `UNSUBSCRIBED`, записывается `unsubscribedAt`
+
+## Email-кампании
+
+### API-маршруты кампаний
+
+- `GET /email/campaigns?projectId=<id>` — Список email-кампаний
+- `POST /email/campaigns/send` — Отправить email-кампанию
 
 ## Отправка кампаний
 
