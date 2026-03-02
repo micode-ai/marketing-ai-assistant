@@ -27,4 +27,9 @@ export class AnalyticsController {
   trackEvent(@Body() dto: any) {
     return this.analyticsService.trackEvent(dto);
   }
+
+  @Post('aggregate')
+  aggregate(@Query('projectId') projectId: string) {
+    return this.analyticsService.aggregateNow(projectId);
+  }
 }
