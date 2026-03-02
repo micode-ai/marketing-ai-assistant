@@ -7,7 +7,7 @@ Marketing AI Assistant is a monorepo managed by **Turborepo** and **pnpm** works
 ```
 marketing-ai-assistant/
 ├── apps/
-│   ├── api/            # NestJS REST API (port 3005)
+│   ├── api/            # NestJS REST API (port 3000)
 │   ├── web/            # SvelteKit frontend (port 5173)
 │   └── ai-agent/       # LangChain/LangGraph microservice (port 3001)
 ├── packages/
@@ -48,7 +48,7 @@ marketing-ai-assistant/
 ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
 │   Web App    │────>│   REST API   │────>│   AI Agent   │
 │  (SvelteKit) │<────│   (NestJS)   │<────│ (LangChain)  │
-│  :5173       │     │  :3005       │     │  :3001       │
+│  :5173       │     │  :3000       │     │  :3001       │
 └──────────────┘     └──────┬───────┘     └──────────────┘
                             │
                     ┌───────┴───────┐
@@ -67,6 +67,7 @@ marketing-ai-assistant/
 4. **API -> Redis**: Bull job queue for async agent task processing
 5. **API -> Stripe**: Payment processing via Stripe SDK
 6. **API -> SMTP/Resend**: Email delivery
+7. **API -> Social Platforms**: LinkedIn, Twitter, Facebook, Telegram APIs for content publishing
 
 ### Data Flow
 
@@ -124,6 +125,8 @@ AppModule
 ├── DocumentsModule
 ├── AgentModule — Bull queue
 ├── AnalyticsModule
+├── SocialModule — Social publishing (LinkedIn, Twitter, Facebook, Telegram)
+├── TrackingModule — Web analytics tracking (pixels, events, snippets)
 └── BillingModule — Stripe
 ```
 
@@ -131,9 +134,9 @@ AppModule
 
 ### shared-types
 TypeScript type definitions shared across all apps:
-- Enums (UserRole, OrgPlan, AgentType, ContentType, etc.)
-- Interfaces (User, Organization, Project, Content, etc.)
-- DTOs (CreateCheckoutSessionDto, BillingPortalDto)
+- Enums (UserRole, OrgPlan, AgentType, ContentType, SocialAccountStatus, PublicationStatus, etc.)
+- Interfaces (User, Organization, Project, Content, SocialAccount, ContentPublication, etc.)
+- DTOs (CreateCheckoutSessionDto, BillingPortalDto, PublishContentDto)
 - Constants (PLAN_LIMITS)
 
 ### database

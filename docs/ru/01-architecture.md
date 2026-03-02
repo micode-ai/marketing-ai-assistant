@@ -7,7 +7,7 @@ Marketing AI Assistant — это монорепозиторий, управля
 ```
 marketing-ai-assistant/
 ├── apps/
-│   ├── api/            # NestJS REST API (порт 3005)
+│   ├── api/            # NestJS REST API (порт 3000)
 │   ├── web/            # SvelteKit фронтенд (порт 5173)
 │   └── ai-agent/       # LangChain/LangGraph микросервис (порт 3001)
 ├── packages/
@@ -48,7 +48,7 @@ marketing-ai-assistant/
 ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
 │  Веб-клиент  │────>│   REST API   │────>│  ИИ-агент    │
 │  (SvelteKit) │<────│   (NestJS)   │<────│ (LangChain)  │
-│  :5173       │     │  :3005       │     │  :3001       │
+│  :5173       │     │  :3000       │     │  :3001       │
 └──────────────┘     └──────┬───────┘     └──────────────┘
                             │
                     ┌───────┴───────┐
@@ -67,6 +67,7 @@ marketing-ai-assistant/
 4. **API -> Redis**: Bull-очередь для асинхронной обработки задач ИИ
 5. **API -> Stripe**: Обработка платежей через Stripe SDK
 6. **API -> SMTP/Resend**: Отправка email
+7. **API -> Социальные платформы**: LinkedIn, Twitter, Facebook, Telegram API для публикации контента
 
 ### Поток данных
 
@@ -124,6 +125,8 @@ AppModule
 ├── DocumentsModule
 ├── AgentModule — Bull-очередь
 ├── AnalyticsModule
+├── SocialModule — публикация в соцсетях
+├── TrackingModule — отслеживание веб-событий, пикселей, email-открытий
 └── BillingModule — Stripe
 ```
 
@@ -134,6 +137,7 @@ AppModule
 - Перечисления (UserRole, OrgPlan, AgentType, ContentType и др.)
 - Интерфейсы (User, Organization, Project, Content и др.)
 - DTO (CreateCheckoutSessionDto, BillingPortalDto)
+- Типы социальных сетей (SocialAccount, ContentPublication, PublishContentDto)
 - Константы (PLAN_LIMITS)
 
 ### database

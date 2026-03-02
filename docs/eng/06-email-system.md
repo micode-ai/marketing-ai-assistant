@@ -20,6 +20,24 @@ The email system supports two providers (**SMTP** and **Resend**), subscriber li
                     └─────────────┘
 ```
 
+## API Routes
+
+| Method | Route | Auth | Description |
+|--------|-------|------|-------------|
+| GET | `/email/accounts?organizationId=<id>` | Protected | List email accounts |
+| POST | `/email/accounts` | Protected | Create email account |
+| DELETE | `/email/accounts/:id` | Protected | Delete email account |
+| POST | `/email/accounts/:id/test` | Protected | Test email account connection |
+| GET | `/email/lists?projectId=<id>` | Protected | List email subscriber lists |
+| POST | `/email/lists` | Protected | Create email list |
+| DELETE | `/email/lists/:id` | Protected | Delete email list |
+| GET | `/email/lists/:listId/subscribers` | Protected | Get subscribers for a list |
+| POST | `/email/lists/:listId/subscribers` | Protected | Add/upsert subscriber |
+| DELETE | `/email/lists/:listId/subscribers/:subscriberId` | Protected | Remove subscriber from list |
+| GET | `/email/unsubscribe/:token` | Public | Unsubscribe via token |
+| GET | `/email/campaigns?projectId=<id>` | Protected | List email campaigns for project |
+| POST | `/email/campaigns/send` | Protected | Send email campaign |
+
 ## Email Accounts
 
 ### Provider Types

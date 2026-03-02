@@ -54,7 +54,7 @@ pnpm dev
 ```
 
 Запускает все три приложения одновременно через Turborepo:
-- **API:** http://localhost:3005/api
+- **API:** http://localhost:3000/api
 - **Web:** http://localhost:5173
 - **ИИ-агент:** http://localhost:3001
 
@@ -84,7 +84,16 @@ pnpm dev
 |-----------|----------|-------------|
 | `GOOGLE_CLIENT_ID` | ID клиента Google OAuth | — |
 | `GOOGLE_CLIENT_SECRET` | Секрет клиента Google OAuth | — |
-| `GOOGLE_CALLBACK_URL` | URL callback Google OAuth | `http://localhost:3005/auth/google/callback` |
+| `GOOGLE_CALLBACK_URL` | URL callback Google OAuth | `http://localhost:3000/auth/google/callback` |
+
+### Опциональные — Социальные сети
+
+| Переменная | Описание | По умолчанию |
+|-----------|----------|-------------|
+| `LINKEDIN_CLIENT_ID` | ID клиента LinkedIn OAuth | — |
+| `LINKEDIN_CLIENT_SECRET` | Секрет клиента LinkedIn OAuth | — |
+| `FACEBOOK_APP_ID` | ID приложения Facebook | — |
+| `FACEBOOK_APP_SECRET` | Секрет приложения Facebook | — |
 
 ### Опциональные — Платежи
 
@@ -117,8 +126,8 @@ pnpm dev
 
 | Переменная | Описание | По умолчанию |
 |-----------|----------|-------------|
-| `PORT` | Порт API-сервера | `3005` |
-| `API_URL` | Полный URL API | `http://localhost:3005` |
+| `PORT` | Порт API-сервера | `3000` |
+| `API_URL` | Полный URL API | `http://localhost:3000` |
 | `WEB_URL` | Полный URL веб-приложения | `http://localhost:5173` |
 | `APP_ENV` | Название окружения | `development` |
 

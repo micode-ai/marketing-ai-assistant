@@ -65,6 +65,32 @@ The Chat Agent supports multilingual responses:
 
 ## Translation Key Structure
 
+The locale files contain the following top-level namespaces:
+
+| Namespace | Description |
+|-----------|-------------|
+| `common` | Shared UI labels (Save, Cancel, Delete, Loading, etc.) |
+| `nav` | Navigation menu labels |
+| `auth` | Login, register, password forms |
+| `onboarding` | Onboarding flow |
+| `projects` | Project list, create, settings |
+| `content` | Content types, statuses, editor |
+| `campaigns` | Campaign management |
+| `email` | Email marketing (accounts, lists, subscribers, campaigns) |
+| `checklists` | Checklist and task management |
+| `documents` | Document management |
+| `aiChat` | AI chat assistant |
+| `settings` | Organization and account settings pages |
+| `billing` | Billing plans and subscription management |
+| `templates` | Email template management |
+| `social` | Social media integrations (LinkedIn, Twitter, Facebook, Telegram) — account connection, publishing, project account linking |
+| `analytics` | Analytics dashboard and metrics |
+| `errors` | Error messages |
+| `tracking` | Web analytics tracking |
+| `calendar` | Content calendar |
+
+Example structure:
+
 ```json
 {
   "common": {
@@ -79,20 +105,22 @@ The Chat Agent supports multilingual responses:
     "email": "Email",
     "password": "Password"
   },
-  "dashboard": {
-    "title": "Dashboard",
-    "projects": "Projects",
-    "welcome": "Welcome, {name}!"
-  },
   "projects": {
     "create": "New Project",
     "empty": "No projects yet"
   },
-  "content": {
-    "types": {
-      "SOCIAL_POST": "Social Post",
-      "BLOG_ARTICLE": "Blog Article"
-    }
+  "social": {
+    "title": "Social Integrations",
+    "subtitle": "Connect your social media accounts to publish content directly",
+    ...
+  },
+  "settings": {
+    "title": "Settings",
+    "team": "Team Members",
+    ...
+  },
+  "calendar": {
+    ...
   }
 }
 ```

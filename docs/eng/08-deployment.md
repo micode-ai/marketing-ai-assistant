@@ -54,7 +54,7 @@ pnpm dev
 ```
 
 This starts all three apps simultaneously via Turborepo:
-- **API:** http://localhost:3005/api
+- **API:** http://localhost:3000/api
 - **Web:** http://localhost:5173
 - **AI Agent:** http://localhost:3001
 
@@ -86,7 +86,16 @@ This starts all three apps simultaneously via Turborepo:
 |----------|-------------|---------|
 | `GOOGLE_CLIENT_ID` | Google OAuth client ID | — |
 | `GOOGLE_CLIENT_SECRET` | Google OAuth client secret | — |
-| `GOOGLE_CALLBACK_URL` | Google OAuth callback URL | `http://localhost:3005/auth/google/callback` |
+| `GOOGLE_CALLBACK_URL` | Google OAuth callback URL | `http://localhost:3000/auth/google/callback` |
+
+### Optional — Social Publishing
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `LINKEDIN_CLIENT_ID` | LinkedIn OAuth client ID | — |
+| `LINKEDIN_CLIENT_SECRET` | LinkedIn OAuth client secret | — |
+| `FACEBOOK_APP_ID` | Facebook App ID for OAuth | — |
+| `FACEBOOK_APP_SECRET` | Facebook App Secret | — |
 
 ### Optional — Payments
 
@@ -123,8 +132,8 @@ This starts all three apps simultaneously via Turborepo:
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `PORT` | API server port | `3005` |
-| `API_URL` | Full API URL | `http://localhost:3005` |
+| `PORT` | API server port | `3000` |
+| `API_URL` | Full API URL | `http://localhost:3000` |
 | `WEB_URL` | Full Web URL | `http://localhost:5173` |
 | `APP_ENV` | Environment name | `development` |
 

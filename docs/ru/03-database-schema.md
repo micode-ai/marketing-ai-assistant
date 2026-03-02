@@ -13,17 +13,22 @@ User ──< OrganizationMember >── Organization
                                       │
                                       ├──< Project
                                       │       ├──< Campaign ──< Content ──< ContentVersion
+                                      │       │                    └──< ContentPublication
                                       │       ├──< Checklist ──< ChecklistItem
                                       │       ├──< Document
                                       │       ├──< AgentRun
                                       │       ├──< AgentSchedule
                                       │       ├──< EmailList ──< EmailSubscriber
                                       │       ├──< AnalyticsEvent
-                                      │       └──< DailyMetrics
+                                      │       ├──< DailyMetrics
+                                      │       ├──< ProjectApiKey
+                                      │       └──< ProjectSocialAccount
                                       │
                                       ├──< Subscription
                                       ├──< EmailAccount
-                                      └──< EmailTemplate
+                                      ├──< EmailTemplate
+                                      └──< SocialAccount ──< ContentPublication
+                                                    └──< ProjectSocialAccount
 ```
 
 ## Модели
@@ -89,14 +94,31 @@ User ──< OrganizationMember >── Organization
 |---------|-----|----------|
 | id | String (CUID) | Первичный ключ |
 | organizationId | String | FK на Organization |
+| trackingId | String? | Уникальный идентификатор для отслеживания (CUID) |
 | name | String | Название проекта |
 | description | String? | Описание |
 | websiteUrl | String? | URL сайта |
+| logoUrl | String? | URL логотипа проекта |
 | targetAudience | String? | Целевая аудитория |
 | brandVoice | Json? | Голос бренда (тон, стиль) |
 | industry | String? | Отрасль |
 | goals | Json? | Цели и KPI |
+| socialLinks | Json? | Ссылки на социальные сети |
 | status | ProjectStatus | ACTIVE / PAUSED / ARCHIVED |
+
+### ProjectApiKey (API-ключ проекта)
+
+| Колонка | Тип | Описание |
+|---------|-----|----------|
+| id | String (CUID) | Первичный ключ |
+| projectId | String | FK на Project |
+| platform | SocialPlatform | Платформа (TWITTER, LINKEDIN и др.) |
+| encryptedKey | String | Зашифрованный API-ключ |
+| scopes | String[] | Области доступа |
+| createdAt | DateTime | Дата создания |
+| updatedAt | DateTime | Дата обновления |
+
+Уникальное ограничение: `(projectId, platform)`
 
 ### Campaign (Кампания)
 
@@ -110,7 +132,7 @@ User ──< OrganizationMember >── Organization
 | startDate | DateTime? | Дата начала |
 | endDate | DateTime? | Дата окончания |
 | budget | Float? | Бюджет |
-| goals | Json? | Цели кампании |
+| goals | String? | Цели кампании |
 
 ### Content (Контент)
 
@@ -119,14 +141,15 @@ User ──< OrganizationMember >── Organization
 | id | String (CUID) | Первичный ключ |
 | projectId | String | FK на Project |
 | campaignId | String? | FK на Campaign |
-| createdById | String? | FK на User |
 | type | ContentType | SOCIAL_POST / BLOG_ARTICLE / EMAIL / NEWSLETTER / AD_COPY / LANDING_PAGE |
 | title | String | Заголовок |
-| body | String? | Тело контента |
-| status | ContentStatus | DRAFT / REVIEW / APPROVED / PUBLISHED / REJECTED |
+| body | String (Text) | Тело контента |
+| mediaUrls | String[] | URL медиафайлов |
 | platform | SocialPlatform? | Целевая платформа |
-| aiGenerated | Boolean | Сгенерировано ИИ |
+| status | ContentStatus | DRAFT / REVIEW / APPROVED / PUBLISHED / REJECTED |
+| scheduledAt | DateTime? | Запланированная дата публикации |
 | publishedAt | DateTime? | Дата публикации |
+| aiGenerated | Boolean | Сгенерировано ИИ |
 
 ### ContentVersion (Версия контента)
 
@@ -135,9 +158,8 @@ User ──< OrganizationMember >── Organization
 | id | String (CUID) | Первичный ключ |
 | contentId | String | FK на Content |
 | version | Int | Номер версии |
-| title | String | Заголовок версии |
-| body | String? | Тело версии |
-| editedById | String? | FK на User |
+| body | String (Text) | Тело версии |
+| editedBy | String | FK на User |
 
 ### Checklist (Чек-лист)
 
@@ -145,8 +167,9 @@ User ──< OrganizationMember >── Organization
 |---------|-----|----------|
 | id | String (CUID) | Первичный ключ |
 | projectId | String | FK на Project |
-| title | String | Название |
+| name | String | Название |
 | type | ChecklistType | LAUNCH / WEEKLY / CAMPAIGN_PREP / SEO / и др. |
+| description | String? | Описание |
 | isTemplate | Boolean | Является ли шаблоном |
 
 ### ChecklistItem (Элемент чек-листа)
@@ -156,10 +179,14 @@ User ──< OrganizationMember >── Organization
 | id | String (CUID) | Первичный ключ |
 | checklistId | String | FK на Checklist |
 | title | String | Заголовок |
+| description | String? | Описание |
 | isCompleted | Boolean | Статус выполнения |
-| priority | ChecklistItemPriority | LOW / MEDIUM / HIGH / CRITICAL |
+| completedAt | DateTime? | Дата выполнения |
+| completedBy | String? | FK на User (кто завершил) |
+| order | Int | Порядок отображения |
 | dueDate | DateTime? | Срок выполнения |
-| sortOrder | Int | Порядок отображения |
+| priority | ChecklistItemPriority | LOW / MEDIUM / HIGH / CRITICAL |
+| chatMessages | Json? | Массив сообщений чата ({ role, content }) |
 
 ### Document (Документ)
 
@@ -167,10 +194,14 @@ User ──< OrganizationMember >── Organization
 |---------|-----|----------|
 | id | String (CUID) | Первичный ключ |
 | projectId | String | FK на Project |
-| createdById | String? | FK на User |
+| createdBy | String | FK на User (создатель) |
 | title | String | Заголовок |
 | type | DocumentType | MARKETING_PLAN / REPORT / COMPETITIVE_ANALYSIS / и др. |
-| content | String? | Содержимое (Markdown/JSON) |
+| content | Json? | Содержимое (JSON) |
+| contentMd | String? (Text) | Содержимое в Markdown |
+| fileUrl | String? | URL файла |
+| generatedByAi | Boolean | Сгенерировано ИИ |
+| version | Int | Номер версии (по умолчанию 1) |
 
 ### EmailAccount (Email-аккаунт)
 
@@ -179,6 +210,11 @@ User ──< OrganizationMember >── Organization
 | id | String (CUID) | Первичный ключ |
 | organizationId | String | FK на Organization |
 | email | String | Email отправителя |
+| displayName | String? | Отображаемое имя |
+| smtpHost | String? | Хост SMTP |
+| smtpPort | Int? | Порт SMTP |
+| imapHost | String? | Хост IMAP |
+| imapPort | Int? | Порт IMAP |
 | provider | EmailProvider | SMTP / RESEND |
 | encryptedCredentials | String? | Зашифрованные учётные данные (AES-256-CBC) |
 | status | EmailAccountStatus | ACTIVE / INACTIVE / ERROR |
@@ -190,6 +226,7 @@ User ──< OrganizationMember >── Organization
 | id | String (CUID) | Первичный ключ |
 | projectId | String | FK на Project |
 | name | String | Название списка |
+| description | String? | Описание |
 | subscriberCount | Int | Количество подписчиков |
 
 ### EmailSubscriber (Подписчик)
@@ -199,8 +236,40 @@ User ──< OrganizationMember >── Organization
 | id | String (CUID) | Первичный ключ |
 | listId | String | FK на EmailList |
 | email | String | Email подписчика |
+| name | String? | Имя подписчика |
 | status | EmailSubscriberStatus | ACTIVE / UNSUBSCRIBED / BOUNCED |
+| metadata | Json? | Дополнительные данные |
+| subscribedAt | DateTime | Дата подписки |
+| unsubscribedAt | DateTime? | Дата отписки |
 | unsubscribeToken | String | Уникальный токен отписки |
+
+### EmailTemplate (Шаблон email)
+
+| Колонка | Тип | Описание |
+|---------|-----|----------|
+| id | String (CUID) | Первичный ключ |
+| organizationId | String | FK на Organization |
+| name | String | Название шаблона |
+| html | String (Text) | HTML-содержимое |
+| mjml | String? (Text) | MJML-исходник |
+| category | String | Категория |
+| thumbnail | String? | URL превью |
+
+### EmailCampaign (Email-кампания)
+
+| Колонка | Тип | Описание |
+|---------|-----|----------|
+| id | String (CUID) | Первичный ключ |
+| campaignId | String | FK на Campaign |
+| emailAccountId | String | FK на EmailAccount |
+| listId | String | FK на EmailList |
+| subject | String | Тема письма |
+| previewText | String? | Текст предпросмотра |
+| templateId | String? | FK на EmailTemplate |
+| html | String (Text) | HTML-содержимое |
+| status | String | Статус (draft / sent и др.) |
+| sentAt | DateTime? | Дата отправки |
+| stats | Json? | Статистика отправки |
 
 ### AgentRun (Запуск агента)
 
@@ -215,22 +284,72 @@ User ──< OrganizationMember >── Organization
 | tokensUsed | Int? | Использовано токенов |
 | cost | Float? | Стоимость |
 | duration | Int? | Время выполнения (мс) |
+| error | String? | Текст ошибки |
+| langsmithRunId | String? | ID запуска LangSmith |
+| langsmithTraceUrl | String? | URL трассировки LangSmith |
+
+### SocialAccount (Социальный аккаунт)
+
+| Колонка | Тип | Описание |
+|---------|-----|----------|
+| id | String (CUID) | Первичный ключ |
+| organizationId | String | FK на Organization |
+| platform | SocialPlatform | TWITTER / LINKEDIN / FACEBOOK / INSTAGRAM / GOOGLE / TELEGRAM |
+| accountName | String | Имя аккаунта |
+| accountId | String | Идентификатор аккаунта на платформе |
+| profileImageUrl | String? | URL изображения профиля |
+| encryptedTokens | String | Зашифрованные токены доступа (AES-256-CBC) |
+| status | SocialAccountStatus | ACTIVE / INACTIVE / EXPIRED / ERROR |
+| scopes | String[] | Области доступа |
+| expiresAt | DateTime? | Дата истечения токена |
+
+Уникальное ограничение: `(organizationId, platform, accountId)`
+
+### ProjectSocialAccount (Связь проекта с социальным аккаунтом)
+
+| Колонка | Тип | Описание |
+|---------|-----|----------|
+| projectId | String | FK на Project (составной PK) |
+| socialAccountId | String | FK на SocialAccount (составной PK) |
+
+Составной первичный ключ: `(projectId, socialAccountId)`
+
+### ContentPublication (Публикация контента)
+
+| Колонка | Тип | Описание |
+|---------|-----|----------|
+| id | String (CUID) | Первичный ключ |
+| contentId | String | FK на Content |
+| socialAccountId | String | FK на SocialAccount |
+| platform | SocialPlatform | Платформа публикации |
+| platformPostId | String? | ID поста на платформе |
+| platformPostUrl | String? | URL поста на платформе |
+| status | PublicationStatus | PENDING / PUBLISHED / FAILED |
+| publishedAt | DateTime? | Дата публикации |
+| error | String? | Текст ошибки |
 
 ## Справочник перечислений
 
 ```
-UserRole:       OWNER, ADMIN, MEMBER
-OrgPlan:        FREE, PRO, ENTERPRISE
-ProjectStatus:  ACTIVE, PAUSED, ARCHIVED
-CampaignType:   EMAIL, SOCIAL, BLOG, MULTI_CHANNEL
-CampaignStatus: DRAFT, SCHEDULED, ACTIVE, PAUSED, COMPLETED
-ContentType:    SOCIAL_POST, BLOG_ARTICLE, EMAIL, NEWSLETTER, AD_COPY, LANDING_PAGE
-ContentStatus:  DRAFT, REVIEW, APPROVED, PUBLISHED, REJECTED
-EmailProvider:  SMTP, RESEND
-ChecklistType:  LAUNCH, WEEKLY, CAMPAIGN_PREP, SEO, SOCIAL_MEDIA, EMAIL_CAMPAIGN, COMPETITIVE_ANALYSIS, CUSTOM
-DocumentType:   MARKETING_PLAN, REPORT, COMPETITIVE_ANALYSIS, BRAND_GUIDELINES, CONTENT_CALENDAR, PROPOSAL, PRESENTATION
-AgentType:      STRATEGY, CONTENT, SEO, SOCIAL_MEDIA, EMAIL, ANALYTICS, CHECKLIST, DOCUMENT, SUPERVISOR
-AgentRunStatus: PENDING, RUNNING, COMPLETED, FAILED
+UserRole:             OWNER, ADMIN, MEMBER
+OrgPlan:              FREE, PRO, ENTERPRISE
+ProjectStatus:        ACTIVE, PAUSED, ARCHIVED
+CampaignType:         EMAIL, SOCIAL, BLOG, MULTI_CHANNEL
+CampaignStatus:       DRAFT, SCHEDULED, ACTIVE, PAUSED, COMPLETED
+ContentType:          SOCIAL_POST, BLOG_ARTICLE, EMAIL, NEWSLETTER, AD_COPY, LANDING_PAGE
+ContentStatus:        DRAFT, REVIEW, APPROVED, PUBLISHED, REJECTED
+SocialPlatform:       TWITTER, LINKEDIN, FACEBOOK, INSTAGRAM, GOOGLE, TELEGRAM
+EmailProvider:        SMTP, RESEND
+EmailAccountStatus:   ACTIVE, INACTIVE, ERROR
+EmailSubscriberStatus: ACTIVE, UNSUBSCRIBED, BOUNCED
+ChecklistType:        LAUNCH, WEEKLY, CAMPAIGN_PREP, SEO, SOCIAL_MEDIA, EMAIL_CAMPAIGN, COMPETITIVE_ANALYSIS, CUSTOM
+ChecklistItemPriority: LOW, MEDIUM, HIGH, CRITICAL
+DocumentType:         MARKETING_PLAN, REPORT, COMPETITIVE_ANALYSIS, BRAND_GUIDELINES, CONTENT_CALENDAR, PROPOSAL, PRESENTATION
+AgentType:            STRATEGY, CONTENT, SEO, SOCIAL_MEDIA, EMAIL, ANALYTICS, CHECKLIST, DOCUMENT, SUPERVISOR
+AgentRunStatus:       PENDING, RUNNING, COMPLETED, FAILED
+AnalyticsEventType:   PAGE_VIEW, EMAIL_OPEN, EMAIL_CLICK, SOCIAL_ENGAGEMENT, CONVERSION
+SocialAccountStatus:  ACTIVE, INACTIVE, EXPIRED, ERROR
+PublicationStatus:    PENDING, PUBLISHED, FAILED
 ```
 
 ## Команды для работы с БД

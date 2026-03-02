@@ -83,6 +83,16 @@ Chat Agent поддерживает мультиязычные ответы:
     "title": "Панель управления",
     "projects": "Проекты",
     "welcome": "Добро пожаловать, {name}!"
+  },
+  "social": {
+    "title": "Социальные сети",
+    "linkedin": { "connect": "Подключить LinkedIn", ... },
+    "twitter": { "connect": "Подключить Twitter", ... },
+    "facebook": { "connect": "Подключить Facebook", ... },
+    "telegram": { "connect": "Подключить Telegram", ... },
+    "publish": "Опубликовать",
+    "publishing": "Публикация...",
+    "disconnect": "Отключить"
   }
 }
 ```
