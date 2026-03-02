@@ -79,9 +79,7 @@ export class TrackingService {
   }
 
   generateSnippet(trackingId: string): string {
-    return `<!-- Marketing AI Tracking -->
-<script>
-(function(w,d){
+    return `(function(w,d){
   var q=w.mktai=w.mktai||function(){(w.mktai.q=w.mktai.q||[]).push(arguments)};
   q.tid='${trackingId}';
   q.ep='${this.apiUrl}/api/t';
@@ -119,9 +117,7 @@ export class TrackingService {
   };
   w.mktai.tid=orig.tid;w.mktai.ep=orig.ep;w.mktai.sid=orig.sid;w.mktai.utm=orig.utm;
   if(orig.q){orig.q.forEach(function(a){w.mktai.apply(null,a);});}
-})(window,document);
-</` + `script>
-<noscript><img src="${this.apiUrl}/api/t/pixel.gif?tid=${trackingId}" alt="" width="1" height="1" style="display:none"/></noscript>
-<!-- End Marketing AI Tracking -->`;
+  var ns=d.createElement('img');ns.src=q.ep+'/pixel.gif?tid='+q.tid;ns.width=1;ns.height=1;ns.style.display='none';ns.alt='';d.body.appendChild(ns);
+})(window,document);`;
   }
 }
