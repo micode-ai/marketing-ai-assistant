@@ -113,6 +113,29 @@ export class AnalyticsService {
     this.logger.log(`Daily metrics aggregation completed for ${projects.length} projects.`);
   }
 
+  async aggregateNow(projectId?: string) {
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const tomorrowStart = new Date(todayStart);
+    tomorrowStart.setDate(tomorrowStart.getDate() + 1);
+
+    const projects = projectId
+      ? [{ id: projectId }]
+      : await this.prisma.project.findMany({ where: { status: 'ACTIVE' }, select: { id: true } });
+
+    let aggregated = 0;
+    for (const project of projects) {
+      try {
+        await this.aggregateForProject(project.id, todayStart, tomorrowStart);
+        aggregated++;
+      } catch (err) {
+        this.logger.error(`Failed to aggregate for ${project.id}:`, err);
+      }
+    }
+
+    return { aggregated, projects: projects.length };
+  }
+
   private async aggregateForProject(projectId: string, dayStart: Date, dayEnd: Date) {
     const events = await this.prisma.analyticsEvent.findMany({
       where: {
