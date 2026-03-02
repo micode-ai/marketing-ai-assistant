@@ -7,16 +7,31 @@ import { UpdateContentDto } from './dto/update-content.dto';
 export class ContentService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll(projectId: string, filters?: { type?: string; status?: string; platform?: string }) {
+  async findAll(projectId: string, filters?: { type?: string; status?: string; platform?: string; from?: string; to?: string }) {
+    const where: any = {
+      projectId,
+      ...(filters?.type && { type: filters.type as any }),
+      ...(filters?.status && { status: filters.status as any }),
+      ...(filters?.platform && { platform: filters.platform as any }),
+    };
+
+    if (filters?.from || filters?.to) {
+      const range: any = {};
+      if (filters.from) range.gte = new Date(filters.from);
+      if (filters.to) range.lte = new Date(filters.to);
+      where.OR = [
+        { scheduledAt: range },
+        { scheduledAt: null, createdAt: range },
+      ];
+    }
+
     return this.prisma.content.findMany({
-      where: {
-        projectId,
-        ...(filters?.type && { type: filters.type as any }),
-        ...(filters?.status && { status: filters.status as any }),
-        ...(filters?.platform && { platform: filters.platform as any }),
-      },
+      where,
       orderBy: { createdAt: 'desc' },
-      include: { _count: { select: { versions: true } } },
+      include: {
+        _count: { select: { versions: true } },
+        campaign: { select: { id: true, name: true, startDate: true, endDate: true } },
+      },
     });
   }
 
