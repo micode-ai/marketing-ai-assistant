@@ -93,4 +93,88 @@ export class ContentService {
       },
     });
   }
+
+  async repurpose(id: string, targetType: string, userId: string) {
+    const source = await this.prisma.content.findUnique({ where: { id } });
+    if (!source) throw new NotFoundException('Source content not found');
+
+    return this.prisma.content.create({
+      data: {
+        projectId: source.projectId,
+        campaignId: source.campaignId,
+        sourceContentId: source.id,
+        type: targetType as any,
+        title: `[Repurposed] ${source.title}`,
+        body: source.body,
+        mediaUrls: source.mediaUrls,
+        aiGenerated: false,
+      },
+    });
+  }
+
+  async getPerformance(projectId: string, days: number = 30) {
+    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+    const [contents, events] = await Promise.all([
+      this.prisma.content.findMany({
+        where: { projectId, status: 'PUBLISHED' },
+        select: { id: true, title: true, type: true, publishedAt: true, seoMetadata: true },
+        orderBy: { publishedAt: 'desc' },
+      }),
+      this.prisma.analyticsEvent.findMany({
+        where: {
+          projectId,
+          timestamp: { gte: since },
+          type: { in: ['PAGE_VIEW', 'CONVERSION', 'SOCIAL_ENGAGEMENT'] },
+        },
+        select: { type: true, metadata: true },
+      }),
+    ]);
+
+    // Build URL → event counts map
+    const urlStats: Record<string, { views: number; conversions: number; engagements: number }> = {};
+    for (const event of events) {
+      const meta = event.metadata as any;
+      const url = meta?.url || meta?.path || '';
+      let path: string;
+      try { path = new URL(url).pathname; } catch { path = url; }
+      if (!path) continue;
+
+      if (!urlStats[path]) urlStats[path] = { views: 0, conversions: 0, engagements: 0 };
+      if (event.type === 'PAGE_VIEW') urlStats[path]!.views++;
+      else if (event.type === 'CONVERSION') urlStats[path]!.conversions++;
+      else if (event.type === 'SOCIAL_ENGAGEMENT') urlStats[path]!.engagements++;
+    }
+
+    // Match content to URL stats by slug from seoMetadata or title-based slug
+    return contents.map(content => {
+      const seo = content.seoMetadata as any;
+      const slug = seo?.suggestedSlug || content.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+      // Find matching URL stats
+      let views = 0, conversions = 0, engagements = 0;
+      for (const [path, stats] of Object.entries(urlStats)) {
+        if (path.includes(slug)) {
+          views += stats.views;
+          conversions += stats.conversions;
+          engagements += stats.engagements;
+        }
+      }
+
+      const score = Math.min(100, Math.round(
+        (views * 0.3 + conversions * 20 + engagements * 2) / Math.max(1, views) * 10
+      ));
+
+      return {
+        id: content.id,
+        title: content.title,
+        type: content.type,
+        publishedAt: content.publishedAt,
+        views,
+        conversions,
+        engagements,
+        score,
+      };
+    }).sort((a, b) => b.score - a.score);
+  }
 }

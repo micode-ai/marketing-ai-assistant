@@ -1,0 +1,222 @@
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../database/prisma.service';
+import { Cron } from '@nestjs/schedule';
+import { Logger } from '@nestjs/common';
+
+@Injectable()
+export class EmailSequencesService {
+  private readonly logger = new Logger(EmailSequencesService.name);
+
+  constructor(private prisma: PrismaService) {}
+
+  async findAll(projectId: string) {
+    return this.prisma.emailSequence.findMany({
+      where: { projectId },
+      include: {
+        steps: { orderBy: { order: 'asc' } },
+        _count: { select: { enrollments: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async findOne(id: string) {
+    const sequence = await this.prisma.emailSequence.findUnique({
+      where: { id },
+      include: {
+        steps: { orderBy: { order: 'asc' } },
+        enrollments: {
+          orderBy: { enrolledAt: 'desc' },
+          take: 50,
+        },
+      },
+    });
+    if (!sequence) throw new NotFoundException('Email sequence not found');
+    return sequence;
+  }
+
+  async create(dto: {
+    projectId: string;
+    name: string;
+    description?: string;
+    triggerType: string;
+    triggerConfig?: Record<string, unknown>;
+    steps: Array<{
+      order: number;
+      delayDays: number;
+      delayHours?: number;
+      subject: string;
+      previewText?: string;
+      html: string;
+      templateId?: string;
+    }>;
+  }) {
+    return this.prisma.emailSequence.create({
+      data: {
+        projectId: dto.projectId,
+        name: dto.name,
+        description: dto.description,
+        triggerType: dto.triggerType as any,
+        triggerConfig: (dto.triggerConfig || {}) as any,
+        steps: {
+          create: dto.steps.map((s) => ({
+            order: s.order,
+            delayDays: s.delayDays,
+            delayHours: s.delayHours || 0,
+            subject: s.subject,
+            previewText: s.previewText,
+            html: s.html,
+            templateId: s.templateId,
+          })),
+        },
+      },
+      include: { steps: { orderBy: { order: 'asc' } } },
+    });
+  }
+
+  async update(id: string, dto: { name?: string; description?: string; status?: string }) {
+    return this.prisma.emailSequence.update({
+      where: { id },
+      data: dto as any,
+    });
+  }
+
+  async activate(id: string) {
+    return this.prisma.emailSequence.update({
+      where: { id },
+      data: { status: 'ACTIVE' },
+    });
+  }
+
+  async pause(id: string) {
+    return this.prisma.emailSequence.update({
+      where: { id },
+      data: { status: 'PAUSED' },
+    });
+  }
+
+  async delete(id: string) {
+    return this.prisma.emailSequence.delete({ where: { id } });
+  }
+
+  async enrollSubscriber(sequenceId: string, subscriberId: string) {
+    const sequence = await this.prisma.emailSequence.findUnique({
+      where: { id: sequenceId },
+      include: { steps: { orderBy: { order: 'asc' }, take: 1 } },
+    });
+    if (!sequence) throw new NotFoundException('Sequence not found');
+
+    const firstStep = sequence.steps[0];
+    const delayMs = firstStep
+      ? (firstStep.delayDays * 24 * 60 * 60 * 1000) + (firstStep.delayHours * 60 * 60 * 1000)
+      : 0;
+    const nextSendAt = new Date(Date.now() + delayMs);
+
+    return this.prisma.emailSequenceEnrollment.upsert({
+      where: { sequenceId_subscriberId: { sequenceId, subscriberId } },
+      update: { status: 'ACTIVE', currentStepIndex: 0, nextSendAt, completedAt: null },
+      create: { sequenceId, subscriberId, currentStepIndex: 0, status: 'ACTIVE', nextSendAt },
+    });
+  }
+
+  async unenrollSubscriber(sequenceId: string, subscriberId: string) {
+    return this.prisma.emailSequenceEnrollment.update({
+      where: { sequenceId_subscriberId: { sequenceId, subscriberId } },
+      data: { status: 'UNSUBSCRIBED' },
+    });
+  }
+
+  async getEnrollments(sequenceId: string) {
+    return this.prisma.emailSequenceEnrollment.findMany({
+      where: { sequenceId },
+      orderBy: { enrolledAt: 'desc' },
+    });
+  }
+
+  /**
+   * Process due sequence emails every 15 minutes.
+   * Finds enrollments where nextSendAt <= now and status = ACTIVE,
+   * then advances them to the next step or completes the sequence.
+   */
+  @Cron('*/15 * * * *')
+  async processSequenceSteps() {
+    const now = new Date();
+
+    const dueEnrollments = await this.prisma.emailSequenceEnrollment.findMany({
+      where: {
+        status: 'ACTIVE',
+        nextSendAt: { lte: now },
+      },
+      take: 100,
+    });
+
+    if (dueEnrollments.length === 0) return;
+
+    this.logger.log(`Processing ${dueEnrollments.length} due sequence enrollments...`);
+
+    for (const enrollment of dueEnrollments) {
+      try {
+        await this.processEnrollment(enrollment);
+      } catch (err) {
+        this.logger.error(`Failed to process enrollment ${enrollment.id}:`, err);
+      }
+    }
+  }
+
+  private async processEnrollment(enrollment: {
+    id: string;
+    sequenceId: string;
+    subscriberId: string;
+    currentStepIndex: number;
+  }) {
+    const sequence = await this.prisma.emailSequence.findUnique({
+      where: { id: enrollment.sequenceId },
+      include: { steps: { orderBy: { order: 'asc' } } },
+    });
+
+    if (!sequence || sequence.status !== 'ACTIVE') {
+      await this.prisma.emailSequenceEnrollment.update({
+        where: { id: enrollment.id },
+        data: { status: 'PAUSED' },
+      });
+      return;
+    }
+
+    const currentStep = sequence.steps[enrollment.currentStepIndex];
+    if (!currentStep) {
+      // No more steps — mark as completed
+      await this.prisma.emailSequenceEnrollment.update({
+        where: { id: enrollment.id },
+        data: { status: 'COMPLETED', completedAt: new Date(), nextSendAt: null },
+      });
+      return;
+    }
+
+    // TODO: Actually send the email here using EmailService
+    // For now, log and advance to next step
+    this.logger.log(
+      `[Sequence] Send step ${enrollment.currentStepIndex + 1} of "${sequence.name}" ` +
+      `to subscriber ${enrollment.subscriberId}: "${currentStep.subject}"`,
+    );
+
+    const nextStepIndex = enrollment.currentStepIndex + 1;
+    const nextStep = sequence.steps[nextStepIndex];
+
+    if (nextStep) {
+      const delayMs = (nextStep.delayDays * 24 * 60 * 60 * 1000) + (nextStep.delayHours * 60 * 60 * 1000);
+      await this.prisma.emailSequenceEnrollment.update({
+        where: { id: enrollment.id },
+        data: {
+          currentStepIndex: nextStepIndex,
+          nextSendAt: new Date(Date.now() + delayMs),
+        },
+      });
+    } else {
+      // Last step — mark as completed
+      await this.prisma.emailSequenceEnrollment.update({
+        where: { id: enrollment.id },
+        data: { status: 'COMPLETED', completedAt: new Date(), nextSendAt: null },
+      });
+    }
+  }
+}

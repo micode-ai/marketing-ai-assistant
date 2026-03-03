@@ -58,6 +58,19 @@ This starts all three apps simultaneously via Turborepo:
 - **Web:** http://localhost:5173
 - **AI Agent:** http://localhost:3001
 
+The full startup sequence follows this pipeline:
+
+```mermaid
+graph LR
+    A["pnpm install"] --> B["pnpm db:generate"]
+    B --> C["pnpm db:migrate"]
+    C --> D["pnpm db:seed"]
+    D --> E["pnpm dev"]
+    E --> F["API :3000"]
+    E --> G["Web :5173"]
+    E --> H["AI Agent :3001"]
+```
+
 ## Environment Variables
 
 ### Required
@@ -128,6 +141,20 @@ This starts all three apps simultaneously via Turborepo:
 | `AWS_REGION` | AWS region | `eu-central-1` |
 | `AWS_S3_BUCKET` | S3 bucket name | — |
 
+### Optional — Google Integrations
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `GOOGLE_SEARCH_CONSOLE_CLIENT_ID` | Google Search Console OAuth client ID | — |
+| `GOOGLE_SEARCH_CONSOLE_CLIENT_SECRET` | Google Search Console OAuth client secret | — |
+| `GOOGLE_ANALYTICS_PROPERTY_ID` | Google Analytics 4 property ID | — |
+
+### Optional — Agent Scheduling
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `AGENT_SCHEDULER_ENABLED` | Enable cron-based agent scheduling | `true` |
+
 ### Application URLs
 
 | Variable | Description | Default |
@@ -136,6 +163,21 @@ This starts all three apps simultaneously via Turborepo:
 | `API_URL` | Full API URL | `http://localhost:3000` |
 | `WEB_URL` | Full Web URL | `http://localhost:5173` |
 | `APP_ENV` | Environment name | `development` |
+
+## New Modules Overview
+
+The following modules were added in addition to the core system:
+
+| Module | Endpoints prefix | Description |
+|--------|-----------------|-------------|
+| SEO | `/seo` | Keyword tracking, rank history, site audits |
+| A/B Testing | `/ab-testing` | Email subject and content variant tests |
+| Email Sequences | `/email-sequences` | Drip campaign automation with Bull queue |
+| Competitors | `/competitors` | Competitor monitoring and snapshots |
+| Webhooks | `/webhooks` | Outgoing webhook delivery with HMAC signing |
+| Google Integrations | `/google-integrations` | GSC and GA4 data sync |
+| Social Publishing | `/social` | LinkedIn, Twitter, Facebook, Telegram publishing |
+| Content Performance | `/content/performance` | Analytics-linked content scoring |
 
 ## Docker Infrastructure
 
@@ -186,8 +228,9 @@ services:
 |--------|-------------|
 | `pnpm dev` | Start all apps in development mode |
 | `pnpm build` | Build all apps and packages |
-| `pnpm lint` | Lint all packages |
-| `pnpm test` | Run all tests |
+| `pnpm test` | Run all tests (Jest for API & AI Agent, Vitest for Web) |
+| `pnpm test:e2e` | Run end-to-end tests (API) |
+| `pnpm lint` | Run ESLint across all packages |
 | `pnpm db:generate` | Generate Prisma client |
 | `pnpm db:migrate` | Run database migrations |
 | `pnpm db:seed` | Seed demo data |

@@ -60,22 +60,55 @@ async function loadContext(state: State) {
     '200-300 words';
 
   const language = (input['language'] as string) || undefined;
+  const isSeoArticle = contentType === 'SEO_ARTICLE';
 
   const systemPrompt = `You are an expert marketing copywriter for ${project.name}.
 Brand: ${project.name} — ${project.description || ''}
 Target Audience: ${project.targetAudience || 'general audience'}
 Industry: ${project.industry || 'general'}
 Brand Voice: ${JSON.stringify(brandVoice) || 'professional and engaging'}
+${isSeoArticle ? `Website: ${project.websiteUrl || 'not specified'}
 
+You are also an SEO expert. Optimize content for search engines while maintaining readability.` : ''}
 Create compelling content that resonates with the target audience.${getLanguageInstruction(language)}`;
 
-  const userPrompt = `Create a ${contentType.replace(/_/g, ' ').toLowerCase()}${platform ? ` for ${platform}` : ''}.
+  let userPrompt: string;
+
+  if (isSeoArticle) {
+    const targetKeyword = (input['targetKeyword'] as string) || keywords[0] || topic;
+    userPrompt = `Create an SEO-optimized article.
+Topic: ${topic || 'key product benefits and value proposition'}
+Primary keyword: ${targetKeyword}
+Secondary keywords: ${keywords.length > 0 ? keywords.join(', ') : 'none specified'}
+Tone: ${tone}
+Length: 800-1200 words (long-form SEO content)
+
+Requirements:
+- Include the primary keyword in the first paragraph, at least one H2, and naturally throughout
+- Use H2 and H3 subheadings (markdown format)
+- Write a compelling meta title (50-60 chars) and meta description (150-160 chars)
+- Include internal linking suggestions as [link text](URL_PLACEHOLDER)
+- Optimize for featured snippets where possible (definition paragraphs, lists)
+- End with a clear CTA
+
+Return the content in this format:
+---META---
+metaTitle: <title tag content>
+metaDescription: <meta description>
+suggestedSlug: <url-slug>
+primaryKeyword: ${targetKeyword}
+keywordDensity: <estimated %>
+---CONTENT---
+<the full article in markdown>`;
+  } else {
+    userPrompt = `Create a ${contentType.replace(/_/g, ' ').toLowerCase()}${platform ? ` for ${platform}` : ''}.
 Topic: ${topic || 'key product benefits and value proposition'}
 Keywords to include naturally: ${keywords.length > 0 ? keywords.join(', ') : 'none specified'}
 Tone: ${tone}
 Length: approximately ${lengthGuide}
 
 Return ONLY the final content text, ready to publish. No explanations, no meta-commentary.`;
+  }
 
   return { project, systemPrompt, userPrompt };
 }
@@ -133,15 +166,39 @@ async function saveContent(state: State) {
   const topic    = (state.input['topic'] as string) || '';
   const platform = (state.input['platform'] as string) || '';
 
+  let body = state.generatedContent;
+  let seoMetadata: Record<string, string> | undefined;
+
+  // Parse SEO metadata from SEO_ARTICLE output
+  if (contentType === 'SEO_ARTICLE' && body.includes('---META---')) {
+    const metaMatch = body.match(/---META---\s*([\s\S]*?)---CONTENT---/);
+    if (metaMatch) {
+      const metaBlock = metaMatch[1].trim();
+      seoMetadata = {};
+      for (const line of metaBlock.split('\n')) {
+        const colonIdx = line.indexOf(':');
+        if (colonIdx > 0) {
+          const key = line.slice(0, colonIdx).trim();
+          const val = line.slice(colonIdx + 1).trim();
+          seoMetadata[key] = val;
+        }
+      }
+      body = body.slice(body.indexOf('---CONTENT---') + '---CONTENT---'.length).trim();
+    }
+  }
+
+  const title = seoMetadata?.metaTitle || topic || `${contentType.replace(/_/g, ' ')} — ${state.project.name}`;
+
   const content = await prisma.content.create({
     data: {
       projectId:   state.projectId,
       type:        contentType as any,
-      title:       topic || `${contentType.replace(/_/g, ' ')} — ${state.project.name}`,
-      body:        state.generatedContent,
+      title,
+      body,
       platform:    (platform as any) || undefined,
       aiGenerated: true,
       mediaUrls:   [],
+      seoMetadata: seoMetadata ? (seoMetadata as any) : undefined,
     },
   });
 

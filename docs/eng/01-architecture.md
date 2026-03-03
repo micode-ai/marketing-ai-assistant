@@ -1,8 +1,8 @@
 # Architecture Overview
 
-## Project Structure
+Marketing AI Assistant is a Turborepo + pnpm monorepo with three apps and five shared packages, purpose-built for SaaS and web application marketing teams.
 
-Marketing AI Assistant is a monorepo managed by **Turborepo** and **pnpm** workspaces. It consists of three applications and five shared packages.
+## Project Structure
 
 ```
 marketing-ai-assistant/
@@ -44,119 +44,233 @@ marketing-ai-assistant/
 
 ### High-Level Diagram
 
-```
-┌──────────────┐     ┌──────────────┐     ┌──────────────┐
-│   Web App    │────>│   REST API   │────>│   AI Agent   │
-│  (SvelteKit) │<────│   (NestJS)   │<────│ (LangChain)  │
-│  :5173       │     │  :3000       │     │  :3001       │
-└──────────────┘     └──────┬───────┘     └──────────────┘
-                            │
-                    ┌───────┴───────┐
-                    │               │
-              ┌─────┴─────┐  ┌─────┴─────┐
-              │ PostgreSQL │  │   Redis   │
-              │   :5437    │  │   :6380   │
-              └───────────┘  └───────────┘
+```mermaid
+graph TB
+    subgraph Client
+        WEB["Web App\n(SvelteKit :5173)"]
+    end
+
+    subgraph Backend
+        API["REST API\n(NestJS :3000)"]
+        AI["AI Agent\n(LangChain :3001)"]
+    end
+
+    subgraph Storage
+        PG[("PostgreSQL\n:5437")]
+        RD[("Redis\n:6380")]
+    end
+
+    subgraph "External Services"
+        OPENAI["OpenAI GPT-4o"]
+        STRIPE["Stripe"]
+        SMTP["SMTP / Resend"]
+        SOCIAL["LinkedIn / Twitter\nFacebook / Telegram"]
+        GSC["Google Search Console"]
+        GA4["Google Analytics 4"]
+    end
+
+    WEB -->|REST + JWT| API
+    API -->|HTTP| AI
+    AI -->|Prisma| PG
+    API -->|Prisma| PG
+    API -->|Bull Queue| RD
+    RD -->|Jobs| AI
+    AI -->|LLM calls| OPENAI
+    API --> STRIPE
+    API --> SMTP
+    API --> SOCIAL
+    API --> GSC
+    API --> GA4
 ```
 
 ### Communication Patterns
 
-1. **Web <-> API**: REST over HTTP with JWT Bearer authentication
-2. **API -> AI Agent**: HTTP requests (Bull queue dispatches agent tasks)
-3. **API -> PostgreSQL**: Prisma ORM (connection pooling via PrismaClient)
-4. **API -> Redis**: Bull job queue for async agent task processing
-5. **API -> Stripe**: Payment processing via Stripe SDK
-6. **API -> SMTP/Resend**: Email delivery
-7. **API -> Social Platforms**: LinkedIn, Twitter, Facebook, Telegram APIs for content publishing
+1. **Web ↔ API** — REST over HTTP with JWT Bearer authentication (15-min access token + 7-day refresh token in HttpOnly cookies)
+2. **API → AI Agent** — Bull queue dispatches jobs; worker calls AI Agent over HTTP
+3. **API → PostgreSQL** — Prisma ORM with connection pooling via `globalForPrisma` singleton
+4. **API → Redis** — Bull job queue for async agent task processing
+5. **API → Stripe** — Payment processing via Stripe SDK
+6. **API → SMTP/Resend** — Transactional and bulk email delivery
+7. **API → Social Platforms** — LinkedIn OAuth2, Twitter API v2, Facebook Graph API v19, Telegram Bot API
+8. **API → Google Services** — Search Console API (SEO data), GA4 Data API (web analytics)
 
 ### Data Flow
 
-```
-User Action (Web)
-    ↓
-SvelteKit Route (+page.svelte / +page.server.ts)
-    ↓
-API Client (fetch with Bearer token)
-    ↓
-NestJS Controller (validation, guards)
-    ↓
-NestJS Service (business logic)
-    ↓
-Prisma Client (database query)
-    ↓
-PostgreSQL
+```mermaid
+flowchart LR
+    U["User\n(Browser)"]
+    SVK["SvelteKit Route\n+page.svelte"]
+    API["NestJS Controller\n(guard + validation)"]
+    SVC["NestJS Service\n(business logic)"]
+    PG[("PostgreSQL")]
+
+    U --> SVK
+    SVK -->|"fetch + Bearer token"| API
+    API --> SVC
+    SVC -->|Prisma| PG
+    PG --> SVC
+    SVC --> API
+    API --> SVK
+    SVK --> U
 ```
 
 ### AI Agent Flow
 
-```
-User requests AI generation
-    ↓
-POST /api/agent/run { projectId, agentType, input }
-    ↓
-AgentService creates AgentRun (PENDING) in DB
-    ↓
-Bull queue adds job
-    ↓
-Queue processor calls AI Agent HTTP endpoint
-    ↓
-AI Agent loads project context from DB
-    ↓
-LangChain/OpenAI generates content
-    ↓
-Result saved to DB, AgentRun updated (COMPLETED)
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant API as NestJS API
+    participant DB as PostgreSQL
+    participant Q as "Bull Queue (Redis)"
+    participant AI as AI Agent
+    participant LLM as "OpenAI GPT-4o"
+
+    U->>API: POST /api/agent/run
+    API->>DB: Create AgentRun (PENDING)
+    API->>Q: Enqueue job
+    API-->>U: { runId }
+    Q->>AI: HTTP job payload
+    AI->>DB: Load project context
+    AI->>LLM: Prompt + context
+    LLM-->>AI: Generated content
+    AI->>DB: Save result, AgentRun → COMPLETED
+    U->>API: GET /api/agent/runs/:id
+    API-->>U: { status, output }
 ```
 
 ## Module Dependency Graph
 
+```mermaid
+graph LR
+    App --> Config["ConfigModule\n(global)"]
+    App --> Database["DatabaseModule\n(global)"]
+    App --> Common["CommonModule\n(global) — JwtModule"]
+
+    App --> Auth["AuthModule"]
+    App --> Users
+    App --> Organizations
+
+    App --> Projects
+    App --> Campaigns
+    App --> Content["ContentModule\n(versioning, repurpose,\nperformance scoring)"]
+    App --> Checklists
+    App --> Documents
+
+    App --> Email["EmailModule\n(accounts, lists,\ncampaigns)"]
+    App --> EmailSeq["EmailSequencesModule\n(drip campaigns,\nenrollments)"]
+    App --> Agent["AgentModule\n(run, chat, schedule)"]
+    App --> Analytics["AnalyticsModule\n(metrics, UTM,\nfunnel, pages)"]
+    App --> Social["SocialModule\n(OAuth, publish)"]
+    App --> Tracking["TrackingModule\n(snippet, pixel,\nidentify)"]
+    App --> Billing["BillingModule\n(Stripe)"]
+
+    App --> SEO["SeoModule\n(keywords, ranks)"]
+    App --> ABTesting["AbTestingModule\n(tests, variants)"]
+    App --> Competitors["CompetitorsModule\n(monitoring)"]
+    App --> Webhooks["WebhooksModule\n(outgoing HMAC)"]
+    App --> GoogleInt["GoogleIntegrationsModule\n(GSC + GA4)"]
+
+    Auth --> Users
+    Agent --> Email
 ```
-AppModule
-├── ConfigModule (global)
-├── DatabaseModule (global) — PrismaService
-├── CommonModule (global) — JwtModule, APP_GUARD
-├── AuthModule — Local/JWT/Google strategies
-├── UsersModule
-├── OrganizationsModule
-├── ProjectsModule
-├── CampaignsModule
-├── ContentModule
-├── EmailModule
-├── ChecklistsModule
-├── DocumentsModule
-├── AgentModule — Bull queue
-├── AnalyticsModule
-├── SocialModule — Social publishing (LinkedIn, Twitter, Facebook, Telegram)
-├── TrackingModule — Web analytics tracking (pixels, events, snippets)
-└── BillingModule — Stripe
+
+## Feature Modules Overview
+
+| Module | Path | Description |
+|--------|------|-------------|
+| Auth | `src/auth/` | JWT, Local, Google OAuth strategies |
+| Users | `src/users/` | Profile management |
+| Organizations | `src/organizations/` | Multi-tenant orgs, member roles (OWNER/ADMIN/MEMBER) |
+| Projects | `src/projects/` | Project CRUD, API keys, websiteUrl for SEO |
+| Campaigns | `src/campaigns/` | Marketing campaigns (EMAIL/SOCIAL/BLOG/MULTI_CHANNEL) |
+| Content | `src/content/` | Content CRUD, versioning, repurposing, performance scoring |
+| Email | `src/email/` | Accounts (SMTP/Resend), lists, subscribers, one-off campaigns |
+| Email Sequences | `src/email-sequences/` | Drip campaigns with SIGNUP/MANUAL/EVENT triggers and enrollment |
+| Checklists | `src/checklists/` | Task checklists with LOW/MEDIUM/HIGH/CRITICAL priorities |
+| Documents | `src/documents/` | Structured marketing documents (plans, reports, briefs) |
+| Agent | `src/agent/` | AI agent runs, interactive chat, schedule management |
+| Analytics | `src/analytics/` | Daily metrics, UTM attribution, conversion funnel, page analytics |
+| Social | `src/social/` | Social account OAuth + manual connections, content publishing |
+| Tracking | `src/tracking/` | JS snippet, pixel GIF, event ingestion, user identification |
+| Billing | `src/billing/` | Stripe subscriptions and webhooks |
+| SEO | `src/seo/` | Keyword tracking with rank history time-series |
+| A/B Testing | `src/ab-testing/` | Email subject line and content variant experiments |
+| Competitors | `src/competitors/` | Competitor URLs, periodic snapshots, change monitoring |
+| Webhooks | `src/webhooks/` | Outgoing webhooks with HMAC-SHA256 signature verification |
+| Google Integrations | `src/google-integrations/` | Google Search Console + GA4 data import |
+
+## Tracking & Analytics Data Flow
+
+```mermaid
+flowchart LR
+    subgraph "Customer Site"
+        SNIPPET["JS Snippet\n(mktai.js)"]
+    end
+
+    subgraph "Tracking API"
+        TRACK["/t/event"]
+        IDENTIFY["TrackedUser\nUpsert"]
+    end
+
+    subgraph "Analytics Service"
+        AGG["@Cron Aggregator\n(01:00 daily)"]
+        UTM["UTM Breakdown"]
+        FUNNEL["Funnel Analysis"]
+        PAGES["Page Analytics"]
+    end
+
+    subgraph "Storage"
+        EVENTS[("AnalyticsEvent")]
+        METRICS[("DailyMetrics")]
+        USERS[("TrackedUser")]
+        FSTEPS[("FunnelStep")]
+    end
+
+    subgraph "AI"
+        AGENT["Analytics Agent\n(LangGraph)"]
+    end
+
+    SNIPPET -->|"page_view, identify\nfunnel, conversion\nsignup, upgrade..."| TRACK
+    TRACK --> EVENTS
+    TRACK --> IDENTIFY
+    IDENTIFY --> USERS
+    AGG -->|reads| EVENTS
+    AGG -->|upserts| METRICS
+    UTM -->|reads| EVENTS
+    FUNNEL -->|reads| EVENTS
+    FUNNEL -->|reads| FSTEPS
+    PAGES -->|reads| EVENTS
+    AGENT -->|read-only| METRICS
+    AGENT -->|read-only| EVENTS
+```
+
+## Email Automation Data Flow
+
+```mermaid
+flowchart TD
+    TRIGGER["Trigger Event\n(SIGNUP / MANUAL / EVENT)"]
+    ENROLL["EmailSequenceEnrollment\ncreated"]
+    SEQ["EmailSequence\n+ Steps loaded"]
+    QUEUE["Bull Queue\n(emailSequence)"]
+    SEND["Email Send\n(SMTP / Resend)"]
+    NEXT["Schedule next step\n(delayHours later)"]
+    DONE["Enrollment\n→ COMPLETED"]
+
+    TRIGGER --> ENROLL
+    ENROLL --> SEQ
+    SEQ --> QUEUE
+    QUEUE --> SEND
+    SEND --> NEXT
+    NEXT -->|"more steps"| QUEUE
+    NEXT -->|"last step"| DONE
 ```
 
 ## Shared Packages
 
-### shared-types
-TypeScript type definitions shared across all apps:
-- Enums (UserRole, OrgPlan, AgentType, ContentType, SocialAccountStatus, PublicationStatus, etc.)
-- Interfaces (User, Organization, Project, Content, SocialAccount, ContentPublication, etc.)
-- DTOs (CreateCheckoutSessionDto, BillingPortalDto, PublishContentDto)
-- Constants (PLAN_LIMITS)
-
-### database
-Prisma ORM package:
-- `prisma/schema.prisma` — complete database schema
-- `src/client.ts` — Prisma singleton (globalForPrisma pattern)
-- `prisma/seed.ts` — demo data seeder
-- Separate `.env` with DATABASE_URL for Prisma CLI
-
-### i18n
-Internationalization locale files:
-- `src/locales/en.json` — English
-- `src/locales/pl.json` — Polish
-- `src/locales/ru.json` — Russian
-
-### email-templates
-Reusable email template components for campaign emails.
-
-### config
-Shared configuration:
-- `tsconfig.base.json` — base TypeScript config (ES2022, Node16, strict)
-- ESLint configuration
-- Shared constants
+| Package | Purpose |
+|---------|---------|
+| `@marketing-ai/shared-types` | TypeScript interfaces, enums, DTOs shared across all apps |
+| `@marketing-ai/database` | Prisma schema + `globalForPrisma` singleton client + seed script |
+| `@marketing-ai/i18n` | EN/PL/RU locale JSON files consumed by SvelteKit |
+| `@marketing-ai/email-templates` | Reusable email HTML templates |
+| `@marketing-ai/config` | `tsconfig.base.json`, `eslint.config.js`, shared constants |

@@ -58,6 +58,19 @@ pnpm dev
 - **Web:** http://localhost:5173
 - **ИИ-агент:** http://localhost:3001
 
+Полная последовательность запуска описывается следующим конвейером:
+
+```mermaid
+graph LR
+    A["pnpm install"] --> B["pnpm db:generate"]
+    B --> C["pnpm db:migrate"]
+    C --> D["pnpm db:seed"]
+    D --> E["pnpm dev"]
+    E --> F["API :3000"]
+    E --> G["Web :5173"]
+    E --> H["AI Agent :3001"]
+```
+
 ## Переменные окружения
 
 ### Обязательные
@@ -122,6 +135,20 @@ pnpm dev
 | `AWS_REGION` | Регион AWS | `eu-central-1` |
 | `AWS_S3_BUCKET` | Имя бакета S3 | — |
 
+### Опциональные — Google-интеграции
+
+| Переменная | Описание | По умолчанию |
+|-----------|----------|-------------|
+| `GOOGLE_SEARCH_CONSOLE_CLIENT_ID` | ID клиента OAuth для Google Search Console | — |
+| `GOOGLE_SEARCH_CONSOLE_CLIENT_SECRET` | Секрет клиента OAuth для Google Search Console | — |
+| `GOOGLE_ANALYTICS_PROPERTY_ID` | ID ресурса Google Analytics 4 | — |
+
+### Опциональные — Планировщик агентов
+
+| Переменная | Описание | По умолчанию |
+|-----------|----------|-------------|
+| `AGENT_SCHEDULER_ENABLED` | Включить планирование агентов по cron | `true` |
+
 ### URL приложения
 
 | Переменная | Описание | По умолчанию |
@@ -130,6 +157,21 @@ pnpm dev
 | `API_URL` | Полный URL API | `http://localhost:3000` |
 | `WEB_URL` | Полный URL веб-приложения | `http://localhost:5173` |
 | `APP_ENV` | Название окружения | `development` |
+
+## Обзор новых модулей
+
+Следующие модули были добавлены в дополнение к базовой системе:
+
+| Модуль | Префикс эндпоинтов | Описание |
+|--------|-------------------|----------|
+| SEO | `/seo` | Отслеживание ключевых слов, история позиций, аудит сайта |
+| A/B-тестирование | `/ab-testing` | Тесты вариантов тем и содержимого email |
+| Email-последовательности | `/email-sequences` | Автоматизация drip-кампаний через очередь Bull |
+| Конкуренты | `/competitors` | Мониторинг конкурентов и снимки данных |
+| Вебхуки | `/webhooks` | Исходящая доставка вебхуков с подписью HMAC |
+| Google-интеграции | `/google-integrations` | Синхронизация данных GSC и GA4 |
+| Публикация в соцсети | `/social` | Публикация в LinkedIn, Twitter, Facebook, Telegram |
+| Эффективность контента | `/content/performance` | Оценка контента на основе аналитики |
 
 ## Docker-инфраструктура
 
@@ -148,8 +190,9 @@ pnpm dev
 |--------|----------|
 | `pnpm dev` | Запуск всех приложений в режиме разработки |
 | `pnpm build` | Сборка всех приложений и пакетов |
-| `pnpm lint` | Линтинг всех пакетов |
-| `pnpm test` | Запуск всех тестов |
+| `pnpm test` | Запуск всех тестов (Jest для API и AI Agent, Vitest для Web) |
+| `pnpm test:e2e` | Запуск end-to-end тестов (API) |
+| `pnpm lint` | Запуск ESLint по всем пакетам |
 | `pnpm db:generate` | Генерация клиента Prisma |
 | `pnpm db:migrate` | Запуск миграций БД |
 | `pnpm db:seed` | Заполнение демо-данными |

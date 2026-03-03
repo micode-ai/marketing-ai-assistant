@@ -24,6 +24,15 @@
   // LangSmith trace link shown after generation
   let lastTraceUrl: string | null = null;
 
+  // Repurpose modal state
+  let repurposingContent: any = null;
+  let repurposeTarget = 'SOCIAL_POST';
+  let repurposeLoading = false;
+
+  // Performance scores
+  let performanceScores: any[] = [];
+  let showPerformance = false;
+
   // Publish modal state
   let publishingContent: any = null;
   let socialAccounts: any[] = [];
@@ -37,6 +46,9 @@
   onMount(async () => {
     contents = await api.get<any[]>('/content', { projectId });
     loading = false;
+    try {
+      performanceScores = await api.get<any[]>('/content/performance/scores', { projectId });
+    } catch { performanceScores = []; }
   });
 
   async function generateContent() {
@@ -143,6 +155,31 @@
     } finally {
       publishLoading = false;
     }
+  }
+
+  async function repurposeContent() {
+    if (!repurposingContent) return;
+    repurposeLoading = true;
+    try {
+      const newContent = await api.post<any>(`/content/${repurposingContent.id}/repurpose`, { targetType: repurposeTarget });
+      contents = [newContent, ...contents];
+      repurposingContent = null;
+    } catch (e: any) {
+      alert(e.message);
+    } finally {
+      repurposeLoading = false;
+    }
+  }
+
+  function getScore(contentId: string): number | null {
+    const entry = performanceScores.find((p: any) => p.id === contentId);
+    return entry ? entry.score : null;
+  }
+
+  function scoreColor(score: number): string {
+    if (score >= 70) return 'text-green-600 bg-green-50';
+    if (score >= 40) return 'text-yellow-600 bg-yellow-50';
+    return 'text-red-500 bg-red-50';
   }
 
   const statusBadge: Record<string, string> = {
@@ -254,6 +291,12 @@
                     AI
                   </span>
                 {/if}
+                {#if content.sourceContentId}
+                  <span class="text-xs px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded">{$_('content.repurposed')}</span>
+                {/if}
+                {#if getScore(content.id) !== null}
+                  <span class="text-xs px-2 py-0.5 rounded font-medium {scoreColor(getScore(content.id))}">{$_('content.score')}: {getScore(content.id)}</span>
+                {/if}
               </div>
               <h3 class="font-medium text-gray-900 truncate">{content.title}</h3>
               <p class="text-sm text-gray-500 mt-1 line-clamp-2">{content.body}</p>
@@ -281,6 +324,17 @@
                   {$_('social.publish')}
                 </button>
               {/if}
+              <!-- Repurpose button -->
+              <button
+                on:click={() => repurposingContent = content}
+                class="text-xs px-3 py-1.5 border border-indigo-300 text-indigo-600 rounded-lg hover:bg-indigo-50 transition-colors duration-150 cursor-pointer flex items-center gap-1"
+                title={$_('content.repurpose')}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 0 0-3.7-3.7 48.678 48.678 0 0 0-7.324 0 4.006 4.006 0 0 0-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 0 0 3.7 3.7 48.656 48.656 0 0 0 7.324 0 4.006 4.006 0 0 0 3.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3-3 3" />
+                </svg>
+                {$_('content.repurpose')}
+              </button>
               <!-- Edit button -->
               <button
                 on:click={() => openEdit(content)}
@@ -330,6 +384,9 @@
             <option value="NEWSLETTER">{$_('content.newsletter')}</option>
             <option value="AD_COPY">{$_('content.adCopy')}</option>
             <option value="LANDING_PAGE">{$_('content.landingPage')}</option>
+            <option value="SEO_ARTICLE">{$_('content.seoArticle')}</option>
+            <option value="REFERRAL_COPY">{$_('content.referralCopy')}</option>
+            <option value="IN_APP_MESSAGE">{$_('content.inAppMessage')}</option>
           </select>
         </div>
         <div>
@@ -569,6 +626,62 @@
             {$_('common.cancel')}
           </button>
         </div>
+      </div>
+    </div>
+  </div>
+{/if}
+
+<!-- Repurpose modal -->
+{#if repurposingContent}
+  <!-- svelte-ignore a11y-click-events-have-key-events -->
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
+  <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => repurposingContent = null}>
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+      <div class="p-6 border-b border-gray-100 flex items-center gap-2.5">
+        <div class="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center flex-shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 0 0-3.7-3.7 48.678 48.678 0 0 0-7.324 0 4.006 4.006 0 0 0-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 0 0 3.7 3.7 48.656 48.656 0 0 0 7.324 0 4.006 4.006 0 0 0 3.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3-3 3" />
+          </svg>
+        </div>
+        <div>
+          <h2 class="text-lg font-semibold text-gray-900">{$_('content.repurpose')}</h2>
+          <p class="text-xs text-gray-500 truncate max-w-[300px]">{repurposingContent.title}</p>
+        </div>
+      </div>
+      <div class="p-6 space-y-4">
+        <p class="text-sm text-gray-600">{$_('content.repurposeDesc')}</p>
+        <div>
+          <label for="repurpose-type" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('content.targetType')}</label>
+          <select id="repurpose-type" bind:value={repurposeTarget} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+            <option value="SOCIAL_POST">{$_('content.socialPost')}</option>
+            <option value="BLOG_ARTICLE">{$_('content.blogArticle')}</option>
+            <option value="EMAIL">{$_('content.emailContent')}</option>
+            <option value="NEWSLETTER">{$_('content.newsletter')}</option>
+            <option value="AD_COPY">{$_('content.adCopy')}</option>
+            <option value="LANDING_PAGE">{$_('content.landingPage')}</option>
+            <option value="SEO_ARTICLE">{$_('content.seoArticle')}</option>
+            <option value="REFERRAL_COPY">{$_('content.referralCopy')}</option>
+            <option value="IN_APP_MESSAGE">{$_('content.inAppMessage')}</option>
+          </select>
+        </div>
+      </div>
+      <div class="p-6 border-t border-gray-100 flex gap-3">
+        <button
+          on:click={repurposeContent}
+          disabled={repurposeLoading}
+          class="flex-1 bg-indigo-600 text-white py-2.5 rounded-lg font-medium hover:bg-indigo-700 transition-colors duration-150 disabled:opacity-50 text-sm flex items-center justify-center gap-2 cursor-pointer"
+        >
+          {#if repurposeLoading}
+            <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+            </svg>
+          {/if}
+          {$_('content.repurpose')}
+        </button>
+        <button on:click={() => repurposingContent = null} class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 text-sm cursor-pointer">
+          {$_('common.cancel')}
+        </button>
       </div>
     </div>
   </div>

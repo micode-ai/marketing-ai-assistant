@@ -54,6 +54,9 @@ export enum ContentType {
   NEWSLETTER = 'NEWSLETTER',
   AD_COPY = 'AD_COPY',
   LANDING_PAGE = 'LANDING_PAGE',
+  SEO_ARTICLE = 'SEO_ARTICLE',
+  REFERRAL_COPY = 'REFERRAL_COPY',
+  IN_APP_MESSAGE = 'IN_APP_MESSAGE',
 }
 
 export enum ContentStatus {
@@ -90,6 +93,7 @@ export enum ChecklistType {
   EMAIL_CAMPAIGN = 'EMAIL_CAMPAIGN',
   COMPETITIVE_ANALYSIS = 'COMPETITIVE_ANALYSIS',
   CUSTOM = 'CUSTOM',
+  PRODUCT_HUNT_LAUNCH = 'PRODUCT_HUNT_LAUNCH',
 }
 
 export enum ChecklistItemPriority {
@@ -107,6 +111,7 @@ export enum DocumentType {
   CONTENT_CALENDAR = 'CONTENT_CALENDAR',
   PROPOSAL = 'PROPOSAL',
   PRESENTATION = 'PRESENTATION',
+  PRODUCT_HUNT_BRIEF = 'PRODUCT_HUNT_BRIEF',
 }
 
 export enum AgentType {
@@ -134,4 +139,51 @@ export enum AnalyticsEventType {
   EMAIL_CLICK = 'EMAIL_CLICK',
   SOCIAL_ENGAGEMENT = 'SOCIAL_ENGAGEMENT',
   CONVERSION = 'CONVERSION',
+  SIGNUP = 'SIGNUP',
+  TRIAL_START = 'TRIAL_START',
+  ACTIVATION = 'ACTIVATION',
+  UPGRADE = 'UPGRADE',
+  CHURN = 'CHURN',
+  FUNNEL_STEP = 'FUNNEL_STEP',
+}
+
+export enum ABTestStatus {
+  DRAFT = 'DRAFT',
+  RUNNING = 'RUNNING',
+  PAUSED = 'PAUSED',
+  COMPLETED = 'COMPLETED',
+}
+
+export enum ABTestType {
+  EMAIL_SUBJECT = 'EMAIL_SUBJECT',
+  CONTENT_VARIANT = 'CONTENT_VARIANT',
+  LANDING_PAGE = 'LANDING_PAGE',
+}
+
+export enum EmailSequenceTrigger {
+  SIGNUP = 'SIGNUP',
+  MANUAL = 'MANUAL',
+  EVENT = 'EVENT',
+  DATE = 'DATE',
+}
+
+export enum EmailSequenceStatus {
+  DRAFT = 'DRAFT',
+  ACTIVE = 'ACTIVE',
+  PAUSED = 'PAUSED',
+  COMPLETED = 'COMPLETED',
+}
+
+export enum EnrollmentStatus {
+  ACTIVE = 'ACTIVE',
+  COMPLETED = 'COMPLETED',
+  PAUSED = 'PAUSED',
+  UNSUBSCRIBED = 'UNSUBSCRIBED',
+}
+
+export enum KeywordIntent {
+  INFORMATIONAL = 'INFORMATIONAL',
+  NAVIGATIONAL = 'NAVIGATIONAL',
+  COMMERCIAL = 'COMMERCIAL',
+  TRANSACTIONAL = 'TRANSACTIONAL',
 }

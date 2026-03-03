@@ -48,4 +48,16 @@ export class ContentController {
   delete(@Param('id') id: string) {
     return this.contentService.delete(id);
   }
+
+  @Post(':id/repurpose')
+  @ApiOperation({ summary: 'Repurpose content into a different format' })
+  repurpose(@Param('id') id: string, @Body('targetType') targetType: string, @CurrentUser() user: any) {
+    return this.contentService.repurpose(id, targetType, user.id);
+  }
+
+  @Get('performance/scores')
+  @ApiOperation({ summary: 'Get content performance scores' })
+  getPerformance(@Query('projectId') projectId: string, @Query('days') days?: number) {
+    return this.contentService.getPerformance(projectId, days);
+  }
 }

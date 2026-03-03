@@ -96,11 +96,13 @@ export class TrackingService {
     try{var s=localStorage.getItem('_mktai_utm');if(s)utm=JSON.parse(s);}catch(e){}
   }
   q.utm=utm;
+  q._uid=null;q._traits={};
   function send(type,name,meta){
     var p={tid:q.tid,type:type,url:location.href,referrer:d.referrer,sid:q.sid};
     if(name)p.name=name;
     if(Object.keys(utm).length)p.utm=utm;
     if(meta)p.meta=meta;
+    if(q._uid){p.userId=q._uid;p.traits=q._traits;}
     if(navigator.sendBeacon){
       navigator.sendBeacon(q.ep+'/event',new Blob([JSON.stringify(p)],{type:'application/json'}));
     }else{
@@ -114,6 +116,12 @@ export class TrackingService {
   w.mktai=function(cmd,name,meta){
     if(cmd==='event')send('event',name,meta);
     else if(cmd==='conversion')send('conversion',name,meta);
+    else if(cmd==='identify'){q._uid=name;q._traits=meta||{};send('identify',name,meta);}
+    else if(cmd==='funnel')send('funnel_step',name,meta);
+    else if(cmd==='signup')send('signup',name,meta);
+    else if(cmd==='trial_start')send('trial_start',name,meta);
+    else if(cmd==='activation')send('activation',name,meta);
+    else if(cmd==='upgrade')send('upgrade',name,meta);
   };
   w.mktai.tid=orig.tid;w.mktai.ep=orig.ep;w.mktai.sid=orig.sid;w.mktai.utm=orig.utm;
   if(orig.q){orig.q.forEach(function(a){w.mktai.apply(null,a);});}

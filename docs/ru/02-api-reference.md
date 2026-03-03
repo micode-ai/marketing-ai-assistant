@@ -241,9 +241,9 @@ Callback Google OAuth. При успехе перенаправляет на:
 
 ## Контент (`/content`)
 
-### GET `/content?projectId=<id>&type=<type>&status=<status>&platform=<platform>` (Защищённый)
+### GET `/content?projectId=<id>&type=<type>&status=<status>&platform=<platform>&from=<date>&to=<date>` (Защищённый)
 
-Список контента с фильтрами.
+Список контента с фильтрами, включая диапазон дат.
 
 ### GET `/content/:id` (Защищённый)
 
@@ -265,9 +265,9 @@ Callback Google OAuth. При успехе перенаправляет на:
 }
 ```
 
-Типы контента: `SOCIAL_POST`, `BLOG_ARTICLE`, `EMAIL`, `NEWSLETTER`, `AD_COPY`, `LANDING_PAGE`
+Типы контента: `SOCIAL_POST`, `BLOG_ARTICLE`, `EMAIL`, `NEWSLETTER`, `AD_COPY`, `LANDING_PAGE`, `SEO_ARTICLE`, `REFERRAL_COPY`, `IN_APP_MESSAGE`
 Статусы: `DRAFT`, `REVIEW`, `APPROVED`, `PUBLISHED`, `REJECTED`
-Платформы: `TWITTER`, `LINKEDIN`, `FACEBOOK`, `INSTAGRAM`, `GOOGLE`
+Платформы: `TWITTER`, `LINKEDIN`, `FACEBOOK`, `INSTAGRAM`, `GOOGLE`, `TELEGRAM`
 
 ### PUT `/content/:id` (Защищённый)
 
@@ -280,6 +280,41 @@ Callback Google OAuth. При успехе перенаправляет на:
 ### DELETE `/content/:id` (Защищённый)
 
 Удалить контент.
+
+### POST `/content/:id/repurpose` (Защищённый)
+
+Перепрофилировать контент в другой формат. Создаёт новую запись контента, связанную с исходной через `sourceContentId`.
+
+**Тело запроса:**
+```json
+{
+  "targetType": "SOCIAL_POST"
+}
+```
+
+**Ответ (201):** Новая запись контента с заполненным полем `sourceContentId`.
+
+### GET `/content/performance/scores?projectId=<id>&days=<n>` (Защищённый)
+
+Получить оценки эффективности для всего опубликованного контента. Сопоставляет контент по URL-slug с аналитическими событиями.
+
+**Ответ:**
+```json
+[
+  {
+    "id": "clx...",
+    "title": "Название статьи",
+    "type": "BLOG_ARTICLE",
+    "publishedAt": "2026-02-01T00:00:00Z",
+    "views": 1250,
+    "conversions": 15,
+    "engagements": 87,
+    "score": 72
+  }
+]
+```
+
+Оценка (0–100) рассчитывается на основе просмотров, конверсий и социальных взаимодействий.
 
 ---
 
@@ -321,7 +356,7 @@ Callback Google OAuth. При успехе перенаправляет на:
 
 ### POST `/email/lists/:listId/subscribers` (Защищённый)
 
-Добавить или обновить подписчика.
+Добавить или обновить подписчика (upsert по email).
 
 ### DELETE `/email/lists/:listId/subscribers/:subscriberId` (Защищённый)
 
@@ -356,11 +391,373 @@ Callback Google OAuth. При успехе перенаправляет на:
 
 ---
 
+## Drip-последовательности (`/email-sequences`)
+
+### GET `/email-sequences?projectId=<id>` (Защищённый)
+
+Список всех drip-последовательностей проекта.
+
+### GET `/email-sequences/:id` (Защищённый)
+
+Получить последовательность с шагами.
+
+### POST `/email-sequences` (Защищённый)
+
+Создать drip-последовательность.
+
+**Тело запроса:**
+```json
+{
+  "projectId": "clx...",
+  "name": "Приветственная серия",
+  "trigger": "SIGNUP",
+  "triggerConfig": {},
+  "description": "Серия из 5 приветственных писем"
+}
+```
+
+Триггеры: `SIGNUP`, `MANUAL`, `EVENT`
+
+### PUT `/email-sequences/:id` (Защищённый) / DELETE `/email-sequences/:id` (Защищённый)
+
+Обновить или удалить последовательность.
+
+### POST `/email-sequences/:id/steps` (Защищённый)
+
+Добавить шаг в последовательность.
+
+**Тело запроса:**
+```json
+{
+  "order": 1,
+  "subject": "Добро пожаловать на платформу!",
+  "body": "<h1>Добро пожаловать!</h1>...",
+  "delayHours": 0
+}
+```
+
+### PUT `/email-sequences/steps/:stepId` (Защищённый) / DELETE `/email-sequences/steps/:stepId` (Защищённый)
+
+Обновить или удалить шаг последовательности.
+
+### POST `/email-sequences/:id/enroll` (Защищённый)
+
+Добавить подписчика в последовательность.
+
+**Тело запроса:**
+```json
+{
+  "subscriberEmail": "user@example.com"
+}
+```
+
+### GET `/email-sequences/:id/enrollments` (Защищённый)
+
+Список подписчиков, добавленных в последовательность.
+
+---
+
+## Аналитика (`/analytics`)
+
+### GET `/analytics/metrics?projectId=<id>&days=<n>` (Защищённый)
+
+Временной ряд ежедневных метрик за последние N дней.
+
+### GET `/analytics/metrics/totals?projectId=<id>&days=<n>` (Защищённый)
+
+Агрегированные метрики за период с изменением относительно предыдущего периода и направлением тренда.
+
+**Ответ:**
+```json
+{
+  "total": { "visitors": 1250, "conversions": 47, "emailOpens": 320 },
+  "change": { "visitors": 15, "conversions": -8 },
+  "trend": { "visitors": "up", "conversions": "down" }
+}
+```
+
+### GET `/analytics/summary?projectId=<id>` (Защищённый)
+
+Сводка аналитики проекта (количество опубликованного контента, активные кампании, подписчики, выполненные элементы чек-листов).
+
+### GET `/analytics/utm-breakdown?projectId=<id>&days=<n>` (Защищённый)
+
+Разбивка трафика и конверсий по UTM-источнику, каналу и кампании.
+
+**Ответ:**
+```json
+{
+  "sources": [{ "name": "google", "visits": 850, "conversions": 32, "conversionRate": 3.76 }],
+  "mediums": [...],
+  "campaigns": [...]
+}
+```
+
+### GET `/analytics/funnel?projectId=<id>&days=<n>` (Защищённый)
+
+Анализ воронки конверсии с показателями отвала на каждом шаге.
+
+**Ответ:**
+```json
+{
+  "steps": [
+    { "name": "Посетители", "eventType": "PAGE_VIEW", "count": 1250, "conversionRate": 100, "dropOffRate": 0 },
+    { "name": "Регистрации", "eventType": "SIGNUP", "count": 87, "conversionRate": 6.96, "dropOffRate": 93.04 }
+  ],
+  "period": "30 days",
+  "totalVisitors": 1250
+}
+```
+
+### GET `/analytics/funnel/steps?projectId=<id>` (Защищённый)
+
+Получить конфигурацию пользовательских шагов воронки.
+
+### PUT `/analytics/funnel/steps?projectId=<id>` (Защищённый)
+
+Настроить пользовательские шаги воронки.
+
+**Тело запроса:**
+```json
+[
+  { "name": "Посетители", "eventType": "PAGE_VIEW", "order": 1 },
+  { "name": "Начало пробного периода", "eventType": "TRIAL_START", "order": 2 },
+  { "name": "Конверсия", "eventType": "UPGRADE", "order": 3 }
+]
+```
+
+### GET `/analytics/pages?projectId=<id>&days=<n>` (Защищённый)
+
+Аналитика по отдельным страницам: просмотры, уникальные посетители, конверсии, коэффициент конверсии. Возвращает топ-50 страниц по количеству просмотров.
+
+### POST `/analytics/events` (Защищённый)
+
+Отследить аналитическое событие вручную.
+
+Типы событий: `PAGE_VIEW`, `EMAIL_OPEN`, `EMAIL_CLICK`, `SOCIAL_ENGAGEMENT`, `CONVERSION`, `SIGNUP`, `TRIAL_START`, `ACTIVATION`, `UPGRADE`, `CHURN`, `FUNNEL_STEP`
+
+### POST `/analytics/aggregate?projectId=<id>` (Защищённый)
+
+Ручная агрегация аналитики. Запускает пересчёт дневных метрик для проекта.
+
+---
+
+## SEO и ключевые слова (`/seo`)
+
+### GET `/seo/keywords?projectId=<id>` (Защищённый)
+
+Список всех отслеживаемых ключевых слов проекта.
+
+### POST `/seo/keywords` (Защищённый)
+
+Добавить ключевое слово для отслеживания.
+
+**Тело запроса:**
+```json
+{
+  "projectId": "clx...",
+  "keyword": "инструменты маркетинга saas",
+  "intent": "COMMERCIAL",
+  "targetUrl": "https://example.com/features"
+}
+```
+
+Типы интента: `INFORMATIONAL`, `NAVIGATIONAL`, `COMMERCIAL`, `TRANSACTIONAL`
+
+### PUT `/seo/keywords/:id` (Защищённый) / DELETE `/seo/keywords/:id` (Защищённый)
+
+Обновить или удалить ключевое слово.
+
+### GET `/seo/keywords/:id/history` (Защищённый)
+
+История позиций ключевого слова в поисковой выдаче.
+
+### POST `/seo/keywords/:id/rank` (Защищённый)
+
+Записать снимок позиции в поисковой выдаче.
+
+**Тело запроса:**
+```json
+{
+  "rank": 12,
+  "url": "https://example.com/features",
+  "searchVolume": 2400
+}
+```
+
+---
+
+## A/B тестирование (`/ab-testing`)
+
+### GET `/ab-testing?projectId=<id>` (Защищённый)
+
+Список A/B тестов проекта.
+
+### POST `/ab-testing` (Защищённый)
+
+Создать новый A/B тест.
+
+**Тело запроса:**
+```json
+{
+  "projectId": "clx...",
+  "name": "Тест темы письма",
+  "type": "EMAIL_SUBJECT",
+  "config": {}
+}
+```
+
+Типы: `EMAIL_SUBJECT`, `CONTENT_VARIANT`, `LANDING_PAGE`
+
+### GET `/ab-testing/:id` (Защищённый) / PUT `/ab-testing/:id` (Защищённый) / DELETE `/ab-testing/:id` (Защищённый)
+
+Получить, обновить или удалить A/B тест.
+
+### POST `/ab-testing/:id/variants` (Защищённый)
+
+Добавить вариант в тест.
+
+**Тело запроса:**
+```json
+{
+  "name": "A",
+  "config": { "subject": "Попробуйте наш продукт бесплатно" }
+}
+```
+
+### POST `/ab-testing/:id/start` (Защищённый)
+
+Запустить A/B тест (статус → RUNNING).
+
+### POST `/ab-testing/:id/complete` (Защищённый)
+
+Завершить тест и при необходимости объявить победителя.
+
+**Тело запроса:**
+```json
+{ "winnerId": "clx..." }
+```
+
+### POST `/ab-testing/variants/:variantId/record` (Защищённый)
+
+Записать показ или конверсию для варианта.
+
+**Тело запроса:**
+```json
+{ "type": "impression" }
+```
+или `{ "type": "conversion" }`
+
+---
+
+## Конкуренты (`/competitors`)
+
+### GET `/competitors?projectId=<id>` (Защищённый)
+
+Список конкурентов проекта.
+
+### POST `/competitors` (Защищённый)
+
+Добавить конкурента.
+
+**Тело запроса:**
+```json
+{
+  "projectId": "clx...",
+  "name": "Конкурент Inc",
+  "url": "https://competitor.com",
+  "description": "Основной конкурент в нашем сегменте"
+}
+```
+
+### PUT `/competitors/:id` (Защищённый) / DELETE `/competitors/:id` (Защищённый)
+
+Обновить или удалить конкурента.
+
+### GET `/competitors/:id/snapshots` (Защищённый)
+
+История снимков конкурента.
+
+### POST `/competitors/:id/snapshot` (Защищённый)
+
+Запустить ручной снимок (парсинг и сравнение).
+
+---
+
+## Вебхуки (`/webhooks`)
+
+### GET `/webhooks?organizationId=<id>` (Защищённый)
+
+Список вебхуков организации.
+
+### POST `/webhooks` (Защищённый)
+
+Создать вебхук.
+
+**Тело запроса:**
+```json
+{
+  "organizationId": "clx...",
+  "url": "https://example.com/hooks/marketing",
+  "events": ["content.published", "campaign.sent", "conversion.tracked"],
+  "secret": "my-signing-secret"
+}
+```
+
+### PUT `/webhooks/:id` (Защищённый) / DELETE `/webhooks/:id` (Защищённый)
+
+Обновить или удалить вебхук.
+
+### POST `/webhooks/:id/test` (Защищённый)
+
+Отправить тестовое событие на URL вебхука.
+
+Полезная нагрузка вебхука подписывается алгоритмом HMAC-SHA256 с использованием `secret`. Подпись передаётся в заголовке `X-Signature-256`.
+
+---
+
+## Интеграции с Google (`/google-integrations`)
+
+### GET `/google-integrations/auth?organizationId=<id>` (Защищённый)
+
+Получить URL авторизации Google OAuth для доступа к Search Console и GA4.
+
+### GET `/google-integrations/callback` (Публичный)
+
+Callback Google OAuth. Сохраняет access- и refresh-токены.
+
+### GET `/google-integrations/search-console?projectId=<id>&days=<n>` (Защищённый)
+
+Данные Google Search Console: топ-запросы, страницы, позиции, CTR.
+
+**Ответ:**
+```json
+[
+  {
+    "query": "инструменты маркетинга saas",
+    "clicks": 245,
+    "impressions": 3200,
+    "ctr": 7.66,
+    "position": 4.2
+  }
+]
+```
+
+### GET `/google-integrations/analytics?projectId=<id>&days=<n>` (Защищённый)
+
+Данные Google Analytics 4: сессии, пользователи, показатель отказов, конверсии.
+
+### POST `/google-integrations/sync?projectId=<id>` (Защищённый)
+
+Вручную запустить синхронизацию данных GSC и GA4.
+
+---
+
 ## Социальные сети (`/social`)
 
-### GET `/social/accounts?organizationId=<id>` (Защищённый)
+### GET `/social/accounts` (Защищённый)
 
-Список подключённых социальных аккаунтов организации.
+Список подключённых социальных аккаунтов организации текущего пользователя.
 
 ### POST `/social/accounts` (Защищённый)
 
@@ -369,28 +766,24 @@ Callback Google OAuth. При успехе перенаправляет на:
 **Тело запроса (Twitter — ручной ввод):**
 ```json
 {
-  "organizationId": "clx...",
   "platform": "TWITTER",
   "accountName": "@mycompany",
-  "credentials": {
-    "appKey": "...",
-    "appSecret": "...",
-    "accessToken": "...",
-    "accessSecret": "..."
-  }
+  "accountId": "123456",
+  "appKey": "...",
+  "appSecret": "...",
+  "accessToken": "...",
+  "accessSecret": "..."
 }
 ```
 
 **Тело запроса (Telegram — ручной ввод):**
 ```json
 {
-  "organizationId": "clx...",
   "platform": "TELEGRAM",
-  "accountName": "Мой бот",
-  "credentials": {
-    "botToken": "...",
-    "chatId": "..."
-  }
+  "accountName": "Мой канал",
+  "accountId": "channel_id",
+  "botToken": "...",
+  "chatId": "..."
 }
 ```
 
@@ -450,17 +843,48 @@ Callback Facebook OAuth.
 
 ## Отслеживание (`/t`)
 
+Все эндпоинты отслеживания публичны (JWT не требуется). Контроллер подключён по префиксу `/t` (не `/api/t`).
+
 ### POST `/t/event` (Публичный)
 
-Отследить веб-событие.
+Отследить веб-событие аналитики.
 
 **Тело запроса:**
 ```json
 {
   "tid": "tracking-id",
-  "event": "page_view",
+  "type": "page_view",
   "url": "https://example.com/page",
-  "metadata": {}
+  "referrer": "https://google.com",
+  "utm": { "source": "google", "medium": "cpc", "campaign": "launch" }
+}
+```
+
+Возвращает `204 No Content`.
+
+### POST `/t/identify` (Публичный)
+
+Идентифицировать пользователя.
+
+**Тело запроса:**
+```json
+{
+  "tid": "tracking-id",
+  "userId": "user_123",
+  "traits": { "name": "Иван", "email": "ivan@example.com", "plan": "PRO" }
+}
+```
+
+### POST `/t/funnel` (Публичный)
+
+Отследить событие шага воронки.
+
+**Тело запроса:**
+```json
+{
+  "tid": "tracking-id",
+  "step": "trial_start",
+  "userId": "user_123"
 }
 ```
 
@@ -470,15 +894,15 @@ Callback Facebook OAuth.
 
 ### GET `/t/o/:trackingId` (Публичный)
 
-Отследить открытие email. Возвращает прозрачный пиксель.
+Отследить открытие email. Возвращает прозрачный пиксель GIF 1x1.
 
 ### GET `/t/c/:trackingId` (Публичный)
 
-Отследить клик. Перенаправляет на целевой URL после записи события.
+Отследить клик. Перенаправляет (302) на целевой URL после записи события.
 
 ### GET `/t/snippet/:trackingId` (Публичный)
 
-JavaScript-сниппет для интеграции на сайт. Возвращает JS-код, который автоматически отслеживает просмотры страниц.
+JavaScript-сниппет для интеграции на сайт. Возвращает `Content-Type: text/javascript`. Сниппет поддерживает: `page_view`, `identify`, `funnel`, `conversion`.
 
 ---
 
@@ -584,37 +1008,21 @@ JavaScript-сниппет для интеграции на сайт. Возвр�
 
 ---
 
-## Аналитика (`/analytics`)
-
-### GET `/analytics/metrics?projectId=<id>&days=<n>` (Защищённый)
-
-Метрики проекта за последние N дней.
-
-### GET `/analytics/metrics/totals?projectId=<id>&days=<n>` (Защищённый)
-
-Агрегированные метрики проекта (суммарные показатели за период).
-
-### GET `/analytics/summary?projectId=<id>` (Защищённый)
-
-Сводка аналитики проекта.
-
-### POST `/analytics/events` (Защищённый)
-
-Отследить аналитическое событие.
-
-Типы событий: `PAGE_VIEW`, `EMAIL_OPEN`, `EMAIL_CLICK`, `SOCIAL_ENGAGEMENT`, `CONVERSION`
-
-### POST `/analytics/aggregate?projectId=<id>` (Защищённый)
-
-Ручная агрегация аналитики. Запускает пересчёт дневных метрик для проекта.
-
----
-
 ## Биллинг (`/billing`)
 
 ### POST `/billing/checkout` (Защищённый)
 
-Создать сессию оплаты Stripe.
+Создать сессию оплаты Stripe для перехода на другой тарифный план.
+
+**Тело запроса:**
+```json
+{
+  "organizationId": "clx...",
+  "plan": "PRO",
+  "successUrl": "http://localhost:5173/settings/billing?success=true",
+  "cancelUrl": "http://localhost:5173/settings/billing?canceled=true"
+}
+```
 
 ### POST `/billing/portal` (Защищённый)
 
@@ -626,23 +1034,29 @@ JavaScript-сниппет для интеграции на сайт. Возвр�
 
 ### POST `/billing/webhook` (Публичный)
 
-Вебхук Stripe для обработки событий подписки.
+Вебхук Stripe для обработки событий подписки. Обрабатывает:
+- `customer.subscription.created`
+- `customer.subscription.updated`
+- `customer.subscription.deleted`
 
 ---
 
 ## Формат ошибок
 
+Все ошибки соответствуют формату NestJS:
+
 ```json
 {
-  "statusCode": 401,
-  "message": "Unauthorized",
-  "error": "Unauthorized"
+  "statusCode": 404,
+  "message": "Content not found",
+  "error": "Not Found"
 }
 ```
 
-Коды ответов:
-- `400` — Ошибка валидации
-- `401` — Не авторизован (нет/невалидный JWT)
-- `403` — Запрещено (недостаточно прав)
-- `404` — Ресурс не найден
-- `500` — Внутренняя ошибка сервера
+| Код | Описание |
+|-----|----------|
+| 400 | Ошибка валидации |
+| 401 | Не авторизован (нет/невалидный JWT) |
+| 403 | Запрещено (недостаточно прав) |
+| 404 | Ресурс не найден |
+| 500 | Внутренняя ошибка сервера |

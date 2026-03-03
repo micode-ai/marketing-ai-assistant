@@ -42,6 +42,42 @@ export class AgentService {
     };
   }
 
+  async getSchedules(projectId: string) {
+    return this.prisma.agentSchedule.findMany({
+      where: { projectId },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async createSchedule(dto: {
+    projectId: string;
+    agentType: string;
+    cronExpression: string;
+    config?: Record<string, unknown>;
+  }) {
+    const nextRunAt = new Date(Date.now() + 60 * 60 * 1000);
+    return this.prisma.agentSchedule.create({
+      data: {
+        projectId: dto.projectId,
+        agentType: dto.agentType as any,
+        cronExpression: dto.cronExpression,
+        config: (dto.config as any) || {},
+        nextRunAt,
+      },
+    });
+  }
+
+  async updateSchedule(id: string, dto: { cronExpression?: string; isActive?: boolean; config?: Record<string, unknown> }) {
+    return this.prisma.agentSchedule.update({
+      where: { id },
+      data: dto as any,
+    });
+  }
+
+  async deleteSchedule(id: string) {
+    return this.prisma.agentSchedule.delete({ where: { id } });
+  }
+
   async chat(dto: { projectId?: string; message: string; history?: any[] }) {
     // Will be replaced by actual LangChain integration in ai-agent service
     // For now, forward to ai-agent microservice via HTTP

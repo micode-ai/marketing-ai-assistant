@@ -19,6 +19,12 @@ import { SocialModule } from './social/social.module';
 import { TrackingModule } from './tracking/tracking.module';
 import { CommonModule } from './common/common.module';
 import { DatabaseModule } from './database/database.module';
+import { SeoModule } from './seo/seo.module';
+import { ABTestingModule } from './ab-testing/ab-testing.module';
+import { EmailSequencesModule } from './email-sequences/email-sequences.module';
+import { ChatModule } from './chat/chat.module';
+import { WebhooksModule } from './webhooks/webhooks.module';
+import { GoogleIntegrationsModule } from './google-integrations/google-integrations.module';
 
 @Module({
   imports: [
@@ -47,6 +53,12 @@ import { DatabaseModule } from './database/database.module';
     AgentModule,
     SocialModule,
     TrackingModule,
+    SeoModule,
+    ABTestingModule,
+    EmailSequencesModule,
+    ChatModule,
+    WebhooksModule,
+    GoogleIntegrationsModule,
   ],
 })
 export class AppModule {}

@@ -136,6 +136,174 @@ export class AnalyticsService {
     return { aggregated, projects: projects.length };
   }
 
+  // ── UTM Attribution ──────────────────────────────────────────
+
+  async getUtmBreakdown(projectId: string, days: number | string = 30) {
+    days = Number(days) || 30;
+    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+    const events = await this.prisma.analyticsEvent.findMany({
+      where: { projectId, timestamp: { gte: since } },
+      select: { type: true, metadata: true },
+    });
+
+    const sources: Record<string, { visits: number; conversions: number }> = {};
+    const mediums: Record<string, { visits: number; conversions: number }> = {};
+    const campaigns: Record<string, { visits: number; conversions: number }> = {};
+
+    for (const event of events) {
+      const meta = event.metadata as any;
+      const utm = meta?.utm || {};
+      const source = utm.source || meta?.referrer || 'direct';
+      const medium = utm.medium || 'none';
+      const campaign = utm.campaign || 'none';
+
+      if (!sources[source]) sources[source] = { visits: 0, conversions: 0 };
+      if (!mediums[medium]) mediums[medium] = { visits: 0, conversions: 0 };
+      if (!campaigns[campaign]) campaigns[campaign] = { visits: 0, conversions: 0 };
+
+      if (event.type === 'PAGE_VIEW') {
+        sources[source]!.visits++;
+        mediums[medium]!.visits++;
+        campaigns[campaign]!.visits++;
+      } else if (event.type === 'CONVERSION' || event.type === 'SIGNUP' || event.type === 'UPGRADE') {
+        sources[source]!.conversions++;
+        mediums[medium]!.conversions++;
+        campaigns[campaign]!.conversions++;
+      }
+    }
+
+    const toSorted = (obj: Record<string, { visits: number; conversions: number }>) =>
+      Object.entries(obj)
+        .map(([name, data]) => ({
+          name,
+          ...data,
+          conversionRate: data.visits > 0 ? Number(((data.conversions / data.visits) * 100).toFixed(2)) : 0,
+        }))
+        .sort((a, b) => b.visits - a.visits)
+        .slice(0, 20);
+
+    return {
+      sources: toSorted(sources),
+      mediums: toSorted(mediums),
+      campaigns: toSorted(campaigns),
+    };
+  }
+
+  // ── Conversion Funnel ──────────────────────────────────────
+
+  async getFunnel(projectId: string, days: number | string = 30) {
+    days = Number(days) || 30;
+    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+    const funnelSteps = await this.prisma.funnelStep.findMany({
+      where: { projectId },
+      orderBy: { order: 'asc' },
+    });
+
+    const steps = funnelSteps.length > 0
+      ? funnelSteps.map(s => ({ name: s.name, eventType: s.eventType }))
+      : [
+          { name: 'Visitors', eventType: 'PAGE_VIEW' },
+          { name: 'Signups', eventType: 'SIGNUP' },
+          { name: 'Activated', eventType: 'ACTIVATION' },
+          { name: 'Converted', eventType: 'CONVERSION' },
+        ];
+
+    const events = await this.prisma.analyticsEvent.findMany({
+      where: { projectId, timestamp: { gte: since } },
+      select: { type: true, metadata: true },
+    });
+
+    const typeCounts: Record<string, Set<string>> = {};
+    for (const event of events) {
+      const meta = event.metadata as any;
+      const sessionKey = meta?.sessionId || meta?.sid || meta?.userId || event.type;
+      if (!typeCounts[event.type]) typeCounts[event.type] = new Set();
+      typeCounts[event.type]!.add(sessionKey);
+    }
+
+    const totalVisitors = typeCounts['PAGE_VIEW']?.size || 0;
+
+    const funnelData = steps.map((step, i) => {
+      const count = typeCounts[step.eventType]?.size || 0;
+      const previousCount = i > 0
+        ? (typeCounts[steps[i - 1]!.eventType]?.size || 0)
+        : totalVisitors;
+      return {
+        name: step.name,
+        eventType: step.eventType,
+        count,
+        conversionRate: previousCount > 0 ? Number(((count / previousCount) * 100).toFixed(2)) : 0,
+        dropOffRate: previousCount > 0 ? Number((((previousCount - count) / previousCount) * 100).toFixed(2)) : 0,
+      };
+    });
+
+    return { steps: funnelData, period: `${days} days`, totalVisitors };
+  }
+
+  // ── Page Analytics ─────────────────────────────────────────
+
+  async getPageAnalytics(projectId: string, days: number | string = 30) {
+    days = Number(days) || 30;
+    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+    const events = await this.prisma.analyticsEvent.findMany({
+      where: {
+        projectId,
+        timestamp: { gte: since },
+        type: { in: ['PAGE_VIEW', 'CONVERSION'] },
+      },
+      select: { type: true, metadata: true },
+    });
+
+    const pages: Record<string, { views: number; uniqueVisitors: Set<string>; conversions: number }> = {};
+
+    for (const event of events) {
+      const meta = event.metadata as any;
+      const url = meta?.url || meta?.path || 'unknown';
+      let path: string;
+      try { path = new URL(url).pathname; } catch { path = url; }
+      const sessionKey = meta?.sessionId || meta?.sid || 'anon';
+
+      if (!pages[path]) pages[path] = { views: 0, uniqueVisitors: new Set(), conversions: 0 };
+
+      if (event.type === 'PAGE_VIEW') {
+        pages[path]!.views++;
+        pages[path]!.uniqueVisitors.add(sessionKey);
+      } else if (event.type === 'CONVERSION') {
+        pages[path]!.conversions++;
+      }
+    }
+
+    return Object.entries(pages)
+      .map(([path, data]) => ({
+        path,
+        views: data.views,
+        uniqueVisitors: data.uniqueVisitors.size,
+        conversions: data.conversions,
+        conversionRate: data.views > 0 ? Number(((data.conversions / data.views) * 100).toFixed(2)) : 0,
+      }))
+      .sort((a, b) => b.views - a.views)
+      .slice(0, 50);
+  }
+
+  // ── Funnel Steps CRUD ──────────────────────────────────────
+
+  async getFunnelSteps(projectId: string) {
+    return this.prisma.funnelStep.findMany({
+      where: { projectId },
+      orderBy: { order: 'asc' },
+    });
+  }
+
+  async setFunnelSteps(projectId: string, steps: Array<{ name: string; eventType: string; order: number; description?: string }>) {
+    await this.prisma.funnelStep.deleteMany({ where: { projectId } });
+    return this.prisma.funnelStep.createMany({
+      data: steps.map(s => ({ projectId, name: s.name, eventType: s.eventType, order: s.order, description: s.description })),
+    });
+  }
+
   private async aggregateForProject(projectId: string, dayStart: Date, dayEnd: Date) {
     const events = await this.prisma.analyticsEvent.findMany({
       where: {
