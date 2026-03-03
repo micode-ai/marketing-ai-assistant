@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AgentService } from './agent.service';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -31,5 +31,29 @@ export class AgentController {
   @ApiOperation({ summary: 'Chat with AI assistant' })
   chat(@Body() dto: { projectId?: string; message: string; history?: any[] }) {
     return this.agentService.chat(dto);
+  }
+
+  @Get('schedules')
+  @ApiOperation({ summary: 'Get agent schedules for project' })
+  getSchedules(@Query('projectId') projectId: string) {
+    return this.agentService.getSchedules(projectId);
+  }
+
+  @Post('schedules')
+  @ApiOperation({ summary: 'Create agent schedule' })
+  createSchedule(@Body() dto: { projectId: string; agentType: string; cronExpression: string; config?: Record<string, unknown> }) {
+    return this.agentService.createSchedule(dto);
+  }
+
+  @Put('schedules/:id')
+  @ApiOperation({ summary: 'Update agent schedule' })
+  updateSchedule(@Param('id') id: string, @Body() dto: { cronExpression?: string; isActive?: boolean; config?: Record<string, unknown> }) {
+    return this.agentService.updateSchedule(id, dto);
+  }
+
+  @Delete('schedules/:id')
+  @ApiOperation({ summary: 'Delete agent schedule' })
+  deleteSchedule(@Param('id') id: string) {
+    return this.agentService.deleteSchedule(id);
   }
 }

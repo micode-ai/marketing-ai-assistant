@@ -2,6 +2,10 @@ import { Client as LangSmithClient } from 'langsmith';
 import { runContentAgent } from './content-agent';
 import { runChecklistAgent } from './checklist-agent';
 import { runDocumentAgent } from './document-agent';
+import { runSeoAgent } from './seo-agent';
+import { runStrategyAgent } from './strategy-agent';
+import { runEmailAgent } from './email-agent';
+import { runAnalyticsAgent } from './analytics-agent';
 
 async function getLangSmithTraceUrl(runId: string): Promise<string | null> {
   try {
@@ -36,6 +40,18 @@ export async function runAgentTask({ runId, projectId, agentType, input }: Agent
       break;
     case 'DOCUMENT':
       output = await runDocumentAgent({ projectId, input });
+      break;
+    case 'SEO':
+      output = await runSeoAgent({ projectId, input });
+      break;
+    case 'STRATEGY':
+      output = await runStrategyAgent({ projectId, input });
+      break;
+    case 'EMAIL':
+      output = await runEmailAgent({ projectId, input });
+      break;
+    case 'ANALYTICS':
+      output = await runAnalyticsAgent({ projectId, input });
       break;
     default:
       output = { message: `Agent type ${agentType} is not yet implemented` };

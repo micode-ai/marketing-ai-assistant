@@ -43,12 +43,7 @@ Register a new user. Automatically creates an Organization (FREE plan, 14-day tr
 {
   "accessToken": "eyJhbGci...",
   "refreshToken": "eyJhbGci...",
-  "user": {
-    "id": "clx123...",
-    "email": "user@example.com",
-    "name": "John Doe",
-    "avatarUrl": null
-  }
+  "user": { "id": "clx123...", "email": "user@example.com", "name": "John Doe" }
 }
 ```
 
@@ -56,73 +51,21 @@ Register a new user. Automatically creates an Organization (FREE plan, 14-day tr
 
 Authenticate with email and password.
 
-**Request Body:**
-```json
-{
-  "email": "user@example.com",
-  "password": "securePassword123"
-}
-```
-
-**Response (201):**
-```json
-{
-  "accessToken": "eyJhbGci...",
-  "refreshToken": "eyJhbGci...",
-  "user": {
-    "id": "clx123...",
-    "email": "user@example.com",
-    "name": "John Doe",
-    "avatarUrl": null
-  }
-}
-```
-
 ### POST `/auth/refresh` (Public)
 
-Refresh an expired access token.
-
-**Request Body:**
-```json
-{
-  "refreshToken": "eyJhbGci..."
-}
-```
-
-**Response (201):**
-```json
-{
-  "accessToken": "eyJhbGci...",
-  "refreshToken": "eyJhbGci..."
-}
-```
+Refresh an expired access token. Body: `{ "refreshToken": "..." }`
 
 ### GET `/auth/google` (Public)
 
-Initiates Google OAuth 2.0 login flow. Redirects to Google consent page.
+Initiates Google OAuth 2.0 login flow.
 
 ### GET `/auth/google/callback` (Public)
 
-Google OAuth callback. On success, redirects to:
-```
-{WEB_URL}/auth/callback?token={accessToken}&refresh={refreshToken}
-```
+Google OAuth callback. Redirects to `{WEB_URL}/auth/callback?token=...&refresh=...`
 
 ### GET `/auth/me` (Protected)
 
 Get current authenticated user profile.
-
-**Response (200):**
-```json
-{
-  "id": "clx123...",
-  "email": "user@example.com",
-  "name": "John Doe",
-  "avatarUrl": null,
-  "emailVerified": true,
-  "memberships": [...]
-}
-```
 
 ---
 
@@ -132,40 +75,9 @@ Get current authenticated user profile.
 
 Get current user with organization memberships.
 
-**Response (200):**
-```json
-{
-  "id": "clx123...",
-  "email": "user@example.com",
-  "name": "John Doe",
-  "avatarUrl": null,
-  "emailVerified": false,
-  "memberships": [
-    {
-      "id": "clx456...",
-      "role": "OWNER",
-      "organization": {
-        "id": "clx789...",
-        "name": "My Company",
-        "slug": "my-company",
-        "plan": "FREE"
-      }
-    }
-  ]
-}
-```
-
 ### PUT `/users/me` (Protected)
 
-Update current user profile.
-
-**Request Body:**
-```json
-{
-  "name": "Updated Name",
-  "avatarUrl": "https://example.com/avatar.png"
-}
-```
+Update current user profile. Body: `{ "name": "...", "avatarUrl": "..." }`
 
 ---
 
@@ -173,7 +85,7 @@ Update current user profile.
 
 ### GET `/organizations/:id` (Protected)
 
-Get organization details with members and subscription.
+Get organization with members and subscription.
 
 ### PUT `/organizations/:id` (Protected)
 
@@ -181,19 +93,11 @@ Update organization (name, logo, slug).
 
 ### POST `/organizations/:id/members/invite` (Protected, OWNER/ADMIN)
 
-Invite a member by email.
-
-**Request Body:**
-```json
-{
-  "email": "newmember@example.com",
-  "role": "MEMBER"
-}
-```
+Body: `{ "email": "...", "role": "MEMBER" }`
 
 ### DELETE `/organizations/:id/members/:memberId` (Protected, OWNER/ADMIN)
 
-Remove a member from the organization.
+Remove a member.
 
 ---
 
@@ -202,20 +106,6 @@ Remove a member from the organization.
 ### GET `/projects?organizationId=<id>` (Protected)
 
 List all non-archived projects for an organization.
-
-**Response (200):**
-```json
-[
-  {
-    "id": "clx...",
-    "name": "Tech Startup",
-    "description": "B2B SaaS marketing",
-    "status": "ACTIVE",
-    "industry": "SaaS",
-    "_count": { "campaigns": 3, "content": 12, "checklists": 2 }
-  }
-]
-```
 
 ### GET `/projects/:id` (Protected)
 
@@ -230,12 +120,10 @@ Create a new project.
 {
   "organizationId": "clx...",
   "name": "New Project",
-  "description": "Project description",
   "websiteUrl": "https://example.com",
   "targetAudience": "Enterprise CTOs",
-  "brandVoice": { "tone": ["professional"], "style": "minimalist" },
-  "industry": "SaaS",
-  "goals": { "primary": "Brand awareness" }
+  "brandVoice": { "tone": ["professional"] },
+  "industry": "SaaS"
 }
 ```
 
@@ -255,46 +143,21 @@ Archive project (sets status to ARCHIVED).
 
 List campaigns for a project.
 
-### GET `/campaigns/:id` (Protected)
-
-Get campaign with associated content.
-
 ### POST `/campaigns` (Protected)
 
-Create a campaign.
+Create a campaign. Types: `EMAIL`, `SOCIAL`, `BLOG`, `MULTI_CHANNEL`
 
-**Request Body:**
-```json
-{
-  "projectId": "clx...",
-  "name": "Q1 Launch Campaign",
-  "type": "MULTI_CHANNEL",
-  "status": "DRAFT",
-  "startDate": "2026-03-01T00:00:00Z",
-  "endDate": "2026-03-31T00:00:00Z",
-  "budget": 5000,
-  "goals": { "target": "1000 leads" }
-}
-```
+### PUT `/campaigns/:id` (Protected) / DELETE `/campaigns/:id` (Protected)
 
-Campaign types: `EMAIL`, `SOCIAL`, `BLOG`, `MULTI_CHANNEL`
-Campaign statuses: `DRAFT`, `SCHEDULED`, `ACTIVE`, `PAUSED`, `COMPLETED`
-
-### PUT `/campaigns/:id` (Protected)
-
-Update campaign.
-
-### DELETE `/campaigns/:id` (Protected)
-
-Delete campaign.
+Update or delete campaign.
 
 ---
 
 ## Content (`/content`)
 
-### GET `/content?projectId=<id>&type=<type>&status=<status>&platform=<platform>` (Protected)
+### GET `/content?projectId=<id>&type=<type>&status=<status>&platform=<platform>&from=<date>&to=<date>` (Protected)
 
-List content with optional filters.
+List content with optional filters including date range.
 
 ### GET `/content/:id` (Protected)
 
@@ -308,7 +171,6 @@ Create content.
 ```json
 {
   "projectId": "clx...",
-  "campaignId": "clx...",
   "type": "SOCIAL_POST",
   "title": "Product Launch Tweet",
   "body": "Exciting news! ...",
@@ -317,9 +179,9 @@ Create content.
 }
 ```
 
-Content types: `SOCIAL_POST`, `BLOG_ARTICLE`, `EMAIL`, `NEWSLETTER`, `AD_COPY`, `LANDING_PAGE`
+Content types: `SOCIAL_POST`, `BLOG_ARTICLE`, `EMAIL`, `NEWSLETTER`, `AD_COPY`, `LANDING_PAGE`, `SEO_ARTICLE`, `REFERRAL_COPY`, `IN_APP_MESSAGE`
+
 Content statuses: `DRAFT`, `REVIEW`, `APPROVED`, `PUBLISHED`, `REJECTED`
-Platforms: `TWITTER`, `LINKEDIN`, `FACEBOOK`, `INSTAGRAM`, `GOOGLE`, `TELEGRAM`
 
 ### PUT `/content/:id` (Protected)
 
@@ -327,11 +189,46 @@ Update content. Automatically creates a version record if the body changes.
 
 ### PUT `/content/:id/status` (Protected)
 
-Update content status. Sets `publishedAt` timestamp when status becomes `PUBLISHED`.
+Update content status. Sets `publishedAt` when status becomes `PUBLISHED`.
 
 ### DELETE `/content/:id` (Protected)
 
 Delete content.
+
+### POST `/content/:id/repurpose` (Protected)
+
+Repurpose content into a different format. Creates a new Content record linked via `sourceContentId`.
+
+**Request Body:**
+```json
+{
+  "targetType": "SOCIAL_POST"
+}
+```
+
+**Response (201):** New Content record with `sourceContentId` set to original.
+
+### GET `/content/performance/scores?projectId=<id>&days=<n>` (Protected)
+
+Get performance scores for all published content. Matches content by URL slug to analytics events.
+
+**Response:**
+```json
+[
+  {
+    "id": "clx...",
+    "title": "Blog Post Title",
+    "type": "BLOG_ARTICLE",
+    "publishedAt": "2026-02-01T00:00:00Z",
+    "views": 1250,
+    "conversions": 15,
+    "engagements": 87,
+    "score": 72
+  }
+]
+```
+
+Score (0-100) is calculated from views, conversions, and social engagements.
 
 ---
 
@@ -343,249 +240,93 @@ List email accounts for organization.
 
 ### POST `/email/accounts` (Protected)
 
-Create email account with encrypted credentials.
+Create email account with encrypted credentials. Providers: `SMTP`, `RESEND`
 
-**Request Body:**
-```json
-{
-  "organizationId": "clx...",
-  "email": "marketing@company.com",
-  "displayName": "Marketing Team",
-  "provider": "SMTP",
-  "smtpHost": "smtp.gmail.com",
-  "smtpPort": 587,
-  "credentials": { "user": "...", "pass": "..." }
-}
-```
+### DELETE `/email/accounts/:id` (Protected) / POST `/email/accounts/:id/test` (Protected)
 
-Providers: `SMTP`, `RESEND`
+Delete or test email account connection.
 
-### DELETE `/email/accounts/:id` (Protected)
+### GET `/email/lists?projectId=<id>` (Protected) / POST `/email/lists` (Protected) / DELETE `/email/lists/:id` (Protected)
 
-Delete an email account.
+Manage email subscriber lists.
 
-### POST `/email/accounts/:id/test` (Protected)
+### GET `/email/lists/:listId/subscribers` (Protected) / POST `/email/lists/:listId/subscribers` (Protected) / DELETE `/email/lists/:listId/subscribers/:subscriberId` (Protected)
 
-Test email account connection. Verifies SMTP/Resend credentials are valid.
-
-### GET `/email/lists?projectId=<id>` (Protected)
-
-List email subscriber lists.
-
-### POST `/email/lists` (Protected)
-
-Create email list.
-
-### DELETE `/email/lists/:id` (Protected)
-
-Delete an email list.
-
-### GET `/email/lists/:listId/subscribers` (Protected)
-
-Get active subscribers for a list.
-
-### POST `/email/lists/:listId/subscribers` (Protected)
-
-Add or upsert a subscriber.
-
-**Request Body:**
-```json
-{
-  "email": "subscriber@example.com",
-  "name": "Subscriber Name",
-  "metadata": { "source": "website" }
-}
-```
-
-### DELETE `/email/lists/:listId/subscribers/:subscriberId` (Protected)
-
-Remove a subscriber from a list.
+Manage subscribers. POST upserts by email address.
 
 ### GET `/email/unsubscribe/:token` (Public)
 
-Unsubscribe a subscriber via unique token. Sets status to `UNSUBSCRIBED`.
+Unsubscribe a subscriber via unique token.
 
-### GET `/email/campaigns?projectId=<id>` (Protected)
+### GET `/email/campaigns?projectId=<id>` (Protected) / POST `/email/campaigns/send` (Protected)
 
-List email campaigns for a project.
-
-### POST `/email/campaigns/send` (Protected)
-
-Send an email campaign to all active subscribers.
-
-**Request Body:**
-```json
-{
-  "campaignId": "clx...",
-  "emailAccountId": "clx...",
-  "listId": "clx...",
-  "subject": "Monthly Newsletter",
-  "html": "<h1>Hello {{email}}</h1>...<a href='{{unsubscribe_url}}'>Unsubscribe</a>"
-}
-```
-
-Placeholders replaced at send time:
-- `{{unsubscribe_url}}` — unique unsubscribe link per subscriber
-- `{{email}}` — subscriber email address
+List or send email campaigns. Placeholders replaced at send time: `{{unsubscribe_url}}`, `{{email}}`
 
 ---
 
-## Checklists (`/checklists`)
+## Email Sequences (`/email-sequences`)
 
-### GET `/checklists?projectId=<id>` (Protected)
+### GET `/email-sequences?projectId=<id>` (Protected)
 
-List checklists for a project.
+List all drip sequences for a project.
 
-### GET `/checklists/:id` (Protected)
+### GET `/email-sequences/:id` (Protected)
 
-Get checklist with items.
+Get sequence with steps.
 
-### POST `/checklists` (Protected)
+### POST `/email-sequences` (Protected)
 
-Create checklist.
-
-**Request Body:**
-```json
-{
-  "projectId": "clx...",
-  "title": "Launch Checklist",
-  "type": "LAUNCH",
-  "isTemplate": false
-}
-```
-
-Types: `LAUNCH`, `WEEKLY`, `CAMPAIGN_PREP`, `SEO`, `SOCIAL_MEDIA`, `EMAIL_CAMPAIGN`, `COMPETITIVE_ANALYSIS`, `CUSTOM`
-
-### POST `/checklists/:id/items` (Protected)
-
-Add item to checklist.
-
-**Request Body:**
-```json
-{
-  "title": "Set up analytics tracking",
-  "priority": "HIGH",
-  "dueDate": "2026-03-15T00:00:00Z"
-}
-```
-
-Priority: `LOW`, `MEDIUM`, `HIGH`, `CRITICAL`
-
-### PUT `/checklists/items/:itemId` (Protected)
-
-Update checklist item (toggle completion, change priority, set due date).
-
-### DELETE `/checklists/:id` (Protected)
-
-Delete checklist.
-
----
-
-## Documents (`/documents`)
-
-### GET `/documents?projectId=<id>` (Protected)
-
-List documents for a project.
-
-### GET `/documents/:id` (Protected)
-
-Get document.
-
-### POST `/documents` (Protected)
-
-Create document.
+Create a drip sequence.
 
 **Request Body:**
 ```json
 {
   "projectId": "clx...",
-  "title": "Q1 Marketing Plan",
-  "type": "MARKETING_PLAN",
-  "content": "# Marketing Plan\n\n..."
+  "name": "Welcome Onboarding",
+  "trigger": "SIGNUP",
+  "triggerConfig": {},
+  "description": "5-email welcome series"
 }
 ```
 
-Types: `MARKETING_PLAN`, `REPORT`, `COMPETITIVE_ANALYSIS`, `BRAND_GUIDELINES`, `CONTENT_CALENDAR`, `PROPOSAL`, `PRESENTATION`
+Triggers: `SIGNUP`, `MANUAL`, `EVENT`
 
-### PUT `/documents/:id` (Protected)
+### PUT `/email-sequences/:id` (Protected) / DELETE `/email-sequences/:id` (Protected)
 
-Update document.
+Update or delete sequence.
 
-### DELETE `/documents/:id` (Protected)
+### POST `/email-sequences/:id/steps` (Protected)
 
-Delete document.
-
----
-
-## Agent (`/agent`)
-
-### POST `/agent/run` (Protected)
-
-Queue an AI agent task.
+Add a step to the sequence.
 
 **Request Body:**
 ```json
 {
-  "projectId": "clx...",
-  "agentType": "CONTENT",
-  "input": {
-    "type": "SOCIAL_POST",
-    "platform": "TWITTER",
-    "topic": "New product launch",
-    "keywords": ["innovation", "tech"],
-    "tone": "professional",
-    "length": "short"
-  }
+  "order": 1,
+  "subject": "Welcome to the platform!",
+  "body": "<h1>Welcome!</h1>...",
+  "delayHours": 0
 }
 ```
 
-Agent types: `STRATEGY`, `CONTENT`, `SEO`, `SOCIAL_MEDIA`, `EMAIL`, `ANALYTICS`, `CHECKLIST`, `DOCUMENT`, `SUPERVISOR`
+### PUT `/email-sequences/steps/:stepId` (Protected) / DELETE `/email-sequences/steps/:stepId` (Protected)
 
-**Response (201):**
-```json
-{
-  "id": "clx...",
-  "projectId": "clx...",
-  "agentType": "CONTENT",
-  "status": "PENDING",
-  "input": { ... },
-  "output": null,
-  "createdAt": "2026-02-27T10:30:00Z"
-}
-```
+Update or delete a sequence step.
 
-### GET `/agent/runs?projectId=<id>` (Protected)
+### POST `/email-sequences/:id/enroll` (Protected)
 
-List agent runs for a project.
-
-### GET `/agent/runs/:id` (Protected)
-
-Get agent run details (status, output, tokens used, cost).
-
-### POST `/agent/chat` (Protected)
-
-Chat with AI assistant.
+Enroll a subscriber in a sequence.
 
 **Request Body:**
 ```json
 {
-  "message": "What marketing strategy would you recommend for a B2B SaaS launch?",
-  "projectId": "clx...",
-  "history": [
-    { "role": "user", "content": "Previous message" },
-    { "role": "assistant", "content": "Previous response" }
-  ]
+  "subscriberEmail": "user@example.com"
 }
 ```
 
-**Response (200):**
-```json
-{
-  "message": "For a B2B SaaS launch, I'd recommend...",
-  "role": "assistant",
-  "timestamp": "2026-02-27T10:35:00Z"
-}
-```
+### GET `/email-sequences/:id/enrollments` (Protected)
+
+List enrollments for a sequence.
 
 ---
 
@@ -593,34 +334,295 @@ Chat with AI assistant.
 
 ### GET `/analytics/metrics?projectId=<id>&days=<n>` (Protected)
 
-Get project metrics for the last N days.
+Get daily metrics time-series for the last N days.
 
 ### GET `/analytics/metrics/totals?projectId=<id>&days=<n>` (Protected)
 
-Get aggregated metric totals for the last N days.
+Get aggregated metric totals with period-over-period change and trend direction.
+
+**Response:**
+```json
+{
+  "total": { "visitors": 1250, "conversions": 47, "emailOpens": 320 },
+  "change": { "visitors": 15, "conversions": -8 },
+  "trend": { "visitors": "up", "conversions": "down" }
+}
+```
 
 ### GET `/analytics/summary?projectId=<id>` (Protected)
 
-Get project analytics summary.
+Get high-level project summary (published content count, active campaigns, subscribers, completed checklist items).
+
+### GET `/analytics/utm-breakdown?projectId=<id>&days=<n>` (Protected)
+
+Get traffic and conversion breakdown by UTM source, medium, and campaign.
+
+**Response:**
+```json
+{
+  "sources": [{ "name": "google", "visits": 850, "conversions": 32, "conversionRate": 3.76 }],
+  "mediums": [...],
+  "campaigns": [...]
+}
+```
+
+### GET `/analytics/funnel?projectId=<id>&days=<n>` (Protected)
+
+Get conversion funnel analysis with drop-off rates per step.
+
+**Response:**
+```json
+{
+  "steps": [
+    { "name": "Visitors", "eventType": "PAGE_VIEW", "count": 1250, "conversionRate": 100, "dropOffRate": 0 },
+    { "name": "Signups", "eventType": "SIGNUP", "count": 87, "conversionRate": 6.96, "dropOffRate": 93.04 }
+  ],
+  "period": "30 days",
+  "totalVisitors": 1250
+}
+```
+
+### GET `/analytics/funnel/steps?projectId=<id>` (Protected)
+
+Get custom funnel step configuration.
+
+### PUT `/analytics/funnel/steps?projectId=<id>` (Protected)
+
+Configure custom funnel steps.
+
+**Request Body:**
+```json
+[
+  { "name": "Visitors", "eventType": "PAGE_VIEW", "order": 1 },
+  { "name": "Trial Start", "eventType": "TRIAL_START", "order": 2 },
+  { "name": "Converted", "eventType": "UPGRADE", "order": 3 }
+]
+```
+
+### GET `/analytics/pages?projectId=<id>&days=<n>` (Protected)
+
+Get per-page analytics: views, unique visitors, conversions, conversion rate. Returns top 50 pages sorted by views.
 
 ### POST `/analytics/events` (Protected)
 
-Track an analytics event.
+Track an analytics event manually.
+
+Event types: `PAGE_VIEW`, `EMAIL_OPEN`, `EMAIL_CLICK`, `SOCIAL_ENGAGEMENT`, `CONVERSION`, `SIGNUP`, `TRIAL_START`, `ACTIVATION`, `UPGRADE`, `CHURN`, `FUNNEL_STEP`
+
+### POST `/analytics/aggregate?projectId=<id>` (Protected)
+
+Manually trigger metrics aggregation for a project.
+
+---
+
+## SEO (`/seo`)
+
+### GET `/seo/keywords?projectId=<id>` (Protected)
+
+List all tracked keywords for a project.
+
+### POST `/seo/keywords` (Protected)
+
+Add a keyword to track.
 
 **Request Body:**
 ```json
 {
   "projectId": "clx...",
-  "type": "EMAIL_OPEN",
-  "metadata": { "campaignId": "clx...", "subscriberId": "clx..." }
+  "keyword": "saas marketing tools",
+  "intent": "COMMERCIAL",
+  "targetUrl": "https://example.com/features"
 }
 ```
 
-Event types: `PAGE_VIEW`, `EMAIL_OPEN`, `EMAIL_CLICK`, `SOCIAL_ENGAGEMENT`, `CONVERSION`
+Intents: `INFORMATIONAL`, `NAVIGATIONAL`, `COMMERCIAL`, `TRANSACTIONAL`
 
-### POST `/analytics/aggregate?projectId=<id>` (Protected)
+### PUT `/seo/keywords/:id` (Protected) / DELETE `/seo/keywords/:id` (Protected)
 
-Manually trigger analytics aggregation for a project. Computes daily metrics from raw events.
+Update or delete keyword.
+
+### GET `/seo/keywords/:id/history` (Protected)
+
+Get rank history for a keyword.
+
+### POST `/seo/keywords/:id/rank` (Protected)
+
+Record a rank position snapshot.
+
+**Request Body:**
+```json
+{
+  "rank": 12,
+  "url": "https://example.com/features",
+  "searchVolume": 2400
+}
+```
+
+---
+
+## A/B Testing (`/ab-testing`)
+
+### GET `/ab-testing?projectId=<id>` (Protected)
+
+List A/B tests for a project.
+
+### POST `/ab-testing` (Protected)
+
+Create a new A/B test.
+
+**Request Body:**
+```json
+{
+  "projectId": "clx...",
+  "name": "Subject line test",
+  "type": "EMAIL_SUBJECT",
+  "config": {}
+}
+```
+
+Types: `EMAIL_SUBJECT`, `CONTENT_VARIANT`, `LANDING_PAGE`
+
+### GET `/ab-testing/:id` (Protected) / PUT `/ab-testing/:id` (Protected) / DELETE `/ab-testing/:id` (Protected)
+
+Get, update, or delete an A/B test.
+
+### POST `/ab-testing/:id/variants` (Protected)
+
+Add a variant to the test.
+
+**Request Body:**
+```json
+{
+  "name": "A",
+  "config": { "subject": "Try our product free" }
+}
+```
+
+### POST `/ab-testing/:id/start` (Protected)
+
+Start the A/B test (status → RUNNING).
+
+### POST `/ab-testing/:id/complete` (Protected)
+
+Complete the test and optionally declare a winner.
+
+**Request Body:**
+```json
+{ "winnerId": "clx..." }
+```
+
+### POST `/ab-testing/variants/:variantId/record` (Protected)
+
+Record an impression or conversion for a variant.
+
+**Request Body:**
+```json
+{ "type": "impression" }
+```
+or `{ "type": "conversion" }`
+
+---
+
+## Competitors (`/competitors`)
+
+### GET `/competitors?projectId=<id>` (Protected)
+
+List competitors for a project.
+
+### POST `/competitors` (Protected)
+
+Add a competitor.
+
+**Request Body:**
+```json
+{
+  "projectId": "clx...",
+  "name": "Competitor Inc",
+  "url": "https://competitor.com",
+  "description": "Main competitor in our segment"
+}
+```
+
+### PUT `/competitors/:id` (Protected) / DELETE `/competitors/:id` (Protected)
+
+Update or delete competitor.
+
+### GET `/competitors/:id/snapshots` (Protected)
+
+Get snapshot history for a competitor.
+
+### POST `/competitors/:id/snapshot` (Protected)
+
+Trigger a manual snapshot (scrape and compare).
+
+---
+
+## Webhooks (`/webhooks`)
+
+### GET `/webhooks?organizationId=<id>` (Protected)
+
+List webhooks for an organization.
+
+### POST `/webhooks` (Protected)
+
+Create a webhook.
+
+**Request Body:**
+```json
+{
+  "organizationId": "clx...",
+  "url": "https://example.com/hooks/marketing",
+  "events": ["content.published", "campaign.sent", "conversion.tracked"],
+  "secret": "my-signing-secret"
+}
+```
+
+### PUT `/webhooks/:id` (Protected) / DELETE `/webhooks/:id` (Protected)
+
+Update or delete webhook.
+
+### POST `/webhooks/:id/test` (Protected)
+
+Send a test event to the webhook URL.
+
+Webhook payloads are signed with HMAC-SHA256 using the `secret`. Signature is in the `X-Signature-256` header.
+
+---
+
+## Google Integrations (`/google-integrations`)
+
+### GET `/google-integrations/auth?organizationId=<id>` (Protected)
+
+Get Google OAuth authorization URL for Search Console + GA4 access.
+
+### GET `/google-integrations/callback` (Public)
+
+Google OAuth callback. Stores access + refresh tokens.
+
+### GET `/google-integrations/search-console?projectId=<id>&days=<n>` (Protected)
+
+Get Google Search Console data: top queries, pages, positions, CTR.
+
+**Response:**
+```json
+[
+  {
+    "query": "saas marketing tools",
+    "clicks": 245,
+    "impressions": 3200,
+    "ctr": 7.66,
+    "position": 4.2
+  }
+]
+```
+
+### GET `/google-integrations/analytics?projectId=<id>&days=<n>` (Protected)
+
+Get Google Analytics 4 data: sessions, users, bounce rate, conversions.
+
+### POST `/google-integrations/sync?projectId=<id>` (Protected)
+
+Manually trigger a sync of GSC and GA4 data.
 
 ---
 
@@ -632,7 +634,7 @@ List connected social accounts for the current user's organization.
 
 ### POST `/social/accounts` (Protected)
 
-Connect a social account manually by providing credentials.
+Connect a social account manually.
 
 **Request Body (Twitter):**
 ```json
@@ -658,11 +660,7 @@ Connect a social account manually by providing credentials.
 }
 ```
 
-Platforms:
-- **LINKEDIN** — OAuth 2.0 flow (see OAuth routes below)
-- **TWITTER** — Manual credential entry (appKey, appSecret, accessToken, accessSecret)
-- **FACEBOOK** — OAuth 2.0 flow (see OAuth routes below)
-- **TELEGRAM** — Manual entry (botToken, chatId)
+Platforms: `LINKEDIN` (OAuth), `TWITTER` (manual), `FACEBOOK` (OAuth), `TELEGRAM` (manual)
 
 ### DELETE `/social/accounts/:id` (Protected)
 
@@ -670,7 +668,7 @@ Disconnect a social account.
 
 ### POST `/social/publish` (Protected)
 
-Publish content to one or more social platforms.
+Publish content to social platforms.
 
 **Request Body:**
 ```json
@@ -684,59 +682,73 @@ Publish content to one or more social platforms.
 
 Get publication history for a content item.
 
-### GET `/social/project-accounts?projectId=<id>` (Protected)
+### GET `/social/auth/linkedin` (Public) / GET `/social/auth/linkedin/callback` (Public)
 
-Get social accounts linked to a specific project.
+LinkedIn OAuth 2.0 flow.
 
-### PUT `/social/project-accounts` (Protected)
+### GET `/social/auth/facebook` (Public) / GET `/social/auth/facebook/callback` (Public)
 
-Link social accounts to a project.
-
-**Request Body:**
-```json
-{
-  "projectId": "clx...",
-  "socialAccountIds": ["clx...", "clx..."]
-}
-```
+Facebook OAuth 2.0 flow.
 
 ---
 
 ## Tracking (`/t`)
 
-All tracking endpoints are public (no JWT required). The tracking controller is mounted at the `/t` prefix (not `/api/t`).
+All tracking endpoints are public (no JWT). Mounted at `/t` prefix (not `/api/t`).
 
 ### POST `/t/event` (Public)
 
 Track a web analytics event.
 
-**Request Body:**
 ```json
 {
   "tid": "tracking-id",
   "type": "page_view",
   "url": "https://example.com/page",
-  "referrer": "https://google.com"
+  "referrer": "https://google.com",
+  "utm": { "source": "google", "medium": "cpc", "campaign": "launch" }
 }
 ```
 
-Returns `204 No Content`.
+### POST `/t/identify` (Public)
+
+Identify a user.
+
+```json
+{
+  "tid": "tracking-id",
+  "userId": "user_123",
+  "traits": { "name": "John", "email": "john@example.com", "plan": "PRO" }
+}
+```
+
+### POST `/t/funnel` (Public)
+
+Track a funnel step event.
+
+```json
+{
+  "tid": "tracking-id",
+  "step": "trial_start",
+  "userId": "user_123"
+}
+```
 
 ### GET `/t/pixel.gif?tid=<trackingId>&url=<url>` (Public)
 
-Tracking pixel for page views. Returns a transparent 1x1 GIF. Used for embedding in websites or emails.
+Tracking pixel. Returns transparent 1x1 GIF.
 
 ### GET `/t/o/:trackingId` (Public)
 
-Track an email open event. Returns a transparent 1x1 GIF. Embedded as an image in campaign emails.
+Track email open. Returns transparent 1x1 GIF.
 
 ### GET `/t/c/:trackingId` (Public)
 
-Track an email click event. Decodes the tracking ID to extract the target URL and redirects (302) to it.
+Track email click. Redirects (302) to target URL.
 
 ### GET `/t/snippet/:trackingId` (Public)
 
-Get a JavaScript tracking snippet for website integration. Returns `Content-Type: text/javascript`. The snippet can be embedded in a website's HTML to automatically track page views.
+Get JavaScript tracking snippet. Returns `text/javascript`. Snippet supports: `page_view`, `identify`, `funnel`, `conversion`.
 
 ---
 
@@ -744,36 +756,11 @@ Get a JavaScript tracking snippet for website integration. Returns `Content-Type
 
 ### POST `/billing/checkout` (Protected)
 
-Create a Stripe checkout session for plan upgrade.
-
-**Request Body:**
-```json
-{
-  "organizationId": "clx...",
-  "plan": "PRO",
-  "successUrl": "http://localhost:5173/settings/billing?success=true",
-  "cancelUrl": "http://localhost:5173/settings/billing?canceled=true"
-}
-```
-
-**Response (200):**
-```json
-{
-  "url": "https://checkout.stripe.com/..."
-}
-```
+Create Stripe checkout session. Body: `{ "organizationId": "...", "plan": "PRO", "successUrl": "...", "cancelUrl": "..." }`
 
 ### POST `/billing/portal` (Protected)
 
 Create Stripe customer portal session.
-
-**Request Body:**
-```json
-{
-  "organizationId": "clx...",
-  "returnUrl": "http://localhost:5173/settings/billing"
-}
-```
 
 ### GET `/billing/subscription?organizationId=<id>` (Protected)
 
@@ -781,28 +768,26 @@ Get current subscription details.
 
 ### POST `/billing/webhook` (Public)
 
-Stripe webhook endpoint. Handles:
-- `customer.subscription.created`
-- `customer.subscription.updated`
-- `customer.subscription.deleted`
+Stripe webhook. Handles: `customer.subscription.created/updated/deleted`.
 
 ---
 
 ## Error Responses
 
-All errors follow the NestJS exception format:
+All errors follow NestJS format:
 
 ```json
 {
-  "statusCode": 401,
-  "message": "Unauthorized",
-  "error": "Unauthorized"
+  "statusCode": 404,
+  "message": "Content not found",
+  "error": "Not Found"
 }
 ```
 
-Common status codes:
-- `400` — Validation error (invalid request body)
-- `401` — Unauthorized (missing/invalid JWT)
-- `403` — Forbidden (insufficient permissions)
-- `404` — Resource not found
-- `500` — Internal server error
+| Code | Meaning |
+|------|---------|
+| 400 | Validation error |
+| 401 | Unauthorized (missing/invalid JWT) |
+| 403 | Forbidden (insufficient permissions) |
+| 404 | Resource not found |
+| 500 | Internal server error |
