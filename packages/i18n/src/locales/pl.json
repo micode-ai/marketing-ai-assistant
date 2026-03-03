@@ -49,7 +49,9 @@
     "emailAccounts": "Konta email",
     "docs": "Dokumentacja",
     "help": "Pomoc",
-    "webhooks": "Webhooki"
+    "webhooks": "Webhooki",
+    "showAdvanced": "Zaawansowane funkcje",
+    "hideAdvanced": "Ukryj zaawansowane"
   },
   "auth": {
     "login": "Zaloguj się",
@@ -86,8 +88,9 @@
     "step4": "Wszystko gotowe!",
     "createOrg": "Utwórz organizację",
     "addProject": "Dodaj projekt",
-    "addFirstProject": "Dodaj swój pierwszy projekt",
-    "skip": "Pomiń",
+    "addFirstProject": "Opowiedz nam o swoim produkcie",
+    "step1Desc": "Tylko podstawy — nazwa i opis produktu",
+    "skip": "Pomiń konfigurację",
     "finish": "Zakończ konfigurację",
     "projectNamePlaceholder": "Mój produkt SaaS",
     "projectDescPlaceholder": "Czym zajmuje się Twój produkt?",
@@ -95,7 +98,38 @@
     "industry": "Branża",
     "selectIndustry": "Wybierz...",
     "creating": "Tworzenie...",
-    "createAndContinue": "Utwórz projekt i kontynuuj →"
+    "createAndContinue": "Dalej →",
+    "step2Title": "Kim są Twoi klienci?",
+    "step2Desc": "To pomoże AI spersonalizować Twoje porady marketingowe",
+    "audienceLabel": "Opisz swojego idealnego klienta",
+    "audiencePlaceholder": "np. założyciele startupów, właściciele małych firm, freelancerzy...",
+    "audienceAge": "Przedział wiekowy",
+    "audienceAgeAny": "Dowolny wiek",
+    "audienceAgeB2B": "Właściciele firm / zespoły",
+    "audienceAge1": "13–24 (Generacja Z)",
+    "audienceAge2": "25–44 (Millenialsi)",
+    "audienceAge3": "45–65 (Generacja X / Baby Boomers)",
+    "audienceAge4": "Właściciele firm / zespoły",
+    "painPointsLabel": "Jaki problem mają, który Ty rozwiązujesz?",
+    "painPointsPlaceholder": "np. Nie mają czasu na marketing...",
+    "step3Title": "Jaki jest Twój główny cel teraz?",
+    "step3Desc": "Zaznacz wszystkie odpowiednie — dostosujemy Twój plan",
+    "step4Title": "Twoja konfiguracja marketingowa jest gotowa!",
+    "generatingPlan": "Tworzenie Twojego planu marketingowego...",
+    "createPlan": "Wygeneruj mój plan marketingowy →",
+    "planReady": "Gotowe! Oto co przygotowaliśmy:",
+    "planReadyAudience": "Profil odbiorców zapisany w projekcie",
+    "planReadyPlan": "30-dniowy plan marketingowy jest generowany (sprawdź Dokumenty za ~1 min)",
+    "planReadyGoals": "Twoje cele: {goals}",
+    "acceptAndStart": "Zacznij marketing →",
+    "goals": {
+      "getVisitors": "Więcej odwiedzających stronę",
+      "convert": "Konwersja odwiedzających na klientów",
+      "emailList": "Zbuduj listę mailingową",
+      "productHunt": "Uruchom na Product Hunt",
+      "social": "Rozwijaj media społecznościowe",
+      "brand": "Zbuduj świadomość marki"
+    }
   },
   "projects": {
     "title": "Projekty",
@@ -139,6 +173,20 @@
     "askAIDesc": "Uzyskaj porady marketingowe, generuj treści, analizuj wyniki",
     "openChat": "Otwórz czat →",
     "quickActions": "Szybkie akcje",
+    "gs": {
+      "title": "Pierwsze kroki",
+      "progress": "{done} z {total} ukończone",
+      "dismiss": "Zamknij",
+      "doItNow": "Zrób teraz",
+      "aiStrategy": "Uzyskaj strategię marketingową AI",
+      "aiStrategyDesc": "Poproś AI o spersonalizowany 30-dniowy plan",
+      "firstContent": "Utwórz swój pierwszy post w mediach społecznościowych",
+      "firstContentDesc": "Wygeneruj treść AI w Content Studio",
+      "firstChecklist": "Skonfiguruj checklistę marketingową",
+      "firstChecklistDesc": "Śledź swoje zadania krok po kroku",
+      "shareContent": "Połącz konto mediów społecznościowych",
+      "shareContentDesc": "Publikuj treści bezpośrednio z aplikacji"
+    },
     "quickActionDescs": {
       "content": "Generuj i zarządzaj treściami z AI",
       "campaigns": "Planuj i śledź kampanie marketingowe",
@@ -395,7 +443,16 @@
     },
     "thinking": "Myślę...",
     "error": "Nie udało się uzyskać odpowiedzi. Spróbuj ponownie.",
-    "newChat": "Nowy czat"
+    "newChat": "Nowy czat",
+    "contextualHint": "Sugestie dla {name}:",
+    "contextual": {
+      "socialWeek": "Utwórz tydzień postów społecznościowych dla {name}",
+      "strategy": "Najlepsza strategia marketingowa dla {industry}?",
+      "launchEmail": "Napisz email o premierze produktu dla {name}",
+      "plan30": "Daj mi 30-dniowy plan marketingowy dla początkujących",
+      "channelAdvice": "Na jakich kanałach skupić się dla {industry}?",
+      "defaultIndustry": "mojego produktu"
+    }
   },
   "settings": {
     "organization": "Organizacja",
@@ -827,6 +884,52 @@
     "immediate": "Natychmiast",
     "moveUp": "Przesun w góre",
     "moveDown": "Przesun w dól"
+  },
+  "hints": {
+    "content": {
+      "title": "Content Studio — tworzenie treści z AI",
+      "desc": "Spróbuj: kliknij «Utwórz treść», wybierz typ (np. post na Instagram), opisz swój produkt jednym zdaniem — AI wygeneruje gotowy tekst. Bez doświadczenia marketingowego."
+    },
+    "campaigns": {
+      "title": "Kampanie — koordynacja działań marketingowych",
+      "desc": "Spróbuj: utwórz kampanię, np. «Premiera produktu» lub «Black Friday». Następnie dodawaj do niej treści i e-maile — wszystko w jednym miejscu ze śledzeniem postępów."
+    },
+    "email": {
+      "title": "Email Marketing — docieraj do odbiorców",
+      "desc": "Zacznij tutaj: przejdź do Ustawienia → Konta email i podłącz swoją pocztę. Potem zaimportuj subskrybentów lub dodaj ręcznie i wyślij pierwszy newsletter."
+    },
+    "checklists": {
+      "title": "Checklisty — listy zadań marketingowych krok po kroku",
+      "desc": "Spróbuj: kliknij «Utwórz checklistę» i wybierz typ — np. «Premiera produktu» lub «Plan social media». AI wygeneruje listę zadań krok po kroku, które możesz odhaczać."
+    },
+    "documents": {
+      "title": "Dokumenty — Twoje plany i strategie marketingowe",
+      "desc": "Spróbuj: kliknij «Utwórz dokument» i poproś AI o napisanie planu marketingowego, wytycznych marki lub analizy konkurencji. Idealny do dokumentów strategicznych."
+    },
+    "analytics": {
+      "title": "Analityka — mierz efektywność marketingu",
+      "desc": "Zacznij tutaj: skopiuj kod skryptu śledzącego i dodaj go do HTML swojej strony. Potem zobaczysz tutaj statystyki odwiedzin, wyświetlenia stron i zaangażowanie."
+    },
+    "seo": {
+      "title": "SEO — pomóż klientom Cię znaleźć w Google",
+      "desc": "Spróbuj: kliknij «Dodaj słowo kluczowe» i wpisz frazę, którą szukają Twoi klienci (np. «najlepsze narzędzie do zarządzania projektami»). AI przeanalizuje i podpowie jak się pozycjonować wyżej."
+    },
+    "experiments": {
+      "title": "Testy A/B — sprawdź co działa najlepiej",
+      "desc": "Spróbuj: utwórz eksperyment z dwiema wersjami nagłówka, tematu e-maila lub przycisku CTA. System pokaże obie wersje użytkownikom i powie, która działa lepiej."
+    },
+    "sequences": {
+      "title": "Sekwencje email — automatyczne serie powitalne",
+      "desc": "Spróbuj: utwórz sekwencję i dodaj e-maile z opóźnieniami — np. powitanie w Dniu 0, przydatna wskazówka w Dniu 3, oferta specjalna w Dniu 7. E-maile wysyłane automatycznie po zapisie."
+    },
+    "competitors": {
+      "title": "Konkurencja — obserwuj rynek",
+      "desc": "Spróbuj: kliknij «Dodaj konkurenta» i wpisz URL ich strony. Śledź co robią, aby znaleźć luki rynkowe i wyróżnić swój produkt."
+    },
+    "calendar": {
+      "title": "Kalendarz treści — planuj harmonogram publikacji",
+      "desc": "Tu widać wszystkie treści z datami publikacji w widoku miesięcznym. Aby użyć — twórz treści w Content Studio z datą publikacji, a pojawią się tutaj automatycznie."
+    }
   },
   "seo": {
     "title": "Słowa kluczowe SEO",

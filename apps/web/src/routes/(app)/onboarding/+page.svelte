@@ -6,22 +6,75 @@
   import type { Project } from '@marketing-ai/shared-types';
 
   let step = 1;
+
+  // Step 1 — product info
   let projectName = '';
   let projectDescription = '';
   let projectWebsite = '';
   let projectIndustry = '';
-  let loading = false;
 
-  async function createAndContinue() {
+  // Step 2 — audience
+  let audienceAgeRange = '';
+  let audienceDescription = '';
+  let audiencePainPoints = '';
+
+  // Step 3 — goals
+  let selectedGoals: string[] = [];
+  const goalOptions = [
+    { value: 'get_visitors',     emoji: '📈', labelKey: 'onboarding.goals.getVisitors' },
+    { value: 'convert',          emoji: '💰', labelKey: 'onboarding.goals.convert' },
+    { value: 'build_email_list', emoji: '📧', labelKey: 'onboarding.goals.emailList' },
+    { value: 'product_hunt',     emoji: '🚀', labelKey: 'onboarding.goals.productHunt' },
+    { value: 'grow_social',      emoji: '📣', labelKey: 'onboarding.goals.social' },
+    { value: 'brand_awareness',  emoji: '✨', labelKey: 'onboarding.goals.brand' },
+  ];
+
+  // Step 4 — confirmation
+  let planLoading = false;
+  let createdProjectId = '';
+
+  function nextStep() { step++; }
+  function prevStep() { step--; }
+
+  function toggleGoal(v: string) {
+    selectedGoals = selectedGoals.includes(v)
+      ? selectedGoals.filter(g => g !== v)
+      : [...selectedGoals, v];
+  }
+
+  async function generatePlan() {
     if (!$organizationIdStore || !projectName) return;
-    loading = true;
+    planLoading = true;
     try {
       const project = await api.post<Project>(`/projects?organizationId=${$organizationIdStore}`, {
-        name: projectName, description: projectDescription, websiteUrl: projectWebsite, industry: projectIndustry,
+        name: projectName,
+        description: projectDescription,
+        websiteUrl: projectWebsite,
+        industry: projectIndustry,
+        targetAudience: audienceDescription,
+        goals: { primary: selectedGoals[0] || 'GENERAL', kpis: selectedGoals },
       });
+      createdProjectId = project.id;
       projectsStore.set([project]);
-      goto(`/projects/${project.id}/overview`);
-    } finally { loading = false; }
+
+      // Fire-and-forget STRATEGY agent
+      api.post('/agent/run', {
+        projectId: project.id,
+        agentType: 'STRATEGY',
+        input: {
+          strategyType: 'GO_TO_MARKET',
+          context: `Audience: ${audienceDescription}. Age range: ${audienceAgeRange}. Pain points: ${audiencePainPoints}. Goals: ${selectedGoals.join(', ')}. Beginner entrepreneur.`,
+        },
+      }).catch(() => {});
+
+      step = 4;
+    } finally {
+      planLoading = false;
+    }
+  }
+
+  function acceptAndStart() {
+    goto(`/projects/${createdProjectId}/overview`);
   }
 </script>
 
@@ -36,18 +89,21 @@
     <p class="text-gray-500 mt-2 text-sm">{$_('onboarding.welcomeDesc')}</p>
   </div>
 
+  <!-- Step indicator -->
   <div class="flex justify-center gap-2 mb-8">
-    {#each [1, 2] as s}
+    {#each [1, 2, 3, 4] as s}
       <div class="flex items-center gap-2">
         <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold {step >= s ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-500'}">{s}</div>
-        {#if s < 2}<div class="w-8 h-0.5 {step > s ? 'bg-primary-600' : 'bg-gray-200'}"></div>{/if}
+        {#if s < 4}<div class="w-8 h-0.5 {step > s ? 'bg-primary-600' : 'bg-gray-200'}"></div>{/if}
       </div>
     {/each}
   </div>
 
   <div class="bg-white rounded-2xl border border-gray-200 p-6">
+    <!-- Step 1: Product info -->
     {#if step === 1}
-      <h2 class="text-lg font-semibold text-gray-900 mb-4">{$_('onboarding.addFirstProject')}</h2>
+      <h2 class="text-lg font-semibold text-gray-900 mb-1">{$_('onboarding.addFirstProject')}</h2>
+      <p class="text-sm text-gray-500 mb-4">{$_('onboarding.step1Desc')}</p>
       <div class="space-y-4">
         <div>
           <label for="ob-name" class="block text-sm font-medium text-gray-700 mb-1">{$_('projects.name')} *</label>
@@ -72,12 +128,114 @@
           </div>
         </div>
       </div>
-      <div class="mt-6 flex gap-3">
-        <button on:click={createAndContinue} disabled={!projectName || loading} class="flex-1 bg-primary-600 text-white py-2.5 rounded-lg font-medium hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150 text-sm cursor-pointer">
-          {loading ? $_('onboarding.creating') : $_('onboarding.createAndContinue')}
-        </button>
-        <button on:click={() => goto('/dashboard')} class="px-4 py-2.5 text-sm text-gray-500 hover:text-gray-700 transition-colors duration-150 cursor-pointer">
+      <div class="mt-6 flex items-center justify-between">
+        <button on:click={() => goto('/dashboard')} class="text-sm text-gray-400 hover:text-gray-600 transition-colors duration-150 cursor-pointer">
           {$_('onboarding.skip')}
+        </button>
+        <button on:click={nextStep} disabled={!projectName} class="bg-primary-600 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150 text-sm cursor-pointer">
+          {$_('onboarding.createAndContinue')}
+        </button>
+      </div>
+    {/if}
+
+    <!-- Step 2: Audience -->
+    {#if step === 2}
+      <h2 class="text-lg font-semibold text-gray-900 mb-1">{$_('onboarding.step2Title')}</h2>
+      <p class="text-sm text-gray-500 mb-4">{$_('onboarding.step2Desc')}</p>
+      <div class="space-y-4">
+        <div>
+          <label for="ob-age" class="block text-sm font-medium text-gray-700 mb-1">{$_('onboarding.audienceAge')}</label>
+          <select id="ob-age" bind:value={audienceAgeRange} class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm cursor-pointer">
+            <option value="">{$_('onboarding.audienceAgeAny')}</option>
+            <option value="13-24">13–24</option>
+            <option value="25-44">25–44</option>
+            <option value="45-65">45–65</option>
+            <option value="business">{$_('onboarding.audienceAgeB2B')}</option>
+          </select>
+        </div>
+        <div>
+          <label for="ob-audience" class="block text-sm font-medium text-gray-700 mb-1">{$_('onboarding.audienceLabel')}</label>
+          <textarea id="ob-audience" bind:value={audienceDescription} rows="2" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm resize-none" placeholder={$_('onboarding.audiencePlaceholder')}></textarea>
+        </div>
+        <div>
+          <label for="ob-pain" class="block text-sm font-medium text-gray-700 mb-1">{$_('onboarding.painPointsLabel')}</label>
+          <textarea id="ob-pain" bind:value={audiencePainPoints} rows="2" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm resize-none" placeholder={$_('onboarding.painPointsPlaceholder')}></textarea>
+        </div>
+      </div>
+      <div class="mt-6 flex items-center justify-between">
+        <button on:click={prevStep} class="text-sm text-gray-500 hover:text-gray-700 transition-colors duration-150 cursor-pointer flex items-center gap-1">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
+          {$_('common.back')}
+        </button>
+        <button on:click={nextStep} disabled={!audienceDescription} class="bg-primary-600 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150 text-sm cursor-pointer">
+          {$_('common.next')} →
+        </button>
+      </div>
+    {/if}
+
+    <!-- Step 3: Goals -->
+    {#if step === 3}
+      <h2 class="text-lg font-semibold text-gray-900 mb-1">{$_('onboarding.step3Title')}</h2>
+      <p class="text-sm text-gray-500 mb-4">{$_('onboarding.step3Desc')}</p>
+      <div class="grid grid-cols-2 gap-2">
+        {#each goalOptions as goal}
+          <button
+            on:click={() => toggleGoal(goal.value)}
+            class="flex items-center gap-2 p-3 rounded-lg border text-left transition-all duration-150 cursor-pointer text-sm
+              {selectedGoals.includes(goal.value)
+                ? 'border-primary-500 bg-primary-50 text-primary-700 font-medium'
+                : 'border-gray-200 hover:border-primary-300 hover:bg-gray-50 text-gray-700'}"
+          >
+            <span class="text-base">{goal.emoji}</span>
+            <span class="leading-tight">{$_(goal.labelKey)}</span>
+          </button>
+        {/each}
+      </div>
+      <div class="mt-6 flex items-center justify-between">
+        <button on:click={prevStep} class="text-sm text-gray-500 hover:text-gray-700 transition-colors duration-150 cursor-pointer flex items-center gap-1">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
+          {$_('common.back')}
+        </button>
+        <button on:click={generatePlan} disabled={selectedGoals.length === 0 || planLoading}
+          class="bg-primary-600 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150 text-sm cursor-pointer">
+          {planLoading ? $_('onboarding.generatingPlan') : $_('onboarding.createPlan')}
+        </button>
+      </div>
+    {/if}
+
+    <!-- Step 4: Success -->
+    {#if step === 4}
+      <div class="text-center">
+        <div class="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg class="w-7 h-7 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+          </svg>
+        </div>
+        <h2 class="text-lg font-semibold text-gray-900 mb-1">{$_('onboarding.step4Title')}</h2>
+        <p class="text-sm text-gray-500 mb-5">{$_('onboarding.planReady')}</p>
+        <div class="bg-gray-50 rounded-xl p-4 text-left space-y-2.5 mb-6">
+          <div class="flex items-start gap-2.5">
+            <div class="w-5 h-5 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+              <svg class="w-3 h-3 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+            </div>
+            <p class="text-sm text-gray-700">{$_('onboarding.planReadyAudience')}</p>
+          </div>
+          <div class="flex items-start gap-2.5">
+            <div class="w-5 h-5 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+              <svg class="w-3 h-3 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+            </div>
+            <p class="text-sm text-gray-700">{$_('onboarding.planReadyPlan')}</p>
+          </div>
+          <div class="flex items-start gap-2.5">
+            <div class="w-5 h-5 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+              <svg class="w-3 h-3 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+            </div>
+            <p class="text-sm text-gray-700">{$_('onboarding.planReadyGoals', { values: { goals: selectedGoals.join(', ') } })}</p>
+          </div>
+        </div>
+        <button on:click={acceptAndStart}
+          class="w-full bg-primary-600 text-white py-2.5 rounded-lg font-medium hover:bg-primary-700 transition-colors duration-150 text-sm cursor-pointer">
+          {$_('onboarding.acceptAndStart')}
         </button>
       </div>
     {/if}

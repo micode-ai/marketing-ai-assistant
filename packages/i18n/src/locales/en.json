@@ -49,7 +49,9 @@
     "emailAccounts": "Email Accounts",
     "docs": "Documentation",
     "help": "Help",
-    "webhooks": "Webhooks"
+    "webhooks": "Webhooks",
+    "showAdvanced": "Advanced features",
+    "hideAdvanced": "Hide advanced"
   },
   "auth": {
     "login": "Sign In",
@@ -86,8 +88,9 @@
     "step4": "You're all set!",
     "createOrg": "Create Organization",
     "addProject": "Add Project",
-    "addFirstProject": "Add Your First Project",
-    "skip": "Skip for now",
+    "addFirstProject": "Tell us about your product",
+    "step1Desc": "Just the basics — name and what it does",
+    "skip": "Skip setup",
     "finish": "Finish Setup",
     "projectNamePlaceholder": "My SaaS Product",
     "projectDescPlaceholder": "What does your product do?",
@@ -95,7 +98,38 @@
     "industry": "Industry",
     "selectIndustry": "Select...",
     "creating": "Creating...",
-    "createAndContinue": "Create Project & Continue →"
+    "createAndContinue": "Next →",
+    "step2Title": "Who are your customers?",
+    "step2Desc": "This helps AI personalize your marketing advice",
+    "audienceLabel": "Describe your ideal customer",
+    "audiencePlaceholder": "e.g. startup founders, small business owners, freelancers...",
+    "audienceAge": "Age range",
+    "audienceAgeAny": "Any age",
+    "audienceAgeB2B": "Business owners / teams",
+    "audienceAge1": "13–24 (Gen Z)",
+    "audienceAge2": "25–44 (Millennials)",
+    "audienceAge3": "45–65 (Gen X / Boomers)",
+    "audienceAge4": "Business owners / teams",
+    "painPointsLabel": "What problem do they have that you solve?",
+    "painPointsPlaceholder": "e.g. They struggle to find time for marketing...",
+    "step3Title": "What's your main goal right now?",
+    "step3Desc": "Select all that apply — we'll tailor your plan",
+    "step4Title": "Your marketing setup is ready!",
+    "generatingPlan": "Creating your marketing plan...",
+    "createPlan": "Generate My Marketing Plan →",
+    "planReady": "All set! Here's what we've prepared:",
+    "planReadyAudience": "Audience profile saved to your project",
+    "planReadyPlan": "30-day marketing plan is being generated (check Documents in ~1 min)",
+    "planReadyGoals": "Your goals: {goals}",
+    "acceptAndStart": "Start Marketing →",
+    "goals": {
+      "getVisitors": "Get more website visitors",
+      "convert": "Convert visitors to customers",
+      "emailList": "Build an email list",
+      "productHunt": "Launch on Product Hunt",
+      "social": "Grow social media following",
+      "brand": "Build brand awareness"
+    }
   },
   "projects": {
     "title": "Projects",
@@ -141,6 +175,20 @@
     "askAIDesc": "Get marketing advice, generate content, analyze performance",
     "openChat": "Open Chat →",
     "quickActions": "Quick Actions",
+    "gs": {
+      "title": "Getting Started",
+      "progress": "{done} of {total} completed",
+      "dismiss": "Dismiss",
+      "doItNow": "Do it now",
+      "aiStrategy": "Get your AI marketing strategy",
+      "aiStrategyDesc": "Ask AI for a personalized 30-day plan",
+      "firstContent": "Create your first social media post",
+      "firstContentDesc": "Generate AI content in Content Studio",
+      "firstChecklist": "Set up your marketing checklist",
+      "firstChecklistDesc": "Track your tasks step by step",
+      "shareContent": "Connect a social media account",
+      "shareContentDesc": "Publish content directly from the app"
+    },
     "quickActionDescs": {
       "content": "Generate and manage content with AI",
       "campaigns": "Plan and track marketing campaigns",
@@ -404,7 +452,16 @@
     },
     "thinking": "Thinking...",
     "error": "Failed to get a response. Please try again.",
-    "newChat": "New Chat"
+    "newChat": "New Chat",
+    "contextualHint": "Suggested for {name}:",
+    "contextual": {
+      "socialWeek": "Create a week of social posts for {name}",
+      "strategy": "Best marketing strategy for {industry}?",
+      "launchEmail": "Write a product launch email for {name}",
+      "plan30": "Give me a 30-day beginner marketing plan",
+      "channelAdvice": "Which channels to focus on for {industry}?",
+      "defaultIndustry": "my product"
+    }
   },
   "settings": {
     "organization": "Organization",
@@ -847,6 +904,52 @@
     "immediate": "Immediate",
     "moveUp": "Move up",
     "moveDown": "Move down"
+  },
+  "hints": {
+    "content": {
+      "title": "Content Studio — AI-powered content creation",
+      "desc": "Try it: click \"Create Content\", pick a type (e.g. Instagram post), describe your product in one sentence — AI generates ready-to-publish text. No marketing experience needed."
+    },
+    "campaigns": {
+      "title": "Campaigns — coordinate your marketing actions",
+      "desc": "Try it: create a campaign like \"Product Launch\" or \"Black Friday\". Then add content and emails to it — everything stays organized in one place with progress tracking."
+    },
+    "email": {
+      "title": "Email Marketing — grow and reach your audience",
+      "desc": "Start here: go to Settings → Email Accounts and connect your email. Then import subscribers or add them manually, and send your first newsletter."
+    },
+    "checklists": {
+      "title": "Checklists — step-by-step marketing task lists",
+      "desc": "Try it: click \"Create Checklist\" and choose a type — e.g. \"Product Launch\" or \"Social Media Plan\". AI generates a step-by-step task list you can follow and check off."
+    },
+    "documents": {
+      "title": "Documents — your marketing plans and strategies",
+      "desc": "Try it: click \"Create Document\" and ask AI to write a marketing plan, brand guidelines, or competitor analysis. Great for long-form strategy docs."
+    },
+    "analytics": {
+      "title": "Analytics — see how your marketing is performing",
+      "desc": "Start here: copy the tracking snippet code and add it to your website's HTML. After that, you'll see visitor stats, page views, and content engagement here."
+    },
+    "seo": {
+      "title": "SEO — help customers find you on Google",
+      "desc": "Try it: click \"Add Keyword\" and enter a phrase your customers might search for (e.g. \"best project management tool\"). AI will analyze it and suggest how to rank higher."
+    },
+    "experiments": {
+      "title": "A/B Testing — find out what works best",
+      "desc": "Try it: create an experiment with two versions of a headline, email subject, or CTA button. The system will show both to users and tell you which one performs better."
+    },
+    "sequences": {
+      "title": "Email Sequences — automated welcome & nurture emails",
+      "desc": "Try it: create a sequence and add emails with delays — e.g. welcome email on Day 0, a helpful tip on Day 3, a special offer on Day 7. Emails are sent automatically after someone subscribes."
+    },
+    "competitors": {
+      "title": "Competitors — keep an eye on the competition",
+      "desc": "Try it: click \"Add Competitor\" and enter their website URL. Track what they're doing so you can find gaps and differentiate your product."
+    },
+    "calendar": {
+      "title": "Content Calendar — plan your publishing schedule",
+      "desc": "This shows all your content with scheduled dates in a monthly view. To use it, create content in Content Studio and set a publish date — it will appear here automatically."
+    }
   },
   "seo": {
     "title": "SEO Keywords",

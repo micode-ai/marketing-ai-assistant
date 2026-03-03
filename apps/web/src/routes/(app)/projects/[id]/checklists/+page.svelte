@@ -4,6 +4,7 @@
   import { onMount } from 'svelte';
   import { slide } from 'svelte/transition';
   import { api } from '$lib/api/client';
+  import SectionHint from '$lib/components/SectionHint.svelte';
   import { marked } from 'marked';
 
   // Configure marked for inline rendering (no wrapping <p> tags for short content)
@@ -168,6 +169,7 @@
 </script>
 
 <div class="p-6">
+  <SectionHint sectionKey="checklists" titleKey="hints.checklists.title" descKey="hints.checklists.desc" />
   <div class="flex items-center justify-between mb-6">
     <h1 class="text-2xl font-bold text-gray-900">{$_('checklists.title')}</h1>
     <button on:click={() => showModal = true} class="bg-primary-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-700 transition flex items-center gap-2">
