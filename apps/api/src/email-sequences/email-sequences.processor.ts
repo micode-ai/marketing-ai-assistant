@@ -11,7 +11,7 @@ export class EmailSequenceProcessor {
 
   @Process('send-step')
   async handleSendStep(job: Job) {
-    const { enrollmentId, stepId, subscriberId } = job.data;
+    const { enrollmentId: _enrollmentId, stepId, subscriberId } = job.data;
     this.logger.log(`Processing email sequence step ${stepId} for subscriber ${subscriberId}`);
 
     try {

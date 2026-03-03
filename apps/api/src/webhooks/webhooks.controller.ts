@@ -30,7 +30,7 @@ export class WebhooksController {
 
   @Post('test/:id')
   async test(@Param('id') id: string) {
-    const webhook = await this.webhooksService.findAll('').then(() => null); // placeholder
+    await this.webhooksService.sendTestEvent(id);
     return { message: 'Webhook test event sent' };
   }
 }

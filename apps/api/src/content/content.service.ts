@@ -94,7 +94,7 @@ export class ContentService {
     });
   }
 
-  async repurpose(id: string, targetType: string, userId: string) {
+  async repurpose(id: string, targetType: string, _userId: string) {
     const source = await this.prisma.content.findUnique({ where: { id } });
     if (!source) throw new NotFoundException('Source content not found');
 

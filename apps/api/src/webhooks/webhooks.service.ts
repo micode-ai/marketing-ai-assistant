@@ -70,7 +70,7 @@ export class WebhooksService {
             'X-Webhook-Event': eventType,
           },
           body,
-          signal: AbortSignal.timeout(10000),
+          signal: globalThis.AbortSignal.timeout(10000),
         });
 
         results.push({ webhookId: webhook.id, success: response.ok });
@@ -87,5 +87,32 @@ export class WebhooksService {
     }
 
     return results;
+  }
+
+  async sendTestEvent(id: string) {
+    const webhook = await this.prisma.webhook.findUniqueOrThrow({ where: { id } });
+    const body = JSON.stringify({
+      event: 'webhook.test',
+      timestamp: new Date().toISOString(),
+      data: { message: 'This is a test event' },
+    });
+
+    const signature = crypto
+      .createHmac('sha256', webhook.secret)
+      .update(body)
+      .digest('hex');
+
+    const response = await fetch(webhook.url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Webhook-Signature': signature,
+        'X-Webhook-Event': 'webhook.test',
+      },
+      body,
+      signal: globalThis.AbortSignal.timeout(10000),
+    });
+
+    return { success: response.ok, status: response.status };
   }
 }
