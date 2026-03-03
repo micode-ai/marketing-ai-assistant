@@ -3,6 +3,7 @@
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
   import { api } from '$lib/api/client';
+  import SectionHint from '$lib/components/SectionHint.svelte';
 
   let contents: any[] = [];
   let campaigns: any[] = [];
@@ -294,6 +295,7 @@
 </script>
 
 <div class="p-6">
+  <SectionHint sectionKey="calendar" titleKey="hints.calendar.title" descKey="hints.calendar.desc" />
   <!-- Header -->
   <div class="flex items-center justify-between mb-5">
     <h1 class="text-2xl font-bold text-gray-900">{$_('calendar.title')}</h1>

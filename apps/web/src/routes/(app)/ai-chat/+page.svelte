@@ -3,6 +3,7 @@
   import { api } from '$lib/api/client';
   import { currentProjectStore } from '$lib/stores/projects';
   import { onMount, tick } from 'svelte';
+  import { page } from '$app/stores';
 
   interface Message {
     role: 'user' | 'assistant';
@@ -26,16 +27,27 @@
   let sessionsLoading = true;
   let container: HTMLElement;
 
-  $: examples = [
-    $_('aiChat.examples.1'),
-    $_('aiChat.examples.2'),
-    $_('aiChat.examples.3'),
-    $_('aiChat.examples.4'),
-    $_('aiChat.examples.5'),
-  ];
+  $: examples = $currentProjectStore
+    ? [
+        $_('aiChat.contextual.socialWeek', { values: { name: $currentProjectStore.name } }),
+        $_('aiChat.contextual.strategy', { values: { industry: $currentProjectStore.industry || $_('aiChat.contextual.defaultIndustry') } }),
+        $_('aiChat.contextual.launchEmail', { values: { name: $currentProjectStore.name } }),
+        $_('aiChat.contextual.plan30'),
+        $_('aiChat.contextual.channelAdvice', { values: { industry: $currentProjectStore.industry || $_('aiChat.contextual.defaultIndustry') } }),
+      ]
+    : [
+        $_('aiChat.examples.1'),
+        $_('aiChat.examples.2'),
+        $_('aiChat.examples.3'),
+        $_('aiChat.examples.4'),
+        $_('aiChat.examples.5'),
+      ];
 
   onMount(async () => {
     await loadSessions();
+    // Pre-fill from ?prompt= URL param (used by Getting Started "Do it now" links)
+    const promptParam = $page.url.searchParams.get('prompt');
+    if (promptParam) input = promptParam;
   });
 
   async function loadSessions() {
@@ -207,6 +219,9 @@
           <h2 class="text-xl font-semibold text-gray-900 mb-1">{$_('aiChat.title')}</h2>
           <p class="text-gray-500 mb-8 max-w-sm text-sm">{$_('aiChat.examples.title')}</p>
           <div class="flex flex-col gap-2 w-full max-w-md">
+            {#if $currentProjectStore}
+              <p class="text-xs text-gray-400 mb-1 text-left">{$_('aiChat.contextualHint', { values: { name: $currentProjectStore.name } })}</p>
+            {/if}
             {#each examples as ex}
               <button on:click={() => { input = ex; send(); }}
                 class="text-sm px-4 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 transition-colors duration-150 text-left cursor-pointer">

@@ -3,6 +3,7 @@
   import { page } from '$app/stores';
   import { onMount, onDestroy, tick } from 'svelte';
   import { api } from '$lib/api/client';
+  import SectionHint from '$lib/components/SectionHint.svelte';
 
   $: projectId = $page.params['id'];
 
@@ -273,6 +274,7 @@
 </script>
 
 <div class="p-6">
+  <SectionHint sectionKey="analytics" titleKey="hints.analytics.title" descKey="hints.analytics.desc" />
   <div class="flex items-center justify-between mb-6">
     <div>
       <h1 class="text-2xl font-bold text-gray-900">{$_('analytics.title')}</h1>

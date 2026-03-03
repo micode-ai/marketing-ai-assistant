@@ -2,6 +2,7 @@
   import { page } from '$app/stores';
   import { _ } from 'svelte-i18n';
   import { currentProjectStore } from '$lib/stores/projects';
+  import { browser } from '$app/environment';
 
   export let open = true;
 
@@ -47,23 +48,42 @@
     { href: '/settings/webhooks', iconKey: 'webhook', labelKey: 'nav.webhooks' },
   ];
 
-  const projectSubLinks = [
-    { path: 'overview', iconKey: 'chartbar', labelKey: 'projects.overview' },
-    { path: 'campaigns', iconKey: 'megaphone', labelKey: 'projects.campaigns' },
-    { path: 'content', iconKey: 'pencil', labelKey: 'projects.content' },
-    { path: 'email', iconKey: 'envelope', labelKey: 'projects.email' },
+  const essentialLinks = [
+    { path: 'overview',   iconKey: 'chartbar',    labelKey: 'projects.overview' },
+    { path: 'content',    iconKey: 'pencil',      labelKey: 'projects.content' },
     { path: 'checklists', iconKey: 'checkcircle', labelKey: 'projects.checklists' },
-    { path: 'documents', iconKey: 'document', labelKey: 'projects.documents' },
-    { path: 'analytics', iconKey: 'presentation', labelKey: 'projects.analytics' },
-    { path: 'seo', iconKey: 'globe', labelKey: 'projects.seo' },
-    { path: 'experiments', iconKey: 'beaker', labelKey: 'projects.experiments' },
-    { path: 'sequences', iconKey: 'mailstack', labelKey: 'projects.sequences' },
-    { path: 'competitors', iconKey: 'eye', labelKey: 'projects.competitors' },
-    { path: 'calendar', iconKey: 'calendar', labelKey: 'projects.calendar' },
+    { path: 'email',      iconKey: 'envelope',    labelKey: 'projects.email' },
+    { path: 'campaigns',  iconKey: 'megaphone',   labelKey: 'projects.campaigns' },
   ];
+
+  const advancedLinks = [
+    { path: 'documents',   iconKey: 'document',     labelKey: 'projects.documents' },
+    { path: 'analytics',   iconKey: 'presentation', labelKey: 'projects.analytics' },
+    { path: 'seo',         iconKey: 'globe',         labelKey: 'projects.seo' },
+    { path: 'experiments', iconKey: 'beaker',        labelKey: 'projects.experiments' },
+    { path: 'sequences',   iconKey: 'mailstack',     labelKey: 'projects.sequences' },
+    { path: 'competitors', iconKey: 'eye',           labelKey: 'projects.competitors' },
+    { path: 'calendar',    iconKey: 'calendar',      labelKey: 'projects.calendar' },
+  ];
+
+  let showAdvanced = browser ? localStorage.getItem('sidebarAdvanced') === 'true' : false;
+
+  function toggleAdvanced() {
+    showAdvanced = !showAdvanced;
+    if (browser) localStorage.setItem('sidebarAdvanced', String(showAdvanced));
+  }
 
   $: currentPath = $page.url.pathname;
   $: projectId = $currentProjectStore?.id;
+
+  // Auto-expand advanced section when navigating to an advanced route
+  $: if ($currentProjectStore && projectId && !showAdvanced) {
+    const onAdvanced = advancedLinks.some(l => currentPath === `/projects/${projectId}/${l.path}`);
+    if (onAdvanced) {
+      showAdvanced = true;
+      if (browser) localStorage.setItem('sidebarAdvanced', 'true');
+    }
+  }
 
   function isActive(href: string) {
     return currentPath === href || currentPath.startsWith(href + '/');
@@ -123,7 +143,8 @@
             {$currentProjectStore.name}
           </p>
           <ul class="space-y-0.5">
-            {#each projectSubLinks as link}
+            <!-- Essential links — always visible -->
+            {#each essentialLinks as link}
               {@const href = `/projects/${projectId}/${link.path}`}
               <li>
                 <a
@@ -138,6 +159,41 @@
                 </a>
               </li>
             {/each}
+
+            <!-- Advanced toggle button -->
+            <li>
+              <button
+                on:click={toggleAdvanced}
+                class="w-full flex items-center justify-between px-3 py-2 text-xs font-medium text-gray-400 hover:text-gray-600 cursor-pointer transition-colors duration-150 mt-1"
+              >
+                <span>{showAdvanced ? $_('nav.hideAdvanced') : $_('nav.showAdvanced')}</span>
+                <svg
+                  class="w-3.5 h-3.5 transition-transform duration-200 {showAdvanced ? 'rotate-180' : ''}"
+                  fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
+                >
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+            </li>
+
+            <!-- Advanced links — conditionally visible -->
+            {#if showAdvanced}
+              {#each advancedLinks as link}
+                {@const href = `/projects/${projectId}/${link.path}`}
+                <li>
+                  <a
+                    href={href}
+                    class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-150 cursor-pointer
+                      {currentPath === href
+                        ? 'bg-primary-50 text-primary-700 border-l-2 border-primary-600'
+                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 border-l-2 border-transparent'}"
+                  >
+                    {@html icons[link.iconKey]}
+                    <span>{$_(link.labelKey)}</span>
+                  </a>
+                </li>
+              {/each}
+            {/if}
           </ul>
         </div>
       {/if}

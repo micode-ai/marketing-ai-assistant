@@ -4,6 +4,7 @@
   import { onMount } from 'svelte';
   import { slide } from 'svelte/transition';
   import { api } from '$lib/api/client';
+  import SectionHint from '$lib/components/SectionHint.svelte';
 
   $: projectId = $page.params['id'];
 
@@ -249,6 +250,7 @@
 </script>
 
 <div class="p-6">
+  <SectionHint sectionKey="sequences" titleKey="hints.sequences.title" descKey="hints.sequences.desc" />
   <!-- Header -->
   <div class="flex items-center justify-between mb-6">
     <h1 class="text-2xl font-bold text-gray-900">{$_('sequences.title')}</h1>

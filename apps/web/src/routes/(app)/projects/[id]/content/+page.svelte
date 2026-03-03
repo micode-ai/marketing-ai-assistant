@@ -3,6 +3,7 @@
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
   import { api } from '$lib/api/client';
+  import SectionHint from '$lib/components/SectionHint.svelte';
   import { organizationIdStore } from '$lib/stores/projects';
 
   let contents: any[] = [];
@@ -208,6 +209,7 @@
 </script>
 
 <div class="p-6">
+  <SectionHint sectionKey="content" titleKey="hints.content.title" descKey="hints.content.desc" />
   <div class="flex items-center justify-between mb-6">
     <h1 class="text-2xl font-bold text-gray-900">{$_('content.title')}</h1>
     <button

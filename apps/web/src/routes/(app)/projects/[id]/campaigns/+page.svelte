@@ -3,6 +3,7 @@
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
   import { api } from '$lib/api/client';
+  import SectionHint from '$lib/components/SectionHint.svelte';
 
   let campaigns: any[] = [];
   let loading = true;
@@ -151,6 +152,7 @@
 </script>
 
 <div class="p-6">
+  <SectionHint sectionKey="campaigns" titleKey="hints.campaigns.title" descKey="hints.campaigns.desc" />
   <div class="flex items-center justify-between mb-6">
     <h1 class="text-2xl font-bold text-gray-900">{$_('campaigns.title')}</h1>
     <button

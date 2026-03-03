@@ -4,6 +4,7 @@
   import { onMount } from 'svelte';
   import { api } from '$lib/api/client';
   import { currentProjectStore } from '$lib/stores/projects';
+  import { browser } from '$app/environment';
   import type { Project } from '@marketing-ai/shared-types';
 
   let summary: { contentCount: number; campaignCount: number; subscriberCount: number; checklistItems: number } | null = null;
@@ -25,6 +26,54 @@
       loading = false;
     }
   });
+
+  // Getting Started guide state — per-project dismissal via localStorage
+  $: dismissed = browser
+    ? localStorage.getItem(`gs_dismissed_${projectId}`) === 'true'
+    : false;
+
+  function dismissGuide() {
+    dismissed = true;
+    if (browser) localStorage.setItem(`gs_dismissed_${projectId}`, 'true');
+  }
+
+  $: gettingStartedItems = [
+    {
+      id: 'ai_strategy',
+      labelKey: 'projects.gs.aiStrategy',
+      descKey: 'projects.gs.aiStrategyDesc',
+      href: `/ai-chat?prompt=${encodeURIComponent('Give me a 30-day marketing plan for my product')}`,
+      done: (($currentProjectStore as any)?._count?.documents ?? 0) > 0,
+      external: true,
+    },
+    {
+      id: 'first_content',
+      labelKey: 'projects.gs.firstContent',
+      descKey: 'projects.gs.firstContentDesc',
+      href: 'content',
+      done: (summary?.contentCount ?? 0) > 0,
+      external: false,
+    },
+    {
+      id: 'first_checklist',
+      labelKey: 'projects.gs.firstChecklist',
+      descKey: 'projects.gs.firstChecklistDesc',
+      href: 'checklists',
+      done: (summary?.checklistItems ?? 0) > 0,
+      external: false,
+    },
+    {
+      id: 'share_social',
+      labelKey: 'projects.gs.shareContent',
+      descKey: 'projects.gs.shareContentDesc',
+      href: '/settings/integrations',
+      done: false,
+      external: true,
+    },
+  ];
+
+  $: completedCount = gettingStartedItems.filter(i => i.done).length;
+  $: allDone = completedCount === gettingStartedItems.length;
 
   $: quickActions = [
     {
@@ -125,6 +174,61 @@
         </a>
       </div>
     </div>
+
+    <!-- Getting Started guide — shown until dismissed or all items done -->
+    {#if !dismissed && !allDone}
+      <div class="bg-white rounded-xl border border-gray-200 p-5 mb-8">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <h2 class="text-base font-semibold text-gray-900">{$_('projects.gs.title')}</h2>
+            <p class="text-xs text-gray-500 mt-0.5">
+              {$_('projects.gs.progress', { values: { done: completedCount, total: gettingStartedItems.length } })}
+            </p>
+          </div>
+          <button on:click={dismissGuide} class="text-xs text-gray-400 hover:text-gray-600 cursor-pointer transition-colors duration-150">
+            {$_('projects.gs.dismiss')}
+          </button>
+        </div>
+        <!-- Progress bar -->
+        <div class="w-full bg-gray-100 rounded-full h-1.5 mb-4">
+          <div
+            class="bg-primary-600 h-1.5 rounded-full transition-all duration-500"
+            style="width: {(completedCount / gettingStartedItems.length) * 100}%"
+          ></div>
+        </div>
+        <div class="space-y-2">
+          {#each gettingStartedItems as item}
+            <div class="flex items-center gap-3 p-3 rounded-lg {item.done ? 'bg-gray-50' : 'border border-gray-100'}">
+              <!-- Circle check indicator -->
+              <div class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0
+                {item.done ? 'bg-green-100 text-green-600' : 'border-2 border-gray-300'}">
+                {#if item.done}
+                  <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                {/if}
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium {item.done ? 'line-through text-gray-400' : 'text-gray-900'}">
+                  {$_(item.labelKey)}
+                </p>
+                {#if !item.done}
+                  <p class="text-xs text-gray-500 mt-0.5">{$_(item.descKey)}</p>
+                {/if}
+              </div>
+              {#if !item.done}
+                <a
+                  href={item.external ? item.href : `/projects/${projectId}/${item.href}`}
+                  class="text-xs font-medium text-primary-600 hover:text-primary-700 whitespace-nowrap cursor-pointer transition-colors duration-150"
+                >
+                  {$_('projects.gs.doItNow')} →
+                </a>
+              {/if}
+            </div>
+          {/each}
+        </div>
+      </div>
+    {/if}
 
     <!-- Quick actions grid -->
     <h2 class="text-lg font-semibold text-gray-900 mb-4">{$_('projects.quickActions')}</h2>

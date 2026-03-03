@@ -112,8 +112,9 @@ export class ContentService {
     });
   }
 
-  async getPerformance(projectId: string, days: number = 30) {
-    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+  async getPerformance(projectId: string, days?: number) {
+    const d = Number(days) || 30;
+    const since = new Date(Date.now() - d * 24 * 60 * 60 * 1000);
 
     const [contents, events] = await Promise.all([
       this.prisma.content.findMany({

@@ -4,6 +4,7 @@
   import { onMount } from 'svelte';
   import { api } from '$lib/api/client';
   import { marked } from 'marked';
+  import SectionHint from '$lib/components/SectionHint.svelte';
 
   marked.setOptions({ breaks: true, gfm: true });
 
@@ -157,6 +158,7 @@
 </script>
 
 <div class="p-6">
+  <SectionHint sectionKey="documents" titleKey="hints.documents.title" descKey="hints.documents.desc" />
   <!-- Header -->
   <div class="flex items-center justify-between mb-6">
     <h1 class="text-2xl font-bold text-gray-900">{$_('documents.title')}</h1>

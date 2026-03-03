@@ -3,6 +3,7 @@
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
   import { api } from '$lib/api/client';
+  import SectionHint from '$lib/components/SectionHint.svelte';
 
   let keywords: any[] = [];
   let loading = true;
@@ -164,6 +165,7 @@
 </script>
 
 <div class="p-6">
+  <SectionHint sectionKey="seo" titleKey="hints.seo.title" descKey="hints.seo.desc" />
   <!-- Header -->
   <div class="flex items-center justify-between mb-6">
     <div>
