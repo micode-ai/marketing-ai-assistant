@@ -124,23 +124,9 @@ services:
         limits:
           memory: 256M
 
-  nginx:
-    image: nginx:alpine
-    container_name: marketing-ai-nginx
-    restart: unless-stopped
-    ports:
-      - "${NGINX_PORT:-8080}:80"
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - web
-      - api
-    networks:
-      - marketing-network
-    deploy:
-      resources:
-        limits:
-          memory: 64M
+  # NOTE: nginx is handled by the shared accounting-nginx container
+  # which routes both eksiegowyai.pl and emarketingai.pl.
+  # See /opt/accounting-ai-agent/nginx.conf on the VPS.
 
 volumes:
   postgres_data_prod:
