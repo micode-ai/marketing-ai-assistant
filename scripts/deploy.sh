@@ -59,9 +59,16 @@ $DC -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d
 echo "=== Waiting for services to start ==="
 sleep 15
 
-echo "=== Restarting nginx to pick up new container IPs ==="
-$DC -f "$COMPOSE_FILE" --env-file "$ENV_FILE" restart nginx
-sleep 3
+echo "=== Reconnecting shared nginx to marketing network ==="
+# accounting-nginx is the shared reverse proxy for both domains.
+# After container recreation, it may lose the marketing-network connection.
+if docker ps -q -f name=accounting-nginx | grep -q .; then
+  docker network connect marketing-ai_marketing-network accounting-nginx 2>/dev/null || true
+  docker exec accounting-nginx nginx -s reload 2>/dev/null || true
+  echo "accounting-nginx reconnected and reloaded."
+else
+  echo "WARNING: accounting-nginx not found. emarketingai.pl will not be routed."
+fi
 
 echo "=== Health checks ==="
 $DC -f "$COMPOSE_FILE" --env-file "$ENV_FILE" ps
