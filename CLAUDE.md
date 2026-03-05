@@ -103,3 +103,34 @@ packages/
 
 ### Agent Types
 `CONTENT`, `CHECKLIST`, `DOCUMENT`, `STRATEGY`, `SEO`, `EMAIL`, `ANALYTICS`, `SUPERVISOR`
+
+## Claude Code Slash Commands
+
+Custom commands for the team. Use as `/command <args>` in Claude Code.
+
+| Command | Role | Description |
+|---------|------|-------------|
+| `/api` | Backend Dev | NestJS API — endpoints, modules, DTOs, guards, queues |
+| `/web` | Frontend Dev | SvelteKit — pages, components, stores, UI patterns |
+| `/agent` | AI Engineer | LangChain/LangGraph agents — prompts, graphs, tools |
+| `/db` | Database | Prisma schema, migrations, seed, queries |
+| `/deploy` | DevOps | Docker, CI/CD, production deploy, infrastructure |
+| `/test` | QA | Jest/Vitest — write tests, run tests, fix failures |
+| `/i18n` | Localization | Add/update translations in en/pl/ru |
+| `/feature` | Full-Stack | Plan & implement features across all layers |
+| `/debug` | Troubleshoot | Diagnose and fix issues systematically |
+| `/review` | Code Review | Review changes for quality, security, patterns |
+
+### Usage Examples
+```
+/api add PATCH endpoint to update content tags
+/web create a notification dropdown in the header
+/agent add competitor monitoring agent
+/db add tags field to Content model
+/deploy check why production build is failing
+/test write unit tests for social service
+/i18n add translations for the new webhooks page
+/feature implement a content templates marketplace
+/debug API returns 500 when creating email campaign
+/review review staged changes before commit
+```

@@ -40,6 +40,15 @@ enum ProjectStatus {
   ARCHIVED
 }
 
+enum ProjectType {
+  WEBSITE
+  MOBILE_APP
+  SAAS
+  ECOMMERCE
+  BLOG
+  OTHER
+}
+
 enum SocialPlatform {
   TWITTER
   LINKEDIN
@@ -317,6 +326,7 @@ model Project {
   organizationId String
   trackingId     String?       @unique @default(cuid())
   name           String
+  projectType    ProjectType @default(WEBSITE)
   description    String?
   websiteUrl     String?
   logoUrl        String?

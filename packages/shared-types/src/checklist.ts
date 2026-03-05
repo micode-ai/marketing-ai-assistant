@@ -49,3 +49,12 @@ export interface UpdateChecklistItemDto {
   dueDate?: Date;
   priority?: ChecklistItemPriority;
 }
+
+export interface UpdateChecklistDto {
+  name?: string;
+  description?: string;
+}
+
+export interface ReorderChecklistItemsDto {
+  itemIds: string[];
+}

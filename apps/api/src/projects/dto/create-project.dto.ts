@@ -1,10 +1,15 @@
-import { IsString, IsOptional, IsUrl, IsObject } from 'class-validator';
+import { IsString, IsOptional, IsUrl, IsObject, IsEnum } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateProjectDto {
   @ApiProperty()
   @IsString()
   name: string;
+
+  @ApiPropertyOptional({ enum: ['WEBSITE', 'MOBILE_APP', 'SAAS', 'ECOMMERCE', 'BLOG', 'OTHER'] })
+  @IsOptional()
+  @IsEnum(['WEBSITE', 'MOBILE_APP', 'SAAS', 'ECOMMERCE', 'BLOG', 'OTHER'])
+  projectType?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
