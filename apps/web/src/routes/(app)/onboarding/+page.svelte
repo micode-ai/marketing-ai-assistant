@@ -9,9 +9,13 @@
 
   // Step 1 — product info
   let projectName = '';
+  let projectType = 'WEBSITE';
   let projectDescription = '';
   let projectWebsite = '';
   let projectIndustry = '';
+
+  const projectTypes = ['WEBSITE', 'MOBILE_APP', 'SAAS', 'ECOMMERCE', 'BLOG', 'OTHER'] as const;
+  $: showWebsiteUrl = projectType !== 'MOBILE_APP';
 
   // Step 2 — audience
   let audienceAgeRange = '';
@@ -48,8 +52,9 @@
     try {
       const project = await api.post<Project>(`/projects?organizationId=${$organizationIdStore}`, {
         name: projectName,
+        projectType,
         description: projectDescription,
-        websiteUrl: projectWebsite,
+        websiteUrl: showWebsiteUrl ? projectWebsite : undefined,
         industry: projectIndustry,
         targetAudience: audienceDescription,
         goals: { primary: selectedGoals[0] || 'GENERAL', kpis: selectedGoals },
@@ -110,14 +115,30 @@
           <input id="ob-name" type="text" bind:value={projectName} class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm" placeholder={$_('onboarding.projectNamePlaceholder')} />
         </div>
         <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">{$_('projects.projectType')}</label>
+          <div class="grid grid-cols-3 gap-2">
+            {#each projectTypes as pt}
+              <button
+                type="button"
+                on:click={() => projectType = pt}
+                class="px-3 py-2 text-sm rounded-lg border transition-colors duration-150 cursor-pointer {projectType === pt ? 'border-primary-500 bg-primary-50 text-primary-700 font-medium' : 'border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50'}"
+              >
+                {$_(`projects.types.${pt}`)}
+              </button>
+            {/each}
+          </div>
+        </div>
+        <div>
           <label for="ob-desc" class="block text-sm font-medium text-gray-700 mb-1">{$_('projects.description')}</label>
           <textarea id="ob-desc" bind:value={projectDescription} rows="2" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm resize-none" placeholder={$_('onboarding.projectDescPlaceholder')}></textarea>
         </div>
         <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label for="ob-website" class="block text-sm font-medium text-gray-700 mb-1">{$_('onboarding.website')}</label>
-            <input id="ob-website" type="url" bind:value={projectWebsite} class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm" placeholder="https://..." />
-          </div>
+          {#if showWebsiteUrl}
+            <div>
+              <label for="ob-website" class="block text-sm font-medium text-gray-700 mb-1">{$_('onboarding.website')}</label>
+              <input id="ob-website" type="url" bind:value={projectWebsite} class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm" placeholder="https://..." />
+            </div>
+          {/if}
           <div>
             <label for="ob-industry" class="block text-sm font-medium text-gray-700 mb-1">{$_('onboarding.industry')}</label>
             <select id="ob-industry" bind:value={projectIndustry} class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm cursor-pointer">

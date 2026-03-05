@@ -1,7 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { CreateChecklistDto } from './dto/create-checklist.dto';
+import { UpdateChecklistDto } from './dto/update-checklist.dto';
 import { UpdateChecklistItemDto } from './dto/update-checklist-item.dto';
+import { CreateChecklistItemDto } from './dto/create-checklist-item.dto';
+import { ReorderChecklistItemsDto } from './dto/reorder-checklist-items.dto';
 
 @Injectable()
 export class ChecklistsService {
@@ -56,14 +59,46 @@ export class ChecklistsService {
     });
   }
 
+  async update(id: string, dto: UpdateChecklistDto) {
+    const checklist = await this.prisma.checklist.findUnique({ where: { id } });
+    if (!checklist) throw new NotFoundException('Checklist not found');
+    return this.prisma.checklist.update({
+      where: { id },
+      data: dto,
+      include: { items: { orderBy: { order: 'asc' } } },
+    });
+  }
+
   async delete(id: string) {
     return this.prisma.checklist.delete({ where: { id } });
   }
 
-  async addItem(checklistId: string, item: any) {
+  async addItem(checklistId: string, dto: CreateChecklistItemDto) {
     const count = await this.prisma.checklistItem.count({ where: { checklistId } });
     return this.prisma.checklistItem.create({
-      data: { checklistId, ...item, order: item.order || count + 1, priority: (item.priority || 'MEDIUM') as any },
+      data: {
+        checklistId,
+        title: dto.title,
+        description: dto.description,
+        order: dto.order || count + 1,
+        priority: (dto.priority || 'MEDIUM') as any,
+        isCompleted: dto.isCompleted || false,
+      },
     });
+  }
+
+  async deleteItem(itemId: string) {
+    return this.prisma.checklistItem.delete({ where: { id: itemId } });
+  }
+
+  async reorderItems(checklistId: string, dto: ReorderChecklistItemsDto) {
+    const updates = dto.itemIds.map((id, index) =>
+      this.prisma.checklistItem.update({
+        where: { id },
+        data: { order: index + 1 },
+      }),
+    );
+    await this.prisma.$transaction(updates);
+    return this.findOne(checklistId);
   }
 }

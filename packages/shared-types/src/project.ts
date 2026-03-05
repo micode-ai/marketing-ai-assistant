@@ -1,4 +1,4 @@
-import { ProjectStatus, SocialPlatform } from './enums';
+import { ProjectStatus, ProjectType, SocialPlatform } from './enums';
 
 export interface BrandVoice {
   tone: string[];
@@ -27,6 +27,7 @@ export interface Project {
   id: string;
   organizationId: string;
   name: string;
+  projectType: ProjectType;
   description?: string;
   websiteUrl?: string;
   logoUrl?: string;
@@ -50,6 +51,7 @@ export interface ProjectApiKey {
 
 export interface CreateProjectDto {
   name: string;
+  projectType?: ProjectType;
   description?: string;
   websiteUrl?: string;
   targetAudience?: string;

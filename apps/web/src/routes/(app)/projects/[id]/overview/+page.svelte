@@ -125,7 +125,7 @@
         </div>
         <div>
           <h1 class="text-2xl font-bold text-gray-900">{$currentProjectStore.name}</h1>
-          <p class="text-sm text-gray-500 mt-0.5">{$currentProjectStore.industry || ''}{$currentProjectStore.websiteUrl ? ' · ' + $currentProjectStore.websiteUrl : ''}</p>
+          <p class="text-sm text-gray-500 mt-0.5">{$currentProjectStore.projectType ? $_(`projects.types.${$currentProjectStore.projectType}`) : ''}{$currentProjectStore.industry ? ' · ' + $currentProjectStore.industry : ''}{$currentProjectStore.websiteUrl ? ' · ' + $currentProjectStore.websiteUrl : ''}</p>
         </div>
       </div>
       <a href="/projects/{projectId}/settings" class="px-3 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-150 flex items-center gap-1.5 cursor-pointer">

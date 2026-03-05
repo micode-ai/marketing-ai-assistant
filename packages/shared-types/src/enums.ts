@@ -24,6 +24,15 @@ export enum ProjectStatus {
   ARCHIVED = 'ARCHIVED',
 }
 
+export enum ProjectType {
+  WEBSITE = 'WEBSITE',
+  MOBILE_APP = 'MOBILE_APP',
+  SAAS = 'SAAS',
+  ECOMMERCE = 'ECOMMERCE',
+  BLOG = 'BLOG',
+  OTHER = 'OTHER',
+}
+
 export enum SocialPlatform {
   TWITTER = 'TWITTER',
   LINKEDIN = 'LINKEDIN',
