@@ -1019,5 +1019,43 @@
     "difficultyEasy": "Easy",
     "difficultyMedium": "Medium",
     "difficultyHard": "Hard"
+  },
+  "projectExport": {
+    "title": "Export Project",
+    "description": "Download project data as JSON file",
+    "selectSections": "Select data to export",
+    "exportBtn": "Export",
+    "downloading": "Exporting...",
+    "selectAll": "Select all",
+    "deselectAll": "Deselect all",
+    "sectionContent": "Content",
+    "sectionCampaigns": "Campaigns",
+    "sectionChecklists": "Checklists",
+    "sectionDocuments": "Documents",
+    "sectionEmailLists": "Email Lists & Subscribers",
+    "sectionKeywords": "SEO Keywords",
+    "sectionCompetitors": "Competitors"
+  },
+  "projectImport": {
+    "title": "Import Project",
+    "description": "Create project from exported JSON file",
+    "uploadFile": "Click to upload JSON file",
+    "uploadHint": "Select a .json file exported from this app",
+    "validating": "Validating file...",
+    "importing": "Importing...",
+    "preview": "Preview",
+    "previewDesc": "Select which data to import",
+    "importBtn": "Import Project",
+    "importSuccess": "Project imported successfully",
+    "errorInvalidFile": "Please select a .json file",
+    "errorInvalidVersion": "Unsupported file version",
+    "errorParseFailed": "Could not parse the JSON file",
+    "sectionContent": "Content",
+    "sectionCampaigns": "Campaigns",
+    "sectionChecklists": "Checklists",
+    "sectionDocuments": "Documents",
+    "sectionEmailLists": "Email Lists & Subscribers",
+    "sectionKeywords": "SEO Keywords",
+    "sectionCompetitors": "Competitors"
   }
 }

@@ -3,7 +3,7 @@
   import { onMount } from 'svelte';
   import { api } from '$lib/api/client';
   import { organizationIdStore, projectsStore } from '$lib/stores/projects';
-  import type { Project } from '@marketing-ai/shared-types';
+  import type { Project, ProjectExportData, ProjectExportSection, ImportValidationResult } from '@marketing-ai/shared-types';
   import { goto } from '$app/navigation';
 
   let loading = true;
@@ -19,6 +19,109 @@
     }
     loading = false;
   });
+
+  // ── Import ──
+  let showImportModal = false;
+  let importStep: 'upload' | 'preview' = 'upload';
+  let importError = '';
+  let importing = false;
+  let validating = false;
+  let importData: ProjectExportData | null = null;
+  let importValidation: ImportValidationResult | null = null;
+  let selectedImportSections: Set<ProjectExportSection> = new Set();
+
+  const sectionLabels: Record<ProjectExportSection, string> = {
+    content: 'projectImport.sectionContent',
+    campaigns: 'projectImport.sectionCampaigns',
+    checklists: 'projectImport.sectionChecklists',
+    documents: 'projectImport.sectionDocuments',
+    emailLists: 'projectImport.sectionEmailLists',
+    keywords: 'projectImport.sectionKeywords',
+    competitors: 'projectImport.sectionCompetitors',
+  };
+
+  function resetImport() {
+    importStep = 'upload';
+    importError = '';
+    importData = null;
+    importValidation = null;
+    selectedImportSections = new Set();
+  }
+
+  function handleImportFile(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    if (!file.name.endsWith('.json')) {
+      importError = $_('projectImport.errorInvalidFile');
+      return;
+    }
+
+    importError = '';
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const text = e.target?.result as string;
+        const parsed = JSON.parse(text) as ProjectExportData;
+        importData = parsed;
+
+        // Validate
+        validating = true;
+        try {
+          const result = await api.post<ImportValidationResult>('/projects/import/validate', { data: parsed });
+          importValidation = result;
+          if (!result.valid) {
+            importError = result.errors.join('; ');
+            return;
+          }
+          // Pre-select all available sections
+          selectedImportSections = new Set(
+            Object.keys(result.summary) as ProjectExportSection[]
+          );
+          importStep = 'preview';
+        } catch (err: any) {
+          importError = err.message || $_('projectImport.errorParseFailed');
+        } finally {
+          validating = false;
+        }
+      } catch {
+        importError = $_('projectImport.errorParseFailed');
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  function toggleImportSection(key: ProjectExportSection) {
+    if (selectedImportSections.has(key)) {
+      selectedImportSections.delete(key);
+    } else {
+      selectedImportSections.add(key);
+    }
+    selectedImportSections = new Set(selectedImportSections);
+  }
+
+  async function doImport() {
+    if (!importData || !$organizationIdStore) return;
+    importing = true;
+    try {
+      const result = await api.post<Project>('/projects/import', {
+        organizationId: $organizationIdStore,
+        data: importData,
+        sections: Array.from(selectedImportSections),
+      });
+      // Reload projects
+      const projects = await api.get<Project[]>('/projects', { organizationId: $organizationIdStore });
+      projectsStore.set(projects);
+      showImportModal = false;
+      resetImport();
+      goto(`/projects/${result.id}/overview`);
+    } catch (e: any) {
+      importError = e.message || 'Import failed';
+    } finally {
+      importing = false;
+    }
+  }
 </script>
 
 <div class="p-6">
@@ -27,12 +130,20 @@
       <h1 class="text-2xl font-bold text-gray-900">{$_('nav.dashboard')}</h1>
       <p class="text-sm text-gray-500 mt-1">{$_('projects.manageDesc')}</p>
     </div>
-    <a href="/projects/new" class="bg-primary-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors duration-150 flex items-center gap-2 cursor-pointer">
-      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-      </svg>
-      {$_('projects.create')}
-    </a>
+    <div class="flex items-center gap-2">
+      <button on:click={() => { resetImport(); showImportModal = true; }} class="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 flex items-center gap-2 cursor-pointer">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+        </svg>
+        {$_('common.import')}
+      </button>
+      <a href="/projects/new" class="bg-primary-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors duration-150 flex items-center gap-2 cursor-pointer">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+        </svg>
+        {$_('projects.create')}
+      </a>
+    </div>
   </div>
 
   {#if loading}
@@ -116,3 +227,101 @@
     </div>
   {/if}
 </div>
+
+<!-- Import Modal -->
+{#if showImportModal}
+  <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => showImportModal = false}>
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+      <div class="p-6 border-b border-gray-100">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900">{$_('projectImport.title')}</h3>
+            <p class="text-sm text-gray-500">{$_('projectImport.description')}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-6">
+        {#if importStep === 'upload'}
+          <!-- Upload step -->
+          <label class="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-primary-400 hover:bg-primary-50/30 transition-colors duration-150">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m6.75 12H9.75m3 0l-3-3m0 0l-3 3m3-3v6.75" />
+            </svg>
+            <p class="text-sm text-gray-600 font-medium">{$_('projectImport.uploadFile')}</p>
+            <p class="text-xs text-gray-400 mt-1">{$_('projectImport.uploadHint')}</p>
+            <input type="file" accept=".json" class="hidden" on:change={handleImportFile} />
+          </label>
+          {#if validating}
+            <div class="flex items-center gap-2 mt-4 text-sm text-gray-500">
+              <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+              {$_('projectImport.validating')}
+            </div>
+          {/if}
+          {#if importError}
+            <div class="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{importError}</div>
+          {/if}
+
+        {:else if importStep === 'preview'}
+          <!-- Preview step -->
+          <div class="mb-4">
+            <div class="flex items-center gap-2 mb-1">
+              <div class="w-8 h-8 bg-gradient-to-br from-primary-400 to-primary-700 rounded-lg flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                {importValidation?.projectName?.charAt(0) || 'P'}
+              </div>
+              <div>
+                <p class="text-sm font-semibold text-gray-900">{importValidation?.projectName}</p>
+                <p class="text-xs text-gray-500">{$_('projectImport.previewDesc')}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            {#each Object.entries(importValidation?.summary || {}) as [section, count]}
+              <label class="flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors duration-150
+                {selectedImportSections.has(section) ? 'border-primary-200 bg-primary-50/50' : 'border-gray-200 hover:bg-gray-50'}">
+                <div class="flex items-center gap-3">
+                  <input type="checkbox" checked={selectedImportSections.has(section)} on:change={() => toggleImportSection(section)}
+                    class="w-4 h-4 text-primary-600 rounded border-gray-300 focus:ring-primary-500" />
+                  <span class="text-sm text-gray-700">{$_(sectionLabels[section] || section)}</span>
+                </div>
+                <span class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{count}</span>
+              </label>
+            {/each}
+          </div>
+
+          {#if importError}
+            <div class="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{importError}</div>
+          {/if}
+        {/if}
+      </div>
+
+      <div class="p-6 border-t border-gray-100 flex justify-end gap-3">
+        {#if importStep === 'preview'}
+          <button on:click={() => { importStep = 'upload'; importError = ''; }} class="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors duration-150">
+            {$_('common.back')}
+          </button>
+        {/if}
+        <button on:click={() => showImportModal = false} class="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors duration-150">
+          {$_('common.cancel')}
+        </button>
+        {#if importStep === 'preview'}
+          <button on:click={doImport} disabled={importing || selectedImportSections.size === 0}
+            class="px-4 py-2 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50 cursor-pointer transition-colors duration-150 flex items-center gap-2">
+            {#if importing}
+              <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+              {$_('projectImport.importing')}
+            {:else}
+              {$_('projectImport.importBtn')}
+            {/if}
+          </button>
+        {/if}
+      </div>
+    </div>
+  </div>
+{/if}

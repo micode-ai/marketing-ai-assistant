@@ -38,10 +38,3 @@ export interface AgentMessage {
   content: string;
   timestamp: Date;
 }
-
-export interface ChatSession {
-  id: string;
-  projectId?: string;
-  messages: AgentMessage[];
-  createdAt: Date;
-}
