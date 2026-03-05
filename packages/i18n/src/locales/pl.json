@@ -999,5 +999,43 @@
     "difficultyEasy": "Łatwe",
     "difficultyMedium": "Średnie",
     "difficultyHard": "Trudne"
+  },
+  "projectExport": {
+    "title": "Eksportuj projekt",
+    "description": "Pobierz dane projektu jako plik JSON",
+    "selectSections": "Wybierz dane do eksportu",
+    "exportBtn": "Eksportuj",
+    "downloading": "Eksportowanie...",
+    "selectAll": "Zaznacz wszystko",
+    "deselectAll": "Odznacz wszystko",
+    "sectionContent": "Treści",
+    "sectionCampaigns": "Kampanie",
+    "sectionChecklists": "Listy kontrolne",
+    "sectionDocuments": "Dokumenty",
+    "sectionEmailLists": "Listy e-mail i subskrybenci",
+    "sectionKeywords": "Słowa kluczowe SEO",
+    "sectionCompetitors": "Konkurenci"
+  },
+  "projectImport": {
+    "title": "Importuj projekt",
+    "description": "Utwórz projekt z wyeksportowanego pliku JSON",
+    "uploadFile": "Kliknij, aby przesłać plik JSON",
+    "uploadHint": "Wybierz plik .json wyeksportowany z tej aplikacji",
+    "validating": "Walidacja pliku...",
+    "importing": "Importowanie...",
+    "preview": "Podgląd",
+    "previewDesc": "Wybierz dane do zaimportowania",
+    "importBtn": "Importuj projekt",
+    "importSuccess": "Projekt zaimportowany pomyślnie",
+    "errorInvalidFile": "Proszę wybrać plik .json",
+    "errorInvalidVersion": "Nieobsługiwana wersja pliku",
+    "errorParseFailed": "Nie udało się odczytać pliku JSON",
+    "sectionContent": "Treści",
+    "sectionCampaigns": "Kampanie",
+    "sectionChecklists": "Listy kontrolne",
+    "sectionDocuments": "Dokumenty",
+    "sectionEmailLists": "Listy e-mail i subskrybenci",
+    "sectionKeywords": "Słowa kluczowe SEO",
+    "sectionCompetitors": "Konkurenci"
   }
 }

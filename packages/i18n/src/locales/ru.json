@@ -997,5 +997,43 @@
     "difficultyEasy": "Лёгкое",
     "difficultyMedium": "Среднее",
     "difficultyHard": "Сложное"
+  },
+  "projectExport": {
+    "title": "Экспорт проекта",
+    "description": "Скачать данные проекта в формате JSON",
+    "selectSections": "Выберите данные для экспорта",
+    "exportBtn": "Экспортировать",
+    "downloading": "Экспорт...",
+    "selectAll": "Выбрать все",
+    "deselectAll": "Снять все",
+    "sectionContent": "Контент",
+    "sectionCampaigns": "Кампании",
+    "sectionChecklists": "Чек-листы",
+    "sectionDocuments": "Документы",
+    "sectionEmailLists": "Email-списки и подписчики",
+    "sectionKeywords": "SEO ключевые слова",
+    "sectionCompetitors": "Конкуренты"
+  },
+  "projectImport": {
+    "title": "Импорт проекта",
+    "description": "Создать проект из экспортированного JSON файла",
+    "uploadFile": "Нажмите для загрузки JSON файла",
+    "uploadHint": "Выберите .json файл, экспортированный из приложения",
+    "validating": "Проверка файла...",
+    "importing": "Импорт...",
+    "preview": "Предпросмотр",
+    "previewDesc": "Выберите данные для импорта",
+    "importBtn": "Импортировать проект",
+    "importSuccess": "Проект успешно импортирован",
+    "errorInvalidFile": "Пожалуйста, выберите файл .json",
+    "errorInvalidVersion": "Неподдерживаемая версия файла",
+    "errorParseFailed": "Не удалось прочитать файл JSON",
+    "sectionContent": "Контент",
+    "sectionCampaigns": "Кампании",
+    "sectionChecklists": "Чек-листы",
+    "sectionDocuments": "Документы",
+    "sectionEmailLists": "Email-списки и подписчики",
+    "sectionKeywords": "SEO ключевые слова",
+    "sectionCompetitors": "Конкуренты"
   }
 }
