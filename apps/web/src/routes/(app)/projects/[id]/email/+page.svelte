@@ -271,7 +271,7 @@
   };
 </script>
 
-<div class="p-6">
+<div class="p-4 sm:p-6">
   <SectionHint sectionKey="email" titleKey="hints.email.title" descKey="hints.email.desc" />
   <!-- Header -->
   <div class="flex items-center justify-between mb-6">

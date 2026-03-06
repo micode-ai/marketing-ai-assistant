@@ -157,7 +157,7 @@
   }
 </script>
 
-<div class="p-6">
+<div class="p-4 sm:p-6">
   <SectionHint sectionKey="documents" titleKey="hints.documents.title" descKey="hints.documents.desc" />
   <!-- Header -->
   <div class="flex items-center justify-between mb-6">

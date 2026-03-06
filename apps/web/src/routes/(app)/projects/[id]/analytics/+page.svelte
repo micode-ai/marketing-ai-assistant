@@ -273,7 +273,7 @@
   ];
 </script>
 
-<div class="p-6">
+<div class="p-4 sm:p-6">
   <SectionHint sectionKey="analytics" titleKey="hints.analytics.title" descKey="hints.analytics.desc" />
   <div class="flex items-center justify-between mb-6">
     <div>

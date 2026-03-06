@@ -294,7 +294,7 @@
   }
 </script>
 
-<div class="p-6">
+<div class="p-4 sm:p-6">
   <SectionHint sectionKey="calendar" titleKey="hints.calendar.title" descKey="hints.calendar.desc" />
   <!-- Header -->
   <div class="flex items-center justify-between mb-5">

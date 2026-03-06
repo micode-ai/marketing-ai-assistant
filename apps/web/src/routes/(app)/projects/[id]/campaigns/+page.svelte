@@ -151,9 +151,9 @@
   }
 </script>
 
-<div class="p-6">
+<div class="p-4 sm:p-6">
   <SectionHint sectionKey="campaigns" titleKey="hints.campaigns.title" descKey="hints.campaigns.desc" />
-  <div class="flex items-center justify-between mb-6">
+  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
     <h1 class="text-2xl font-bold text-gray-900">{$_('campaigns.title')}</h1>
     <button
       on:click={() => showCreateModal = true}
@@ -195,7 +195,7 @@
     <div class="space-y-3">
       {#each campaigns as campaign}
         <div class="bg-white rounded-xl border border-gray-200 border-l-4 {statusBorderAccent[campaign.status] || 'border-l-gray-300'} p-5 hover:shadow-sm transition-shadow duration-150">
-          <div class="flex items-start justify-between gap-4">
+          <div class="flex flex-col sm:flex-row items-start justify-between gap-3 sm:gap-4">
             <div class="flex-1 min-w-0">
               <div class="flex flex-wrap items-center gap-1.5 mb-2">
                 <span class="text-xs px-2 py-0.5 rounded font-medium {typeBadge[campaign.type] || 'bg-gray-100 text-gray-600'}">{$_(typeLabel[campaign.type] || 'campaigns.email')}</span>
@@ -229,7 +229,7 @@
                 <p class="text-sm text-gray-500 mt-1.5 line-clamp-1">{campaign.goals}</p>
               {/if}
             </div>
-            <div class="flex items-center gap-2 flex-shrink-0">
+            <div class="flex items-center gap-2 flex-shrink-0 flex-wrap">
               <select
                 value={campaign.status}
                 on:change={e => updateStatus(campaign.id, (e.target as HTMLSelectElement).value)}
@@ -289,7 +289,7 @@
             {/each}
           </select>
         </div>
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label for="c-start" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('campaigns.startDate')}</label>
             <input id="c-start" type="date" bind:value={createForm.startDate} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
@@ -351,7 +351,7 @@
           <label for="e-name" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('campaigns.name')} *</label>
           <input id="e-name" type="text" bind:value={editForm.name} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
         </div>
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label for="e-type" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('campaigns.type')}</label>
             <select id="e-type" bind:value={editForm.type} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
@@ -369,7 +369,7 @@
             </select>
           </div>
         </div>
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label for="e-start" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('campaigns.startDate')}</label>
             <input id="e-start" type="date" bind:value={editForm.startDate} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />

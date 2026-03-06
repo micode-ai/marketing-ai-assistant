@@ -175,9 +175,9 @@
   ];
 </script>
 
-<div class="p-6">
+<div class="p-4 sm:p-6">
   {#if $currentProjectStore}
-    <div class="flex items-start justify-between mb-6">
+    <div class="flex flex-col sm:flex-row items-start justify-between gap-4 mb-6">
       <div class="flex items-center gap-4">
         <div class="w-14 h-14 bg-gradient-to-br from-primary-400 to-primary-700 rounded-2xl flex items-center justify-center text-white font-bold text-2xl flex-shrink-0">
           {$currentProjectStore.name.charAt(0)}
@@ -187,14 +187,14 @@
           <p class="text-sm text-gray-500 mt-0.5">{$currentProjectStore.projectType ? $_(`projects.types.${$currentProjectStore.projectType}`) : ''}{$currentProjectStore.industry ? ' · ' + $currentProjectStore.industry : ''}{$currentProjectStore.websiteUrl ? ' · ' + $currentProjectStore.websiteUrl : ''}</p>
         </div>
       </div>
-      <div class="flex items-center gap-2">
-        <button on:click={() => showExportModal = true} class="px-3 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-150 flex items-center gap-1.5 cursor-pointer">
+      <div class="flex items-center gap-2 w-full sm:w-auto">
+        <button on:click={() => showExportModal = true} class="flex-1 sm:flex-initial px-3 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-150 flex items-center justify-center gap-1.5 cursor-pointer">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
           </svg>
           {$_('common.export')}
         </button>
-        <a href="/projects/{projectId}/settings" class="px-3 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-150 flex items-center gap-1.5 cursor-pointer">
+        <a href="/projects/{projectId}/settings" class="flex-1 sm:flex-initial px-3 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-150 flex items-center justify-center gap-1.5 cursor-pointer">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" />
             <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -224,7 +224,7 @@
 
     <!-- AI Chat CTA -->
     <div class="bg-gradient-to-r from-primary-600 to-violet-600 rounded-xl p-5 mb-8 text-white">
-      <div class="flex items-center justify-between gap-4">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
@@ -322,7 +322,7 @@
           <div class="h-4 bg-gray-200 rounded w-1/4"></div>
         </div>
       </div>
-      <div class="grid grid-cols-4 gap-4">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {#each Array(4) as _}
           <div class="bg-gray-200 rounded-xl h-24"></div>
         {/each}

@@ -167,7 +167,7 @@
   }
 </script>
 
-<div class="p-6">
+<div class="p-4 sm:p-6">
   <SectionHint sectionKey="competitors" titleKey="hints.competitors.title" descKey="hints.competitors.desc" />
   <!-- Header -->
   <div class="flex items-center justify-between mb-6">
