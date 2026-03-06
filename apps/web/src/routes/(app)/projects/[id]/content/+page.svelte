@@ -208,9 +208,9 @@
   };
 </script>
 
-<div class="p-6">
+<div class="p-4 sm:p-6">
   <SectionHint sectionKey="content" titleKey="hints.content.title" descKey="hints.content.desc" />
-  <div class="flex items-center justify-between mb-6">
+  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
     <h1 class="text-2xl font-bold text-gray-900">{$_('content.title')}</h1>
     <button
       on:click={() => showModal = true}
@@ -277,7 +277,7 @@
     <div class="space-y-3">
       {#each contents as content}
         <div class="bg-white rounded-xl border border-gray-200 border-l-4 {statusBorderAccent[content.status] || 'border-l-gray-300'} p-5 hover:shadow-sm transition-shadow duration-150">
-          <div class="flex items-start justify-between gap-4">
+          <div class="flex flex-col sm:flex-row items-start justify-between gap-3 sm:gap-4">
             <div class="flex-1 min-w-0">
               <div class="flex flex-wrap items-center gap-1.5 mb-2">
                 <span class="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded font-medium">{content.type.replace('_', ' ')}</span>
@@ -303,7 +303,7 @@
               <h3 class="font-medium text-gray-900 truncate">{content.title}</h3>
               <p class="text-sm text-gray-500 mt-1 line-clamp-2">{content.body}</p>
             </div>
-            <div class="flex items-center gap-2 flex-shrink-0">
+            <div class="flex items-center gap-2 flex-shrink-0 flex-wrap">
               <!-- Status dropdown -->
               <select
                 value={content.status}
@@ -395,7 +395,7 @@
           <label for="content-topic" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('content.topic')}</label>
           <input id="content-topic" type="text" bind:value={form.topic} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" placeholder={$_('content.topicPlaceholder')} />
         </div>
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label for="content-tone" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('content.tone')}</label>
             <select id="content-tone" bind:value={form.tone} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">

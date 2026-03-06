@@ -61,7 +61,7 @@
   ];
 </script>
 
-<div class="p-6">
+<div class="p-4 sm:p-6">
   <div class="mb-6">
     <h1 class="text-2xl font-bold text-gray-900">{$_('nav.templates')}</h1>
     <p class="text-gray-500 mt-1 text-sm">{$_('templates.subtitle')}</p>

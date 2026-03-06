@@ -1,6 +1,6 @@
 <script lang="ts">
   import { isAuthenticated, authStore, currentUser } from '$lib/stores/auth';
-  import { goto } from '$app/navigation';
+  import { goto, afterNavigate } from '$app/navigation';
   import { onMount } from 'svelte';
   import { api } from '$lib/api/client';
   import { organizationIdStore } from '$lib/stores/projects';
@@ -9,6 +9,15 @@
 
   let sidebarOpen = true;
   let appReady = false;
+  let innerWidth = 768;
+  $: isMobile = innerWidth < 768;
+
+  // Auto-close sidebar on navigation when mobile
+  afterNavigate(() => {
+    if (isMobile && sidebarOpen) {
+      sidebarOpen = false;
+    }
+  });
 
   onMount(async () => {
     if (!$isAuthenticated) {
@@ -26,13 +35,29 @@
       goto('/login');
       return;
     }
+    // Default sidebar closed on mobile
+    if (window.innerWidth < 768) {
+      sidebarOpen = false;
+    }
     appReady = true;
   });
 </script>
 
+<svelte:window bind:innerWidth />
+
 {#if appReady}
   <div class="flex h-screen bg-gray-50 overflow-hidden">
-    <Sidebar bind:open={sidebarOpen} />
+    <!-- Mobile backdrop overlay -->
+    {#if isMobile && sidebarOpen}
+      <!-- svelte-ignore a11y-click-events-have-key-events -->
+      <!-- svelte-ignore a11y-no-static-element-interactions -->
+      <div
+        class="fixed inset-0 bg-black/50 z-30 transition-opacity duration-200"
+        on:click={() => sidebarOpen = false}
+      ></div>
+    {/if}
+
+    <Sidebar bind:open={sidebarOpen} {isMobile} />
     <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
       <Header bind:sidebarOpen />
       <main class="flex-1 overflow-auto">

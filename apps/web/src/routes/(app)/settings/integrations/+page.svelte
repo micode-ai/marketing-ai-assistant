@@ -154,7 +154,7 @@
   };
 </script>
 
-<div class="p-6 max-w-2xl">
+<div class="p-4 sm:p-6 max-w-2xl">
   <div class="mb-6">
     <h1 class="text-2xl font-bold text-gray-900">{$_('social.title')}</h1>
     <p class="text-gray-500 text-sm mt-1">{$_('social.subtitle')}</p>
@@ -169,7 +169,7 @@
   {:else}
     <!-- LinkedIn -->
     <div class="bg-white rounded-xl border border-gray-200 p-5 mb-3">
-      <div class="flex items-center justify-between">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-lg {platformColor['LINKEDIN']} flex items-center justify-center flex-shrink-0">
             {@html platformIcon['LINKEDIN']}
@@ -179,7 +179,7 @@
             <div class="text-xs text-gray-500">{$_('social.linkedinDesc')}</div>
           </div>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 flex-wrap">
           {#each accounts.filter(a => a.platform === 'LINKEDIN') as account}
             <div class="flex items-center gap-2">
               {#if account.profileImageUrl}
@@ -203,7 +203,7 @@
 
     <!-- Twitter / X -->
     <div class="bg-white rounded-xl border border-gray-200 p-5 mb-3">
-      <div class="flex items-center justify-between">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-lg {platformColor['TWITTER']} flex items-center justify-center flex-shrink-0">
             {@html platformIcon['TWITTER']}
@@ -213,7 +213,7 @@
             <div class="text-xs text-gray-500">{$_('social.twitterDesc')}</div>
           </div>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 flex-wrap">
           {#each accounts.filter(a => a.platform === 'TWITTER') as account}
             <div class="flex items-center gap-2">
               {#if account.profileImageUrl}
@@ -237,7 +237,7 @@
 
     <!-- Facebook -->
     <div class="bg-white rounded-xl border border-gray-200 p-5 mb-3">
-      <div class="flex items-center justify-between">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-lg {platformColor['FACEBOOK']} flex items-center justify-center flex-shrink-0">
             {@html platformIcon['FACEBOOK']}
@@ -247,7 +247,7 @@
             <div class="text-xs text-gray-500">{$_('social.facebookDesc')}</div>
           </div>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 flex-wrap">
           {#each accounts.filter(a => a.platform === 'FACEBOOK') as account}
             <div class="flex items-center gap-2">
               {#if account.profileImageUrl}
@@ -271,7 +271,7 @@
 
     <!-- Telegram -->
     <div class="bg-white rounded-xl border border-gray-200 p-5 mb-3">
-      <div class="flex items-center justify-between">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-lg {platformColor['TELEGRAM']} flex items-center justify-center flex-shrink-0">
             {@html platformIcon['TELEGRAM']}
@@ -281,7 +281,7 @@
             <div class="text-xs text-gray-500">{$_('social.telegramDesc')}</div>
           </div>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 flex-wrap">
           {#each accounts.filter(a => a.platform === 'TELEGRAM') as account}
             <div class="flex items-center gap-2">
               <span class="text-sm text-gray-700 font-medium">{account.accountName}</span>
@@ -370,7 +370,7 @@
         <p class="text-sm text-gray-500 ml-10">{$_('social.twitterManualDesc')}</p>
       </div>
       <div class="p-6 space-y-3">
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-medium text-gray-700 mb-1">{$_('social.accountName')}</label>
             <input type="text" bind:value={twitterForm.accountName} placeholder="@username" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />

@@ -249,7 +249,7 @@
   }
 </script>
 
-<div class="p-6">
+<div class="p-4 sm:p-6">
   <SectionHint sectionKey="sequences" titleKey="hints.sequences.title" descKey="hints.sequences.desc" />
   <!-- Header -->
   <div class="flex items-center justify-between mb-6">
@@ -608,7 +608,7 @@
             class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-y"
           ></textarea>
         </div>
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label for="step-delay-days" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('sequences.delayDays')}</label>
             <input

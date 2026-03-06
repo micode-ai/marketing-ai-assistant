@@ -164,7 +164,7 @@
   }
 </script>
 
-<div class="p-6">
+<div class="p-4 sm:p-6">
   <SectionHint sectionKey="seo" titleKey="hints.seo.title" descKey="hints.seo.desc" />
   <!-- Header -->
   <div class="flex items-center justify-between mb-6">
@@ -404,7 +404,7 @@
             placeholder={$_('seo.keywordPlaceholder')}
           />
         </div>
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label for="seo-target" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('seo.targetRank')}</label>
             <input

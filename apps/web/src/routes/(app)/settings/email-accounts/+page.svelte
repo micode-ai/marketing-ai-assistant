@@ -148,9 +148,9 @@
   };
 </script>
 
-<div class="p-6 max-w-3xl mx-auto">
+<div class="p-4 sm:p-6 max-w-3xl mx-auto">
   <!-- Header -->
-  <div class="flex items-center justify-between mb-6">
+  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
     <div>
       <h1 class="text-2xl font-bold text-gray-900">{$_('email.accounts')}</h1>
       <p class="text-sm text-gray-500 mt-1">{$_('email.noAccountsDesc')}</p>
@@ -324,7 +324,7 @@
           </div>
 
           {#if provider === 'SMTP'}
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">{$_('email.smtpHost')} *</label>
                 <input
@@ -363,7 +363,7 @@
                 class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">
                   {$_('email.imapHost')} <span class="text-gray-400 font-normal">({$_('common.optional')})</span>

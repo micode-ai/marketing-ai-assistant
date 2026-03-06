@@ -469,7 +469,7 @@
   };
 </script>
 
-<div class="p-6">
+<div class="p-4 sm:p-6">
   <SectionHint sectionKey="checklists" titleKey="hints.checklists.title" descKey="hints.checklists.desc" />
   <div class="flex items-center justify-between mb-6">
     <h1 class="text-2xl font-bold text-gray-900">{$_('checklists.title')}</h1>

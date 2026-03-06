@@ -77,7 +77,7 @@
         <label for="new-desc" class="block text-sm font-medium text-gray-700 mb-1">{$_('projects.description')}</label>
         <textarea id="new-desc" bind:value={description} rows="3" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 text-sm resize-none" placeholder={$_('projects.descriptionPlaceholder')}></textarea>
       </div>
-      <div class="grid grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {#if showWebsiteUrl}
           <div>
             <label for="new-website" class="block text-sm font-medium text-gray-700 mb-1">{$_('projects.website')}</label>

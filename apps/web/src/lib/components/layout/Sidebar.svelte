@@ -5,6 +5,7 @@
   import { browser } from '$app/environment';
 
   export let open = true;
+  export let isMobile = false;
 
   // Heroicons outline 24px — stored as SVG strings for {@html} rendering
   // Consistent with existing {@html action.icon} pattern in overview/+page.svelte
@@ -92,8 +93,9 @@
 
 <!-- Sidebar: uses inline style width transition for smooth slide animation -->
 <aside
-  class="bg-white border-r border-gray-200 flex flex-col h-full overflow-hidden flex-shrink-0 transition-[width] duration-200 ease-in-out"
-  style="width: {open ? '16rem' : '0'};"
+  class="bg-white border-r border-gray-200 flex flex-col h-full overflow-hidden flex-shrink-0 transition-[width,transform] duration-200 ease-in-out
+    {isMobile ? 'fixed inset-y-0 left-0 z-40 w-64' : ''}"
+  style={isMobile ? `transform: translateX(${open ? '0' : '-100%'});` : `width: ${open ? '16rem' : '0'};`}
   aria-hidden={!open}
 >
   <!-- Inner wrapper prevents content from reflowing during width transition -->
