@@ -270,19 +270,21 @@
     let currentSection: string | undefined = undefined;
 
     for (const line of lines) {
-      const h1Match = line.match(/^#\s+(.+)/);
+      // h1 — checklist name (only first one, exactly one #)
+      const h1Match = line.match(/^#(?!#)\s+(.+)/);
       if (h1Match && !name) {
         name = h1Match[1].trim();
         inDescription = true;
         continue;
       }
 
-      const h2Match = line.match(/^##\s+(.+)/);
-      if (h2Match) {
+      // h2, h3, h4, etc. — section headers (## or ### or ####...)
+      const sectionMatch = line.match(/^#{2,}\s+(.+)/);
+      if (sectionMatch) {
         inDescription = false;
         if (currentItem) currentItem.description = currentItem.description.trim();
         currentItem = null;
-        currentSection = h2Match[1].trim();
+        currentSection = sectionMatch[1].trim();
         continue;
       }
 
