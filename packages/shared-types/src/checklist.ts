@@ -24,6 +24,10 @@ export interface ChecklistItem {
   order: number;
   dueDate?: Date;
   priority: ChecklistItemPriority;
+  section?: string;
+  note?: string;
+  noteUpdatedBy?: string;
+  noteUpdatedAt?: Date;
 }
 
 export interface CreateChecklistDto {
@@ -40,6 +44,7 @@ export interface CreateChecklistItemDto {
   order: number;
   dueDate?: Date;
   priority?: ChecklistItemPriority;
+  section?: string;
 }
 
 export interface UpdateChecklistItemDto {
@@ -48,6 +53,8 @@ export interface UpdateChecklistItemDto {
   isCompleted?: boolean;
   dueDate?: Date;
   priority?: ChecklistItemPriority;
+  section?: string;
+  note?: string;
 }
 
 export interface UpdateChecklistDto {

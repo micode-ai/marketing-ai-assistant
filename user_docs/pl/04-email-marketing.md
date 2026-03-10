@@ -126,6 +126,51 @@ Gdy subskrybent kliknie link wypisania:
 3. Nie bedzie juz otrzymywal e-maili z tej listy
 4. Data wypisania jest zapisywana
 
+## Sekwencje e-mail (kampanie drip)
+
+Sekwencje e-mail pozwalaja wysylac automatyczne wieloetapowe serie wiadomosci do subskrybentow.
+
+### Tworzenie sekwencji
+
+1. Przejdz do sekcji **Sekwencje** w projekcie
+2. Kliknij **Nowa sekwencja**
+3. Skonfiguruj:
+   - **Nazwa** — nazwa sekwencji
+   - **Wyzwalacz** — kiedy rozpoczac sekwencje:
+
+| Wyzwalacz | Opis |
+|-----------|------|
+| SIGNUP | Automatyczne uruchomienie po dolaczeniu subskrybenta do listy |
+| MANUAL | Reczne zapisywanie wybranych subskrybentow |
+| EVENT | Wyzwalane przez zdarzenie analityczne (np. rozpoczecie triala) |
+
+4. Kliknij **Utworz**
+
+### Dodawanie kroków
+
+1. Otworz sekwencje
+2. Kliknij **Dodaj krok**
+3. Dla kazdego kroku ustaw:
+   - **Temat** — temat e-maila
+   - **Tresc** — zawartosc HTML e-maila
+   - **Opoznienie** — liczba godzin oczekiwania przed wyslaniem (0 = natychmiast)
+4. Kroki sa wykonywane kolejno z okreslonym opoznieniem miedzy nimi
+
+### Zapisywanie subskrybentow
+
+1. Otworz sekwencje
+2. Kliknij **Zapisz**
+3. Wprowadz adres e-mail subskrybenta
+4. Subskrybent zaczyna otrzymywac e-maile zgodnie z wyzwalaczem i opoznieniami kroków
+
+### Wbudowane szablony
+
+| Szablon | Kroki | Zastosowanie |
+|---------|-------|-------------|
+| Seria powitalna | 5 e-maili | Onboarding nowego uzytkownika |
+| Nurturing trialu | 7 e-maili | Konwersja trialu na platny plan |
+| Re-engagement | 3 e-maile | Reaktywacja nieaktywnych uzytkownikow |
+
 ## Szablony e-mail
 
 ### Przegladanie szablonow

@@ -105,6 +105,60 @@ Generate and store marketing documents:
 | Proposal | Marketing proposal for stakeholders |
 | Presentation | Marketing presentation material |
 
+### SEO
+
+Track search engine optimization for your project:
+
+| Feature | Description |
+|---------|-------------|
+| Keywords | Add and track target keywords |
+| Rank History | Monitor search position changes over time |
+| Search Intent | Classify keywords (Informational, Navigational, Commercial, Transactional) |
+| Target URLs | Link keywords to specific pages |
+
+### Competitors
+
+Monitor your competition:
+- Add competitor websites by URL
+- Take snapshots to capture current state
+- Track changes over time
+- Compare strategies and positioning
+
+### A/B Testing (Experiments)
+
+Run experiments to optimize your marketing:
+
+| Test Type | Description |
+|-----------|-------------|
+| Email Subject | Test different email subject lines |
+| Content Variant | Compare content versions |
+| Landing Page | Test landing page variations |
+
+Each test has variants with tracked impressions and conversions. Start a test, collect data, and declare a winner.
+
+### Email Sequences
+
+Create automated drip campaigns:
+- **Triggers** — start sequences on SIGNUP, MANUAL enrollment, or custom EVENT
+- **Steps** — define email series with custom delays between each
+- **Enrollment** — add subscribers to sequences individually or automatically
+- **Tracking** — monitor enrollment status (Active, Completed, Paused, Unsubscribed)
+
+### Content Repurposing
+
+Repurpose existing content into different formats:
+1. Open a content item
+2. Click **Repurpose**
+3. Select the target format (e.g., Blog Article → Social Post)
+4. A new content item is created, linked to the original
+
+### Content Performance
+
+Track how your published content performs:
+- **Score** (0–100) — calculated from views, conversions, and social engagements
+- **Metrics** — page views, conversions, engagement counts
+- View scores for all published content in the Content section
+
 ### Calendar
 
 View your content schedule in a calendar format. See when content is planned to be published and campaign dates.

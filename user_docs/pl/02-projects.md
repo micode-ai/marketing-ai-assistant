@@ -105,6 +105,60 @@ Generowanie i przechowywanie dokumentow marketingowych:
 | Propozycja | Propozycja marketingowa |
 | Prezentacja | Material prezentacyjny |
 
+### SEO
+
+Sledzenie optymalizacji dla wyszukiwarek w ramach projektu:
+
+| Funkcja | Opis |
+|---------|------|
+| Slowa kluczowe | Dodawanie i sledzenie docelowych slow kluczowych |
+| Historia pozycji | Monitorowanie zmian pozycji w wynikach wyszukiwania w czasie |
+| Intencja wyszukiwania | Klasyfikacja slow kluczowych (Informacyjna, Nawigacyjna, Komercyjna, Transakcyjna) |
+| Docelowe URL | Przypisywanie slow kluczowych do konkretnych stron |
+
+### Konkurenci
+
+Monitorowanie konkurencji:
+- Dodawanie stron internetowych konkurentow po URL
+- Tworzenie snapshotow aktualnego stanu
+- Sledzenie zmian w czasie
+- Porownywanie strategii i pozycjonowania
+
+### Testy A/B (Eksperymenty)
+
+Przeprowadzanie eksperymentow w celu optymalizacji marketingu:
+
+| Typ testu | Opis |
+|-----------|------|
+| Temat e-maila | Testowanie roznych tematow e-maili |
+| Wariant tresci | Porownywanie wersji tresci |
+| Landing page | Testowanie wariantow stron docelowych |
+
+Kazdy test ma warianty ze sledzonymi wyswietleniami i konwersjami. Rozpocznij test, zbierz dane i wyznacz zwyciezce.
+
+### Sekwencje e-mail
+
+Tworzenie automatycznych kampanii drip:
+- **Wyzwalacze** — uruchamianie sekwencji przy REJESTRACJI, recznym ZAPISANIU lub niestandardowym ZDARZENIU
+- **Kroki** — definiowanie serii e-maili z niestandardowymi opoznieniami miedzy nimi
+- **Zapisywanie** — dodawanie subskrybentow do sekwencji indywidualnie lub automatycznie
+- **Sledzenie** — monitorowanie statusu zapisu (Aktywny, Ukonczony, Wstrzymany, Wypisany)
+
+### Ponowne wykorzystanie tresci
+
+Przeksztalcanie istniejacych tresci w rozne formaty:
+1. Otworz element tresci
+2. Kliknij **Ponowne wykorzystanie**
+3. Wybierz format docelowy (np. Artykul na blog → Post w mediach spolecznosciowych)
+4. Tworzony jest nowy element tresci, polaczony z oryginalem
+
+### Wydajnosc tresci
+
+Sledzenie skutecznosci opublikowanych tresci:
+- **Wynik** (0–100) — obliczany na podstawie wyswietlen, konwersji i zaangazowania w mediach spolecznosciowych
+- **Metryki** — wyswietlenia stron, konwersje, liczba interakcji
+- Przegladaj wyniki dla wszystkich opublikowanych tresci w sekcji Tresci
+
 ### Kalendarz
 
 Przegladanie harmonogramu tresci w formacie kalendarza. Widoczne sa daty planowanych publikacji i terminy kampanii.

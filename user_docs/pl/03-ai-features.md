@@ -76,6 +76,9 @@ Marketing AI Assistant wykorzystuje model OpenAI GPT-4o do tworzenia tresci mark
    - **Analiza konkurencji** — porownanie z konkurentami
    - **Wytyczne marki** — dokumentacja tozsamosci marki
    - **Kalendarz tresci** — plan publikacji
+   - **Propozycja** — propozycja marketingowa dla interesariuszy
+   - **Prezentacja** — material prezentacyjny
+   - **Product Hunt Brief** — slogan, opis, komentarz twórcy, posty w mediach spolecznosciowych na dzien premiery
 
 4. Podaj temat i dodatkowy kontekst
 5. Kliknij **Generuj**
@@ -121,6 +124,33 @@ Czat AI obsluguje rozmowy w:
 - **Rosyjskim**
 
 Pisz w preferowanym jezyku, a AI odpowie w tym samym jezyku.
+
+## Generowanie strategii AI
+
+### Jak to dziala
+
+1. Przejdz do projektu i uruchom agenta **Strategia**
+2. Wybierz typ strategii:
+   - **GTM** — strategia wejscia na rynek (go-to-market)
+   - **Pozycjonowanie** — analiza pozycjonowania marki
+   - **Product Hunt** — strategia premiery na Product Hunt
+   - **Pricing** — rekomendacje strategii cenowej
+3. Dodaj temat i kontekst
+4. Kliknij **Generuj**
+
+AI generuje ustrukturyzowany dokument obejmujacy pozycjonowanie, krajobraz konkurencyjny, strategie kanalow, alokacje budzetu i KPI.
+
+## Generowanie e-maili AI
+
+### Jak to dziala
+
+1. Uruchom agenta **E-mail** z poziomu projektu
+2. Wybierz typ generowania:
+   - **Temat e-maila** — wiele wariantow do testow A/B z przewidywanym wskaznikiem otwarc
+   - **E-mail kampanijny** — pelna tresc e-maila (temat + preheader + tresc + CTA)
+   - **Sekwencja** — kompletna sekwencja drip (wiele e-maili z sugestiami czasu wysylki)
+3. Podaj temat i ton
+4. Kliknij **Generuj**
 
 ## Sledzenie uzycia AI
 

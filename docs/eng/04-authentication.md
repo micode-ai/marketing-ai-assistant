@@ -98,13 +98,18 @@ getProfile(@CurrentUser() user: User) {
 
 3. Password hashed with bcrypt (10 rounds)
 
-4. Database transaction creates:
-   - User record
-   - Organization record (FREE plan)
-   - OrganizationMember record (role: OWNER)
-   - Subscription record (status: trialing, 14-day period)
+4. Check for pending invitation:
+   - If user's email matches a pending invite → join existing organization
+   - Otherwise → create new Organization (FREE plan) + Subscription
 
-5. JWT tokens generated and returned
+5. Database transaction creates:
+   - User record
+   - OrganizationMember record (role: OWNER for new org, or invited role)
+   - Organization + Subscription (only if no pending invite)
+
+Note: After accepting an invite, any empty personal organization created during registration is automatically cleaned up.
+
+6. JWT tokens generated and returned
    { accessToken, refreshToken, user }
 ```
 

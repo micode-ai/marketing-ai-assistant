@@ -99,6 +99,46 @@ Body: `{ "email": "...", "role": "MEMBER" }`
 
 Remove a member.
 
+### POST `/organizations/:id/members/:memberId/approve` (Protected, OWNER/ADMIN)
+
+Approve a pending join request.
+
+### POST `/organizations/:id/members/:memberId/decline` (Protected, OWNER/ADMIN)
+
+Decline a pending join request. Removes the membership record.
+
+### POST `/organizations/:id/leave` (Protected)
+
+Leave an organization. The current user is removed from the organization. Owners cannot leave.
+
+---
+
+## Invitations (`/invitations`)
+
+### GET `/invitations` (Protected)
+
+Get pending invitations for the current user.
+
+**Response (200):**
+```json
+[
+  {
+    "id": "clx...",
+    "organizationId": "clx...",
+    "role": "MEMBER",
+    "organization": { "id": "clx...", "name": "My Company" }
+  }
+]
+```
+
+### POST `/invitations/:id/accept` (Protected)
+
+Accept an invitation. The user joins the organization with the assigned role.
+
+### POST `/invitations/:id/decline` (Protected)
+
+Decline an invitation. The invitation is removed.
+
 ---
 
 ## Projects (`/projects`)

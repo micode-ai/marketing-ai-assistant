@@ -32,6 +32,44 @@ The invited person will receive an email with instructions to join your organiza
 
 Only Owners and Admins can remove members.
 
+### Invitation Flow
+
+When you invite someone to your organization:
+
+1. They receive an email with the invitation
+2. After logging in, they see pending invitations
+3. They can **Accept** or **Decline** each invitation
+4. Accepted invitations add them to your organization with the assigned role
+
+If someone registers with an email that already has a pending invite, they automatically join the organization.
+
+### Join Requests & Approval
+
+When a user requests to join an organization:
+
+1. The request appears in **Settings > Team** for Owners and Admins
+2. Owners/Admins can **Approve** or **Decline** the request
+3. Approved users gain access with the MEMBER role
+
+### Leaving an Organization
+
+To leave an organization:
+
+1. Open the **organization switcher** in the sidebar
+2. Click **Leave** next to the organization you want to leave
+3. Confirm the action
+
+Note: Organization Owners cannot leave — they must transfer ownership first.
+
+### Organization Switcher
+
+If you belong to multiple organizations:
+
+1. Click the organization name in the sidebar
+2. A dropdown shows all your organizations
+3. Click an organization to switch to it
+4. All projects, settings, and data switch to the selected organization
+
 ### Team Limits by Plan
 
 | Plan | Team Members |

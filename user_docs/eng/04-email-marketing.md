@@ -142,6 +142,51 @@ When a subscriber clicks the unsubscribe link:
 4. Add your placeholders (`{{email}}`, `{{unsubscribe_url}}`)
 5. Send
 
+## Email Sequences (Drip Campaigns)
+
+Email sequences let you send automated multi-step email flows to subscribers.
+
+### Creating a Sequence
+
+1. Go to your project's **Sequences** section
+2. Click **New Sequence**
+3. Configure:
+   - **Name** — sequence name
+   - **Trigger** — when to start the sequence:
+
+| Trigger | Description |
+|---------|-------------|
+| SIGNUP | Automatically starts when a subscriber joins a list |
+| MANUAL | You manually enroll specific subscribers |
+| EVENT | Triggered by an analytics event (e.g., trial start) |
+
+4. Click **Create**
+
+### Adding Steps
+
+1. Open a sequence
+2. Click **Add Step**
+3. For each step, set:
+   - **Subject** — email subject line
+   - **Body** — email HTML content
+   - **Delay** — hours to wait before sending (0 = immediate)
+4. Steps execute in order with the specified delay between them
+
+### Enrolling Subscribers
+
+1. Open a sequence
+2. Click **Enroll**
+3. Enter the subscriber's email
+4. The subscriber begins receiving emails based on the trigger and step delays
+
+### Built-in Templates
+
+| Template | Steps | Use Case |
+|----------|-------|----------|
+| Welcome Series | 5 emails | New user onboarding |
+| Trial Nurture | 7 emails | Convert trial to paid |
+| Re-engagement | 3 emails | Win back inactive users |
+
 ## Plan Limits
 
 | Plan | Emails per Month |

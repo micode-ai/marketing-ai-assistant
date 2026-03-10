@@ -25,4 +25,9 @@ export class CreateChecklistItemDto {
   @IsOptional()
   @IsBoolean()
   isCompleted?: boolean;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  section?: string;
 }

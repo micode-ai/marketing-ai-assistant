@@ -78,6 +78,9 @@ The AI creates a prioritized checklist with tasks relevant to your project and c
    - **Competitive Analysis** — competitor comparison
    - **Brand Guidelines** — brand identity documentation
    - **Content Calendar** — content scheduling plan
+   - **Proposal** — marketing proposal for stakeholders
+   - **Presentation** — marketing presentation material
+   - **Product Hunt Brief** — tagline, description, maker comment, launch-day social posts
 
 4. Specify the topic and any additional context
 5. Click **Generate**
@@ -87,6 +90,33 @@ The AI creates a prioritized checklist with tasks relevant to your project and c
 - Structured Markdown document with headers and sections
 - Actionable recommendations tailored to your project
 - Data-driven insights based on your project context
+
+## AI Strategy Generation
+
+### How It Works
+
+1. Go to your project and run the **Strategy** agent
+2. Select the strategy type:
+   - **GTM** — go-to-market strategy
+   - **Positioning** — brand positioning analysis
+   - **Product Hunt** — Product Hunt launch strategy
+   - **Pricing** — pricing strategy recommendations
+3. Add topic and context
+4. Click **Generate**
+
+The AI generates a structured document covering positioning, competitive landscape, channel strategy, budget allocation, and KPIs.
+
+## AI Email Generation
+
+### How It Works
+
+1. Run the **Email** agent from your project
+2. Select the generation type:
+   - **Subject Line** — multiple A/B test variants with predicted open rates
+   - **Campaign Email** — full email copy (subject + preheader + body + CTA)
+   - **Sequence** — complete drip sequence (multiple emails with timing suggestions)
+3. Specify the topic and tone
+4. Click **Generate**
 
 ## AI Chat Assistant
 

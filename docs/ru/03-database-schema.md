@@ -90,6 +90,21 @@ erDiagram
 | goals | Json? | Цели и KPI |
 | status | ProjectStatus | ACTIVE / PAUSED / ARCHIVED |
 
+### OrganizationMember (Участник организации)
+
+| Колонка | Тип | Описание |
+|---------|-----|----------|
+| userId | String | FK на User (составной PK) |
+| organizationId | String | FK на Organization (составной PK) |
+| role | UserRole | OWNER / ADMIN / MEMBER |
+| invitedAt | DateTime? | Дата отправки приглашения |
+| joinedAt | DateTime? | Дата одобрения/принятия приглашения (null = ожидает одобрения) |
+| requestedAt | DateTime? | Дата подачи запроса на вступление (null = приглашён) |
+
+Уникальное ограничение: `(userId, organizationId)`
+
+**Процесс одобрения:** Участники с заполненным полем `requestedAt`, но пустым `joinedAt`, ожидают одобрения администратора. После одобрения в `joinedAt` записывается текущая метка времени.
+
 ### Content (Контент)
 
 | Колонка | Тип | Описание |

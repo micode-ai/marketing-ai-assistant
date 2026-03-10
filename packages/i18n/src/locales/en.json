@@ -443,7 +443,12 @@
     "addAnotherItem": "Add another item",
     "noItemsYet": "No items added yet",
     "save": "Save",
-    "itemTitlePlaceholder": "Item title"
+    "itemTitlePlaceholder": "Item title",
+    "section": "Section",
+    "sectionPlaceholder": "e.g. Planning, Content, Analytics",
+    "notes": "Notes",
+    "notesPlaceholder": "Add a note for the team...",
+    "noteLastUpdated": "Updated {time}"
   },
   "documents": {
     "title": "Documents",

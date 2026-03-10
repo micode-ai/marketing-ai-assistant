@@ -1,7 +1,7 @@
 <script lang="ts">
   import { _, locale } from 'svelte-i18n';
   import { page } from '$app/stores';
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import { slide } from 'svelte/transition';
   import { api } from '$lib/api/client';
   import SectionHint from '$lib/components/SectionHint.svelte';
@@ -12,6 +12,17 @@
 
   function renderMarkdown(text: string): string {
     return marked.parse(text, { async: false }) as string;
+  }
+
+  // ── Markdown cache (perf fix) ──
+  const mdCache = new Map<string, string>();
+  function renderMarkdownCached(text: string): string {
+    let cached = mdCache.get(text);
+    if (!cached) {
+      cached = renderMarkdown(text);
+      mdCache.set(text, cached);
+    }
+    return cached;
   }
 
   let checklists: any[] = [];
@@ -32,6 +43,7 @@
       order: number;
       priority: string;
       isCompleted: boolean;
+      section?: string;
     }>;
   }
 
@@ -46,7 +58,7 @@
     name: '',
     type: 'CUSTOM',
     description: '',
-    items: [] as Array<{ title: string; description: string; priority: string }>,
+    items: [] as Array<{ title: string; description: string; priority: string; section: string }>,
   };
   let creatingManual = false;
 
@@ -56,14 +68,79 @@
 
   // ── Edit Item state ──
   let editingItem: any = null;
-  let editItemForm = { title: '', description: '', priority: 'MEDIUM' };
+  let editItemForm = { title: '', description: '', priority: 'MEDIUM', section: '' };
 
   // ── Delete item state ──
   let deletingItemId: string | null = null;
 
   // ── Add item inline state ──
   let addingItemToId: string | null = null;
-  let newItemForm = { title: '', description: '', priority: 'MEDIUM' };
+  let newItemForm = { title: '', description: '', priority: 'MEDIUM', section: '' };
+
+  // ── Notes state ──
+  let noteSaving = new Set<string>();
+  let noteTimers: Record<string, ReturnType<typeof setTimeout>> = {};
+
+  function scheduleNoteSave(itemId: string, note: string) {
+    if (noteTimers[itemId]) clearTimeout(noteTimers[itemId]);
+    noteTimers[itemId] = setTimeout(async () => {
+      noteSaving.add(itemId);
+      noteSaving = noteSaving;
+      try {
+        await api.put(`/checklists/items/${itemId}`, { note });
+        // Update local noteUpdatedAt
+        checklists = checklists.map(c => ({
+          ...c,
+          items: (c.items || []).map((i: any) => i.id === itemId ? { ...i, note, noteUpdatedAt: new Date().toISOString() } : i),
+        }));
+      } catch { /* silent */ }
+      finally {
+        noteSaving.delete(itemId);
+        noteSaving = noteSaving;
+      }
+    }, 1000);
+  }
+
+  // ── Polling for team note updates ──
+  let lastFetchedAt = new Date().toISOString();
+  let highlightedNotes = new Set<string>();
+  let pollingInterval: ReturnType<typeof setInterval>;
+
+  async function refreshChecklists() {
+    try {
+      const fresh = await api.get<any[]>('/checklists', { projectId });
+      const prevAt = lastFetchedAt;
+      lastFetchedAt = new Date().toISOString();
+      // Detect notes updated since last fetch
+      for (const cl of fresh) {
+        for (const item of cl.items || []) {
+          if (item.noteUpdatedAt && item.noteUpdatedAt > prevAt && !expandedItems.has(item.id)) {
+            highlightedNotes.add(item.id);
+          }
+        }
+      }
+      highlightedNotes = highlightedNotes;
+      checklists = fresh;
+      initChatsFromDB();
+    } catch { /* silent */ }
+  }
+
+  // ── Section grouping helper ──
+  type SectionGroup = { section: string | null; items: any[] };
+  function groupBySection(items: any[]): SectionGroup[] {
+    const groups: SectionGroup[] = [];
+    let current: SectionGroup | null = null;
+    for (const item of items) {
+      const sec = item.section || null;
+      if (!current || current.section !== sec) {
+        current = { section: sec, items: [item] };
+        groups.push(current);
+      } else {
+        current.items.push(item);
+      }
+    }
+    return groups;
+  }
 
   function toggleExpand(itemId: string) {
     if (expandedItems.has(itemId)) {
@@ -71,6 +148,11 @@
     } else {
       expandedItems.add(itemId);
       ensureItemChat(itemId);
+      // Mark note as read
+      if (highlightedNotes.has(itemId)) {
+        highlightedNotes.delete(itemId);
+        highlightedNotes = highlightedNotes;
+      }
     }
     expandedItems = expandedItems;
   }
@@ -91,10 +173,23 @@
     itemChats = itemChats;
   }
 
+  function handleVisibilityChange() {
+    if (document.visibilityState === 'visible') refreshChecklists();
+  }
+
   onMount(async () => {
     checklists = await api.get<any[]>('/checklists', { projectId });
     initChatsFromDB();
     loading = false;
+    // Polling every 30s + refresh on tab focus
+    pollingInterval = setInterval(refreshChecklists, 30_000);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+  });
+
+  onDestroy(() => {
+    clearInterval(pollingInterval);
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
+    Object.values(noteTimers).forEach(clearTimeout);
   });
 
   // ── AI Generation ──
@@ -149,6 +244,7 @@
     let currentItem: ParsedChecklist['items'][0] | null = null;
     let inDescription = false;
     let order = 0;
+    let currentSection: string | undefined = undefined;
 
     for (const line of lines) {
       const h1Match = line.match(/^#\s+(.+)/);
@@ -158,10 +254,12 @@
         continue;
       }
 
-      if (line.match(/^##\s+/)) {
+      const h2Match = line.match(/^##\s+(.+)/);
+      if (h2Match) {
         inDescription = false;
         if (currentItem) currentItem.description = currentItem.description.trim();
         currentItem = null;
+        currentSection = h2Match[1].trim();
         continue;
       }
 
@@ -185,6 +283,7 @@
           order,
           priority,
           isCompleted: taskMatch[1] !== ' ',
+          section: currentSection,
         };
         items.push(currentItem);
         continue;
@@ -257,7 +356,7 @@
 
   // ── Manual Create ──
   function addCreateItem() {
-    createForm.items = [...createForm.items, { title: '', description: '', priority: 'MEDIUM' }];
+    createForm.items = [...createForm.items, { title: '', description: '', priority: 'MEDIUM', section: '' }];
   }
 
   function removeCreateItem(index: number) {
@@ -275,12 +374,12 @@
         description: createForm.description,
         items: createForm.items
           .filter(i => i.title.trim())
-          .map((i, idx) => ({ ...i, order: idx + 1 })),
+          .map((i, idx) => ({ ...i, order: idx + 1, section: i.section || undefined })),
       });
       checklists = await api.get<any[]>('/checklists', { projectId });
       initChatsFromDB();
       showCreateModal = false;
-      createForm = { name: '', type: 'CUSTOM', description: '', items: [] };
+      createForm = { name: '', type: 'CUSTOM', description: '', items: [] as typeof createForm.items };
     } catch (e: any) {
       alert(e.message);
     } finally {
@@ -312,6 +411,7 @@
       title: item.title,
       description: item.description || '',
       priority: item.priority || 'MEDIUM',
+      section: item.section || '',
     };
   }
 
@@ -355,7 +455,7 @@
           ? { ...c, items: [...(c.items || []), item] }
           : c
       );
-      newItemForm = { title: '', description: '', priority: 'MEDIUM' };
+      newItemForm = { title: '', description: '', priority: 'MEDIUM', section: '' };
       addingItemToId = null;
     } catch (e: any) {
       alert(e.message);
@@ -516,6 +616,7 @@
         {@const completed = items.filter((i: any) => i.isCompleted).length}
         {@const total = items.length}
         {@const progress = total > 0 ? Math.round((completed / total) * 100) : 0}
+        {@const sections = groupBySection(items)}
         <div class="bg-white rounded-xl border border-gray-200 p-6">
           <div class="flex items-start justify-between mb-3">
             <div class="flex-1 min-w-0">
@@ -551,9 +652,14 @@
           <div class="w-full bg-gray-100 rounded-full h-1.5 mb-5">
             <div class="bg-primary-600 h-1.5 rounded-full transition-all duration-500" style="width: {progress}%"></div>
           </div>
-          <ul class="space-y-1">
-            {#each items as item, itemIndex}
-              <li class="rounded-lg transition-colors {expandedItems.has(item.id) ? 'bg-gray-50' : 'hover:bg-gray-50/50'}">
+          <div class="space-y-1">
+            {#each sections as group}
+              {#if group.section}
+                <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider pt-3 pb-1 px-2">{group.section}</h4>
+              {/if}
+              {#each group.items as item}
+                {@const itemIndex = items.indexOf(item)}
+              <div class="rounded-lg transition-colors {expandedItems.has(item.id) ? 'bg-gray-50' : 'hover:bg-gray-50/50'}">
                 <div class="flex items-center gap-3 py-2 px-2 group">
                   <button
                     on:click|stopPropagation={() => toggleItem(checklist.id, item.id, !item.isCompleted)}
@@ -569,6 +675,9 @@
                   <!-- svelte-ignore a11y_no_static_element_interactions -->
                   <div class="flex-1 min-w-0 flex items-center gap-2 cursor-pointer select-none" on:click={() => toggleExpand(item.id)}>
                     <span class="text-sm {item.isCompleted ? 'text-gray-400 line-through' : 'text-gray-700'}">{item.title}</span>
+                    {#if item.note}
+                      <svg class="w-3.5 h-3.5 flex-shrink-0 {highlightedNotes.has(item.id) ? 'text-yellow-500 animate-pulse' : 'text-yellow-400'}" fill="currentColor" viewBox="0 0 24 24"><path d="M21.731 2.269a2.625 2.625 0 0 0-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 0 0 0-3.712ZM19.513 8.199l-3.712-3.712-8.4 8.4a5.25 5.25 0 0 0-1.32 2.214l-.8 2.685a.75.75 0 0 0 .933.933l2.685-.8a5.25 5.25 0 0 0 2.214-1.32l8.4-8.4Z" /><path d="M5.25 5.25a3 3 0 0 0-3 3v10.5a3 3 0 0 0 3 3h10.5a3 3 0 0 0 3-3V13.5a.75.75 0 0 0-1.5 0v5.25a1.5 1.5 0 0 1-1.5 1.5H5.25a1.5 1.5 0 0 1-1.5-1.5V8.25a1.5 1.5 0 0 1 1.5-1.5h5.25a.75.75 0 0 0 0-1.5H5.25Z" /></svg>
+                    {/if}
                     <svg class="w-4 h-4 flex-shrink-0 text-gray-400 transition-transform duration-200 {expandedItems.has(item.id) ? 'rotate-180' : ''}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
                     </svg>
@@ -609,13 +718,33 @@
                       <p class="text-sm text-gray-500 border-l-2 border-primary-200 pl-3 mb-3">{item.description}</p>
                     {/if}
 
+                    <!-- Notes -->
+                    <div class="mb-3">
+                      <label class="block text-xs font-medium text-gray-500 mb-1">{$_('checklists.notes')}</label>
+                      <textarea
+                        value={item.note || ''}
+                        on:input={(e) => { const val = e.currentTarget.value; checklists = checklists.map(c => ({ ...c, items: (c.items || []).map((i: any) => i.id === item.id ? { ...i, note: val } : i) })); scheduleNoteSave(item.id, val); }}
+                        placeholder={$_('checklists.notesPlaceholder')}
+                        rows="2"
+                        class="w-full text-sm px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary-400 focus:border-primary-400 resize-none"
+                      ></textarea>
+                      <div class="flex items-center gap-2 mt-0.5">
+                        {#if noteSaving.has(item.id)}
+                          <span class="text-xs text-gray-400">{$_('common.loading')}...</span>
+                        {/if}
+                        {#if item.noteUpdatedAt}
+                          <span class="text-xs text-gray-400">{$_('checklists.noteLastUpdated', { values: { time: new Date(item.noteUpdatedAt).toLocaleString() } })}</span>
+                        {/if}
+                      </div>
+                    </div>
+
                     {#if itemChats[item.id].messages.length > 0}
                       <div class="space-y-2 mb-3 max-h-60 overflow-y-auto">
-                        {#each itemChats[item.id].messages as msg}
+                        {#each itemChats[item.id].messages as msg, idx (idx)}
                           <div class="flex {msg.role === 'user' ? 'justify-end' : 'justify-start'}">
                             {#if msg.role === 'assistant'}
                               <div class="max-w-[80%] px-3 py-2 rounded-lg text-sm bg-gray-100 text-gray-700 prose prose-sm prose-gray max-w-none [&>p]:m-0 [&>ul]:m-0 [&>ol]:m-0 [&>p+p]:mt-1.5">
-                                {@html renderMarkdown(msg.content)}
+                                {@html renderMarkdownCached(msg.content)}
                               </div>
                             {:else}
                               <div class="max-w-[80%] px-3 py-2 rounded-lg text-sm whitespace-pre-wrap bg-primary-100 text-primary-800">
@@ -652,9 +781,10 @@
                     </div>
                   </div>
                 {/if}
-              </li>
+              </div>
+              {/each}
             {/each}
-          </ul>
+          </div>
           <!-- Add Item inline -->
           {#if addingItemToId === checklist.id}
             <div transition:slide={{ duration: 150 }} class="mt-3 p-3 border border-dashed border-gray-300 rounded-lg">
@@ -667,14 +797,17 @@
                   <option value="CRITICAL">{$_('checklists.critical')}</option>
                 </select>
               </div>
-              <textarea bind:value={newItemForm.description} placeholder={$_('checklists.descriptionLabel')} rows="2" class="w-full text-sm px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary-400 mb-2"></textarea>
+              <div class="flex gap-2 mb-2">
+                <textarea bind:value={newItemForm.description} placeholder={$_('checklists.descriptionLabel')} rows="2" class="flex-1 text-sm px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary-400"></textarea>
+                <input type="text" bind:value={newItemForm.section} placeholder={$_('checklists.sectionPlaceholder')} class="w-40 text-sm px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary-400" />
+              </div>
               <div class="flex gap-2 justify-end">
-                <button on:click={() => { addingItemToId = null; newItemForm = { title: '', description: '', priority: 'MEDIUM' }; }} class="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition">{$_('common.cancel')}</button>
+                <button on:click={() => { addingItemToId = null; newItemForm = { title: '', description: '', priority: 'MEDIUM', section: '' }; }} class="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition">{$_('common.cancel')}</button>
                 <button on:click={() => addItemToChecklist(checklist.id)} disabled={!newItemForm.title.trim()} class="px-3 py-1.5 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 transition">{$_('checklists.addItemToList')}</button>
               </div>
             </div>
           {:else}
-            <button on:click={() => { addingItemToId = checklist.id; newItemForm = { title: '', description: '', priority: 'MEDIUM' }; }} class="mt-3 w-full py-2 border border-dashed border-gray-300 rounded-lg text-sm text-gray-500 hover:text-primary-600 hover:border-primary-400 transition flex items-center justify-center gap-1.5">
+            <button on:click={() => { addingItemToId = checklist.id; newItemForm = { title: '', description: '', priority: 'MEDIUM', section: '' }; }} class="mt-3 w-full py-2 border border-dashed border-gray-300 rounded-lg text-sm text-gray-500 hover:text-primary-600 hover:border-primary-400 transition flex items-center justify-center gap-1.5">
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
               {$_('checklists.addItemToList')}
             </button>
@@ -810,6 +943,7 @@
                     <input type="text" bind:value={item.title} placeholder={$_('checklists.itemTitlePlaceholder')} class="w-full text-sm px-2 py-1.5 border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-primary-400" />
                     <div class="flex gap-2">
                       <input type="text" bind:value={item.description} placeholder={$_('checklists.descriptionLabel')} class="flex-1 text-sm px-2 py-1.5 border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-primary-400" />
+                      <input type="text" bind:value={item.section} placeholder={$_('checklists.sectionPlaceholder')} class="w-32 text-sm px-2 py-1.5 border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-primary-400" />
                       <select bind:value={item.priority} class="text-xs px-2 py-1.5 border border-gray-200 rounded">
                         <option value="LOW">{$_('checklists.low')}</option>
                         <option value="MEDIUM">{$_('checklists.medium')}</option>
@@ -882,6 +1016,10 @@
         <div>
           <label for="edit-item-desc" class="block text-sm font-medium text-gray-700 mb-1">{$_('checklists.descriptionLabel')}</label>
           <textarea id="edit-item-desc" bind:value={editItemForm.description} rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary-400 focus:border-primary-400"></textarea>
+        </div>
+        <div>
+          <label for="edit-item-section" class="block text-sm font-medium text-gray-700 mb-1">{$_('checklists.section')}</label>
+          <input id="edit-item-section" type="text" bind:value={editItemForm.section} placeholder={$_('checklists.sectionPlaceholder')} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary-400 focus:border-primary-400" />
         </div>
         <div>
           <label for="edit-item-priority" class="block text-sm font-medium text-gray-700 mb-1">{$_('checklists.priority')}</label>

@@ -432,7 +432,12 @@
     "addAnotherItem": "Добавить ещё элемент",
     "noItemsYet": "Элементы ещё не добавлены",
     "save": "Сохранить",
-    "itemTitlePlaceholder": "Название элемента"
+    "itemTitlePlaceholder": "Название элемента",
+    "section": "Секция",
+    "sectionPlaceholder": "напр. Планирование, Контент, Аналитика",
+    "notes": "Заметки",
+    "notesPlaceholder": "Добавьте заметку для команды...",
+    "noteLastUpdated": "Обновлено {time}"
   },
   "documents": {
     "title": "Документы",

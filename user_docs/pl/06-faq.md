@@ -149,6 +149,54 @@ Przejdz do **Ustawienia > Platnosci > Zarzadzaj subskrypcja** i kliknij **Anuluj
 
 ---
 
+## Publikacja w mediach spolecznosciowych
+
+### Jak opublikowac tresc w mediach spolecznosciowych?
+
+1. Podlacz konta spolecznosciowe w **Ustawienia > Integracje**
+2. Otworz element tresci o statusie APPROVED lub PUBLISHED
+3. Kliknij **Publikuj** i wybierz, na ktore konta opublikowac
+4. System publikuje na kazdej wybranej platformie
+
+### Jakie platformy spolecznosciowe sa obslugiwane?
+
+- **LinkedIn** — polaczenie przez OAuth (kliknij Polacz, autoryzuj)
+- **Twitter/X** — reczne dane uwierzytelniajace (klucze API i tokeny)
+- **Facebook** — polaczenie przez OAuth (wybierz strone do publikacji)
+- **Telegram** — reczne wprowadzenie (token bota i ID czatu)
+
+### Dlaczego moj post w mediach spolecznosciowych nie zostal opublikowany?
+
+Sprawdz historie publikacji, aby zobaczyc szczegoly bledu. Czeste przyczyny:
+- Wygasle tokeny OAuth (ponownie polacz konto)
+- Tresc przekracza limit znakow platformy
+- Osiagnieto limit zapytan API
+
+---
+
+## Zaawansowane funkcje
+
+### Jak dziala sledzenie slow kluczowych SEO?
+
+Dodaj slowa kluczowe w sekcji **SEO** projektu. Dla kazdego slowa kluczowego mozesz:
+- Ustawic intencje wyszukiwania (Informacyjna, Nawigacyjna, Komercyjna, Transakcyjna)
+- Przypisac docelowy URL
+- Rejestrowac pozycje w rankingu w czasie, aby sledzic postepy
+
+### Czym sa testy A/B?
+
+Testy A/B pozwalaja porownywac warianty tematow e-maili, tresci lub stron docelowych. Utworz test, dodaj warianty (A, B itd.), uruchom test i sledz wyswietlenia oraz konwersje, aby znalezc zwyciezce.
+
+### Jak dzialaja webhooki?
+
+Webhooki wysylaja powiadomienia na Twoje adresy URL, gdy zachodza zdarzenia (np. opublikowanie tresci, wyslanie kampanii). Dane sa podpisywane HMAC-SHA256. Skonfiguruj je w **Ustawienia > Webhooki**.
+
+### Czy moge sledzic odwiedzajacych strone?
+
+Tak. Kazdy projekt ma **snippet sledzacy** (JavaScript), ktory mozesz osadzic na swojej stronie. Sledzi on wyswietlenia stron, identyfikuje uzytkownikow i dostarcza dane do analityki projektu. Dostepny jest tez piksel sledzacy dla e-maili.
+
+---
+
 ## Kwestie techniczne
 
 ### Jakie przegladarki sa obslugiwane?

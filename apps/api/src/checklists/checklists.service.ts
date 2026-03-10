@@ -53,6 +53,10 @@ export class ChecklistsService {
       data.completedAt = dto.isCompleted ? new Date() : null;
       data.completedBy = dto.isCompleted ? userId : null;
     }
+    if (dto.note !== undefined) {
+      data.noteUpdatedBy = userId;
+      data.noteUpdatedAt = new Date();
+    }
     return this.prisma.checklistItem.update({
       where: { id: itemId },
       data,
@@ -83,6 +87,7 @@ export class ChecklistsService {
         order: dto.order || count + 1,
         priority: (dto.priority || 'MEDIUM') as any,
         isCompleted: dto.isCompleted || false,
+        section: dto.section || null,
       },
     });
   }

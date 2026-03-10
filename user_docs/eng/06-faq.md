@@ -149,6 +149,54 @@ Go to **Settings > Billing > Manage Subscription** and click **Cancel Plan** in 
 
 ---
 
+## Social Publishing
+
+### How do I publish content to social media?
+
+1. Connect your social accounts in **Settings > Integrations**
+2. Open a content item with APPROVED or PUBLISHED status
+3. Click **Publish** and select which accounts to publish to
+4. The system posts to each selected platform
+
+### Which social platforms are supported?
+
+- **LinkedIn** — connected via OAuth (click Connect, authorize)
+- **Twitter/X** — manual credentials (API keys and tokens)
+- **Facebook** — connected via OAuth (select page to post to)
+- **Telegram** — manual entry (bot token and chat ID)
+
+### Why did my social post fail?
+
+Check the publication history for error details. Common causes:
+- Expired OAuth tokens (reconnect the account)
+- Content exceeds platform character limits
+- API rate limits reached
+
+---
+
+## Advanced Features
+
+### How does SEO keyword tracking work?
+
+Add keywords in the **SEO** section of your project. For each keyword, you can:
+- Set search intent (Informational, Navigational, Commercial, Transactional)
+- Link to a target URL
+- Record rank positions over time to track progress
+
+### What is A/B testing?
+
+A/B testing lets you compare variants of email subjects, content, or landing pages. Create a test, add variants (A, B, etc.), run the test, and track impressions and conversions to find the winner.
+
+### How do webhooks work?
+
+Webhooks send notifications to your URLs when events happen (e.g., content published, campaign sent). Payloads are signed with HMAC-SHA256. Configure them in **Settings > Webhooks**.
+
+### Can I track website visitors?
+
+Yes. Each project has a **tracking snippet** (JavaScript) you can embed on your website. It tracks page views, identifies users, and feeds data into your project's analytics. There's also a tracking pixel for emails.
+
+---
+
 ## Technical
 
 ### What browsers are supported?
