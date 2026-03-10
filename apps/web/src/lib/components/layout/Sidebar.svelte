@@ -1,11 +1,27 @@
 <script lang="ts">
   import { page } from '$app/stores';
   import { _ } from 'svelte-i18n';
-  import { currentProjectStore } from '$lib/stores/projects';
+  import { currentProjectStore, organizationIdStore } from '$lib/stores/projects';
+  import { currentUser } from '$lib/stores/auth';
   import { browser } from '$app/environment';
 
   export let open = true;
   export let isMobile = false;
+
+  $: memberships = ($currentUser as any)?.memberships || [];
+  $: currentOrg = memberships.find((m: any) => m.organization?.id === $organizationIdStore)?.organization;
+  $: hasMultipleOrgs = memberships.length > 1;
+  let showOrgDropdown = false;
+
+  function switchOrg(orgId: string) {
+    organizationIdStore.set(orgId);
+    showOrgDropdown = false;
+    window.location.href = '/dashboard';
+  }
+
+  function handleClickOutside(event: MouseEvent) {
+    if (showOrgDropdown) showOrgDropdown = false;
+  }
 
   // Heroicons outline 24px — stored as SVG strings for {@html} rendering
   // Consistent with existing {@html action.icon} pattern in overview/+page.svelte
@@ -91,6 +107,10 @@
   }
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<svelte:window on:click={handleClickOutside} />
+
 <!-- Sidebar: uses inline style width transition for smooth slide animation -->
 <aside
   class="bg-white border-r border-gray-200 flex flex-col h-full overflow-hidden flex-shrink-0 transition-[width,transform] duration-200 ease-in-out
@@ -115,6 +135,47 @@
         </div>
       </a>
     </div>
+
+    <!-- Organization switcher -->
+    {#if hasMultipleOrgs}
+      <div class="px-4 py-3 border-b border-gray-100 relative">
+        <button
+          on:click|stopPropagation={() => (showOrgDropdown = !showOrgDropdown)}
+          class="w-full flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-50 transition-colors duration-150 cursor-pointer"
+        >
+          <div class="flex items-center gap-2 min-w-0">
+            <div class="w-6 h-6 rounded bg-primary-100 flex items-center justify-center text-primary-700 text-xs font-bold flex-shrink-0">
+              {(currentOrg?.name || '?').charAt(0).toUpperCase()}
+            </div>
+            <span class="text-sm font-medium text-gray-700 truncate">{currentOrg?.name || ''}</span>
+          </div>
+          <svg class="w-4 h-4 text-gray-400 flex-shrink-0 transition-transform duration-150 {showOrgDropdown ? 'rotate-180' : ''}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        {#if showOrgDropdown}
+          <div class="absolute left-3 right-3 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 py-1">
+            {#each memberships as m}
+              <button
+                on:click={() => switchOrg(m.organization.id)}
+                class="w-full text-left px-3 py-2 text-sm flex items-center gap-2 hover:bg-gray-50 transition-colors duration-150 cursor-pointer
+                  {m.organization.id === $organizationIdStore ? 'text-primary-700 font-medium' : 'text-gray-600'}"
+              >
+                <div class="w-5 h-5 rounded bg-primary-100 flex items-center justify-center text-primary-700 text-[10px] font-bold flex-shrink-0">
+                  {(m.organization.name || '?').charAt(0).toUpperCase()}
+                </div>
+                <span class="truncate">{m.organization.name}</span>
+                {#if m.organization.id === $organizationIdStore}
+                  <svg class="w-4 h-4 text-primary-600 ml-auto flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                  </svg>
+                {/if}
+              </button>
+            {/each}
+          </div>
+        {/if}
+      </div>
+    {/if}
 
     <nav class="p-3 flex-1 space-y-6">
       <!-- Main navigation -->

@@ -29,7 +29,11 @@
       const user = await api.get<any>('/users/me');
       authStore.setUser(user);
       if (user.memberships?.length > 0) {
-        organizationIdStore.set(user.memberships[0].organization.id);
+        const currentOrgId = $organizationIdStore;
+        const validOrg = currentOrgId && user.memberships.some((m: any) => m.organization.id === currentOrgId);
+        if (!validOrg) {
+          organizationIdStore.set(user.memberships[0].organization.id);
+        }
       }
     } catch {
       authStore.logout();
