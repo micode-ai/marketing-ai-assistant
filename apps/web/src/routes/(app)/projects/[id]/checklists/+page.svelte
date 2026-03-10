@@ -124,6 +124,18 @@
     } catch { /* silent */ }
   }
 
+  // ── Collapsible sections state ──
+  let collapsedSections = new Set<string>();
+
+  function toggleSection(sectionKey: string) {
+    if (collapsedSections.has(sectionKey)) {
+      collapsedSections.delete(sectionKey);
+    } else {
+      collapsedSections.add(sectionKey);
+    }
+    collapsedSections = collapsedSections;
+  }
+
   // ── Section grouping helper ──
   type SectionGroup = { section: string | null; items: any[] };
   function groupBySection(items: any[]): SectionGroup[] {
@@ -267,13 +279,11 @@
     let currentItem: ParsedChecklist['items'][0] | null = null;
     let inDescription = false;
     let order = 0;
-    let parentSection = '';
-    let subSection = '';
+    // Track heading levels as a stack: [h2, h3, h4, ...]
+    const sectionStack: string[] = [];
 
     function currentSection(): string | undefined {
-      if (!parentSection && !subSection) return undefined;
-      if (parentSection && subSection) return `${parentSection} / ${subSection}`;
-      return parentSection || subSection || undefined;
+      return sectionStack.length > 0 ? sectionStack.join(' / ') : undefined;
     }
 
     for (const line of lines) {
@@ -285,24 +295,17 @@
         continue;
       }
 
-      // h2 — main section
-      const h2Match = line.match(/^##(?!#)\s+(.+)/);
-      if (h2Match) {
+      // Any heading level 2+ — section/subsection
+      const headingMatch = line.match(/^(#{2,})\s+(.+)/);
+      if (headingMatch) {
         inDescription = false;
         if (currentItem) currentItem.description = currentItem.description.trim();
         currentItem = null;
-        parentSection = h2Match[1].trim();
-        subSection = '';
-        continue;
-      }
-
-      // h3, h4, etc. — subsection
-      const subMatch = line.match(/^#{3,}\s+(.+)/);
-      if (subMatch) {
-        inDescription = false;
-        if (currentItem) currentItem.description = currentItem.description.trim();
-        currentItem = null;
-        subSection = subMatch[1].trim();
+        const level = headingMatch[1].length; // 2 for ##, 3 for ###, etc.
+        const depth = level - 2; // 0-based index in stack
+        // Trim stack to parent level, then set this level
+        sectionStack.length = depth;
+        sectionStack[depth] = headingMatch[2].trim();
         continue;
       }
 
@@ -698,8 +701,17 @@
           <div class="space-y-1">
             {#each sections as group, gi (group.section ?? `__${gi}`)}
               {#if group.section}
-                <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider pt-3 pb-1 px-2">{group.section}</h4>
+                {@const sectionKey = `${checklist.id}::${group.section}`}
+                {@const sectionDone = group.items.filter((i: any) => i.isCompleted).length}
+                <!-- svelte-ignore a11y_click_events_have_key_events -->
+                <!-- svelte-ignore a11y_no_static_element_interactions -->
+                <div class="flex items-center gap-2 pt-3 pb-1 px-2 cursor-pointer select-none group/sec" on:click={() => toggleSection(sectionKey)}>
+                  <svg class="w-3.5 h-3.5 text-gray-400 transition-transform duration-150 {collapsedSections.has(sectionKey) ? '-rotate-90' : ''}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+                  <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{group.section}</h4>
+                  <span class="text-xs text-gray-300">{sectionDone}/{group.items.length}</span>
+                </div>
               {/if}
+              {#if !group.section || !collapsedSections.has(`${checklist.id}::${group.section}`)}
               {#each group.items as item, itemInGroup (item.id)}
                 {@const itemIndex = group.items === items ? itemInGroup : items.indexOf(item)}
               <div class="rounded-lg transition-colors {expandedItems.has(item.id) ? 'bg-gray-50' : 'hover:bg-gray-50/50'}">
@@ -826,6 +838,7 @@
                 {/if}
               </div>
               {/each}
+              {/if}
             {/each}
           </div>
           <!-- Add Item inline -->
