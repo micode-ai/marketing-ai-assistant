@@ -538,7 +538,10 @@
     "memberRemoved": "Członek usunięty pomyślnie",
     "joined": "Dołączył",
     "invited": "Zaproszony",
-    "you": "(ty)"
+    "you": "(ty)",
+    "leaveTeam": "Opuść zespół",
+    "leaveTeamConfirm": "Opuścić ten zespół?",
+    "leaveTeamDesc": "Stracisz dostęp do wszystkich projektów i zasobów tej organizacji."
   },
   "billing": {
     "title": "Płatności i subskrypcja",

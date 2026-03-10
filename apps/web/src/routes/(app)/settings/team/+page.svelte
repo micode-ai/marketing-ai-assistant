@@ -16,11 +16,13 @@
   let inviteError = '';
 
   let removingMember: any = null;
+  let showLeaveModal = false;
 
   let successMsg = '';
   let errorMsg = '';
 
   $: isAdmin = currentRole === 'OWNER' || currentRole === 'ADMIN';
+  $: isOwner = currentRole === 'OWNER';
 
   function initials(name: string): string {
     if (!name) return '?';
@@ -61,7 +63,9 @@
   onMount(async () => {
     if ($currentUser) {
       currentUserId = $currentUser.id;
-      const membership = ($currentUser as any).memberships?.[0];
+      const membership = ($currentUser as any).memberships?.find(
+        (m: any) => m.organizationId === $organizationIdStore || m.organization?.id === $organizationIdStore
+      ) || ($currentUser as any).memberships?.[0];
       if (membership) currentRole = membership.role;
     }
     await loadMembers();
@@ -103,6 +107,19 @@
       removingMember = null;
     }
   }
+
+  async function leaveOrganization() {
+    try {
+      await api.post(`/organizations/${$organizationIdStore}/leave`);
+      organizationIdStore.set(null);
+      window.location.href = '/dashboard';
+    } catch (e: any) {
+      errorMsg = e.message;
+      setTimeout(() => (errorMsg = ''), 3000);
+    } finally {
+      showLeaveModal = false;
+    }
+  }
 </script>
 
 <div class="p-6 max-w-3xl mx-auto">
@@ -112,17 +129,30 @@
       <h1 class="text-2xl font-bold text-gray-900">{$_('settings.teamTitle')}</h1>
       <p class="text-sm text-gray-500 mt-1">{$_('settings.teamDesc')}</p>
     </div>
-    {#if isAdmin}
-      <button
-        on:click={() => { showInviteModal = true; inviteError = ''; }}
-        class="inline-flex items-center gap-2 bg-primary-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors duration-150 cursor-pointer"
-      >
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z" />
-        </svg>
-        {$_('settings.inviteMember')}
-      </button>
-    {/if}
+    <div class="flex items-center gap-2">
+      {#if !isOwner}
+        <button
+          on:click={() => (showLeaveModal = true)}
+          class="inline-flex items-center gap-2 border border-red-200 text-red-600 text-sm font-medium px-4 py-2 rounded-lg hover:bg-red-50 transition-colors duration-150 cursor-pointer"
+        >
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
+          </svg>
+          {$_('settings.leaveTeam')}
+        </button>
+      {/if}
+      {#if isAdmin}
+        <button
+          on:click={() => { showInviteModal = true; inviteError = ''; }}
+          class="inline-flex items-center gap-2 bg-primary-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors duration-150 cursor-pointer"
+        >
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z" />
+          </svg>
+          {$_('settings.inviteMember')}
+        </button>
+      {/if}
+    </div>
   </div>
 
   <!-- Messages -->
@@ -236,6 +266,37 @@
         <button
           on:click={() => (showInviteModal = false)}
           class="px-5 py-2.5 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors duration-150 cursor-pointer"
+        >
+          {$_('common.cancel')}
+        </button>
+      </div>
+    </div>
+  </div>
+{/if}
+
+<!-- Leave Confirmation Modal -->
+{#if showLeaveModal}
+  <!-- svelte-ignore a11y-click-events-have-key-events -->
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
+  <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => (showLeaveModal = false)}>
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+      <div class="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center mb-4">
+        <svg class="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
+        </svg>
+      </div>
+      <h2 class="text-lg font-semibold text-gray-900 mb-1">{$_('settings.leaveTeamConfirm')}</h2>
+      <p class="text-sm text-gray-500 mb-6">{$_('settings.leaveTeamDesc')}</p>
+      <div class="flex gap-3">
+        <button
+          on:click={leaveOrganization}
+          class="flex-1 bg-red-600 text-white py-2.5 rounded-lg font-medium text-sm hover:bg-red-700 transition-colors duration-150 cursor-pointer"
+        >
+          {$_('settings.leaveTeam')}
+        </button>
+        <button
+          on:click={() => (showLeaveModal = false)}
+          class="flex-1 border border-gray-300 rounded-lg text-sm py-2.5 font-medium hover:bg-gray-50 transition-colors duration-150 cursor-pointer"
         >
           {$_('common.cancel')}
         </button>

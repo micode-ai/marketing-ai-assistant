@@ -34,4 +34,10 @@ export class OrganizationsController {
   removeMember(@Param('id') orgId: string, @Param('memberId') memberId: string, @CurrentUser() user: any) {
     return this.orgsService.removeMember(orgId, user.id, memberId);
   }
+
+  @Post(':id/leave')
+  @ApiOperation({ summary: 'Leave organization' })
+  leave(@Param('id') orgId: string, @CurrentUser() user: any) {
+    return this.orgsService.leaveOrganization(orgId, user.id);
+  }
 }
