@@ -24,10 +24,10 @@
     try {
       const result = await api.post<any>(`/invitations/${inv.id}/accept`);
       invitations = invitations.filter(i => i.id !== inv.id);
-      // Switch to the accepted organization
+      // Switch to the accepted organization and full reload to refresh user data
       if (result.organization?.id) {
         organizationIdStore.set(result.organization.id);
-        window.location.reload();
+        window.location.href = '/dashboard';
       }
     } catch {
       // ignore
