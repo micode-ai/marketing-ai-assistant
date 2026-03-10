@@ -3,6 +3,7 @@
   import { _ } from 'svelte-i18n';
   import { currentProjectStore, organizationIdStore } from '$lib/stores/projects';
   import { currentUser } from '$lib/stores/auth';
+  import { api } from '$lib/api/client';
   import { browser } from '$app/environment';
 
   export let open = true;
@@ -17,6 +18,21 @@
     organizationIdStore.set(orgId);
     showOrgDropdown = false;
     window.location.href = '/dashboard';
+  }
+
+  let leavingOrg: any = null;
+
+  async function leaveOrg() {
+    if (!leavingOrg) return;
+    try {
+      await api.post(`/organizations/${leavingOrg.organization.id}/leave`);
+      leavingOrg = null;
+      showOrgDropdown = false;
+      organizationIdStore.set(null);
+      window.location.href = '/dashboard';
+    } catch {
+      leavingOrg = null;
+    }
   }
 
   function handleClickOutside(event: MouseEvent) {
@@ -156,21 +172,34 @@
         {#if showOrgDropdown}
           <div class="absolute left-3 right-3 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 py-1">
             {#each memberships as m}
-              <button
-                on:click={() => switchOrg(m.organization.id)}
-                class="w-full text-left px-3 py-2 text-sm flex items-center gap-2 hover:bg-gray-50 transition-colors duration-150 cursor-pointer
-                  {m.organization.id === $organizationIdStore ? 'text-primary-700 font-medium' : 'text-gray-600'}"
-              >
-                <div class="w-5 h-5 rounded bg-primary-100 flex items-center justify-center text-primary-700 text-[10px] font-bold flex-shrink-0">
-                  {(m.organization.name || '?').charAt(0).toUpperCase()}
-                </div>
-                <span class="truncate">{m.organization.name}</span>
-                {#if m.organization.id === $organizationIdStore}
-                  <svg class="w-4 h-4 text-primary-600 ml-auto flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                  </svg>
+              <div class="flex items-center hover:bg-gray-50 transition-colors duration-150">
+                <button
+                  on:click={() => switchOrg(m.organization.id)}
+                  class="flex-1 text-left px-3 py-2 text-sm flex items-center gap-2 cursor-pointer
+                    {m.organization.id === $organizationIdStore ? 'text-primary-700 font-medium' : 'text-gray-600'}"
+                >
+                  <div class="w-5 h-5 rounded bg-primary-100 flex items-center justify-center text-primary-700 text-[10px] font-bold flex-shrink-0">
+                    {(m.organization.name || '?').charAt(0).toUpperCase()}
+                  </div>
+                  <span class="truncate">{m.organization.name}</span>
+                  {#if m.organization.id === $organizationIdStore}
+                    <svg class="w-4 h-4 text-primary-600 ml-auto flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                    </svg>
+                  {/if}
+                </button>
+                {#if m.role !== 'OWNER'}
+                  <button
+                    on:click|stopPropagation={() => (leavingOrg = m)}
+                    class="px-2 py-1 mr-2 text-red-400 hover:text-red-600 cursor-pointer flex-shrink-0"
+                    title={$_('settings.leaveTeam')}
+                  >
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
+                    </svg>
+                  </button>
                 {/if}
-              </button>
+              </div>
             {/each}
           </div>
         {/if}
@@ -284,3 +313,35 @@
     </nav>
   </div>
 </aside>
+
+<!-- Leave Organization Modal -->
+{#if leavingOrg}
+  <!-- svelte-ignore a11y-click-events-have-key-events -->
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
+  <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => (leavingOrg = null)}>
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+      <div class="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center mb-4">
+        <svg class="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
+        </svg>
+      </div>
+      <h2 class="text-lg font-semibold text-gray-900 mb-1">{$_('settings.leaveTeamConfirm')}</h2>
+      <p class="text-sm text-gray-500 mb-1 font-medium">{leavingOrg.organization?.name}</p>
+      <p class="text-sm text-gray-500 mb-6">{$_('settings.leaveTeamDesc')}</p>
+      <div class="flex gap-3">
+        <button
+          on:click={leaveOrg}
+          class="flex-1 bg-red-600 text-white py-2.5 rounded-lg font-medium text-sm hover:bg-red-700 transition-colors duration-150 cursor-pointer"
+        >
+          {$_('settings.leaveTeam')}
+        </button>
+        <button
+          on:click={() => (leavingOrg = null)}
+          class="flex-1 border border-gray-300 rounded-lg text-sm py-2.5 font-medium hover:bg-gray-50 transition-colors duration-150 cursor-pointer"
+        >
+          {$_('common.cancel')}
+        </button>
+      </div>
+    </div>
+  </div>
+{/if}
