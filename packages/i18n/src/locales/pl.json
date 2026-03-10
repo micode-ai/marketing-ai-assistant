@@ -1037,5 +1037,12 @@
     "sectionEmailLists": "Listy e-mail i subskrybenci",
     "sectionKeywords": "Słowa kluczowe SEO",
     "sectionCompetitors": "Konkurenci"
+  },
+  "invitations": {
+    "youAreInvited": "Zaproszono Cię do {organization} jako {role}",
+    "accept": "Akceptuj",
+    "decline": "Odrzuć",
+    "accepted": "Zaproszenie zaakceptowane",
+    "declined": "Zaproszenie odrzucone"
   }
 }
