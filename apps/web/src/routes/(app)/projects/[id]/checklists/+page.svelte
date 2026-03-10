@@ -2,7 +2,6 @@
   import { _, locale } from 'svelte-i18n';
   import { page } from '$app/stores';
   import { onMount, onDestroy } from 'svelte';
-  import { slide } from 'svelte/transition';
   import { api } from '$lib/api/client';
   import SectionHint from '$lib/components/SectionHint.svelte';
   import { marked } from 'marked';
@@ -171,6 +170,30 @@
       }
     }
     itemChats = itemChats;
+    // Pre-warm markdown cache in idle time so first expand is instant
+    prewarmMdCache();
+  }
+
+  function prewarmMdCache() {
+    const pending: string[] = [];
+    for (const id in itemChats) {
+      for (const msg of itemChats[id].messages) {
+        if (msg.role === 'assistant' && !mdCache.has(msg.content)) {
+          pending.push(msg.content);
+        }
+      }
+    }
+    if (!pending.length) return;
+    let i = 0;
+    function processChunk() {
+      const end = Math.min(i + 3, pending.length);
+      while (i < end) {
+        renderMarkdownCached(pending[i]);
+        i++;
+      }
+      if (i < pending.length) requestAnimationFrame(processChunk);
+    }
+    requestAnimationFrame(processChunk);
   }
 
   function handleVisibilityChange() {
@@ -653,12 +676,12 @@
             <div class="bg-primary-600 h-1.5 rounded-full transition-all duration-500" style="width: {progress}%"></div>
           </div>
           <div class="space-y-1">
-            {#each sections as group}
+            {#each sections as group, gi (group.section ?? `__${gi}`)}
               {#if group.section}
                 <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider pt-3 pb-1 px-2">{group.section}</h4>
               {/if}
-              {#each group.items as item}
-                {@const itemIndex = items.indexOf(item)}
+              {#each group.items as item, itemInGroup (item.id)}
+                {@const itemIndex = group.items === items ? itemInGroup : items.indexOf(item)}
               <div class="rounded-lg transition-colors {expandedItems.has(item.id) ? 'bg-gray-50' : 'hover:bg-gray-50/50'}">
                 <div class="flex items-center gap-3 py-2 px-2 group">
                   <button
@@ -713,7 +736,7 @@
                   <div class="w-2 h-2 rounded-full flex-shrink-0 {priorityDot[item.priority] || 'bg-gray-300'}" title={item.priority}></div>
                 </div>
                 {#if expandedItems.has(item.id)}
-                  <div transition:slide={{ duration: 200 }} class="px-2 pb-3 pl-12">
+                  <div class="px-2 pb-3 pl-12">
                     {#if item.description}
                       <p class="text-sm text-gray-500 border-l-2 border-primary-200 pl-3 mb-3">{item.description}</p>
                     {/if}
@@ -787,7 +810,7 @@
           </div>
           <!-- Add Item inline -->
           {#if addingItemToId === checklist.id}
-            <div transition:slide={{ duration: 150 }} class="mt-3 p-3 border border-dashed border-gray-300 rounded-lg">
+            <div class="mt-3 p-3 border border-dashed border-gray-300 rounded-lg">
               <div class="flex gap-2 mb-2">
                 <input type="text" bind:value={newItemForm.title} placeholder={$_('checklists.itemTitlePlaceholder')} class="flex-1 text-sm px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary-400" on:keydown={(e) => e.key === 'Enter' && addItemToChecklist(checklist.id)} />
                 <select bind:value={newItemForm.priority} class="text-sm px-2 py-2 border border-gray-200 rounded-lg">
