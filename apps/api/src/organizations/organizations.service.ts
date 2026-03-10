@@ -71,6 +71,20 @@ export class OrganizationsService {
     });
   }
 
+  async leaveOrganization(orgId: string, userId: string) {
+    const member = await this.prisma.organizationMember.findUnique({
+      where: { userId_organizationId: { userId, organizationId: orgId } },
+    });
+    if (!member) throw new NotFoundException('Membership not found');
+    if (member.role === 'OWNER') throw new ForbiddenException('Owner cannot leave the organization');
+
+    await this.prisma.organizationMember.delete({
+      where: { userId_organizationId: { userId, organizationId: orgId } },
+    });
+
+    return { success: true };
+  }
+
   private async checkOwnerOrAdmin(orgId: string, userId: string) {
     const member = await this.prisma.organizationMember.findUnique({
       where: { userId_organizationId: { userId, organizationId: orgId } },

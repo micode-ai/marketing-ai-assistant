@@ -547,7 +547,10 @@
     "memberRemoved": "Member removed successfully",
     "joined": "Joined",
     "invited": "Invited",
-    "you": "(you)"
+    "you": "(you)",
+    "leaveTeam": "Leave Team",
+    "leaveTeamConfirm": "Leave this team?",
+    "leaveTeamDesc": "You will lose access to all projects and resources of this organization."
   },
   "billing": {
     "title": "Billing & Subscription",
