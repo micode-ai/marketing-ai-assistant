@@ -72,6 +72,9 @@
   // ── Delete item state ──
   let deletingItemId: string | null = null;
 
+  // ── Hover tracking (lazy-render action buttons) ──
+  let hoveredItemId: string | null = null;
+
   // ── Add item inline state ──
   let addingItemToId: string | null = null;
   let newItemForm = { title: '', description: '', priority: 'MEDIUM', section: '' };
@@ -136,6 +139,17 @@
     collapsedSections = collapsedSections;
   }
 
+  // Auto-collapse all sections on load (so only headers render, not 85+ items)
+  function autoCollapseSections() {
+    for (const checklist of checklists) {
+      const sections = groupBySection(checklist.items || []);
+      for (const g of sections) {
+        if (g.section) collapsedSections.add(`${checklist.id}::${g.section}`);
+      }
+    }
+    collapsedSections = collapsedSections;
+  }
+
   // ── Section grouping helper ──
   type SectionGroup = { section: string | null; items: any[] };
   function groupBySection(items: any[]): SectionGroup[] {
@@ -158,13 +172,13 @@
       expandedItems.delete(itemId);
     } else {
       expandedItems.add(itemId);
-      ensureItemChat(itemId);
-      // Mark note as read
-      if (highlightedNotes.has(itemId)) {
-        highlightedNotes.delete(itemId);
-        highlightedNotes = highlightedNotes;
+      // Init chat entry inline (no separate reactivity trigger)
+      if (!itemChats[itemId]) {
+        itemChats[itemId] = { messages: [], input: '', loading: false };
       }
+      highlightedNotes.delete(itemId);
     }
+    // Single reactive update for all changes
     expandedItems = expandedItems;
   }
 
@@ -215,6 +229,7 @@
   onMount(async () => {
     checklists = await api.get<any[]>('/checklists', { projectId });
     initChatsFromDB();
+    autoCollapseSections();
     loading = false;
     // Polling every 30s + refresh on tab focus
     pollingInterval = setInterval(refreshChecklists, 30_000);
@@ -245,6 +260,7 @@
 
       checklists = await api.get<any[]>('/checklists', { projectId });
       initChatsFromDB();
+      autoCollapseSections();
       showAIModal = false;
     } catch (e: any) { alert(e.message); }
     finally { creating = false; }
@@ -391,6 +407,7 @@
       });
       checklists = await api.get<any[]>('/checklists', { projectId });
       initChatsFromDB();
+      autoCollapseSections();
       showImportModal = false;
       importParsed = null;
     } catch (e: any) {
@@ -424,6 +441,7 @@
       });
       checklists = await api.get<any[]>('/checklists', { projectId });
       initChatsFromDB();
+      autoCollapseSections();
       showCreateModal = false;
       createForm = { name: '', type: 'CUSTOM', description: '', items: [] as typeof createForm.items };
     } catch (e: any) {
@@ -714,8 +732,9 @@
               {#if !group.section || !collapsedSections.has(`${checklist.id}::${group.section}`)}
               {#each group.items as item, itemInGroup (item.id)}
                 {@const itemIndex = group.items === items ? itemInGroup : items.indexOf(item)}
-              <div class="rounded-lg transition-colors {expandedItems.has(item.id) ? 'bg-gray-50' : 'hover:bg-gray-50/50'}">
-                <div class="flex items-center gap-3 py-2 px-2 group">
+              <!-- svelte-ignore a11y_no_static_element_interactions -->
+              <div class="rounded-lg transition-colors {expandedItems.has(item.id) ? 'bg-gray-50' : 'hover:bg-gray-50/50'}" on:mouseenter={() => hoveredItemId = item.id} on:mouseleave={() => { if (hoveredItemId === item.id) hoveredItemId = null; }}>
+                <div class="flex items-center gap-3 py-2 px-2">
                   <button
                     on:click|stopPropagation={() => toggleItem(checklist.id, item.id, !item.isCompleted)}
                     class="w-5 h-5 rounded-md border-2 flex-shrink-0 flex items-center justify-center transition-all {item.isCompleted ? 'bg-primary-600 border-primary-600' : 'border-gray-300 hover:border-primary-400'}"
@@ -737,8 +756,9 @@
                       <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
                     </svg>
                   </div>
-                  <!-- Item action buttons (visible on hover) -->
-                  <div class="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <!-- Action buttons: only mount in DOM when hovered (saves ~500 SVGs) -->
+                  {#if hoveredItemId === item.id || deletingItemId === item.id}
+                  <div class="flex items-center gap-0.5">
                     {#if itemIndex > 0}
                       <button on:click|stopPropagation={() => moveItem(checklist.id, items, itemIndex, 'up')} class="p-1 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-100" title={$_('checklists.moveUp')}>
                         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" /></svg>
@@ -765,6 +785,7 @@
                       </button>
                     {/if}
                   </div>
+                  {/if}
                   <div class="w-2 h-2 rounded-full flex-shrink-0 {priorityDot[item.priority] || 'bg-gray-300'}" title={item.priority}></div>
                 </div>
                 {#if expandedItems.has(item.id)}
