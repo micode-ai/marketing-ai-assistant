@@ -1,21 +1,51 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
 @Injectable()
 export class MailService {
-  private transporter: nodemailer.Transporter;
+  private readonly logger = new Logger(MailService.name);
+  private transporter: nodemailer.Transporter | null = null;
+  private resend: Resend | null = null;
+  private fromEmail: string;
 
   constructor(private config: ConfigService) {
-    this.transporter = nodemailer.createTransport({
-      host: this.config.get('SMTP_HOST', 'localhost'),
-      port: Number(this.config.get('SMTP_PORT', '1025')),
-      secure: this.config.get('SMTP_SECURE', 'false') === 'true',
-      auth:
-        this.config.get('SMTP_USER')
+    this.fromEmail = this.config.get('RESEND_FROM_EMAIL', 'noreply@marketingai.app');
+
+    const resendKey = this.config.get<string>('RESEND_API_KEY');
+    if (resendKey && !resendKey.startsWith('re_placeholder')) {
+      this.resend = new Resend(resendKey);
+      this.logger.log('Mail: using Resend API');
+    } else {
+      this.transporter = nodemailer.createTransport({
+        host: this.config.get('SMTP_HOST', 'localhost'),
+        port: Number(this.config.get('SMTP_PORT', '1025')),
+        secure: this.config.get('SMTP_SECURE', 'false') === 'true',
+        auth: this.config.get('SMTP_USER')
           ? { user: this.config.get('SMTP_USER'), pass: this.config.get('SMTP_PASS') }
           : undefined,
-    });
+      });
+      this.logger.log('Mail: using SMTP');
+    }
+  }
+
+  private async send(params: { to: string; subject: string; html: string }) {
+    if (this.resend) {
+      await this.resend.emails.send({
+        from: this.fromEmail,
+        to: params.to,
+        subject: params.subject,
+        html: params.html,
+      });
+    } else if (this.transporter) {
+      await this.transporter.sendMail({
+        from: this.fromEmail,
+        to: params.to,
+        subject: params.subject,
+        html: params.html,
+      });
+    }
   }
 
   async sendTeamInvite(params: {
@@ -27,8 +57,7 @@ export class MailService {
   }) {
     const { to, inviterName, organizationName, role, loginUrl } = params;
 
-    await this.transporter.sendMail({
-      from: this.config.get('RESEND_FROM_EMAIL', 'noreply@marketingai.app'),
+    await this.send({
       to,
       subject: `You've been invited to ${organizationName}`,
       html: `
