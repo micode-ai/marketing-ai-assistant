@@ -23,6 +23,8 @@
 
   $: isAdmin = currentRole === 'OWNER' || currentRole === 'ADMIN';
   $: isOwner = currentRole === 'OWNER';
+  $: activeMembers = members.filter(m => m.joinedAt || (!m.requestedAt && m.invitedAt));
+  $: pendingRequests = members.filter(m => m.requestedAt && !m.joinedAt);
 
   function initials(name: string): string {
     if (!name) return '?';
@@ -107,6 +109,30 @@
     }
   }
 
+  async function approveRequest(userId: string) {
+    try {
+      await api.post(`/organizations/${$organizationIdStore}/members/${userId}/approve`);
+      successMsg = $_('settings.requestApproved');
+      setTimeout(() => (successMsg = ''), 3000);
+      await loadMembers();
+    } catch (e: any) {
+      errorMsg = e.message;
+      setTimeout(() => (errorMsg = ''), 3000);
+    }
+  }
+
+  async function declineRequest(userId: string) {
+    try {
+      await api.post(`/organizations/${$organizationIdStore}/members/${userId}/decline`);
+      members = members.filter(m => m.userId !== userId);
+      successMsg = $_('settings.requestDeclined');
+      setTimeout(() => (successMsg = ''), 3000);
+    } catch (e: any) {
+      errorMsg = e.message;
+      setTimeout(() => (errorMsg = ''), 3000);
+    }
+  }
+
   async function leaveOrganization() {
     try {
       await api.post(`/organizations/${$organizationIdStore}/leave`);
@@ -167,9 +193,48 @@
       <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600"></div>
     </div>
   {:else}
+    <!-- Pending Join Requests -->
+    {#if isAdmin && pendingRequests.length > 0}
+      <div class="mb-6">
+        <h2 class="text-sm font-semibold text-amber-700 mb-3 flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+          </svg>
+          {$_('settings.pendingRequests')}
+        </h2>
+        <div class="space-y-3">
+          {#each pendingRequests as member}
+            <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center gap-4">
+              <div class="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white font-semibold text-sm flex-shrink-0 overflow-hidden">
+                {initials(member.user?.name || '')}
+              </div>
+              <div class="flex-1 min-w-0">
+                <span class="font-medium text-gray-900 text-sm">{member.user?.name || '—'}</span>
+                <div class="text-xs text-gray-500 mt-0.5">{member.user?.email || ''}</div>
+              </div>
+              <div class="flex items-center gap-2 flex-shrink-0">
+                <button
+                  on:click={() => approveRequest(member.userId)}
+                  class="inline-flex items-center bg-primary-600 text-white text-xs font-medium px-3 py-1.5 rounded-lg hover:bg-primary-700 transition-colors duration-150 cursor-pointer"
+                >
+                  {$_('settings.approve')}
+                </button>
+                <button
+                  on:click={() => declineRequest(member.userId)}
+                  class="inline-flex items-center border border-gray-300 text-gray-700 text-xs font-medium px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors duration-150 cursor-pointer"
+                >
+                  {$_('settings.decline')}
+                </button>
+              </div>
+            </div>
+          {/each}
+        </div>
+      </div>
+    {/if}
+
     <!-- Members List -->
     <div class="space-y-3">
-      {#each members as member}
+      {#each activeMembers as member}
         <div class="bg-white border border-gray-200 rounded-xl p-4 flex items-center gap-4">
           <!-- Avatar -->
           <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white font-semibold text-sm flex-shrink-0 overflow-hidden">
@@ -212,7 +277,7 @@
       {/each}
     </div>
 
-    {#if members.length === 0}
+    {#if activeMembers.length === 0}
       <div class="text-center py-12 text-gray-500 text-sm">{$_('common.noData')}</div>
     {/if}
   {/if}

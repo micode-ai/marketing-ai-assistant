@@ -77,7 +77,9 @@
     "passwordMismatch": "Hasła nie są identyczne",
     "invalidCredentials": "Nieprawidłowy email lub hasło",
     "organizationName": "Nazwa organizacji",
-    "organizationNamePlaceholder": "Nazwa Twojej firmy lub projektu"
+    "organizationNamePlaceholder": "Nazwa Twojej firmy lub projektu",
+    "joinRequestSent": "Prośba o dołączenie wysłana",
+    "joinRequestDesc": "Twoja prośba o dołączenie do {organization} została wysłana. Administrator rozpatrzy ją wkrótce."
   },
   "onboarding": {
     "welcome": "Witaj w Marketing AI Assistant",
@@ -541,7 +543,12 @@
     "you": "(ty)",
     "leaveTeam": "Opuść zespół",
     "leaveTeamConfirm": "Opuścić ten zespół?",
-    "leaveTeamDesc": "Stracisz dostęp do wszystkich projektów i zasobów tej organizacji."
+    "leaveTeamDesc": "Stracisz dostęp do wszystkich projektów i zasobów tej organizacji.",
+    "pendingRequests": "Oczekujące prośby o dołączenie",
+    "approve": "Zatwierdź",
+    "decline": "Odrzuć",
+    "requestApproved": "Prośba zatwierdzona",
+    "requestDeclined": "Prośba odrzucona"
   },
   "billing": {
     "title": "Płatności i subskrypcja",
@@ -1046,6 +1053,8 @@
     "accept": "Akceptuj",
     "decline": "Odrzuć",
     "accepted": "Zaproszenie zaakceptowane",
-    "declined": "Zaproszenie odrzucone"
+    "declined": "Zaproszenie odrzucone",
+    "joinRequestPending": "Twoja prośba o dołączenie do {organization} oczekuje na zatwierdzenie",
+    "awaitingApproval": "Oczekuje na zatwierdzenie"
   }
 }

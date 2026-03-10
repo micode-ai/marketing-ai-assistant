@@ -35,6 +35,18 @@ export class OrganizationsController {
     return this.orgsService.removeMember(orgId, user.id, memberId);
   }
 
+  @Post(':id/members/:memberId/approve')
+  @ApiOperation({ summary: 'Approve join request' })
+  approveRequest(@Param('id') orgId: string, @Param('memberId') memberId: string, @CurrentUser() user: any) {
+    return this.orgsService.approveRequest(orgId, user.id, memberId);
+  }
+
+  @Post(':id/members/:memberId/decline')
+  @ApiOperation({ summary: 'Decline join request' })
+  declineRequest(@Param('id') orgId: string, @Param('memberId') memberId: string, @CurrentUser() user: any) {
+    return this.orgsService.declineRequest(orgId, user.id, memberId);
+  }
+
   @Post(':id/leave')
   @ApiOperation({ summary: 'Leave organization' })
   leave(@Param('id') orgId: string, @CurrentUser() user: any) {

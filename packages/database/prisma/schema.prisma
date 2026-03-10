@@ -288,6 +288,7 @@ model OrganizationMember {
   role           UserRole     @default(MEMBER)
   invitedAt      DateTime?
   joinedAt       DateTime?
+  requestedAt    DateTime?
   createdAt      DateTime     @default(now())
 
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)

@@ -9,11 +9,18 @@ export class InvitationsService {
 
   async getPending(userId: string) {
     return this.prisma.organizationMember.findMany({
-      where: { userId, joinedAt: null },
+      where: {
+        userId,
+        joinedAt: null,
+        OR: [
+          { invitedAt: { not: null } },
+          { requestedAt: { not: null } },
+        ],
+      },
       include: {
         organization: { select: { id: true, name: true, slug: true, logoUrl: true } },
       },
-      orderBy: { invitedAt: 'desc' },
+      orderBy: { createdAt: 'desc' },
     });
   }
 

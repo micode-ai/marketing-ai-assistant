@@ -10,18 +10,26 @@
   let organizationName = '';
   let loading = false;
   let error = '';
+  let joinRequestPending = false;
+  let pendingOrgName = '';
 
   async function handleRegister() {
     loading = true;
     error = '';
     try {
-      const result = await api.post<{ accessToken: string; refreshToken: string; user: any }>(
+      const result = await api.post<{ accessToken: string; refreshToken: string; user: any; joinRequestPending?: boolean; organizationName?: string }>(
         '/auth/register',
         { email, name, password, organizationName }
       );
       authStore.setTokens(result.accessToken, result.refreshToken);
       authStore.setUser(result.user);
-      goto('/onboarding');
+
+      if (result.joinRequestPending) {
+        joinRequestPending = true;
+        pendingOrgName = result.organizationName || organizationName;
+      } else {
+        goto('/onboarding');
+      }
     } catch (e: any) {
       error = e.message || $_('errors.generic');
     } finally {
@@ -45,6 +53,23 @@
 
     <!-- Card body -->
     <div class="px-8 py-7">
+      {#if joinRequestPending}
+        <div class="text-center py-4">
+          <div class="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <svg class="w-7 h-7 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+            </svg>
+          </div>
+          <h2 class="text-lg font-semibold text-gray-900 mb-2">{$_('auth.joinRequestSent')}</h2>
+          <p class="text-sm text-gray-500 mb-6">{$_('auth.joinRequestDesc', { values: { organization: pendingOrgName } })}</p>
+          <a
+            href="/login"
+            class="inline-block bg-primary-600 text-white px-6 py-2.5 rounded-lg font-medium text-sm hover:bg-primary-700 transition-colors duration-150"
+          >
+            {$_('auth.login')}
+          </a>
+        </div>
+      {:else}
       {#if error}
         <div class="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 mb-5 text-sm flex items-center gap-2">
           <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -118,6 +143,7 @@
         {$_('auth.haveAccount')}
         <a href="/login" class="text-primary-600 font-semibold hover:underline ml-1 transition-colors duration-150">{$_('auth.login')}</a>
       </p>
+      {/if}
     </div>
   </div>
 </div>
