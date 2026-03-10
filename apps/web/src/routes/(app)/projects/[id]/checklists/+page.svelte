@@ -721,12 +721,17 @@
               {#if group.section}
                 {@const sectionKey = `${checklist.id}::${group.section}`}
                 {@const sectionDone = group.items.filter((i: any) => i.isCompleted).length}
+                {@const sectionComplete = sectionDone === group.items.length}
                 <!-- svelte-ignore a11y_click_events_have_key_events -->
                 <!-- svelte-ignore a11y_no_static_element_interactions -->
                 <div class="flex items-center gap-2 pt-3 pb-1 px-2 cursor-pointer select-none group/sec" on:click={() => toggleSection(sectionKey)}>
-                  <svg class="w-3.5 h-3.5 text-gray-400 transition-transform duration-150 {collapsedSections.has(sectionKey) ? '-rotate-90' : ''}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
-                  <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{group.section}</h4>
-                  <span class="text-xs text-gray-300">{sectionDone}/{group.items.length}</span>
+                  {#if sectionComplete}
+                    <svg class="w-3.5 h-3.5 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" /></svg>
+                  {:else}
+                    <svg class="w-3.5 h-3.5 text-gray-400 transition-transform duration-150 {collapsedSections.has(sectionKey) ? '-rotate-90' : ''}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+                  {/if}
+                  <h4 class="text-xs font-semibold uppercase tracking-wider {sectionComplete ? 'text-green-500 line-through' : 'text-gray-400'}">{group.section}</h4>
+                  <span class="text-xs {sectionComplete ? 'text-green-400' : 'text-gray-300'}">{sectionDone}/{group.items.length}</span>
                 </div>
               {/if}
               {#if !group.section || !collapsedSections.has(`${checklist.id}::${group.section}`)}
