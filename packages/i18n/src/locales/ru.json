@@ -1035,5 +1035,12 @@
     "sectionEmailLists": "Email-списки и подписчики",
     "sectionKeywords": "SEO ключевые слова",
     "sectionCompetitors": "Конкуренты"
+  },
+  "invitations": {
+    "youAreInvited": "Вас приглашают в {organization} в роли {role}",
+    "accept": "Принять",
+    "decline": "Отклонить",
+    "accepted": "Приглашение принято",
+    "declined": "Приглашение отклонено"
   }
 }

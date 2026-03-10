@@ -6,6 +6,7 @@
   import { organizationIdStore } from '$lib/stores/projects';
   import Sidebar from '$lib/components/layout/Sidebar.svelte';
   import Header from '$lib/components/layout/Header.svelte';
+  import InvitationsBanner from '$lib/components/layout/InvitationsBanner.svelte';
 
   let sidebarOpen = true;
   let appReady = false;
@@ -60,6 +61,7 @@
     <Sidebar bind:open={sidebarOpen} {isMobile} />
     <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
       <Header bind:sidebarOpen />
+      <InvitationsBanner />
       <main class="flex-1 overflow-auto">
         <slot />
       </main>

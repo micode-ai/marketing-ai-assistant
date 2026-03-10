@@ -25,6 +25,7 @@ import { EmailSequencesModule } from './email-sequences/email-sequences.module';
 import { ChatModule } from './chat/chat.module';
 import { WebhooksModule } from './webhooks/webhooks.module';
 import { GoogleIntegrationsModule } from './google-integrations/google-integrations.module';
+import { InvitationsModule } from './invitations/invitations.module';
 import { MailModule } from './mail/mail.module';
 
 @Module({
@@ -44,6 +45,7 @@ import { MailModule } from './mail/mail.module';
     AuthModule,
     UsersModule,
     OrganizationsModule,
+    InvitationsModule,
     BillingModule,
     ProjectsModule,
     CampaignsModule,
