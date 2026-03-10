@@ -39,6 +39,40 @@ export class AuthService {
 
     const passwordHash = await bcrypt.hash(dto.password, 10);
     const orgName = dto.organizationName || `${dto.name}'s Organization`;
+
+    // Check if an organization with this name already exists
+    const existingOrg = dto.organizationName
+      ? await this.prisma.organization.findFirst({
+          where: { name: { equals: dto.organizationName, mode: 'insensitive' } },
+        })
+      : null;
+
+    if (existingOrg) {
+      // Org exists — create user and a pending join request
+      const user = await this.prisma.user.create({
+        data: {
+          email: dto.email,
+          name: dto.name,
+          passwordHash,
+          emailVerified: false,
+          memberships: {
+            create: {
+              organizationId: existingOrg.id,
+              role: 'MEMBER',
+              requestedAt: new Date(),
+            },
+          },
+        },
+      });
+
+      return {
+        ...await this.login(user),
+        joinRequestPending: true,
+        organizationName: existingOrg.name,
+      };
+    }
+
+    // Org doesn't exist — create new org with user as OWNER
     const slug = orgName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-') + '-' + Date.now();
 
     const user = await this.prisma.user.create({

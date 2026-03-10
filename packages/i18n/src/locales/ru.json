@@ -75,7 +75,9 @@
     "passwordMismatch": "Пароли не совпадают",
     "invalidCredentials": "Неверный email или пароль",
     "organizationName": "Название организации",
-    "organizationNamePlaceholder": "Название вашей компании или проекта"
+    "organizationNamePlaceholder": "Название вашей компании или проекта",
+    "joinRequestSent": "Запрос на вступление отправлен",
+    "joinRequestDesc": "Ваш запрос на вступление в {organization} отправлен. Администратор рассмотрит его в ближайшее время."
   },
   "onboarding": {
     "welcome": "Добро пожаловать в Marketing AI Assistant",
@@ -539,7 +541,12 @@
     "you": "(вы)",
     "leaveTeam": "Покинуть команду",
     "leaveTeamConfirm": "Покинуть эту команду?",
-    "leaveTeamDesc": "Вы потеряете доступ ко всем проектам и ресурсам этой организации."
+    "leaveTeamDesc": "Вы потеряете доступ ко всем проектам и ресурсам этой организации.",
+    "pendingRequests": "Ожидающие запросы на вступление",
+    "approve": "Принять",
+    "decline": "Отклонить",
+    "requestApproved": "Запрос одобрен",
+    "requestDeclined": "Запрос отклонён"
   },
   "billing": {
     "title": "Оплата и подписка",
@@ -1044,6 +1051,8 @@
     "accept": "Принять",
     "decline": "Отклонить",
     "accepted": "Приглашение принято",
-    "declined": "Приглашение отклонено"
+    "declined": "Приглашение отклонено",
+    "joinRequestPending": "Ваш запрос на вступление в {organization} ожидает одобрения",
+    "awaitingApproval": "Ожидает одобрения"
   }
 }

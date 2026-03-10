@@ -65,30 +65,42 @@
           <!-- Icon -->
           <div class="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
             <svg class="w-4 h-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z" />
+              {#if inv.requestedAt}
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+              {:else}
+                <path stroke-linecap="round" stroke-linejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z" />
+              {/if}
             </svg>
           </div>
           <!-- Text -->
           <p class="text-sm text-amber-800 truncate">
-            {$_('invitations.youAreInvited', { values: { organization: inv.organization?.name || '', role: roleLabel(inv.role) } })}
+            {#if inv.requestedAt}
+              {$_('invitations.joinRequestPending', { values: { organization: inv.organization?.name || '' } })}
+            {:else}
+              {$_('invitations.youAreInvited', { values: { organization: inv.organization?.name || '', role: roleLabel(inv.role) } })}
+            {/if}
           </p>
         </div>
-        <div class="flex items-center gap-2 flex-shrink-0">
-          <button
-            on:click={() => accept(inv)}
-            disabled={processing[inv.id]}
-            class="inline-flex items-center bg-primary-600 text-white text-xs font-medium px-3 py-1.5 rounded-lg hover:bg-primary-700 transition-colors duration-150 disabled:opacity-50 cursor-pointer"
-          >
-            {$_('invitations.accept')}
-          </button>
-          <button
-            on:click={() => decline(inv)}
-            disabled={processing[inv.id]}
-            class="inline-flex items-center border border-gray-300 text-gray-700 text-xs font-medium px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors duration-150 disabled:opacity-50 cursor-pointer"
-          >
-            {$_('invitations.decline')}
-          </button>
-        </div>
+        {#if inv.invitedAt && !inv.requestedAt}
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <button
+              on:click={() => accept(inv)}
+              disabled={processing[inv.id]}
+              class="inline-flex items-center bg-primary-600 text-white text-xs font-medium px-3 py-1.5 rounded-lg hover:bg-primary-700 transition-colors duration-150 disabled:opacity-50 cursor-pointer"
+            >
+              {$_('invitations.accept')}
+            </button>
+            <button
+              on:click={() => decline(inv)}
+              disabled={processing[inv.id]}
+              class="inline-flex items-center border border-gray-300 text-gray-700 text-xs font-medium px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors duration-150 disabled:opacity-50 cursor-pointer"
+            >
+              {$_('invitations.decline')}
+            </button>
+          </div>
+        {:else if inv.requestedAt}
+          <span class="text-xs text-amber-600 font-medium flex-shrink-0">{$_('invitations.awaitingApproval')}</span>
+        {/if}
       </div>
     {/each}
   </div>

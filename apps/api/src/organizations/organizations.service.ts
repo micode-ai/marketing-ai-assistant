@@ -71,6 +71,36 @@ export class OrganizationsService {
     });
   }
 
+  async approveRequest(orgId: string, approverId: string, memberId: string) {
+    await this.checkOwnerOrAdmin(orgId, approverId);
+    const member = await this.prisma.organizationMember.findUnique({
+      where: { userId_organizationId: { userId: memberId, organizationId: orgId } },
+    });
+    if (!member) throw new NotFoundException('Request not found');
+    if (!member.requestedAt || member.joinedAt) throw new ForbiddenException('No pending request');
+
+    return this.prisma.organizationMember.update({
+      where: { userId_organizationId: { userId: memberId, organizationId: orgId } },
+      data: { joinedAt: new Date() },
+      include: { user: { select: { id: true, email: true, name: true } } },
+    });
+  }
+
+  async declineRequest(orgId: string, declinerId: string, memberId: string) {
+    await this.checkOwnerOrAdmin(orgId, declinerId);
+    const member = await this.prisma.organizationMember.findUnique({
+      where: { userId_organizationId: { userId: memberId, organizationId: orgId } },
+    });
+    if (!member) throw new NotFoundException('Request not found');
+    if (!member.requestedAt || member.joinedAt) throw new ForbiddenException('No pending request');
+
+    await this.prisma.organizationMember.delete({
+      where: { userId_organizationId: { userId: memberId, organizationId: orgId } },
+    });
+
+    return { success: true };
+  }
+
   async leaveOrganization(orgId: string, userId: string) {
     const member = await this.prisma.organizationMember.findUnique({
       where: { userId_organizationId: { userId, organizationId: orgId } },
