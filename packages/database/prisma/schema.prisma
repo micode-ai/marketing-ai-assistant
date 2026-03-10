@@ -246,6 +246,7 @@ model User {
   memberships       OrganizationMember[]
   contentVersions   ContentVersion[]
   completedItems    ChecklistItem[]      @relation("CompletedBy")
+  updatedNotes      ChecklistItem[]      @relation("NoteUpdatedBy")
   createdDocuments  Document[]
   chatSessions      ChatSession[]
 
@@ -588,9 +589,14 @@ model ChecklistItem {
   priority    ChecklistItemPriority @default(MEDIUM)
   createdAt   DateTime              @default(now())
   updatedAt   DateTime              @updatedAt
+  section         String?
+  note            String?
+  noteUpdatedBy   String?
+  noteUpdatedAt   DateTime?
 
   checklist   Checklist @relation(fields: [checklistId], references: [id], onDelete: Cascade)
   completedByUser User? @relation("CompletedBy", fields: [completedBy], references: [id])
+  noteUpdatedByUser User? @relation("NoteUpdatedBy", fields: [noteUpdatedBy], references: [id])
   chatMessages Json? // Array of { role: 'user' | 'assistant', content: string }
 
   @@index([checklistId])

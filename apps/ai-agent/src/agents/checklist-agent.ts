@@ -17,6 +17,7 @@ type ChecklistItemData = {
   description?: string;
   priority: string;
   order: number;
+  section?: string;
 };
 
 type ChecklistData = {
@@ -43,7 +44,8 @@ const JSON_FORMAT = `{
       "title": "short action item title (5-8 words)",
       "description": "MUST be a detailed mini-guide of 5-8 sentences...",
       "priority": "LOW|MEDIUM|HIGH|CRITICAL",
-      "order": 1
+      "order": 1,
+      "section": "Section Name"
     }
   ]
 }`;
@@ -113,6 +115,7 @@ async function generateChecklist(state: State) {
       `Target Audience: ${project.targetAudience || 'general'}\n` +
       (context ? `Additional context: ${context}\n` : '') +
       `\nInclude 10-15 specific, actionable items. Mark critical items appropriately.\n` +
+      `Group items into 3-5 logical sections. Each item must have a "section" field with the section name.\n` +
       `Remember: each item description must be a detailed mini-guide (5-8 sentences) with specific tools, steps, and metrics.`,
     ),
   ]);
@@ -177,11 +180,11 @@ async function saveChecklist(state: State) {
     name:        `${typeLabels[checklistType] || checklistType} Checklist — ${project.name}`,
     description: `AI-generated ${checklistType.toLowerCase()} checklist`,
     items: [
-      { title: 'Define goals and success metrics',       priority: 'CRITICAL', order: 1 },
-      { title: 'Identify and segment target audience',   priority: 'HIGH',     order: 2 },
-      { title: 'Create content strategy and calendar',   priority: 'HIGH',     order: 3 },
-      { title: 'Set up analytics and tracking',          priority: 'HIGH',     order: 4 },
-      { title: 'Execute and monitor performance',        priority: 'MEDIUM',   order: 5 },
+      { title: 'Define goals and success metrics',       priority: 'CRITICAL', order: 1, section: 'Planning' },
+      { title: 'Identify and segment target audience',   priority: 'HIGH',     order: 2, section: 'Planning' },
+      { title: 'Create content strategy and calendar',   priority: 'HIGH',     order: 3, section: 'Content' },
+      { title: 'Set up analytics and tracking',          priority: 'HIGH',     order: 4, section: 'Analytics' },
+      { title: 'Execute and monitor performance',        priority: 'MEDIUM',   order: 5, section: 'Execution' },
     ],
   };
 
@@ -198,6 +201,7 @@ async function saveChecklist(state: State) {
           description: item.description || '',
           priority:    (item.priority || 'MEDIUM') as any,
           order:       item.order ?? i + 1,
+          section:     item.section || null,
         })),
       },
     },

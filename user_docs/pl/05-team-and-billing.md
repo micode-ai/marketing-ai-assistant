@@ -23,6 +23,44 @@ Kazdy uzytkownik nalezy do organizacji z okreslona rola:
 
 Zaproszona osoba otrzyma e-mail z instrukcjami dolaczenia do organizacji.
 
+### Przebieg zaproszenia
+
+Gdy zapraszasz kogos do swojej organizacji:
+
+1. Osoba otrzymuje e-mail z zaproszeniem
+2. Po zalogowaniu widzi oczekujace zaproszenia
+3. Moze **Zaakceptowac** lub **Odrzucic** kazde zaproszenie
+4. Zaakceptowane zaproszenia dodaja osobe do organizacji z przypisana rola
+
+Jesli ktos zarejestruje sie z adresem e-mail, na ktory jest juz oczekujace zaproszenie, automatycznie dolaczy do organizacji.
+
+### Prosba o dolaczenie i zatwierdzanie
+
+Gdy uzytkownik prosi o dolaczenie do organizacji:
+
+1. Prosba pojawia sie w **Ustawienia > Zespol** dla Wlascicieli i Administratorow
+2. Wlasciciele/Administratorzy moga **Zatwierdzic** lub **Odrzucic** prosbe
+3. Zatwierdzeni uzytkownicy uzyskuja dostep z rola CZLONEK
+
+### Opuszczanie organizacji
+
+Aby opuscic organizacje:
+
+1. Otworz **przelacznik organizacji** w pasku bocznym
+2. Kliknij **Opusc** obok organizacji, ktora chcesz opuscic
+3. Potwierdz akcje
+
+Uwaga: Wlasciciele organizacji nie moga jej opuscic — musza najpierw przeniesc wlasnosc.
+
+### Przelacznik organizacji
+
+Jesli nalezysz do wielu organizacji:
+
+1. Kliknij nazwe organizacji w pasku bocznym
+2. Wyswietli sie lista rozwijana ze wszystkimi Twoimi organizacjami
+3. Kliknij organizacje, aby sie na nia przelaczyc
+4. Wszystkie projekty, ustawienia i dane zmienia sie na wybrana organizacje
+
 ### Usuwanie czlonkow
 
 1. Przejdz do **Ustawienia > Zespol**
@@ -128,6 +166,12 @@ Aby anulowac subskrypcje:
 2. Przegladaj i zarzadzaj podlaczonymi kontami
 3. Dodawaj nowe konta do wysylki kampanii
 4. Usuwaj niepotrzebne konta
+
+### Ustawienia integracji
+
+1. Przejdz do **Ustawienia > Integracje**
+2. Polacz uslugi zewnetrzne
+3. Zarzadzaj kluczami API i danymi uwierzytelniajacymi
 
 ## Ustawienia konta
 

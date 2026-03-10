@@ -149,6 +149,7 @@ graph LR
     App --> Auth["AuthModule"]
     App --> Users["UsersModule"]
     App --> Organizations["OrganizationsModule"]
+    App --> Invitations["InvitationsModule"]
 
     App --> Projects["ProjectsModule"]
     App --> Campaigns["CampaignsModule"]
@@ -181,6 +182,7 @@ graph LR
 | Auth | `src/auth/` | JWT, Local, Google OAuth стратегии |
 | Users | `src/users/` | Управление профилем |
 | Organizations | `src/organizations/` | Мультиарендные организации, роли участников |
+| Invitations | `src/invitations/` | Принятие/отклонение приглашений в организацию |
 | Projects | `src/projects/` | CRUD проектов, API-ключи, websiteUrl для SEO |
 | Campaigns | `src/campaigns/` | Маркетинговые кампании (EMAIL/SOCIAL/BLOG/MULTI_CHANNEL) |
 | Content | `src/content/` | CRUD контента, версионирование, переупаковка, оценка эффективности |

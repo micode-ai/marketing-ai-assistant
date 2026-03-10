@@ -95,11 +95,11 @@ packages/
 | MailHog UI  | 8025      | http://localhost:8025 |
 
 ### Billing Plans (`PLAN_LIMITS` in shared-types)
-| Plan       | Projects | Content | Campaigns | Subscribers | Checklists |
-|------------|----------|---------|-----------|-------------|------------|
-| FREE       | 3        | 50      | 5         | 500         | 10         |
-| PRO        | 25       | 500     | 50        | 10 000      | 100        |
-| ENTERPRISE | ∞        | ∞       | ∞         | ∞           | ∞          |
+| Plan       | Projects | AI Gen/mo | Emails/mo | Team | Docs/mo | Integrations |
+|------------|----------|-----------|-----------|------|---------|--------------|
+| FREE       | 1        | 50        | 100       | 1    | 3       | 0            |
+| PRO        | 5        | 500       | 5 000     | 5    | 30      | 3            |
+| ENTERPRISE | ∞        | ∞         | 50 000    | ∞    | ∞       | ∞            |
 
 ### Agent Types
 `CONTENT`, `CHECKLIST`, `DOCUMENT`, `STRATEGY`, `SEO`, `EMAIL`, `ANALYTICS`, `SUPERVISOR`

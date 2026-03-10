@@ -434,7 +434,12 @@
     "addAnotherItem": "Dodaj kolejną pozycję",
     "noItemsYet": "Brak dodanych pozycji",
     "save": "Zapisz",
-    "itemTitlePlaceholder": "Tytuł pozycji"
+    "itemTitlePlaceholder": "Tytuł pozycji",
+    "section": "Sekcja",
+    "sectionPlaceholder": "np. Planowanie, Treści, Analityka",
+    "notes": "Notatki",
+    "notesPlaceholder": "Dodaj notatkę dla zespołu...",
+    "noteLastUpdated": "Zaktualizowano {time}"
   },
   "documents": {
     "title": "Dokumenty",

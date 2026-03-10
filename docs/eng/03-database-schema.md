@@ -79,6 +79,21 @@ erDiagram
 | stripeSubscriptionId | String? | Stripe subscription ID (unique) |
 | trialEndsAt | DateTime? | Trial expiration date |
 
+### OrganizationMember
+
+| Column | Type | Description |
+|--------|------|-------------|
+| userId | String | FK to User (composite PK) |
+| organizationId | String | FK to Organization (composite PK) |
+| role | UserRole | OWNER / ADMIN / MEMBER |
+| invitedAt | DateTime? | When the invitation was sent |
+| joinedAt | DateTime? | When the member was approved/accepted (null = pending approval) |
+| requestedAt | DateTime? | When the user requested to join (null = invited) |
+
+Unique constraint: `(userId, organizationId)`
+
+**Approval flow:** Members with `requestedAt` set but `joinedAt` null are pending admin approval. Once approved, `joinedAt` is set to the current timestamp.
+
 ### Project
 
 | Column | Type | Description |

@@ -149,6 +149,7 @@ graph LR
     App --> Auth["AuthModule"]
     App --> Users
     App --> Organizations
+    App --> Invitations
 
     App --> Projects
     App --> Campaigns
@@ -181,6 +182,7 @@ graph LR
 | Auth | `src/auth/` | JWT, Local, Google OAuth strategies |
 | Users | `src/users/` | Profile management |
 | Organizations | `src/organizations/` | Multi-tenant orgs, member roles (OWNER/ADMIN/MEMBER) |
+| Invitations | `src/invitations/` | Invitation accept/decline flow for org membership |
 | Projects | `src/projects/` | Project CRUD, API keys, websiteUrl for SEO |
 | Campaigns | `src/campaigns/` | Marketing campaigns (EMAIL/SOCIAL/BLOG/MULTI_CHANNEL) |
 | Content | `src/content/` | Content CRUD, versioning, repurposing, performance scoring |

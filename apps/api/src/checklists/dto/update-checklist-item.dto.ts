@@ -24,4 +24,12 @@ export class UpdateChecklistItemDto {
   @IsOptional()
   @IsArray()
   chatMessages?: Array<{ role: string; content: string }>;
+
+  @IsOptional()
+  @IsString()
+  section?: string;
+
+  @IsOptional()
+  @IsString()
+  note?: string;
 }

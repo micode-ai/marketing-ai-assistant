@@ -1,0 +1,106 @@
+# Social Publishing
+
+## Overview
+
+Marketing AI Assistant lets you publish content directly to social media platforms from within the application. Connect your social accounts once, then publish approved content with a few clicks.
+
+## Supported Platforms
+
+| Platform | Connection Method | What Gets Published |
+|----------|------------------|-------------------|
+| LinkedIn | OAuth 2.0 (click Connect) | Text posts via LinkedIn API |
+| Twitter/X | Manual API credentials | Tweets via Twitter API v2 |
+| Facebook | OAuth 2.0 (select page) | Page posts via Graph API v19 |
+| Telegram | Manual (bot token + chat ID) | Messages via Telegram Bot API |
+
+## Connecting Accounts
+
+### Settings > Integrations
+
+1. Go to **Settings > Integrations**
+2. You'll see cards for each platform
+
+### LinkedIn
+
+1. Click **Connect** on the LinkedIn card
+2. You'll be redirected to LinkedIn to authorize
+3. Grant the requested permissions
+4. You'll be redirected back — the account appears as connected
+
+**Required env vars:** `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET`
+
+### Twitter/X
+
+1. Click **Connect** on the Twitter card
+2. Enter your API credentials:
+   - **App Key** (API Key)
+   - **App Secret** (API Secret)
+   - **Access Token**
+   - **Access Secret**
+3. Click **Save**
+
+You need a Twitter Developer account with API access to get these credentials.
+
+### Facebook
+
+1. Click **Connect** on the Facebook card
+2. You'll be redirected to Facebook to authorize
+3. Select the **Page** you want to post to
+4. Grant the requested permissions
+5. You'll be redirected back with the page connected
+
+**Required env vars:** `FACEBOOK_APP_ID`, `FACEBOOK_APP_SECRET`
+
+### Telegram
+
+1. Click **Connect** on the Telegram card
+2. Enter:
+   - **Bot Token** — from BotFather
+   - **Chat ID** — the channel or group ID
+3. Click **Save**
+
+## Publishing Content
+
+### From the Content Page
+
+1. Open your project's **Content** section
+2. Find content with **APPROVED** or **PUBLISHED** status
+3. Click the **Publish** button
+4. In the modal, select which connected accounts to publish to
+5. Click **Publish**
+
+### Publication Status
+
+Each publication attempt is tracked:
+
+| Status | Meaning |
+|--------|---------|
+| PENDING | Publishing in progress |
+| PUBLISHED | Successfully posted to platform |
+| FAILED | Error occurred (check error message) |
+
+### Viewing Publication History
+
+1. Open a content item
+2. View the publication history showing:
+   - Platform and account
+   - Status (Pending / Published / Failed)
+   - Post URL (if published)
+   - Error message (if failed)
+   - Timestamp
+
+## Managing Accounts
+
+### Disconnecting
+
+1. Go to **Settings > Integrations**
+2. Click **Disconnect** on the account you want to remove
+3. Confirm the action
+
+### Token Expiration
+
+OAuth tokens (LinkedIn, Facebook) may expire. If publishing fails with an auth error, reconnect the account to refresh tokens.
+
+## Security
+
+All social account credentials and OAuth tokens are encrypted at rest using AES-256-CBC encryption, the same security standard used for email account credentials.
