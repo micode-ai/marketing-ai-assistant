@@ -267,7 +267,14 @@
     let currentItem: ParsedChecklist['items'][0] | null = null;
     let inDescription = false;
     let order = 0;
-    let currentSection: string | undefined = undefined;
+    let parentSection = '';
+    let subSection = '';
+
+    function currentSection(): string | undefined {
+      if (!parentSection && !subSection) return undefined;
+      if (parentSection && subSection) return `${parentSection} / ${subSection}`;
+      return parentSection || subSection || undefined;
+    }
 
     for (const line of lines) {
       // h1 — checklist name (only first one, exactly one #)
@@ -278,13 +285,24 @@
         continue;
       }
 
-      // h2, h3, h4, etc. — section headers (## or ### or ####...)
-      const sectionMatch = line.match(/^#{2,}\s+(.+)/);
-      if (sectionMatch) {
+      // h2 — main section
+      const h2Match = line.match(/^##(?!#)\s+(.+)/);
+      if (h2Match) {
         inDescription = false;
         if (currentItem) currentItem.description = currentItem.description.trim();
         currentItem = null;
-        currentSection = sectionMatch[1].trim();
+        parentSection = h2Match[1].trim();
+        subSection = '';
+        continue;
+      }
+
+      // h3, h4, etc. — subsection
+      const subMatch = line.match(/^#{3,}\s+(.+)/);
+      if (subMatch) {
+        inDescription = false;
+        if (currentItem) currentItem.description = currentItem.description.trim();
+        currentItem = null;
+        subSection = subMatch[1].trim();
         continue;
       }
 
@@ -308,7 +326,7 @@
           order,
           priority,
           isCompleted: taskMatch[1] !== ' ',
-          section: currentSection,
+          section: currentSection(),
         };
         items.push(currentItem);
         continue;
