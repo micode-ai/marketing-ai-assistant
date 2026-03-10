@@ -63,12 +63,11 @@
   onMount(async () => {
     if ($currentUser) {
       currentUserId = $currentUser.id;
-      const membership = ($currentUser as any).memberships?.find(
-        (m: any) => m.organizationId === $organizationIdStore || m.organization?.id === $organizationIdStore
-      ) || ($currentUser as any).memberships?.[0];
-      if (membership) currentRole = membership.role;
     }
     await loadMembers();
+    // Determine role from loaded members (reliable, matches current org)
+    const me = members.find(m => m.userId === currentUserId);
+    if (me) currentRole = me.role;
     loading = false;
   });
 
