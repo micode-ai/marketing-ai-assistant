@@ -129,19 +129,39 @@
 
   // ── Collapsible sections state ──
   let collapsedSections = new Set<string>();
+  // Progressive render: limits how many items are visible per section after expand
+  let sectionVisibleCount: Record<string, number> = {};
 
   function toggleSection(sectionKey: string) {
     if (collapsedSections.has(sectionKey)) {
       collapsedSections.delete(sectionKey);
+      // Start progressive render: show 0 items, then add in chunks
+      sectionVisibleCount[sectionKey] = 0;
+      collapsedSections = collapsedSections;
+      progressiveRender(sectionKey);
     } else {
       collapsedSections.add(sectionKey);
+      delete sectionVisibleCount[sectionKey];
+      collapsedSections = collapsedSections;
     }
-    collapsedSections = collapsedSections;
   }
 
-  // Auto-collapse all sections on load (so only headers render, not 85+ items)
-  function autoCollapseSections() {
-    for (const checklist of checklists) {
+  function progressiveRender(sectionKey: string) {
+    const CHUNK = 20;
+    function addChunk() {
+      const current = sectionVisibleCount[sectionKey] ?? 0;
+      sectionVisibleCount[sectionKey] = current + CHUNK;
+      sectionVisibleCount = sectionVisibleCount;
+      // Keep going until we've revealed all (template slices to actual length)
+      if (current + CHUNK < 500) requestAnimationFrame(addChunk);
+    }
+    requestAnimationFrame(addChunk);
+  }
+
+  // Pre-collapse all sections from raw data BEFORE assigning to checklists
+  // (prevents Svelte from rendering 400 items then hiding them)
+  function preCollapseSections(data: any[]) {
+    for (const checklist of data) {
       const sections = groupBySection(checklist.items || []);
       for (const g of sections) {
         if (g.section) collapsedSections.add(`${checklist.id}::${g.section}`);
@@ -227,9 +247,10 @@
   }
 
   onMount(async () => {
-    checklists = await api.get<any[]>('/checklists', { projectId });
+    const data = await api.get<any[]>('/checklists', { projectId });
+    preCollapseSections(data);
+    checklists = data;
     initChatsFromDB();
-    autoCollapseSections();
     loading = false;
     // Polling every 30s + refresh on tab focus
     pollingInterval = setInterval(refreshChecklists, 30_000);
@@ -258,9 +279,10 @@
       }
       if (attempts >= 60) throw new Error('Timeout waiting for AI generation');
 
-      checklists = await api.get<any[]>('/checklists', { projectId });
+      const fresh = await api.get<any[]>('/checklists', { projectId });
+      preCollapseSections(fresh);
+      checklists = fresh;
       initChatsFromDB();
-      autoCollapseSections();
       showAIModal = false;
     } catch (e: any) { alert(e.message); }
     finally { creating = false; }
@@ -405,9 +427,10 @@
         description: importParsed.description,
         items: importParsed.items,
       });
-      checklists = await api.get<any[]>('/checklists', { projectId });
+      const freshImport = await api.get<any[]>('/checklists', { projectId });
+      preCollapseSections(freshImport);
+      checklists = freshImport;
       initChatsFromDB();
-      autoCollapseSections();
       showImportModal = false;
       importParsed = null;
     } catch (e: any) {
@@ -439,9 +462,10 @@
           .filter(i => i.title.trim())
           .map((i, idx) => ({ ...i, order: idx + 1, section: i.section || undefined })),
       });
-      checklists = await api.get<any[]>('/checklists', { projectId });
+      const freshCreate = await api.get<any[]>('/checklists', { projectId });
+      preCollapseSections(freshCreate);
+      checklists = freshCreate;
       initChatsFromDB();
-      autoCollapseSections();
       showCreateModal = false;
       createForm = { name: '', type: 'CUSTOM', description: '', items: [] as typeof createForm.items };
     } catch (e: any) {
@@ -735,7 +759,8 @@
                 </div>
               {/if}
               {#if !group.section || !collapsedSections.has(`${checklist.id}::${group.section}`)}
-              {#each group.items as item, itemInGroup (item.id)}
+              {@const visibleLimit = group.section ? (sectionVisibleCount[`${checklist.id}::${group.section}`] ?? group.items.length) : group.items.length}
+              {#each group.items.slice(0, visibleLimit) as item, itemInGroup (item.id)}
                 {@const itemIndex = group.items === items ? itemInGroup : items.indexOf(item)}
               <!-- svelte-ignore a11y_no_static_element_interactions -->
               <div class="rounded-lg transition-colors {expandedItems.has(item.id) ? 'bg-gray-50' : 'hover:bg-gray-50/50'}" on:mouseenter={() => hoveredItemId = item.id} on:mouseleave={() => { if (hoveredItemId === item.id) hoveredItemId = null; }}>
