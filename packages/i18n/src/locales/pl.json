@@ -480,7 +480,14 @@
     "uploading": "Przesyłanie...",
     "download": "Pobierz",
     "fileSize": "Rozmiar pliku",
-    "noPreview": "Podgląd nie jest dostępny dla tego typu pliku. Użyj przycisku pobierania poniżej."
+    "noPreview": "Podgląd nie jest dostępny dla tego typu pliku. Użyj przycisku pobierania poniżej.",
+    "manageTypes": "Zarządzaj typami",
+    "addType": "Dodaj typ",
+    "typeLabel": "Nazwa typu",
+    "typeLabelPlaceholder": "np. Studium przypadku",
+    "deleteType": "Usuń typ",
+    "typeInUse": "Ten typ jest używany przez istniejące dokumenty i nie może zostać usunięty.",
+    "confirmDeleteType": "Czy na pewno chcesz usunąć ten typ dokumentu?"
   },
   "aiChat": {
     "title": "Chat AI",

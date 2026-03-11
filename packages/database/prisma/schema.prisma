@@ -129,17 +129,6 @@ enum ChecklistItemPriority {
   CRITICAL
 }
 
-enum DocumentType {
-  MARKETING_PLAN
-  REPORT
-  COMPETITIVE_ANALYSIS
-  BRAND_GUIDELINES
-  CONTENT_CALENDAR
-  PROPOSAL
-  PRESENTATION
-  PRODUCT_HUNT_BRIEF
-}
-
 enum AgentType {
   STRATEGY
   CONTENT
@@ -277,6 +266,7 @@ model Organization {
   emailTemplates EmailTemplate[]
   socialAccounts SocialAccount[]
   webhooks       Webhook[]
+  documentTypes  DocumentTypeConfig[]
 
   @@index([slug])
   @@map("organizations")
@@ -604,13 +594,34 @@ model ChecklistItem {
 }
 
 // =============================================================================
+// Document Type Config (org-scoped dynamic types)
+// =============================================================================
+
+model DocumentTypeConfig {
+  id             String       @id @default(cuid())
+  organizationId String
+  slug           String
+  label          String
+  isDefault      Boolean      @default(false)
+  sortOrder      Int          @default(0)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, slug])
+  @@index([organizationId])
+  @@map("document_type_configs")
+}
+
+// =============================================================================
 // Documents
 // =============================================================================
 
 model Document {
   id            String       @id @default(cuid())
   projectId     String
-  type          DocumentType
+  type          String
   title         String
   content       Json?
   contentMd     String?      @db.Text

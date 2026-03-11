@@ -5,6 +5,17 @@ import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../database/prisma.service';
 import { RegisterDto } from './dto/register.dto';
 
+const DEFAULT_DOCUMENT_TYPES = [
+  { slug: 'MARKETING_PLAN', label: 'Marketing Plan', sortOrder: 0 },
+  { slug: 'REPORT', label: 'Performance Report', sortOrder: 1 },
+  { slug: 'COMPETITIVE_ANALYSIS', label: 'Competitive Analysis', sortOrder: 2 },
+  { slug: 'BRAND_GUIDELINES', label: 'Brand Guidelines', sortOrder: 3 },
+  { slug: 'CONTENT_CALENDAR', label: 'Content Calendar', sortOrder: 4 },
+  { slug: 'PROPOSAL', label: 'Proposal', sortOrder: 5 },
+  { slug: 'PRESENTATION', label: 'Presentation', sortOrder: 6 },
+  { slug: 'PRODUCT_HUNT_BRIEF', label: 'Product Hunt Brief', sortOrder: 7 },
+];
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -103,7 +114,20 @@ export class AuthService {
           },
         },
       },
+      include: { memberships: true },
     });
+
+    // Seed default document types for the new organization
+    const orgId = user.memberships[0]?.organizationId;
+    if (orgId) {
+      await this.prisma.documentTypeConfig.createMany({
+        data: DEFAULT_DOCUMENT_TYPES.map(dt => ({
+          organizationId: orgId,
+          ...dt,
+          isDefault: true,
+        })),
+      });
+    }
 
     return this.login(user);
   }
@@ -126,7 +150,7 @@ export class AuthService {
     if (!user) {
       const orgName = `${googleUser.name}'s Organization`;
       const slug = orgName.toLowerCase().replace(/[^a-z0-9]/g, '-') + '-' + Date.now();
-      user = await this.prisma.user.create({
+      const created = await this.prisma.user.create({
         data: {
           email: googleUser.email,
           name: googleUser.name,
@@ -155,7 +179,21 @@ export class AuthService {
             },
           },
         },
+        include: { memberships: true },
       });
+      user = created;
+
+      // Seed default document types for the new organization
+      const newOrgId = created.memberships[0]?.organizationId;
+      if (newOrgId) {
+        await this.prisma.documentTypeConfig.createMany({
+          data: DEFAULT_DOCUMENT_TYPES.map(dt => ({
+            organizationId: newOrgId,
+            ...dt,
+            isDefault: true,
+          })),
+        });
+      }
     }
     return this.login(user);
   }

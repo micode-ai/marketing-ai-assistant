@@ -1,9 +1,7 @@
-import { DocumentType } from './enums';
-
 export interface Document {
   id: string;
   projectId: string;
-  type: DocumentType;
+  type: string;
   title: string;
   content: Record<string, unknown> | string;
   fileUrl?: string;
@@ -19,20 +17,29 @@ export interface Document {
 
 export interface CreateDocumentDto {
   projectId: string;
-  type: DocumentType;
+  type: string;
   title: string;
   content?: Record<string, unknown> | string;
 }
 
 export interface GenerateDocumentDto {
   projectId: string;
-  type: DocumentType;
+  type: string;
   title?: string;
   context?: string;
   dateRange?: {
     start: Date;
     end: Date;
   };
+}
+
+export interface DocumentTypeConfig {
+  id: string;
+  organizationId: string;
+  slug: string;
+  label: string;
+  isDefault: boolean;
+  sortOrder: number;
 }
 
 export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB

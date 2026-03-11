@@ -83,6 +83,32 @@ async function main() {
     },
   });
 
+  // Seed default document types for demo org
+  const defaultDocTypes = [
+    { slug: 'MARKETING_PLAN', label: 'Marketing Plan', sortOrder: 0 },
+    { slug: 'REPORT', label: 'Performance Report', sortOrder: 1 },
+    { slug: 'COMPETITIVE_ANALYSIS', label: 'Competitive Analysis', sortOrder: 2 },
+    { slug: 'BRAND_GUIDELINES', label: 'Brand Guidelines', sortOrder: 3 },
+    { slug: 'CONTENT_CALENDAR', label: 'Content Calendar', sortOrder: 4 },
+    { slug: 'PROPOSAL', label: 'Proposal', sortOrder: 5 },
+    { slug: 'PRESENTATION', label: 'Presentation', sortOrder: 6 },
+    { slug: 'PRODUCT_HUNT_BRIEF', label: 'Product Hunt Brief', sortOrder: 7 },
+  ];
+  for (const dt of defaultDocTypes) {
+    await prisma.documentTypeConfig.upsert({
+      where: { organizationId_slug: { organizationId: org.id, slug: dt.slug } },
+      update: {},
+      create: {
+        organizationId: org.id,
+        slug: dt.slug,
+        label: dt.label,
+        isDefault: true,
+        sortOrder: dt.sortOrder,
+      },
+    });
+  }
+  console.log('📄 Default document types seeded for demo org');
+
   // Create launch checklist
   const launchChecklist = await prisma.checklist.create({
     data: {

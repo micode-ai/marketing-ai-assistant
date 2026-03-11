@@ -46,20 +46,19 @@
   // Delete
   let deletingId: string | null = null;
 
-  const DOC_TYPES = [
-    'MARKETING_PLAN', 'REPORT', 'COMPETITIVE_ANALYSIS',
-    'BRAND_GUIDELINES', 'CONTENT_CALENDAR', 'PROPOSAL', 'PRESENTATION',
-  ];
+  // Dynamic document types (loaded from API)
+  let docTypes: { id: string; slug: string; label: string; isDefault: boolean; sortOrder: number }[] = [];
 
-  const typeLabels: Record<string, string> = {
-    MARKETING_PLAN: 'documents.marketingPlan',
-    REPORT: 'documents.report',
-    COMPETITIVE_ANALYSIS: 'documents.competitiveAnalysis',
-    BRAND_GUIDELINES: 'documents.brandGuidelines',
-    CONTENT_CALENDAR: 'documents.contentCalendar',
-    PROPOSAL: 'documents.proposal',
-    PRESENTATION: 'documents.presentation',
-  };
+  // Manage types modal
+  let showManageTypesModal = false;
+  let newTypeLabel = '';
+  let addingType = false;
+  let deletingTypeId: string | null = null;
+
+  function getTypeLabel(slug: string): string {
+    const found = docTypes.find(t => t.slug === slug);
+    return found ? found.label : slug;
+  }
 
   const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
@@ -74,7 +73,12 @@
   }
 
   onMount(async () => {
-    documents = await api.get<any[]>('/documents', { projectId });
+    const [docs, types] = await Promise.all([
+      api.get<any[]>('/documents', { projectId }),
+      api.get<any[]>('/documents/types'),
+    ]);
+    documents = docs;
+    docTypes = types;
     loading = false;
   });
 
@@ -227,6 +231,36 @@
       deletingId = null;
     }
   }
+
+  // --- Manage Types ---
+  async function addDocumentType() {
+    if (!newTypeLabel.trim()) return;
+    addingType = true;
+    try {
+      const created = await api.post<any>('/documents/types', { label: newTypeLabel.trim() });
+      docTypes = [...docTypes, created];
+      newTypeLabel = '';
+    } catch (e: any) {
+      alert(e.message);
+    } finally {
+      addingType = false;
+    }
+  }
+
+  async function removeDocumentType(id: string) {
+    try {
+      await api.delete(`/documents/types/${id}`);
+      docTypes = docTypes.filter(t => t.id !== id);
+    } catch (e: any) {
+      alert(e.message);
+    } finally {
+      deletingTypeId = null;
+    }
+  }
+
+  function isTypeInUse(slug: string): boolean {
+    return documents.some(d => d.type === slug);
+  }
 </script>
 
 <div class="p-4 sm:p-6">
@@ -235,6 +269,16 @@
   <div class="flex items-center justify-between mb-6">
     <h1 class="text-2xl font-bold text-gray-900">{$_('documents.title')}</h1>
     <div class="flex items-center gap-2">
+      <button
+        on:click={() => showManageTypesModal = true}
+        class="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors duration-150 flex items-center gap-2 cursor-pointer"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+        </svg>
+        {$_('documents.manageTypes')}
+      </button>
       <button
         on:click={() => showCreateModal = true}
         class="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors duration-150 flex items-center gap-2 cursor-pointer"
@@ -366,7 +410,7 @@
               <div class="flex-1 min-w-0">
                 <h3 class="font-medium text-gray-900 truncate">{doc.title}</h3>
                 <div class="flex flex-wrap items-center gap-1.5 mt-1.5">
-                  <span class="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded font-medium">{$_(typeLabels[doc.type] || 'documents.proposal')}</span>
+                  <span class="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded font-medium">{getTypeLabel(doc.type)}</span>
                   <span class="text-xs text-gray-400">{$_('documents.version')} {doc.version}</span>
                   {#if doc.generatedByAi}
                     <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 bg-purple-50 text-purple-600 rounded">
@@ -437,8 +481,8 @@
         <div>
           <label for="gen-type" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('documents.type')}</label>
           <select id="gen-type" bind:value={generateForm.type} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
-            {#each DOC_TYPES as t}
-              <option value={t}>{$_(typeLabels[t])}</option>
+            {#each docTypes as t}
+              <option value={t.slug}>{t.label}</option>
             {/each}
           </select>
         </div>
@@ -496,8 +540,8 @@
         <div>
           <label for="create-type" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('documents.type')}</label>
           <select id="create-type" bind:value={createForm.type} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
-            {#each DOC_TYPES as t}
-              <option value={t}>{$_(typeLabels[t])}</option>
+            {#each docTypes as t}
+              <option value={t.slug}>{t.label}</option>
             {/each}
           </select>
         </div>
@@ -591,8 +635,8 @@
         <div>
           <label for="upload-type" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('documents.type')}</label>
           <select id="upload-type" bind:value={uploadForm.type} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
-            {#each DOC_TYPES as t}
-              <option value={t}>{$_(typeLabels[t])}</option>
+            {#each docTypes as t}
+              <option value={t.slug}>{t.label}</option>
             {/each}
           </select>
         </div>
@@ -645,7 +689,7 @@
           <div class="flex-1 min-w-0">
             <h2 class="text-lg font-semibold text-gray-900 truncate">{viewingDocument.title}</h2>
             <div class="flex flex-wrap items-center gap-1.5 mt-1">
-              <span class="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded font-medium">{$_(typeLabels[viewingDocument.type] || 'documents.proposal')}</span>
+              <span class="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded font-medium">{getTypeLabel(viewingDocument.type)}</span>
               <span class="text-xs text-gray-400">{$_('documents.version')} {viewingDocument.version}</span>
               {#if viewingDocument.generatedByAi}
                 <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 bg-purple-50 text-purple-600 rounded">
@@ -781,6 +825,98 @@
         </button>
         <button on:click={() => editingDocument = null} class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 text-sm cursor-pointer">
           {$_('common.cancel')}
+        </button>
+      </div>
+    </div>
+  </div>
+{/if}
+
+<!-- Manage Types modal -->
+{#if showManageTypesModal}
+  <!-- svelte-ignore a11y_click_events_have_key_events -->
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
+  <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => showManageTypesModal = false}>
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+      <div class="p-6 border-b border-gray-100 flex items-center gap-2.5">
+        <div class="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+          </svg>
+        </div>
+        <h2 class="text-lg font-semibold text-gray-900">{$_('documents.manageTypes')}</h2>
+      </div>
+      <div class="p-6 space-y-4">
+        <!-- Existing types -->
+        <div class="space-y-2 max-h-64 overflow-y-auto">
+          {#each docTypes as t}
+            <div class="flex items-center justify-between px-3 py-2 bg-gray-50 rounded-lg">
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="text-sm font-medium text-gray-900 truncate">{t.label}</span>
+                <span class="text-xs text-gray-400 font-mono">{t.slug}</span>
+                {#if t.isDefault}
+                  <span class="text-xs px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded">default</span>
+                {/if}
+              </div>
+              {#if isTypeInUse(t.slug)}
+                <span class="text-xs text-gray-400 flex-shrink-0" title={$_('documents.typeInUse')}>in use</span>
+              {:else}
+                <button
+                  on:click={() => deletingTypeId = t.id}
+                  class="text-xs text-red-500 hover:text-red-700 flex-shrink-0 cursor-pointer"
+                  title={$_('documents.deleteType')}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              {/if}
+            </div>
+          {/each}
+        </div>
+
+        <!-- Delete type confirmation -->
+        {#if deletingTypeId}
+          <div class="px-3 py-3 bg-red-50 border border-red-200 rounded-lg">
+            <p class="text-sm text-red-700 mb-2">{$_('documents.confirmDeleteType')}</p>
+            <div class="flex gap-2">
+              <button
+                on:click={() => removeDocumentType(deletingTypeId)}
+                class="text-xs px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 cursor-pointer"
+              >
+                {$_('common.delete')}
+              </button>
+              <button
+                on:click={() => deletingTypeId = null}
+                class="text-xs px-3 py-1.5 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer"
+              >
+                {$_('common.cancel')}
+              </button>
+            </div>
+          </div>
+        {/if}
+
+        <!-- Add new type -->
+        <div class="flex gap-2">
+          <input
+            type="text"
+            bind:value={newTypeLabel}
+            class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            placeholder={$_('documents.typeLabelPlaceholder')}
+            on:keydown={(e) => e.key === 'Enter' && addDocumentType()}
+          />
+          <button
+            on:click={addDocumentType}
+            disabled={addingType || !newTypeLabel.trim()}
+            class="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors duration-150 disabled:opacity-50 cursor-pointer flex-shrink-0"
+          >
+            {$_('documents.addType')}
+          </button>
+        </div>
+      </div>
+      <div class="p-6 border-t border-gray-100 flex justify-end">
+        <button on:click={() => showManageTypesModal = false} class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 text-sm cursor-pointer">
+          {$_('common.close')}
         </button>
       </div>
     </div>
