@@ -3,6 +3,7 @@
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
   import { api } from '$lib/api/client';
+  import { API_URL } from '$lib/config';
   import { marked } from 'marked';
   import SectionHint from '$lib/components/SectionHint.svelte';
 
@@ -26,6 +27,13 @@
   let showCreateModal = false;
   let creating = false;
   let createForm = { type: 'MARKETING_PLAN', title: '', contentMd: '' };
+
+  // Upload
+  let showUploadModal = false;
+  let uploading = false;
+  let uploadFile: File | null = null;
+  let uploadForm = { type: 'REPORT', title: '' };
+  let dragOver = false;
 
   // View
   let viewingDocument: any = null;
@@ -52,6 +60,18 @@
     PROPOSAL: 'documents.proposal',
     PRESENTATION: 'documents.presentation',
   };
+
+  const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
+  function formatFileSize(bytes: number): string {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  }
+
+  function isImageMime(mime: string): boolean {
+    return mime?.startsWith('image/');
+  }
 
   onMount(async () => {
     documents = await api.get<any[]>('/documents', { projectId });
@@ -114,6 +134,58 @@
     }
   }
 
+  // --- Upload ---
+  function handleFileSelect(e: Event) {
+    const input = e.target as HTMLInputElement;
+    if (input.files?.length) {
+      uploadFile = input.files[0];
+    }
+  }
+
+  function handleDrop(e: DragEvent) {
+    e.preventDefault();
+    dragOver = false;
+    if (e.dataTransfer?.files?.length) {
+      uploadFile = e.dataTransfer.files[0];
+    }
+  }
+
+  function handleDragOver(e: DragEvent) {
+    e.preventDefault();
+    dragOver = true;
+  }
+
+  function handleDragLeave() {
+    dragOver = false;
+  }
+
+  async function uploadDocument() {
+    if (!uploadFile) return;
+    if (uploadFile.size > MAX_FILE_SIZE) {
+      alert($_('documents.maxFileSize'));
+      return;
+    }
+    uploading = true;
+    try {
+      const formData = new FormData();
+      formData.append('file', uploadFile);
+      formData.append('projectId', projectId);
+      formData.append('type', uploadForm.type);
+      if (uploadForm.title.trim()) {
+        formData.append('title', uploadForm.title);
+      }
+      const doc = await api.upload<any>('/documents/upload', formData);
+      documents = [doc, ...documents];
+      showUploadModal = false;
+      uploadFile = null;
+      uploadForm = { type: 'REPORT', title: '' };
+    } catch (e: any) {
+      alert(e.message);
+    } finally {
+      uploading = false;
+    }
+  }
+
   // --- View ---
   function openView(doc: any) {
     viewingDocument = doc;
@@ -171,6 +243,15 @@
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
         </svg>
         {$_('documents.create')}
+      </button>
+      <button
+        on:click={() => { showUploadModal = true; uploadFile = null; uploadForm = { type: 'REPORT', title: '' }; }}
+        class="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors duration-150 flex items-center gap-2 cursor-pointer"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+        </svg>
+        {$_('documents.upload')}
       </button>
       <button
         on:click={() => showGenerateModal = true}
@@ -239,6 +320,15 @@
           {$_('documents.create')}
         </button>
         <button
+          on:click={() => { showUploadModal = true; uploadFile = null; uploadForm = { type: 'REPORT', title: '' }; }}
+          class="border border-gray-300 text-gray-700 px-5 py-3 rounded-xl font-medium hover:bg-gray-50 transition-colors duration-150 flex items-center gap-2 cursor-pointer"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+          </svg>
+          {$_('documents.upload')}
+        </button>
+        <button
           on:click={() => showGenerateModal = true}
           class="bg-primary-600 text-white px-5 py-3 rounded-xl font-medium hover:bg-primary-700 transition-colors duration-150 flex items-center gap-2 cursor-pointer"
         >
@@ -263,9 +353,15 @@
           <div class="flex items-start justify-between gap-4">
             <div class="flex items-start gap-4 flex-1 min-w-0">
               <div class="w-10 h-10 rounded-lg bg-primary-50 flex items-center justify-center flex-shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-                </svg>
+                {#if doc.fileUrl}
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m18.375 12.739-7.693 7.693a4.5 4.5 0 0 1-6.364-6.364l10.94-10.94A3 3 0 1 1 19.5 7.372L8.552 18.32m.009-.01-.01.01m5.699-9.941-7.81 7.81a1.5 1.5 0 0 0 2.112 2.13" />
+                  </svg>
+                {:else}
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                  </svg>
+                {/if}
               </div>
               <div class="flex-1 min-w-0">
                 <h3 class="font-medium text-gray-900 truncate">{doc.title}</h3>
@@ -280,18 +376,31 @@
                       AI
                     </span>
                   {/if}
+                  {#if doc.fileUrl}
+                    <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 bg-blue-50 text-blue-600 rounded">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m18.375 12.739-7.693 7.693a4.5 4.5 0 0 1-6.364-6.364l10.94-10.94A3 3 0 1 1 19.5 7.372L8.552 18.32m.009-.01-.01.01m5.699-9.941-7.81 7.81a1.5 1.5 0 0 0 2.112 2.13" />
+                      </svg>
+                      {$_('documents.upload')}
+                    </span>
+                  {/if}
+                  {#if doc.fileSize}
+                    <span class="text-xs text-gray-400">{formatFileSize(doc.fileSize)}</span>
+                  {/if}
                 </div>
                 <p class="text-xs text-gray-400 mt-1">{new Date(doc.createdAt).toLocaleDateString()}</p>
               </div>
             </div>
             <div class="flex items-center gap-2 flex-shrink-0">
-              <!-- Edit button -->
-              <button
-                on:click|stopPropagation={() => openEdit(doc)}
-                class="text-xs px-3 py-1.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 cursor-pointer"
-              >
-                {$_('common.edit')}
-              </button>
+              {#if !doc.fileUrl}
+                <!-- Edit button (only for non-file documents) -->
+                <button
+                  on:click|stopPropagation={() => openEdit(doc)}
+                  class="text-xs px-3 py-1.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 cursor-pointer"
+                >
+                  {$_('common.edit')}
+                </button>
+              {/if}
               <!-- Delete button -->
               <button
                 on:click|stopPropagation={() => deletingId = doc.id}
@@ -425,6 +534,101 @@
   </div>
 {/if}
 
+<!-- Upload document modal -->
+{#if showUploadModal}
+  <!-- svelte-ignore a11y_click_events_have_key_events -->
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
+  <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => showUploadModal = false}>
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+      <div class="p-6 border-b border-gray-100 flex items-center gap-2.5">
+        <div class="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+          </svg>
+        </div>
+        <h2 class="text-lg font-semibold text-gray-900">{$_('documents.uploadDocument')}</h2>
+      </div>
+      <div class="p-6 space-y-4">
+        <!-- Drop zone -->
+        <!-- svelte-ignore a11y_no_static_element_interactions -->
+        <div
+          class="border-2 border-dashed rounded-xl p-6 text-center transition-colors duration-150 {dragOver ? 'border-primary-400 bg-primary-50' : 'border-gray-300 hover:border-gray-400'}"
+          on:drop={handleDrop}
+          on:dragover={handleDragOver}
+          on:dragleave={handleDragLeave}
+        >
+          {#if uploadFile}
+            <div class="flex items-center gap-3 justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+              </svg>
+              <div class="text-left">
+                <p class="text-sm font-medium text-gray-900 truncate max-w-[200px]">{uploadFile.name}</p>
+                <p class="text-xs text-gray-500">{formatFileSize(uploadFile.size)}</p>
+              </div>
+              <button on:click|stopPropagation={() => uploadFile = null} class="text-gray-400 hover:text-gray-600 cursor-pointer">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          {:else}
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-gray-300 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+            </svg>
+            <p class="text-sm text-gray-600 mb-1">{$_('documents.dragDrop')}</p>
+            <p class="text-xs text-gray-400 mb-3">{$_('documents.maxFileSize')}</p>
+            <label class="inline-flex items-center gap-2 px-4 py-2 bg-primary-50 text-primary-600 rounded-lg text-sm font-medium cursor-pointer hover:bg-primary-100 transition-colors duration-150">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+              {$_('documents.selectFile')}
+              <input type="file" class="hidden" on:change={handleFileSelect} accept=".pdf,.doc,.docx,.xlsx,.pptx,.txt,.csv,.md,.png,.jpg,.jpeg,.gif,.webp,.svg" />
+            </label>
+          {/if}
+        </div>
+
+        <div>
+          <label for="upload-type" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('documents.type')}</label>
+          <select id="upload-type" bind:value={uploadForm.type} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+            {#each DOC_TYPES as t}
+              <option value={t}>{$_(typeLabels[t])}</option>
+            {/each}
+          </select>
+        </div>
+        <div>
+          <label for="upload-title" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('documents.titleLabel')} <span class="text-gray-400 font-normal">({$_('common.optional')})</span></label>
+          <input id="upload-title" type="text" bind:value={uploadForm.title} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" placeholder={$_('documents.titlePlaceholder')} />
+        </div>
+        <p class="text-xs text-gray-400">{$_('documents.allowedTypes')}</p>
+      </div>
+      <div class="p-6 border-t border-gray-100 flex gap-3">
+        <button
+          on:click={uploadDocument}
+          disabled={uploading || !uploadFile}
+          class="flex-1 bg-primary-600 text-white py-2.5 rounded-lg font-medium hover:bg-primary-700 transition-colors duration-150 disabled:opacity-50 text-sm flex items-center justify-center gap-2 cursor-pointer"
+        >
+          {#if uploading}
+            <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+            </svg>
+            {$_('documents.uploading')}
+          {:else}
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+            </svg>
+            {$_('documents.upload')}
+          {/if}
+        </button>
+        <button on:click={() => showUploadModal = false} class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 text-sm cursor-pointer">
+          {$_('common.cancel')}
+        </button>
+      </div>
+    </div>
+  </div>
+{/if}
+
 <!-- View document modal -->
 {#if viewingDocument}
   <!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -451,6 +655,9 @@
                   {$_('documents.aiGenerated')}
                 </span>
               {/if}
+              {#if viewingDocument.fileSize}
+                <span class="text-xs text-gray-400">{formatFileSize(viewingDocument.fileSize)}</span>
+              {/if}
               <span class="text-xs text-gray-400">{new Date(viewingDocument.createdAt).toLocaleDateString()}</span>
             </div>
           </div>
@@ -462,7 +669,21 @@
         </button>
       </div>
       <div class="flex-1 overflow-y-auto p-6">
-        {#if viewingDocument.contentMd}
+        {#if viewingDocument.fileUrl && viewingDocument.mimeType && isImageMime(viewingDocument.mimeType)}
+          <!-- Image preview -->
+          <div class="flex justify-center">
+            <img src="{API_URL.replace('/api', '')}{viewingDocument.fileUrl}" alt={viewingDocument.title} class="max-w-full max-h-[60vh] rounded-lg shadow-sm" />
+          </div>
+        {:else if viewingDocument.fileUrl}
+          <!-- File document — no inline preview -->
+          <div class="text-center py-12 text-gray-400">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+            </svg>
+            <p class="text-gray-500 mb-1">{viewingDocument.fileName || viewingDocument.title}</p>
+            <p class="text-sm text-gray-400">{$_('documents.noPreview')}</p>
+          </div>
+        {:else if viewingDocument.contentMd}
           <div class="prose prose-sm prose-gray max-w-none">
             {@html renderMarkdown(viewingDocument.contentMd)}
           </div>
@@ -476,15 +697,30 @@
         {/if}
       </div>
       <div class="p-4 border-t border-gray-100 flex items-center justify-end gap-2 flex-shrink-0">
-        <button
-          on:click={() => openEdit(viewingDocument)}
-          class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors duration-150 cursor-pointer flex items-center gap-2"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
-          </svg>
-          {$_('common.edit')}
-        </button>
+        {#if viewingDocument.fileUrl}
+          <a
+            href="{API_URL.replace('/api', '')}{viewingDocument.fileUrl}"
+            download={viewingDocument.fileName || viewingDocument.title}
+            class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors duration-150 flex items-center gap-2"
+            on:click|stopPropagation
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+            </svg>
+            {$_('documents.download')}
+          </a>
+        {/if}
+        {#if !viewingDocument.fileUrl}
+          <button
+            on:click={() => openEdit(viewingDocument)}
+            class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors duration-150 cursor-pointer flex items-center gap-2"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
+            </svg>
+            {$_('common.edit')}
+          </button>
+        {/if}
         <button
           on:click={() => { deletingId = viewingDocument.id; }}
           class="px-4 py-2 border border-red-200 text-red-500 rounded-lg text-sm font-medium hover:bg-red-50 transition-colors duration-150 cursor-pointer flex items-center gap-2"

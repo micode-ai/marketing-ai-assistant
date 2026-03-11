@@ -59,4 +59,23 @@ export const api = {
     request<T>(endpoint, { method: 'PATCH', body: body ? JSON.stringify(body) : undefined }),
   delete: <T>(endpoint: string) =>
     request<T>(endpoint, { method: 'DELETE' }),
+  upload: async <T>(endpoint: string, formData: FormData): Promise<T> => {
+    const url = `${API_URL}${endpoint}`;
+    const auth = get(authStore);
+    const headers: Record<string, string> = {};
+    if (auth.accessToken) {
+      headers['Authorization'] = `Bearer ${auth.accessToken}`;
+    }
+    const response = await fetch(url, { method: 'POST', headers, body: formData });
+    if (response.status === 401) {
+      authStore.logout();
+      if (typeof window !== 'undefined') window.location.href = '/login';
+      throw new Error('Unauthorized');
+    }
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: 'Upload failed' }));
+      throw new Error(error.message || `HTTP ${response.status}`);
+    }
+    return response.json();
+  },
 };

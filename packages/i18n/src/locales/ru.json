@@ -467,7 +467,18 @@
     "contentPlaceholder": "Напишите содержание документа в формате Markdown...",
     "generated": "Документ успешно сгенерирован!",
     "customTitle": "Свой заголовок",
-    "customTitlePlaceholder": "Оставьте пустым для автоматического заголовка"
+    "customTitlePlaceholder": "Оставьте пустым для автоматического заголовка",
+    "upload": "Загрузить",
+    "uploadDocument": "Загрузить документ",
+    "uploadDesc": "Загрузите файл с компьютера",
+    "selectFile": "Выбрать файл",
+    "dragDrop": "Перетащите файл сюда или нажмите для выбора",
+    "maxFileSize": "Максимальный размер файла: 10 МБ",
+    "allowedTypes": "Поддерживаются: PDF, DOCX, XLSX, PPTX, TXT, CSV, MD, PNG, JPG, GIF, WebP, SVG",
+    "uploading": "Загрузка...",
+    "download": "Скачать",
+    "fileSize": "Размер файла",
+    "noPreview": "Предпросмотр недоступен для этого типа файла. Используйте кнопку скачивания ниже."
   },
   "aiChat": {
     "title": "AI Чат",

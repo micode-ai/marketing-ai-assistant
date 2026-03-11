@@ -3,14 +3,22 @@ import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import helmet from 'helmet';
 import compression from 'compression';
+import * as express from 'express';
+import { resolve } from 'path';
+import { mkdirSync } from 'fs';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // Ensure uploads directory exists and serve static files
+  const uploadsDir = resolve(process.cwd(), '../../uploads');
+  mkdirSync(uploadsDir, { recursive: true });
+  app.use('/api/uploads', express.static(uploadsDir));
+
   app.use((req: any, res: any, next: any) => {
     // Skip helmet for tracking endpoints — they must be loadable cross-origin
-    if (req.url.startsWith('/api/t/')) {
+    if (req.url.startsWith('/api/t/') || req.url.startsWith('/api/uploads/')) {
       return next();
     }
     return helmet()(req, res, next);

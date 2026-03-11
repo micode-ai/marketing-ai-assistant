@@ -1,5 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
+import { unlink } from 'fs/promises';
+import { resolve } from 'path';
 
 @Injectable()
 export class DocumentsService {
@@ -32,6 +34,29 @@ export class DocumentsService {
     });
   }
 
+  async createFromUpload(
+    file: Express.Multer.File,
+    projectId: string,
+    type: string,
+    title: string,
+    userId: string,
+  ) {
+    return this.prisma.document.create({
+      data: {
+        projectId,
+        type: type as any,
+        title,
+        content: {},
+        fileUrl: `/api/uploads/${file.filename}`,
+        fileName: file.originalname,
+        fileSize: file.size,
+        mimeType: file.mimetype,
+        generatedByAi: false,
+        createdBy: userId,
+      },
+    });
+  }
+
   async update(id: string, dto: any) {
     return this.prisma.document.update({
       where: { id },
@@ -40,6 +65,18 @@ export class DocumentsService {
   }
 
   async delete(id: string) {
+    const doc = await this.prisma.document.findUnique({ where: { id } });
+    if (!doc) throw new NotFoundException('Document not found');
+
+    // Delete physical file if it's an uploaded document
+    if (doc.fileUrl) {
+      const filename = doc.fileUrl.split('/').pop();
+      if (filename) {
+        const filePath = resolve(process.cwd(), '../../uploads', filename);
+        await unlink(filePath).catch(() => {});
+      }
+    }
+
     return this.prisma.document.delete({ where: { id } });
   }
 }
