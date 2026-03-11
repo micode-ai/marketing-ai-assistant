@@ -71,6 +71,7 @@ export class DocumentsController {
     }),
   )
   upload(
+    // eslint-disable-next-line no-undef
     @UploadedFile() file: Express.Multer.File,
     @Body('projectId') projectId: string,
     @Body('type') type: string,
