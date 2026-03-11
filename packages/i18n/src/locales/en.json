@@ -478,7 +478,18 @@
     "contentPlaceholder": "Write your document content in Markdown...",
     "generated": "Document generated successfully!",
     "customTitle": "Custom Title",
-    "customTitlePlaceholder": "Leave blank for auto-title"
+    "customTitlePlaceholder": "Leave blank for auto-title",
+    "upload": "Upload",
+    "uploadDocument": "Upload Document",
+    "uploadDesc": "Upload a file from your computer",
+    "selectFile": "Select File",
+    "dragDrop": "Drag & drop a file here, or click to select",
+    "maxFileSize": "Maximum file size: 10 MB",
+    "allowedTypes": "Supported: PDF, DOCX, XLSX, PPTX, TXT, CSV, MD, PNG, JPG, GIF, WebP, SVG",
+    "uploading": "Uploading...",
+    "download": "Download",
+    "fileSize": "File size",
+    "noPreview": "Preview is not available for this file type. Use the download button below."
   },
   "aiChat": {
     "title": "AI Chat",

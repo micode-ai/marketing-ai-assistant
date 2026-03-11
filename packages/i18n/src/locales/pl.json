@@ -469,7 +469,18 @@
     "contentPlaceholder": "Napisz treść dokumentu w formacie Markdown...",
     "generated": "Dokument wygenerowany pomyślnie!",
     "customTitle": "Własny tytuł",
-    "customTitlePlaceholder": "Pozostaw puste dla automatycznego tytułu"
+    "customTitlePlaceholder": "Pozostaw puste dla automatycznego tytułu",
+    "upload": "Prześlij",
+    "uploadDocument": "Prześlij dokument",
+    "uploadDesc": "Prześlij plik z komputera",
+    "selectFile": "Wybierz plik",
+    "dragDrop": "Przeciągnij i upuść plik tutaj lub kliknij, aby wybrać",
+    "maxFileSize": "Maksymalny rozmiar pliku: 10 MB",
+    "allowedTypes": "Obsługiwane: PDF, DOCX, XLSX, PPTX, TXT, CSV, MD, PNG, JPG, GIF, WebP, SVG",
+    "uploading": "Przesyłanie...",
+    "download": "Pobierz",
+    "fileSize": "Rozmiar pliku",
+    "noPreview": "Podgląd nie jest dostępny dla tego typu pliku. Użyj przycisku pobierania poniżej."
   },
   "aiChat": {
     "title": "Chat AI",

@@ -7,6 +7,9 @@ export interface Document {
   title: string;
   content: Record<string, unknown> | string;
   fileUrl?: string;
+  fileName?: string;
+  fileSize?: number;
+  mimeType?: string;
   generatedByAi: boolean;
   version: number;
   createdBy: string;
@@ -31,3 +34,21 @@ export interface GenerateDocumentDto {
     end: Date;
   };
 }
+
+export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
+export const ALLOWED_DOCUMENT_MIMES = [
+  'application/pdf',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // docx
+  'application/msword', // doc
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // xlsx
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation', // pptx
+  'text/plain',
+  'text/csv',
+  'text/markdown',
+  'image/png',
+  'image/jpeg',
+  'image/gif',
+  'image/webp',
+  'image/svg+xml',
+];
