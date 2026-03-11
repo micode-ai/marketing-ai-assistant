@@ -35,6 +35,7 @@ export class DocumentsService {
   }
 
   async createFromUpload(
+    // eslint-disable-next-line no-undef
     file: Express.Multer.File,
     projectId: string,
     type: string,
