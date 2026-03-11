@@ -40,6 +40,28 @@ export class DocumentsController {
     return this.documentsService.findAll(projectId);
   }
 
+  @Get('types')
+  getDocumentTypes(@CurrentUser() user: any) {
+    const orgId = user.memberships?.[0]?.organizationId;
+    if (!orgId) throw new BadRequestException('No organization');
+    return this.documentsService.getDocumentTypes(orgId);
+  }
+
+  @Post('types')
+  createDocumentType(@Body('label') label: string, @CurrentUser() user: any) {
+    const orgId = user.memberships?.[0]?.organizationId;
+    if (!orgId) throw new BadRequestException('No organization');
+    if (!label?.trim()) throw new BadRequestException('label is required');
+    return this.documentsService.createDocumentType(orgId, label);
+  }
+
+  @Delete('types/:id')
+  deleteDocumentType(@Param('id') id: string, @CurrentUser() user: any) {
+    const orgId = user.memberships?.[0]?.organizationId;
+    if (!orgId) throw new BadRequestException('No organization');
+    return this.documentsService.deleteDocumentType(id, orgId);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.documentsService.findOne(id);
