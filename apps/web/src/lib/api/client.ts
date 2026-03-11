@@ -59,6 +59,7 @@ export const api = {
     request<T>(endpoint, { method: 'PATCH', body: body ? JSON.stringify(body) : undefined }),
   delete: <T>(endpoint: string) =>
     request<T>(endpoint, { method: 'DELETE' }),
+  // eslint-disable-next-line no-undef
   upload: async <T>(endpoint: string, formData: FormData): Promise<T> => {
     const url = `${API_URL}${endpoint}`;
     const auth = get(authStore);
