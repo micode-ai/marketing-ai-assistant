@@ -38,8 +38,8 @@ export class ChatController {
   }
 
   @Get('sessions/:id/messages')
-  getMessages(@Param('id') id: string, @Query('limit') limit?: number) {
-    return this.chatService.getMessages(id, limit);
+  getMessages(@Param('id') id: string, @Query('limit') limit?: string) {
+    return this.chatService.getMessages(id, limit ? parseInt(limit, 10) : undefined);
   }
 
   @Post('sessions/:id/messages')
