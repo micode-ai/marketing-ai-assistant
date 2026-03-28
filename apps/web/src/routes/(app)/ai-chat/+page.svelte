@@ -4,6 +4,16 @@
   import { currentProjectStore } from '$lib/stores/projects';
   import { onMount, tick } from 'svelte';
   import { page } from '$app/stores';
+  import { marked } from 'marked';
+
+  marked.setOptions({
+    breaks: true,
+    gfm: true,
+  });
+
+  function renderMarkdown(content: string): string {
+    return marked.parse(content, { async: false }) as string;
+  }
 
   interface Message {
     role: 'user' | 'assistant';
@@ -242,7 +252,13 @@
             {/if}
             <div class="max-w-2xl">
               <div class="{msg.role === 'user' ? 'bg-primary-600 text-white rounded-2xl rounded-tr-sm' : 'bg-white border border-gray-200 text-gray-800 rounded-2xl rounded-tl-sm'} px-4 py-3 shadow-sm">
-                <p class="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+                {#if msg.role === 'assistant'}
+                  <div class="text-sm leading-relaxed prose prose-sm prose-primary max-w-none prose-p:my-1 prose-headings:my-2 prose-ul:my-1 prose-ol:my-1 prose-pre:my-2 prose-code:text-primary-700 prose-code:bg-primary-50 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-[''] prose-code:after:content-['']">
+                    {@html renderMarkdown(msg.content)}
+                  </div>
+                {:else}
+                  <p class="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+                {/if}
               </div>
               <p class="text-xs text-gray-400 mt-1 {msg.role === 'user' ? 'text-right' : ''}">{msg.time}</p>
             </div>
