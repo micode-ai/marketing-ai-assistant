@@ -9,16 +9,16 @@
     "test": "jest"
   },
   "dependencies": {
+    "@langchain/community": "^0.3.59",
+    "@langchain/core": "^0.3.27",
+    "@langchain/langgraph": "^0.2.36",
+    "@langchain/openai": "^0.3.16",
     "@marketing-ai/database": "workspace:*",
     "@marketing-ai/shared-types": "workspace:*",
     "@prisma/client": "^6.2.1",
-    "@langchain/core": "^0.3.27",
-    "@langchain/openai": "^0.3.16",
-    "@langchain/langgraph": "^0.2.36",
-    "@langchain/community": "^0.3.26",
+    "express": "^4.21.2",
     "langchain": "^0.3.15",
     "langsmith": "^0.2.14",
-    "express": "^4.21.2",
     "zod": "^3.24.1"
   },
   "devDependencies": {
