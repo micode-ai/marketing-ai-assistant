@@ -1,6 +1,10 @@
+import { EntityScope } from './enums';
+
 export interface Keyword {
   id: string;
-  projectId: string;
+  projectId?: string;
+  scope: EntityScope;
+  organizationId?: string;
   keyword: string;
   searchVolume?: number | null;
   difficulty?: number | null;
@@ -23,7 +27,9 @@ export interface KeywordRankHistory {
 }
 
 export interface CreateKeywordDto {
-  projectId: string;
+  projectId?: string;
+  scope?: EntityScope;
+  organizationId?: string;
   keyword: string;
   searchVolume?: number;
   difficulty?: number;

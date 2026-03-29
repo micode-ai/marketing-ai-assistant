@@ -1,4 +1,4 @@
-import { EmailAccountStatus, EmailProvider, EmailSubscriberStatus } from './enums';
+import { EmailAccountStatus, EmailProvider, EmailSubscriberStatus, EntityScope } from './enums';
 
 export interface EmailAccount {
   id: string;
@@ -16,7 +16,9 @@ export interface EmailAccount {
 
 export interface EmailList {
   id: string;
-  projectId: string;
+  projectId?: string;
+  scope: EntityScope;
+  organizationId?: string;
   name: string;
   description?: string;
   subscriberCount: number;
@@ -84,7 +86,9 @@ export interface CreateEmailAccountDto {
 }
 
 export interface CreateEmailListDto {
-  projectId: string;
+  projectId?: string;
+  scope?: EntityScope;
+  organizationId?: string;
   name: string;
   description?: string;
 }

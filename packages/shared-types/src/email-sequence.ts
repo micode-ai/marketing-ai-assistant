@@ -1,6 +1,10 @@
+import { EntityScope } from './enums';
+
 export interface EmailSequence {
   id: string;
-  projectId: string;
+  projectId?: string;
+  scope: EntityScope;
+  organizationId?: string;
   name: string;
   description?: string | null;
   triggerType: string;
@@ -38,7 +42,9 @@ export interface EmailSequenceEnrollment {
 }
 
 export interface CreateEmailSequenceDto {
-  projectId: string;
+  projectId?: string;
+  scope?: EntityScope;
+  organizationId?: string;
   name: string;
   description?: string;
   triggerType: string;

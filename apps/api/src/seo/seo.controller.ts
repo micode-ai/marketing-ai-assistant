@@ -1,5 +1,5 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, BadRequestException } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { SeoService } from './seo.service';
 
 @ApiTags('seo')
@@ -11,8 +11,16 @@ export class SeoController {
   // ── Keywords ───────────────────────────────────────────────────
 
   @Get('keywords')
-  findKeywords(@Query('projectId') projectId: string) {
-    return this.seoService.findKeywords(projectId);
+  @ApiOperation({ summary: 'Get keywords (project-scoped, org-scoped, or aggregated)' })
+  findKeywords(
+    @Query('projectId') projectId?: string,
+    @Query('organizationId') organizationId?: string,
+    @Query('aggregated') aggregated?: string,
+  ) {
+    if (!projectId && !organizationId) {
+      throw new BadRequestException('Either projectId or organizationId is required');
+    }
+    return this.seoService.findKeywords({ projectId, organizationId, aggregated: aggregated === 'true' });
   }
 
   @Get('keywords/:id')
@@ -48,8 +56,16 @@ export class SeoController {
   // ── Competitors ────────────────────────────────────────────────
 
   @Get('competitors')
-  findCompetitors(@Query('projectId') projectId: string) {
-    return this.seoService.findCompetitors(projectId);
+  @ApiOperation({ summary: 'Get competitors (project-scoped, org-scoped, or aggregated)' })
+  findCompetitors(
+    @Query('projectId') projectId?: string,
+    @Query('organizationId') organizationId?: string,
+    @Query('aggregated') aggregated?: string,
+  ) {
+    if (!projectId && !organizationId) {
+      throw new BadRequestException('Either projectId or organizationId is required');
+    }
+    return this.seoService.findCompetitors({ projectId, organizationId, aggregated: aggregated === 'true' });
   }
 
   @Post('competitors')

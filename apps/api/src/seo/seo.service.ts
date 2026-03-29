@@ -5,9 +5,20 @@ import { PrismaService } from '../database/prisma.service';
 export class SeoService {
   constructor(private prisma: PrismaService) {}
 
-  async findKeywords(projectId: string) {
+  async findKeywords(scope: { projectId?: string; organizationId?: string; aggregated?: boolean }) {
+    const where: any = {};
+
+    if (scope.projectId) {
+      where.projectId = scope.projectId;
+    } else if (scope.organizationId && scope.aggregated) {
+      where.organizationId = scope.organizationId;
+    } else if (scope.organizationId) {
+      where.organizationId = scope.organizationId;
+      where.scope = 'ORGANIZATION';
+    }
+
     return this.prisma.keyword.findMany({
-      where: { projectId },
+      where,
       include: {
         rankHistory: {
           orderBy: { date: 'desc' },
@@ -37,10 +48,23 @@ export class SeoService {
     targetRank?: number;
     intent?: string;
     url?: string;
+    organizationId?: string;
+    scope?: string;
   }) {
+    let organizationId = dto.organizationId;
+    if (!organizationId && dto.projectId) {
+      const project = await this.prisma.project.findUnique({
+        where: { id: dto.projectId },
+        select: { organizationId: true },
+      });
+      organizationId = project?.organizationId;
+    }
+
     return this.prisma.keyword.create({
       data: {
         projectId: dto.projectId,
+        organizationId,
+        scope: (dto.scope || 'PROJECT') as any,
         keyword: dto.keyword,
         searchVolume: dto.searchVolume,
         difficulty: dto.difficulty,
@@ -107,9 +131,20 @@ export class SeoService {
     });
   }
 
-  async findCompetitors(projectId: string) {
+  async findCompetitors(scope: { projectId?: string; organizationId?: string; aggregated?: boolean }) {
+    const where: any = {};
+
+    if (scope.projectId) {
+      where.projectId = scope.projectId;
+    } else if (scope.organizationId && scope.aggregated) {
+      where.organizationId = scope.organizationId;
+    } else if (scope.organizationId) {
+      where.organizationId = scope.organizationId;
+      where.scope = 'ORGANIZATION';
+    }
+
     return this.prisma.competitor.findMany({
-      where: { projectId },
+      where,
       include: {
         snapshots: { orderBy: { date: 'desc' }, take: 1 },
       },
@@ -122,8 +157,28 @@ export class SeoService {
     name: string;
     websiteUrl: string;
     description?: string;
+    organizationId?: string;
+    scope?: string;
   }) {
-    return this.prisma.competitor.create({ data: dto });
+    let organizationId = dto.organizationId;
+    if (!organizationId && dto.projectId) {
+      const project = await this.prisma.project.findUnique({
+        where: { id: dto.projectId },
+        select: { organizationId: true },
+      });
+      organizationId = project?.organizationId;
+    }
+
+    return this.prisma.competitor.create({
+      data: {
+        projectId: dto.projectId,
+        organizationId,
+        scope: (dto.scope || 'PROJECT') as any,
+        name: dto.name,
+        websiteUrl: dto.websiteUrl,
+        description: dto.description,
+      },
+    });
   }
 
   async updateCompetitor(

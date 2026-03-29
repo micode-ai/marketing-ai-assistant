@@ -27,6 +27,7 @@ import { WebhooksModule } from './webhooks/webhooks.module';
 import { GoogleIntegrationsModule } from './google-integrations/google-integrations.module';
 import { InvitationsModule } from './invitations/invitations.module';
 import { MailModule } from './mail/mail.module';
+import { EntityLinksModule } from './entity-links/entity-links.module';
 
 @Module({
   imports: [
@@ -65,6 +66,7 @@ import { MailModule } from './mail/mail.module';
     ChatModule,
     WebhooksModule,
     GoogleIntegrationsModule,
+    EntityLinksModule,
   ],
 })
 export class AppModule {}

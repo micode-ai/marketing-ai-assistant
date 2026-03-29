@@ -1,6 +1,10 @@
+import { EntityScope } from './enums';
+
 export interface Competitor {
   id: string;
-  projectId: string;
+  projectId?: string;
+  scope: EntityScope;
+  organizationId?: string;
   name: string;
   websiteUrl: string;
   description?: string | null;
@@ -21,7 +25,9 @@ export interface CompetitorSnapshot {
 }
 
 export interface CreateCompetitorDto {
-  projectId: string;
+  projectId?: string;
+  scope?: EntityScope;
+  organizationId?: string;
   name: string;
   websiteUrl: string;
   description?: string;

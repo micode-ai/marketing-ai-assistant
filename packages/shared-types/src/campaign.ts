@@ -1,8 +1,10 @@
-import { CampaignStatus, CampaignType } from './enums';
+import { CampaignStatus, CampaignType, EntityScope } from './enums';
 
 export interface Campaign {
   id: string;
-  projectId: string;
+  projectId?: string;
+  scope: EntityScope;
+  organizationId?: string;
   name: string;
   type: CampaignType;
   status: CampaignStatus;
@@ -15,7 +17,9 @@ export interface Campaign {
 }
 
 export interface CreateCampaignDto {
-  projectId: string;
+  projectId?: string;
+  scope?: EntityScope;
+  organizationId?: string;
   name: string;
   type: CampaignType;
   startDate?: Date;

@@ -68,17 +68,43 @@ export class EmailService {
     }
   }
 
-  async findAllLists(projectId: string) {
+  async findAllLists(scope: { projectId?: string; organizationId?: string; aggregated?: boolean }) {
+    const where: any = {};
+
+    if (scope.projectId) {
+      where.projectId = scope.projectId;
+    } else if (scope.organizationId && scope.aggregated) {
+      where.organizationId = scope.organizationId;
+    } else if (scope.organizationId) {
+      where.organizationId = scope.organizationId;
+      where.scope = 'ORGANIZATION';
+    }
+
     return this.prisma.emailList.findMany({
-      where: { projectId },
+      where,
       include: { _count: { select: { subscribers: true } } },
       orderBy: { createdAt: 'desc' },
     });
   }
 
   async createList(dto: any) {
+    let organizationId = dto.organizationId;
+    if (!organizationId && dto.projectId) {
+      const project = await this.prisma.project.findUnique({
+        where: { id: dto.projectId },
+        select: { organizationId: true },
+      });
+      organizationId = project?.organizationId;
+    }
+
     return this.prisma.emailList.create({
-      data: { projectId: dto.projectId, name: dto.name, description: dto.description },
+      data: {
+        projectId: dto.projectId,
+        organizationId,
+        scope: dto.scope || 'PROJECT',
+        name: dto.name,
+        description: dto.description,
+      },
     });
   }
 

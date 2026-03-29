@@ -162,7 +162,6 @@ enum AnalyticsEventType {
   FUNNEL_STEP
 }
 
-
 enum ABTestStatus {
   DRAFT
   RUNNING
@@ -217,27 +216,51 @@ enum PublicationStatus {
   FAILED
 }
 
+enum EntityScope {
+  PROJECT
+  ORGANIZATION
+}
+
+enum EntityLinkType {
+  COPY
+  LINK
+}
+
+enum EntityModelType {
+  CONTENT
+  CHECKLIST
+  DOCUMENT
+  CAMPAIGN
+  EMAIL_LIST
+  KEYWORD
+  COMPETITOR
+  ANALYTICS_EVENT
+  AB_TEST
+  EMAIL_SEQUENCE
+}
+
 // =============================================================================
 // Users & Auth
 // =============================================================================
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
+  id            String   @id @default(cuid())
+  email         String   @unique
   name          String
   passwordHash  String?
   avatarUrl     String?
-  emailVerified Boolean   @default(false)
-  googleId      String?   @unique
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  emailVerified Boolean  @default(false)
+  googleId      String?  @unique
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  memberships       OrganizationMember[]
-  contentVersions   ContentVersion[]
-  completedItems    ChecklistItem[]      @relation("CompletedBy")
-  updatedNotes      ChecklistItem[]      @relation("NoteUpdatedBy")
-  createdDocuments  Document[]
-  chatSessions      ChatSession[]
+  memberships      OrganizationMember[]
+  contentVersions  ContentVersion[]
+  completedItems   ChecklistItem[]      @relation("CompletedBy")
+  updatedNotes     ChecklistItem[]      @relation("NoteUpdatedBy")
+  createdDocuments Document[]
+  chatSessions     ChatSession[]
+  entityLinks      EntityLink[]
 
   @@index([email])
   @@map("users")
@@ -259,28 +282,38 @@ model Organization {
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
 
-  members        OrganizationMember[]
-  projects       Project[]
-  subscription   Subscription?
-  emailAccounts  EmailAccount[]
-  emailTemplates EmailTemplate[]
-  socialAccounts SocialAccount[]
-  webhooks       Webhook[]
-  documentTypes  DocumentTypeConfig[]
+  members         OrganizationMember[]
+  projects        Project[]
+  subscription    Subscription?
+  emailAccounts   EmailAccount[]
+  emailTemplates  EmailTemplate[]
+  socialAccounts  SocialAccount[]
+  webhooks        Webhook[]
+  documentTypes   DocumentTypeConfig[]
+  content         Content[]            @relation("OrgContent")
+  checklists      Checklist[]          @relation("OrgChecklist")
+  documents       Document[]           @relation("OrgDocument")
+  campaigns       Campaign[]           @relation("OrgCampaign")
+  emailLists      EmailList[]          @relation("OrgEmailList")
+  keywords        Keyword[]            @relation("OrgKeyword")
+  competitors     Competitor[]         @relation("OrgCompetitor")
+  analyticsEvents AnalyticsEvent[]     @relation("OrgAnalyticsEvent")
+  abTests         ABTest[]             @relation("OrgABTest")
+  emailSequences  EmailSequence[]      @relation("OrgEmailSequence")
 
   @@index([slug])
   @@map("organizations")
 }
 
 model OrganizationMember {
-  id             String       @id @default(cuid())
+  id             String    @id @default(cuid())
   userId         String
   organizationId String
-  role           UserRole     @default(MEMBER)
+  role           UserRole  @default(MEMBER)
   invitedAt      DateTime?
   joinedAt       DateTime?
   requestedAt    DateTime?
-  createdAt      DateTime     @default(now())
+  createdAt      DateTime  @default(now())
 
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -318,7 +351,7 @@ model Project {
   organizationId String
   trackingId     String?       @unique @default(cuid())
   name           String
-  projectType    ProjectType @default(WEBSITE)
+  projectType    ProjectType   @default(WEBSITE)
   description    String?
   websiteUrl     String?
   logoUrl        String?
@@ -331,7 +364,7 @@ model Project {
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 
-  organization    Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization    Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   apiKeys         ProjectApiKey[]
   campaigns       Campaign[]
   content         Content[]
@@ -356,13 +389,13 @@ model Project {
 }
 
 model ProjectApiKey {
-  id               String         @id @default(cuid())
-  projectId        String
-  platform         SocialPlatform
-  encryptedKey     String
-  scopes           String[]
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
+  id           String         @id @default(cuid())
+  projectId    String
+  platform     SocialPlatform
+  encryptedKey String
+  scopes       String[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
@@ -375,46 +408,55 @@ model ProjectApiKey {
 // =============================================================================
 
 model Campaign {
-  id        String         @id @default(cuid())
-  projectId String
-  name      String
-  type      CampaignType
-  status    CampaignStatus @default(DRAFT)
-  startDate DateTime?
-  endDate   DateTime?
-  budget    Float?
-  goals     String?
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
+  id             String         @id @default(cuid())
+  projectId      String?
+  name           String
+  type           CampaignType
+  status         CampaignStatus @default(DRAFT)
+  startDate      DateTime?
+  endDate        DateTime?
+  budget         Float?
+  goals          String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  scope          EntityScope    @default(PROJECT)
+  organizationId String?
 
-  project        Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  content        Content[]
-  emailCampaigns EmailCampaign[]
+  project         Project?         @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  organization    Organization?    @relation("OrgCampaign", fields: [organizationId], references: [id], onDelete: Cascade)
+  content         Content[]
+  emailCampaigns  EmailCampaign[]
   analyticsEvents AnalyticsEvent[]
 
   @@index([projectId])
+  @@index([scope, organizationId])
+  @@index([scope, projectId])
+  @@index([organizationId])
   @@map("campaigns")
 }
 
 model Content {
-  id              String         @id @default(cuid())
+  id              String          @id @default(cuid())
   campaignId      String?
-  projectId       String
+  projectId       String?
   sourceContentId String?
   type            ContentType
   title           String
-  body            String         @db.Text
+  body            String          @db.Text
   mediaUrls       String[]
   platform        SocialPlatform?
-  status          ContentStatus  @default(DRAFT)
+  status          ContentStatus   @default(DRAFT)
   scheduledAt     DateTime?
   publishedAt     DateTime?
-  aiGenerated     Boolean        @default(false)
+  aiGenerated     Boolean         @default(false)
   seoMetadata     Json?
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  scope           EntityScope     @default(PROJECT)
+  organizationId  String?
 
-  project        Project              @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project        Project?             @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  organization   Organization?        @relation("OrgContent", fields: [organizationId], references: [id], onDelete: Cascade)
   campaign       Campaign?            @relation(fields: [campaignId], references: [id], onDelete: SetNull)
   sourceContent  Content?             @relation("ContentRepurpose", fields: [sourceContentId], references: [id], onDelete: SetNull)
   repurposed     Content[]            @relation("ContentRepurpose")
@@ -424,6 +466,9 @@ model Content {
 
   @@index([projectId])
   @@index([campaignId])
+  @@index([scope, organizationId])
+  @@index([scope, projectId])
+  @@index([organizationId])
   @@map("content")
 }
 
@@ -469,32 +514,38 @@ model EmailAccount {
 }
 
 model EmailList {
-  id              String   @id @default(cuid())
-  projectId       String
+  id              String      @id @default(cuid())
+  projectId       String?
   name            String
   description     String?
-  subscriberCount Int      @default(0)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  subscriberCount Int         @default(0)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  scope           EntityScope @default(PROJECT)
+  organizationId  String?
 
-  project         Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  subscribers     EmailSubscriber[]
-  emailCampaigns  EmailCampaign[]
+  project        Project?          @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  organization   Organization?     @relation("OrgEmailList", fields: [organizationId], references: [id], onDelete: Cascade)
+  subscribers    EmailSubscriber[]
+  emailCampaigns EmailCampaign[]
 
   @@index([projectId])
+  @@index([scope, organizationId])
+  @@index([scope, projectId])
+  @@index([organizationId])
   @@map("email_lists")
 }
 
 model EmailSubscriber {
-  id              String                @id @default(cuid())
-  listId          String
-  email           String
-  name            String?
-  status          EmailSubscriberStatus @default(ACTIVE)
-  metadata        Json?
-  subscribedAt    DateTime              @default(now())
-  unsubscribedAt  DateTime?
-  unsubscribeToken String              @unique @default(cuid())
+  id               String                @id @default(cuid())
+  listId           String
+  email            String
+  name             String?
+  status           EmailSubscriberStatus @default(ACTIVE)
+  metadata         Json?
+  subscribedAt     DateTime              @default(now())
+  unsubscribedAt   DateTime?
+  unsubscribeToken String                @unique @default(cuid())
 
   list EmailList @relation(fields: [listId], references: [id], onDelete: Cascade)
 
@@ -536,9 +587,9 @@ model EmailCampaign {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
-  campaign     Campaign     @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  emailAccount EmailAccount @relation(fields: [emailAccountId], references: [id])
-  list         EmailList    @relation(fields: [listId], references: [id])
+  campaign     Campaign       @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  emailAccount EmailAccount   @relation(fields: [emailAccountId], references: [id])
+  list         EmailList      @relation(fields: [listId], references: [id])
   template     EmailTemplate? @relation(fields: [templateId], references: [id])
 
   @@index([campaignId])
@@ -550,44 +601,50 @@ model EmailCampaign {
 // =============================================================================
 
 model Checklist {
-  id          String        @id @default(cuid())
-  projectId   String
-  name        String
-  type        ChecklistType
-  description String?
-  isTemplate  Boolean       @default(false)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id             String        @id @default(cuid())
+  projectId      String?
+  name           String
+  type           ChecklistType
+  description    String?
+  isTemplate     Boolean       @default(false)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  scope          EntityScope   @default(PROJECT)
+  organizationId String?
 
-  project Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  items   ChecklistItem[]
+  project      Project?        @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  organization Organization?   @relation("OrgChecklist", fields: [organizationId], references: [id], onDelete: Cascade)
+  items        ChecklistItem[]
 
   @@index([projectId])
+  @@index([scope, organizationId])
+  @@index([scope, projectId])
+  @@index([organizationId])
   @@map("checklists")
 }
 
 model ChecklistItem {
-  id          String                @id @default(cuid())
-  checklistId String
-  title       String
-  description String?
-  isCompleted Boolean               @default(false)
-  completedAt DateTime?
-  completedBy String?
-  order       Int
-  dueDate     DateTime?
-  priority    ChecklistItemPriority @default(MEDIUM)
-  createdAt   DateTime              @default(now())
-  updatedAt   DateTime              @updatedAt
-  section         String?
-  note            String?
-  noteUpdatedBy   String?
-  noteUpdatedAt   DateTime?
+  id            String                @id @default(cuid())
+  checklistId   String
+  title         String
+  description   String?
+  isCompleted   Boolean               @default(false)
+  completedAt   DateTime?
+  completedBy   String?
+  order         Int
+  dueDate       DateTime?
+  priority      ChecklistItemPriority @default(MEDIUM)
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+  section       String?
+  note          String?
+  noteUpdatedBy String?
+  noteUpdatedAt DateTime?
 
-  checklist   Checklist @relation(fields: [checklistId], references: [id], onDelete: Cascade)
-  completedByUser User? @relation("CompletedBy", fields: [completedBy], references: [id])
-  noteUpdatedByUser User? @relation("NoteUpdatedBy", fields: [noteUpdatedBy], references: [id])
-  chatMessages Json? // Array of { role: 'user' | 'assistant', content: string }
+  checklist         Checklist @relation(fields: [checklistId], references: [id], onDelete: Cascade)
+  completedByUser   User?     @relation("CompletedBy", fields: [completedBy], references: [id])
+  noteUpdatedByUser User?     @relation("NoteUpdatedBy", fields: [noteUpdatedBy], references: [id])
+  chatMessages      Json? // Array of { role: 'user' | 'assistant', content: string }
 
   @@index([checklistId])
   @@map("checklist_items")
@@ -598,14 +655,14 @@ model ChecklistItem {
 // =============================================================================
 
 model DocumentTypeConfig {
-  id             String       @id @default(cuid())
+  id             String   @id @default(cuid())
   organizationId String
   slug           String
   label          String
-  isDefault      Boolean      @default(false)
-  sortOrder      Int          @default(0)
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  isDefault      Boolean  @default(false)
+  sortOrder      Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
@@ -619,26 +676,32 @@ model DocumentTypeConfig {
 // =============================================================================
 
 model Document {
-  id            String       @id @default(cuid())
-  projectId     String
-  type          String
-  title         String
-  content       Json?
-  contentMd     String?      @db.Text
-  fileUrl       String?
-  fileName      String?
-  fileSize      Int?
-  mimeType      String?
-  generatedByAi Boolean      @default(false)
-  version       Int          @default(1)
-  createdBy     String
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+  id             String      @id @default(cuid())
+  projectId      String?
+  type           String
+  title          String
+  content        Json?
+  contentMd      String?     @db.Text
+  fileUrl        String?
+  fileName       String?
+  fileSize       Int?
+  mimeType       String?
+  generatedByAi  Boolean     @default(false)
+  version        Int         @default(1)
+  createdBy      String
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  scope          EntityScope @default(PROJECT)
+  organizationId String?
 
-  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  creator User    @relation(fields: [createdBy], references: [id])
+  project      Project?      @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  organization Organization? @relation("OrgDocument", fields: [organizationId], references: [id], onDelete: Cascade)
+  creator      User          @relation(fields: [createdBy], references: [id])
 
   @@index([projectId])
+  @@index([scope, organizationId])
+  @@index([scope, projectId])
+  @@index([organizationId])
   @@map("documents")
 }
 
@@ -647,20 +710,20 @@ model Document {
 // =============================================================================
 
 model AgentRun {
-  id             String         @id @default(cuid())
-  projectId      String
-  agentType      AgentType
-  status         AgentRunStatus @default(PENDING)
-  input          Json
-  output         Json?
-  tokensUsed     Int?
-  cost           Float?
-  duration       Int?
-  error          String?
-  langsmithRunId   String?
+  id                String         @id @default(cuid())
+  projectId         String
+  agentType         AgentType
+  status            AgentRunStatus @default(PENDING)
+  input             Json
+  output            Json?
+  tokensUsed        Int?
+  cost              Float?
+  duration          Int?
+  error             String?
+  langsmithRunId    String?
   langsmithTraceUrl String?
-  createdAt        DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
@@ -692,19 +755,25 @@ model AgentSchedule {
 // =============================================================================
 
 model AnalyticsEvent {
-  id         String             @id @default(cuid())
-  projectId  String
-  campaignId String?
-  type       AnalyticsEventType
-  metadata   Json               @default("{}")
-  timestamp  DateTime           @default(now())
+  id             String             @id @default(cuid())
+  projectId      String?
+  campaignId     String?
+  type           AnalyticsEventType
+  metadata       Json               @default("{}")
+  timestamp      DateTime           @default(now())
+  scope          EntityScope        @default(PROJECT)
+  organizationId String?
 
-  project  Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  campaign Campaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  project      Project?      @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  organization Organization? @relation("OrgAnalyticsEvent", fields: [organizationId], references: [id], onDelete: Cascade)
+  campaign     Campaign?     @relation(fields: [campaignId], references: [id], onDelete: SetNull)
 
   @@index([projectId])
   @@index([timestamp])
   @@index([projectId, type, timestamp])
+  @@index([scope, organizationId])
+  @@index([scope, projectId])
+  @@index([organizationId])
   @@map("analytics_events")
 }
 
@@ -741,7 +810,7 @@ model SocialAccount {
   createdAt       DateTime            @default(now())
   updatedAt       DateTime            @updatedAt
 
-  organization Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   publications ContentPublication[]
   projects     ProjectSocialAccount[]
 
@@ -785,24 +854,31 @@ model ContentPublication {
 // =============================================================================
 
 model Keyword {
-  id           String       @id @default(cuid())
-  projectId    String
-  keyword      String
-  searchVolume Int?
-  difficulty   Int?
-  currentRank  Int?
-  targetRank   Int?
-  intent       KeywordIntent @default(INFORMATIONAL)
-  url          String?
-  isTracking   Boolean      @default(true)
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+  id             String        @id @default(cuid())
+  projectId      String?
+  keyword        String
+  searchVolume   Int?
+  difficulty     Int?
+  currentRank    Int?
+  targetRank     Int?
+  intent         KeywordIntent @default(INFORMATIONAL)
+  url            String?
+  isTracking     Boolean       @default(true)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  scope          EntityScope   @default(PROJECT)
+  organizationId String?
 
-  project      Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project      Project?             @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  organization Organization?        @relation("OrgKeyword", fields: [organizationId], references: [id], onDelete: Cascade)
   rankHistory  KeywordRankHistory[]
 
   @@unique([projectId, keyword])
+  @@unique([organizationId, keyword])
   @@index([projectId])
+  @@index([scope, organizationId])
+  @@index([scope, projectId])
+  @@index([organizationId])
   @@map("keywords")
 }
 
@@ -827,7 +903,7 @@ model KeywordRankHistory {
 
 model ABTest {
   id              String       @id @default(cuid())
-  projectId       String
+  projectId       String?
   name            String
   type            ABTestType
   status          ABTestStatus @default(DRAFT)
@@ -837,26 +913,32 @@ model ABTest {
   config          Json         @default("{}")
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
+  scope           EntityScope  @default(PROJECT)
+  organizationId  String?
 
-  project  Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  variants ABTestVariant[]
+  project      Project?        @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  organization Organization?   @relation("OrgABTest", fields: [organizationId], references: [id], onDelete: Cascade)
+  variants     ABTestVariant[]
 
   @@index([projectId])
+  @@index([scope, organizationId])
+  @@index([scope, projectId])
+  @@index([organizationId])
   @@map("ab_tests")
 }
 
 model ABTestVariant {
-  id           String  @id @default(cuid())
-  testId       String
-  name         String
-  contentId    String?
-  config       Json    @default("{}")
-  impressions  Int     @default(0)
-  conversions  Int     @default(0)
-  clicks       Int     @default(0)
-  isControl    Boolean @default(false)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id          String   @id @default(cuid())
+  testId      String
+  name        String
+  contentId   String?
+  config      Json     @default("{}")
+  impressions Int      @default(0)
+  conversions Int      @default(0)
+  clicks      Int      @default(0)
+  isControl   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   test    ABTest   @relation(fields: [testId], references: [id], onDelete: Cascade)
   content Content? @relation(fields: [contentId], references: [id], onDelete: SetNull)
@@ -870,36 +952,42 @@ model ABTestVariant {
 // =============================================================================
 
 model EmailSequence {
-  id          String                @id @default(cuid())
-  projectId   String
-  name        String
-  description String?
-  triggerType EmailSequenceTrigger  @default(MANUAL)
-  triggerConfig Json               @default("{}")
-  status      EmailSequenceStatus   @default(DRAFT)
-  createdAt   DateTime              @default(now())
-  updatedAt   DateTime              @updatedAt
+  id             String               @id @default(cuid())
+  projectId      String?
+  name           String
+  description    String?
+  triggerType    EmailSequenceTrigger @default(MANUAL)
+  triggerConfig  Json                 @default("{}")
+  status         EmailSequenceStatus  @default(DRAFT)
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  scope          EntityScope          @default(PROJECT)
+  organizationId String?
 
-  project     Project                  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  steps       EmailSequenceStep[]
-  enrollments EmailSequenceEnrollment[]
+  project      Project?                  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  organization Organization?             @relation("OrgEmailSequence", fields: [organizationId], references: [id], onDelete: Cascade)
+  steps        EmailSequenceStep[]
+  enrollments  EmailSequenceEnrollment[]
 
   @@index([projectId])
+  @@index([scope, organizationId])
+  @@index([scope, projectId])
+  @@index([organizationId])
   @@map("email_sequences")
 }
 
 model EmailSequenceStep {
-  id         String  @id @default(cuid())
-  sequenceId String
-  order      Int
-  delayDays  Int     @default(0)
-  delayHours Int     @default(0)
-  subject    String
+  id          String   @id @default(cuid())
+  sequenceId  String
+  order       Int
+  delayDays   Int      @default(0)
+  delayHours  Int      @default(0)
+  subject     String
   previewText String?
-  html       String  @db.Text
-  templateId String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  html        String   @db.Text
+  templateId  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   sequence EmailSequence @relation(fields: [sequenceId], references: [id], onDelete: Cascade)
 
@@ -948,13 +1036,13 @@ model ChatSession {
 }
 
 model ChatMessage {
-  id        String   @id @default(cuid())
-  sessionId String
-  role      String
-  content   String   @db.Text
+  id         String   @id @default(cuid())
+  sessionId  String
+  role       String
+  content    String   @db.Text
   tokensUsed Int?
-  cost      Float?
-  createdAt DateTime @default(now())
+  cost       Float?
+  createdAt  DateTime @default(now())
 
   session ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
@@ -967,21 +1055,28 @@ model ChatMessage {
 // =============================================================================
 
 model Competitor {
-  id           String   @id @default(cuid())
-  projectId    String
-  name         String
-  websiteUrl   String
-  description  String?
-  lastCheckedAt DateTime?
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id             String      @id @default(cuid())
+  projectId      String?
+  name           String
+  websiteUrl     String
+  description    String?
+  lastCheckedAt  DateTime?
+  isActive       Boolean     @default(true)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  scope          EntityScope @default(PROJECT)
+  organizationId String?
 
-  project   Project              @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  snapshots CompetitorSnapshot[]
+  project      Project?             @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  organization Organization?        @relation("OrgCompetitor", fields: [organizationId], references: [id], onDelete: Cascade)
+  snapshots    CompetitorSnapshot[]
 
   @@unique([projectId, websiteUrl])
+  @@unique([organizationId, websiteUrl])
   @@index([projectId])
+  @@index([scope, organizationId])
+  @@index([scope, projectId])
+  @@index([organizationId])
   @@map("competitors")
 }
 
@@ -1005,7 +1100,7 @@ model CompetitorSnapshot {
 // =============================================================================
 
 model FunnelStep {
-  id          String @id @default(cuid())
+  id          String   @id @default(cuid())
   projectId   String
   name        String
   eventType   String
@@ -1049,19 +1144,41 @@ model TrackedUser {
 }
 
 // =============================================================================
+// Entity Links (Promote/Demote)
+// =============================================================================
+
+model EntityLink {
+  id          String          @id @default(cuid())
+  entityType  EntityModelType
+  sourceId    String
+  targetId    String
+  linkType    EntityLinkType
+  sourceScope EntityScope
+  targetScope EntityScope
+  createdBy   String
+  createdAt   DateTime        @default(now())
+
+  creator User @relation(fields: [createdBy], references: [id])
+
+  @@index([entityType, sourceId, targetId])
+  @@index([entityType, targetId])
+  @@map("entity_links")
+}
+
+// =============================================================================
 // Webhooks
 // =============================================================================
 
 model Webhook {
-  id             String   @id @default(cuid())
-  organizationId String
-  url            String
-  events         String[]
-  secret         String
-  isActive       Boolean  @default(true)
+  id              String    @id @default(cuid())
+  organizationId  String
+  url             String
+  events          String[]
+  secret          String
+  isActive        Boolean   @default(true)
   lastTriggeredAt DateTime?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 

@@ -1,6 +1,10 @@
+import { EntityScope } from './enums';
+
 export interface ABTest {
   id: string;
-  projectId: string;
+  projectId?: string;
+  scope: EntityScope;
+  organizationId?: string;
   name: string;
   type: string;
   status: string;
@@ -29,7 +33,9 @@ export interface ABTestVariant {
 }
 
 export interface CreateABTestDto {
-  projectId: string;
+  projectId?: string;
+  scope?: EntityScope;
+  organizationId?: string;
   name: string;
   type: string;
   variants: CreateABTestVariantDto[];

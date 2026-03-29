@@ -185,3 +185,26 @@ export enum KeywordIntent {
   COMMERCIAL = 'COMMERCIAL',
   TRANSACTIONAL = 'TRANSACTIONAL',
 }
+
+export enum EntityScope {
+  PROJECT = 'PROJECT',
+  ORGANIZATION = 'ORGANIZATION',
+}
+
+export enum EntityLinkType {
+  COPY = 'COPY',
+  LINK = 'LINK',
+}
+
+export enum EntityModelType {
+  CONTENT = 'CONTENT',
+  CHECKLIST = 'CHECKLIST',
+  DOCUMENT = 'DOCUMENT',
+  CAMPAIGN = 'CAMPAIGN',
+  EMAIL_LIST = 'EMAIL_LIST',
+  KEYWORD = 'KEYWORD',
+  COMPETITOR = 'COMPETITOR',
+  ANALYTICS_EVENT = 'ANALYTICS_EVENT',
+  AB_TEST = 'AB_TEST',
+  EMAIL_SEQUENCE = 'EMAIL_SEQUENCE',
+}

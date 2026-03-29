@@ -1,5 +1,5 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, BadRequestException } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ChecklistsService } from './checklists.service';
 import { CreateChecklistDto } from './dto/create-checklist.dto';
 import { UpdateChecklistDto } from './dto/update-checklist.dto';
@@ -15,8 +15,16 @@ export class ChecklistsController {
   constructor(private checklistsService: ChecklistsService) {}
 
   @Get()
-  findAll(@Query('projectId') projectId: string) {
-    return this.checklistsService.findAll(projectId);
+  @ApiOperation({ summary: 'Get checklists (project-scoped, org-scoped, or aggregated)' })
+  findAll(
+    @Query('projectId') projectId?: string,
+    @Query('organizationId') organizationId?: string,
+    @Query('aggregated') aggregated?: string,
+  ) {
+    if (!projectId && !organizationId) {
+      throw new BadRequestException('Either projectId or organizationId is required');
+    }
+    return this.checklistsService.findAll({ projectId, organizationId, aggregated: aggregated === 'true' });
   }
 
   @Post()

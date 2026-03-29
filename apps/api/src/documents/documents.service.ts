@@ -65,9 +65,20 @@ export class DocumentsService {
     return this.prisma.documentTypeConfig.delete({ where: { id } });
   }
 
-  async findAll(projectId: string) {
+  async findAll(scope: { projectId?: string; organizationId?: string; aggregated?: boolean }) {
+    const where: any = {};
+
+    if (scope.projectId) {
+      where.projectId = scope.projectId;
+    } else if (scope.organizationId && scope.aggregated) {
+      where.organizationId = scope.organizationId;
+    } else if (scope.organizationId) {
+      where.organizationId = scope.organizationId;
+      where.scope = 'ORGANIZATION';
+    }
+
     return this.prisma.document.findMany({
-      where: { projectId },
+      where,
       orderBy: { createdAt: 'desc' },
     });
   }
@@ -79,9 +90,20 @@ export class DocumentsService {
   }
 
   async create(dto: any, userId: string) {
+    let organizationId = dto.organizationId;
+    if (!organizationId && dto.projectId) {
+      const project = await this.prisma.project.findUnique({
+        where: { id: dto.projectId },
+        select: { organizationId: true },
+      });
+      organizationId = project?.organizationId;
+    }
+
     return this.prisma.document.create({
       data: {
         projectId: dto.projectId,
+        organizationId,
+        scope: dto.scope || 'PROJECT',
         type: dto.type as any,
         title: dto.title,
         content: dto.content || {},
@@ -100,9 +122,20 @@ export class DocumentsService {
     title: string,
     userId: string,
   ) {
+    let organizationId: string | undefined;
+    if (projectId) {
+      const project = await this.prisma.project.findUnique({
+        where: { id: projectId },
+        select: { organizationId: true },
+      });
+      organizationId = project?.organizationId;
+    }
+
     return this.prisma.document.create({
       data: {
         projectId,
+        organizationId,
+        scope: 'PROJECT',
         type: type as any,
         title,
         content: {},

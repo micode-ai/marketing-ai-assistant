@@ -1,5 +1,5 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, BadRequestException } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { EmailSequencesService } from './email-sequences.service';
 
 @ApiTags('email-sequences')
@@ -9,8 +9,16 @@ export class EmailSequencesController {
   constructor(private emailSequencesService: EmailSequencesService) {}
 
   @Get()
-  findAll(@Query('projectId') projectId: string) {
-    return this.emailSequencesService.findAll(projectId);
+  @ApiOperation({ summary: 'Get email sequences (project-scoped, org-scoped, or aggregated)' })
+  findAll(
+    @Query('projectId') projectId?: string,
+    @Query('organizationId') organizationId?: string,
+    @Query('aggregated') aggregated?: string,
+  ) {
+    if (!projectId && !organizationId) {
+      throw new BadRequestException('Either projectId or organizationId is required');
+    }
+    return this.emailSequencesService.findAll({ projectId, organizationId, aggregated: aggregated === 'true' });
   }
 
   @Get(':id')

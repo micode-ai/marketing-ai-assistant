@@ -36,8 +36,15 @@ export class DocumentsController {
   constructor(private documentsService: DocumentsService) {}
 
   @Get()
-  findAll(@Query('projectId') projectId: string) {
-    return this.documentsService.findAll(projectId);
+  findAll(
+    @Query('projectId') projectId?: string,
+    @Query('organizationId') organizationId?: string,
+    @Query('aggregated') aggregated?: string,
+  ) {
+    if (!projectId && !organizationId) {
+      throw new BadRequestException('Either projectId or organizationId is required');
+    }
+    return this.documentsService.findAll({ projectId, organizationId, aggregated: aggregated === 'true' });
   }
 
   @Get('types')
