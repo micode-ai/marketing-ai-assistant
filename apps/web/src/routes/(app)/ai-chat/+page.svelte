@@ -4,6 +4,7 @@
   import { currentProjectStore } from '$lib/stores/projects';
   import { onMount, tick } from 'svelte';
   import { page } from '$app/stores';
+  import { browser } from '$app/environment';
   import { marked } from 'marked';
 
   marked.setOptions({
@@ -53,11 +54,16 @@
         $_('aiChat.examples.5'),
       ];
 
+  let isFromGettingStarted = false;
+
   onMount(async () => {
     await loadSessions();
     // Pre-fill from ?prompt= URL param (used by Getting Started "Do it now" links)
     const promptParam = $page.url.searchParams.get('prompt');
-    if (promptParam) input = promptParam;
+    if (promptParam) {
+      input = promptParam;
+      isFromGettingStarted = true;
+    }
   });
 
   async function loadSessions() {
@@ -147,6 +153,12 @@
       // Save assistant message
       if (currentSessionId) {
         api.post(`/chat/sessions/${currentSessionId}/messages`, { role: 'assistant', content: res.message }).catch(() => {});
+      }
+
+      // Mark Getting Started "AI Strategy" step as done
+      if (isFromGettingStarted && browser && $currentProjectStore?.id) {
+        localStorage.setItem(`gs_ai_strategy_${$currentProjectStore.id}`, 'true');
+        isFromGettingStarted = false;
       }
     } catch {
       messages = [...messages, { role: 'assistant', content: $_('aiChat.error'), time: new Date().toLocaleTimeString() }];

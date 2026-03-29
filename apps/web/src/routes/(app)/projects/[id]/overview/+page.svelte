@@ -102,7 +102,7 @@
       labelKey: 'projects.gs.aiStrategy',
       descKey: 'projects.gs.aiStrategyDesc',
       href: `/ai-chat?prompt=${encodeURIComponent('Give me a 30-day marketing plan for my product')}`,
-      done: (($currentProjectStore as any)?._count?.documents ?? 0) > 0,
+      done: browser && localStorage.getItem(`gs_ai_strategy_${projectId}`) === 'true',
       external: true,
     },
     {
