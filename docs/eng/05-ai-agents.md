@@ -41,7 +41,8 @@ graph LR
     SUP --> CA & CHA & DA & SEO & STRAT & EA & AA
     CA & CHA & DA & SEO & STRAT & EA & AA -->|"read/write"| DB
     CA & CHA & DA & SEO & STRAT & EA & AA -->|"LLM calls"| LLM
-    CHAT -->|"POST /chat"| LLM
+    CHAT -->|"POST /chat + tools"| LLM
+    CHAT -->|"run_agent tool"| AS
 ```
 
 ### Request Flow
@@ -231,13 +232,14 @@ stateDiagram-v2
 
 **File:** `apps/ai-agent/src/agents/chat-agent.ts`
 
-Interactive AI marketing assistant.
+Interactive AI marketing assistant with tool-calling capabilities.
 
 **Input:**
 ```json
 {
-  "message": "What marketing strategy would you recommend?",
+  "message": "Create a launch checklist for my product",
   "projectId": "clx...",
+  "userId": "clx...",
   "history": [
     { "role": "user", "content": "..." },
     { "role": "assistant", "content": "..." }
@@ -245,12 +247,39 @@ Interactive AI marketing assistant.
 }
 ```
 
+**LangGraph State Flow:**
+
+```mermaid
+stateDiagram-v2
+    [*] --> chatNode
+    chatNode --> shouldUseTool
+    shouldUseTool --> toolNode : tool_calls present
+    shouldUseTool --> [*] : no tool_calls
+    toolNode --> chatNode
+```
+
+**Tool: `run_agent`**
+
+The chat agent can dispatch any specialized agent directly from conversation:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| agentType | enum | CONTENT, CHECKLIST, DOCUMENT, STRATEGY, SEO, EMAIL, ANALYTICS |
+| topic | string? | Main topic or subject |
+| type | string? | Subtype (e.g. SOCIAL_POST, LAUNCH, GO_TO_MARKET) |
+| platform | string? | Target platform (LINKEDIN, TWITTER, etc.) |
+| description | string? | Detailed instructions |
+| language | string? | Output language (en, pl, ru) |
+
+The tool calls `POST /api/agent/run-internal` with `X-Agent-Secret` header and returns a confirmation with a direct link to the results page.
+
 **Behavior:**
 - Model: GPT-4o, temperature: 0.7
 - Loads project context if `projectId` provided
-- Covers: strategy, content creation, email marketing, SEO, social media, analytics
-- Supports EN/PL/RU multilingual responses
+- Tool-calling loop: OpenAI decides when to use the `run_agent` tool
+- Supports EN/PL/RU multilingual responses (both chat and agent output)
 - Maintains conversation history from client
+- Messages support Markdown rendering in the frontend
 
 ### Supervisor
 
@@ -281,6 +310,9 @@ LANGSMITH_API_KEY="your-langsmith-api-key"
 LANGSMITH_PROJECT="marketing-ai-assistant"
 LANGCHAIN_TRACING_V2="true"
 LANGCHAIN_ENDPOINT="https://api.smith.langchain.com"
+
+# Internal agent dispatch
+AGENT_SECRET="your-secret-key"    # Shared secret for internal agent dispatch from chat
 ```
 
 ### Dependencies
@@ -327,8 +359,9 @@ Interactive chat with AI assistant.
 **Request:**
 ```json
 {
-  "message": "How should I approach email marketing?",
+  "message": "Create a checklist for product launch",
   "projectId": "clx...",
+  "userId": "clx...",
   "history": []
 }
 ```

@@ -66,6 +66,13 @@ The AI creates a prioritized checklist with tasks relevant to your project and c
 - Priority assignments (Low, Medium, High, Critical)
 - Logical ordering of tasks
 
+### Switching Between Checklists
+
+When your project has multiple checklists, tabs appear at the top of the Checklists page:
+- Each tab shows the checklist name and completion percentage
+- Click a tab to view that checklist
+- Completed checklists show a green progress badge
+
 ## AI Document Generation
 
 ### How It Works
@@ -153,6 +160,34 @@ The AI Chat supports conversations in:
 - **Russian**
 
 Write in your preferred language, and the AI will respond in the same language.
+
+### Creating Things from Chat
+
+You can ask the AI Chat to create marketing assets directly:
+
+- **"Create a launch checklist"** — generates a checklist via the Checklist agent
+- **"Generate a LinkedIn post about our product"** — creates content via the Content agent
+- **"Write a go-to-market strategy"** — produces a strategy document
+- **"Run an SEO audit"** — performs SEO analysis
+- **"Create an email campaign"** — generates email marketing copy
+
+When you ask the AI to create something, it dispatches the appropriate agent and responds with a confirmation and a direct link to view the results.
+
+**Important:** You must have a project selected for the AI to create assets. If no project is selected, the AI will ask you to choose one first.
+
+### Rich Text Responses
+
+AI Chat responses are rendered with full Markdown formatting:
+- **Headers** for structured content
+- **Bold** and *italic* text for emphasis
+- Bulleted and numbered lists
+- `Code blocks` for technical content
+- [Links]() to relevant pages
+
+### Managing Messages
+
+- **Delete a message** — hover over any message and click the X button to remove it
+- Only you (the chat session creator) can delete messages
 
 ## AI Usage Tracking
 

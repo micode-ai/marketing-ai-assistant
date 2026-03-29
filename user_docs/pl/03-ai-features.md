@@ -64,6 +64,13 @@ Marketing AI Assistant wykorzystuje model OpenAI GPT-4o do tworzenia tresci mark
 - Przydzielone priorytety (Niski, Sredni, Wysoki, Krytyczny)
 - Logiczna kolejnosc zadan
 
+### Przelaczanie miedzy listami kontrolnymi
+
+Gdy projekt ma wiele list kontrolnych, na gorze strony List kontrolnych pojawiaja sie zakladki:
+- Kazda zakladka pokazuje nazwe listy kontrolnej i procent ukonczenia
+- Kliknij zakladke, aby wyswietlic dana liste kontrolna
+- Ukonczone listy kontrolne maja zielony znacznik postepu
+
 ## Generowanie dokumentow AI
 
 ### Jak to dziala
@@ -124,6 +131,34 @@ Czat AI obsluguje rozmowy w:
 - **Rosyjskim**
 
 Pisz w preferowanym jezyku, a AI odpowie w tym samym jezyku.
+
+### Tworzenie zasobow z czatu
+
+Mozesz poprosic czat AI o bezposrednie tworzenie zasobow marketingowych:
+
+- **„Stworz liste kontrolna premiery"** — generuje liste kontrolna za pomoca agenta Checklist
+- **„Wygeneruj post na LinkedIn o naszym produkcie"** — tworzy tresc za pomoca agenta Content
+- **„Napisz strategie wejscia na rynek"** — tworzy dokument strategii
+- **„Przeprowadz audyt SEO"** — wykonuje analize SEO
+- **„Stworz kampanie e-mail"** — generuje tresc e-mail marketingu
+
+Gdy poprosisz AI o utworzenie czegos, uruchamia odpowiedniego agenta i odpowiada potwierdzeniem oraz bezposrednim linkiem do wynikow.
+
+**Wazne:** Musisz miec wybrany projekt, aby AI moglo tworzyc zasoby. Jesli projekt nie jest wybrany, AI poprosi Cie o jego wybranie.
+
+### Odpowiedzi z formatowaniem
+
+Odpowiedzi czatu AI sa renderowane z pelnym formatowaniem Markdown:
+- **Naglowki** dla ustrukturyzowanej tresci
+- **Pogrubienie** i *kursywa* dla podkreslenia
+- Listy punktowane i numerowane
+- `Bloki kodu` dla tresci technicznych
+- [Linki]() do odpowiednich stron
+
+### Zarzadzanie wiadomosciami
+
+- **Usun wiadomosc** — najedz kursorem na wiadomosc i kliknij przycisk X, aby ja usunac
+- Tylko Ty (tworca sesji czatu) mozesz usuwac wiadomosci
 
 ## Generowanie strategii AI
 

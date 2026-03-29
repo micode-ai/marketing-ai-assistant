@@ -41,7 +41,8 @@ graph LR
     SUP --> CA & CHA & DA & SEO & STRAT & EA & AA
     CA & CHA & DA & SEO & STRAT & EA & AA -->|"чтение/запись"| DB
     CA & CHA & DA & SEO & STRAT & EA & AA -->|"LLM вызовы"| LLM
-    CHAT -->|"POST /chat"| LLM
+    CHAT -->|"POST /chat + tools"| LLM
+    CHAT -->|"run_agent tool"| AS
 ```
 
 ### Поток запроса
@@ -165,12 +166,54 @@ stateDiagram-v2
 
 **Файл:** `apps/ai-agent/src/agents/chat-agent.ts`
 
-Интерактивный ИИ маркетинговый ассистент.
+Интерактивный ИИ маркетинговый ассистент с возможностью вызова инструментов.
 
+**Входные параметры:**
+```json
+{
+  "message": "Создай чек-лист для запуска продукта",
+  "projectId": "clx...",
+  "userId": "clx...",
+  "history": [
+    { "role": "user", "content": "..." },
+    { "role": "assistant", "content": "..." }
+  ]
+}
+```
+
+**Граф состояний LangGraph:**
+
+```mermaid
+stateDiagram-v2
+    [*] --> chatNode
+    chatNode --> shouldUseTool
+    shouldUseTool --> toolNode : tool_calls present
+    shouldUseTool --> [*] : no tool_calls
+    toolNode --> chatNode
+```
+
+**Инструмент: `run_agent`**
+
+Чат-агент может запускать любого специализированного агента прямо из диалога:
+
+| Поле | Тип | Описание |
+|------|-----|----------|
+| agentType | enum | CONTENT, CHECKLIST, DOCUMENT, STRATEGY, SEO, EMAIL, ANALYTICS |
+| topic | string? | Основная тема |
+| type | string? | Подтип (например, SOCIAL_POST, LAUNCH, GO_TO_MARKET) |
+| platform | string? | Целевая платформа (LINKEDIN, TWITTER и др.) |
+| description | string? | Подробные инструкции |
+| language | string? | Язык результата (en, pl, ru) |
+
+Инструмент вызывает `POST /api/agent/run-internal` с заголовком `X-Agent-Secret` и возвращает подтверждение с прямой ссылкой на страницу результатов.
+
+**Поведение:**
 - Модель: GPT-4o, температура: 0.7
 - Загружает контекст проекта при наличии `projectId`
-- Поддерживает EN/PL/RU языки
-- Охватывает: стратегию, контент, email, SEO, соцсети, аналитику
+- Цикл вызова инструментов: OpenAI решает, когда использовать инструмент `run_agent`
+- Поддерживает EN/PL/RU мультиязычные ответы (как в чате, так и в результатах агента)
+- Поддерживает историю диалога от клиента
+- Сообщения поддерживают рендеринг Markdown на фронтенде
 
 ### Supervisor (Диспетчер)
 
@@ -195,6 +238,9 @@ AI_AGENT_PORT="3001"
 LANGSMITH_API_KEY="your-langsmith-api-key"
 LANGSMITH_PROJECT="marketing-ai-assistant"
 LANGCHAIN_TRACING_V2="true"
+
+# Внутренний запуск агентов
+AGENT_SECRET="your-secret-key"    # Общий секрет для запуска агентов из чата
 ```
 
 ### Зависимости
@@ -209,9 +255,37 @@ LANGCHAIN_TRACING_V2="true"
 
 ## Эндпоинты API (микросервис ИИ-агента)
 
-- `POST /run` — выполнить задачу агента
-- `POST /chat` — интерактивный чат
-- `GET /health` — проверка работоспособности
+### POST `/run`
+
+Выполнить задачу агента.
+
+**Запрос:**
+```json
+{
+  "runId": "clx...",
+  "projectId": "clx...",
+  "agentType": "CONTENT",
+  "input": { ... }
+}
+```
+
+### POST `/chat`
+
+Интерактивный чат с ИИ-ассистентом.
+
+**Запрос:**
+```json
+{
+  "message": "Создай чек-лист для запуска продукта",
+  "projectId": "clx...",
+  "userId": "clx...",
+  "history": []
+}
+```
+
+### GET `/health`
+
+Проверка работоспособности.
 
 ## Отслеживание стоимости
 
