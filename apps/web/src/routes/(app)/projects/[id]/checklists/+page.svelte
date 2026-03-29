@@ -28,10 +28,13 @@
   let loading = true;
   let activeChecklistId: string | null = null;
 
-  $: activeChecklist = checklists.find(c => c.id === activeChecklistId) || checklists[0] || null;
-  $: if (checklists.length > 0 && !checklists.find(c => c.id === activeChecklistId)) {
-    activeChecklistId = checklists[0]?.id || null;
+  // Auto-select first checklist when list changes or active one is removed
+  $: {
+    if (checklists.length > 0 && (!activeChecklistId || !checklists.find(c => c.id === activeChecklistId))) {
+      activeChecklistId = checklists[0].id;
+    }
   }
+  $: activeChecklist = checklists.find(c => c.id === activeChecklistId) || checklists[0] || null;
   let showAIModal = false;
   let creating = false;
   let expandedItems = new Set<string>();
