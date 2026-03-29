@@ -812,6 +812,114 @@ Stripe webhook. Handles: `customer.subscription.created/updated/deleted`.
 
 ---
 
+## Chat (`/chat`)
+
+### GET `/chat/sessions`
+
+List all chat sessions for the current user.
+
+**Query:** `projectId` (optional) — filter by project
+
+**Response:** Array of chat sessions with last message and message count.
+
+### POST `/chat/sessions`
+
+Create a new chat session.
+
+**Body:**
+```json
+{
+  "projectId": "clx...",
+  "title": "My Chat"
+}
+```
+
+### GET `/chat/sessions/:id/messages`
+
+Get messages for a chat session.
+
+**Query:** `limit` (optional, default: 50)
+
+### POST `/chat/sessions/:id/messages`
+
+Add a message to a chat session.
+
+**Body:**
+```json
+{
+  "role": "user",
+  "content": "Hello!"
+}
+```
+
+### DELETE `/chat/messages/:messageId`
+
+Delete a chat message. Only the session owner can delete messages.
+
+### PUT `/chat/sessions/:id`
+
+Update session title.
+
+### DELETE `/chat/sessions/:id`
+
+Delete an entire chat session.
+
+---
+
+## Agent (`/agent`)
+
+### POST `/agent/run`
+
+Run an AI agent task. Creates an AgentRun record and enqueues via Bull.
+
+**Body:**
+```json
+{
+  "projectId": "clx...",
+  "agentType": "CONTENT | CHECKLIST | DOCUMENT | STRATEGY | SEO | EMAIL | ANALYTICS",
+  "input": { ... }
+}
+```
+
+### POST `/agent/run-internal` (Public)
+
+Internal endpoint for AI chat tool to dispatch agents. Requires `X-Agent-Secret` header.
+
+**Headers:** `X-Agent-Secret: <AGENT_SECRET>`
+
+**Body:**
+```json
+{
+  "userId": "clx...",
+  "projectId": "clx...",
+  "agentType": "CHECKLIST",
+  "input": { "topic": "...", "language": "ru" }
+}
+```
+
+### POST `/agent/chat`
+
+Chat with AI assistant. Forwards to ai-agent microservice.
+
+**Body:**
+```json
+{
+  "projectId": "clx...",
+  "message": "Create a checklist",
+  "history": []
+}
+```
+
+### GET `/agent/runs?projectId=X`
+
+List agent runs for a project (last 50).
+
+### GET `/agent/runs/:id`
+
+Get a single agent run by ID.
+
+---
+
 ## Error Responses
 
 All errors follow NestJS format:
