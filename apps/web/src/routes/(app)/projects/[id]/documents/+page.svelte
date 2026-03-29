@@ -10,7 +10,16 @@
   marked.setOptions({ breaks: true, gfm: true });
 
   function renderMarkdown(text: string): string {
-    return marked.parse(text, { async: false }) as string;
+    // Strip ```markdown wrapper if AI agent wrapped the entire content
+    let cleaned = text.trim();
+    if (cleaned.startsWith('```markdown')) {
+      cleaned = cleaned.replace(/^```markdown\s*\n?/, '').replace(/\n?```\s*$/, '');
+    } else if (cleaned.startsWith('```md')) {
+      cleaned = cleaned.replace(/^```md\s*\n?/, '').replace(/\n?```\s*$/, '');
+    } else if (cleaned.startsWith('```') && cleaned.endsWith('```')) {
+      cleaned = cleaned.replace(/^```\s*\n?/, '').replace(/\n?```\s*$/, '');
+    }
+    return marked.parse(cleaned, { async: false }) as string;
   }
 
   let documents: any[] = [];
