@@ -714,7 +714,7 @@
       </div>
       <div class="flex-1 overflow-y-auto p-6">
         {#if viewingDocument.contentMd}
-          <div class="prose prose-sm prose-gray max-w-none prose-headings:mt-4 prose-headings:mb-2 prose-p:my-1.5 prose-ul:my-1.5 prose-ol:my-1.5 prose-li:my-0.5 prose-pre:my-2 prose-code:text-primary-700 prose-code:bg-primary-50 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-[''] prose-code:after:content-['']">
+          <div class="prose prose-sm max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-strong:text-gray-900 prose-ul:text-gray-700 prose-ol:text-gray-700 prose-li:text-gray-700 prose-headings:mt-4 prose-headings:mb-2 prose-p:my-1.5 prose-ul:my-1.5 prose-ol:my-1.5 prose-li:my-0.5 prose-pre:bg-gray-50 prose-pre:text-gray-800 prose-pre:border prose-pre:border-gray-200 prose-pre:my-2 prose-code:text-primary-700 prose-code:bg-primary-50 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-code:before:content-[''] prose-code:after:content-[''] prose-a:text-primary-600 prose-blockquote:text-gray-600 prose-blockquote:border-primary-300">
             {@html renderMarkdown(viewingDocument.contentMd)}
           </div>
         {:else if viewingDocument.fileUrl && viewingDocument.mimeType && isImageMime(viewingDocument.mimeType)}
