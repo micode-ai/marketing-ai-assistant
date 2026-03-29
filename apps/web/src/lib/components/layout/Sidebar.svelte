@@ -72,6 +72,20 @@
     { href: '/templates', iconKey: 'clipboard', labelKey: 'nav.templates' },
   ];
 
+  const orgMarketingLinks = [
+    { href: '/content',     iconKey: 'pencil',       labelKey: 'nav.orgContent' },
+    { href: '/checklists',  iconKey: 'checkcircle',  labelKey: 'nav.orgChecklists' },
+    { href: '/documents',   iconKey: 'document',     labelKey: 'nav.orgDocuments' },
+    { href: '/campaigns',   iconKey: 'megaphone',    labelKey: 'nav.orgCampaigns' },
+    { href: '/email',       iconKey: 'envelope',     labelKey: 'nav.orgEmail' },
+    { href: '/analytics',   iconKey: 'presentation', labelKey: 'nav.orgAnalytics' },
+    { href: '/seo',         iconKey: 'globe',         labelKey: 'nav.orgSeo' },
+    { href: '/competitors', iconKey: 'eye',           labelKey: 'nav.orgCompetitors' },
+    { href: '/experiments', iconKey: 'beaker',        labelKey: 'nav.orgExperiments' },
+    { href: '/sequences',   iconKey: 'mailstack',     labelKey: 'nav.orgSequences' },
+    { href: '/calendar',    iconKey: 'calendar',      labelKey: 'nav.orgCalendar' },
+  ];
+
   const settingsLinks = [
     { href: '/settings/organization', iconKey: 'building', labelKey: 'nav.settings' },
     { href: '/settings/billing', iconKey: 'creditcard', labelKey: 'nav.billing' },
@@ -212,6 +226,27 @@
         <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-widest px-3 mb-2">Navigation</p>
         <ul class="space-y-0.5">
           {#each mainLinks as link}
+            <li>
+              <a
+                href={link.href}
+                class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-150 cursor-pointer
+                  {isActive(link.href)
+                    ? 'bg-primary-50 text-primary-700 border-l-2 border-primary-600'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 border-l-2 border-transparent'}"
+              >
+                {@html icons[link.iconKey]}
+                <span>{$_(link.labelKey)}</span>
+              </a>
+            </li>
+          {/each}
+        </ul>
+      </div>
+
+      <!-- Org Marketing Sections -->
+      <div>
+        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-widest px-3 mb-2">{$_('nav.marketing')}</p>
+        <ul class="space-y-0.5">
+          {#each orgMarketingLinks as link}
             <li>
               <a
                 href={link.href}

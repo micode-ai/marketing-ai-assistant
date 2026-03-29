@@ -51,7 +51,19 @@
     "help": "Help",
     "webhooks": "Webhooks",
     "showAdvanced": "Advanced features",
-    "hideAdvanced": "Hide advanced"
+    "hideAdvanced": "Hide advanced",
+    "marketing": "Marketing",
+    "orgContent": "Content",
+    "orgChecklists": "Checklists",
+    "orgDocuments": "Documents",
+    "orgCampaigns": "Campaigns",
+    "orgEmail": "Email",
+    "orgAnalytics": "Analytics",
+    "orgSeo": "SEO",
+    "orgCompetitors": "Competitors",
+    "orgExperiments": "Experiments",
+    "orgSequences": "Sequences",
+    "orgCalendar": "Calendar"
   },
   "auth": {
     "login": "Sign In",
@@ -1100,5 +1112,28 @@
     "declined": "Invitation declined",
     "joinRequestPending": "Your request to join {organization} is awaiting approval",
     "awaitingApproval": "Awaiting approval"
+  },
+  "org": {
+    "tabOrganization": "Organization",
+    "tabAllProjects": "All Projects",
+    "tabCompare": "Compare",
+    "scopeOrg": "Organization",
+    "scopeProject": "Project"
+  },
+  "entityLinks": {
+    "promoteTitle": "Promote to Organization",
+    "demoteTitle": "Assign to Project",
+    "copy": "Copy",
+    "copyDescription": "Create an independent copy. Changes won't sync.",
+    "link": "Link",
+    "linkDescription": "Same entity visible in both places. Changes sync automatically.",
+    "selectProject": "Select project",
+    "choosePlaceholder": "Choose a project...",
+    "promote": "Promote",
+    "demote": "Assign",
+    "linkedTooltip": "Linked — visible in both org and project",
+    "copiedTooltip": "Copied from another scope",
+    "org": "Org",
+    "project": "Project"
   }
 }

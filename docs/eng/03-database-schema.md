@@ -48,6 +48,18 @@ erDiagram
     Competitor ||--o{ CompetitorSnapshot : "has"
 
     SocialAccount ||--o{ ContentPublication : "used for"
+
+    Organization ||--o{ Content : "org-level"
+    Organization ||--o{ Campaign : "org-level"
+    Organization ||--o{ Checklist : "org-level"
+    Organization ||--o{ Document : "org-level"
+    Organization ||--o{ EmailSequence : "org-level"
+    Organization ||--o{ Keyword : "org-level"
+    Organization ||--o{ ABTest : "org-level"
+    Organization ||--o{ EmailList : "org-level"
+    Organization ||--o{ Competitor : "org-level"
+    Organization ||--o{ FunnelStep : "org-level"
+    Organization ||--o{ EntityLink : "has"
 ```
 
 ## Core Models
@@ -113,10 +125,14 @@ Unique constraint: `(userId, organizationId)`
 
 ### Campaign
 
+> **Note:** `projectId` is now optional. Campaigns can exist at the organization level (with `organizationId` set and `projectId` null). The `scope` field indicates whether the entity is `PROJECT` or `ORGANIZATION` level.
+
 | Column | Type | Description |
 |--------|------|-------------|
 | id | String (CUID) | Primary key |
-| projectId | String | FK to Project |
+| projectId | String? | FK to Project (optional for org-level entities) |
+| organizationId | String? | FK to Organization (set for org-level entities) |
+| scope | EntityScope | PROJECT / ORGANIZATION (default: PROJECT) |
 | name | String | Campaign name |
 | type | CampaignType | EMAIL / SOCIAL / BLOG / MULTI_CHANNEL |
 | status | CampaignStatus | DRAFT / SCHEDULED / ACTIVE / PAUSED / COMPLETED |
@@ -127,10 +143,14 @@ Unique constraint: `(userId, organizationId)`
 
 ### Content
 
+> **Note:** `projectId` is now optional. Content can exist at the organization level (with `organizationId` set and `projectId` null). The `scope` field indicates whether the entity is `PROJECT` or `ORGANIZATION` level.
+
 | Column | Type | Description |
 |--------|------|-------------|
 | id | String (CUID) | Primary key |
-| projectId | String | FK to Project |
+| projectId | String? | FK to Project (optional for org-level entities) |
+| organizationId | String? | FK to Organization (set for org-level entities) |
+| scope | EntityScope | PROJECT / ORGANIZATION (default: PROJECT) |
 | campaignId | String? | FK to Campaign |
 | sourceContentId | String? | FK to Content (repurposed from) |
 | type | ContentType | SOCIAL_POST / BLOG_ARTICLE / EMAIL / NEWSLETTER / AD_COPY / LANDING_PAGE / SEO_ARTICLE / REFERRAL_COPY / IN_APP_MESSAGE |
@@ -413,6 +433,24 @@ Unique constraint: `(projectId, keyword)`
 
 Unique constraint: `(projectId, agentType)`
 
+## Entity Link Model
+
+### EntityLink
+
+Tracks relationships between marketing entities and their organization/project scope. Used when promoting project entities to organization level or assigning org-level entities to projects.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | String (CUID) | Primary key |
+| entityType | EntityModelType | Type of the linked entity (CONTENT, CAMPAIGN, CHECKLIST, etc.) |
+| entityId | String | ID of the linked entity |
+| linkType | EntityLinkType | ORG_LEVEL / PROJECT_ASSIGNMENT |
+| organizationId | String? | FK to Organization (set for org-level links) |
+| projectId | String? | FK to Project (set for project assignment links) |
+| createdAt | DateTime | Creation date |
+
+> **Organization-Level Marketing Entities:** The following 10 models now have optional `projectId`, plus `organizationId` and `scope` (EntityScope) fields, allowing them to exist at the organization level without being tied to a specific project: **Content**, **Campaign**, **Checklist**, **Document**, **EmailSequence**, **Keyword**, **ABTest**, **EmailList**, **Competitor**, **FunnelStep**.
+
 ## Enums Reference
 
 ```prisma
@@ -447,6 +485,10 @@ enum EnrollmentStatus      { ACTIVE, COMPLETED, PAUSED, UNSUBSCRIBED }
 enum KeywordIntent         { INFORMATIONAL, NAVIGATIONAL, COMMERCIAL, TRANSACTIONAL }
 enum SocialAccountStatus   { ACTIVE, INACTIVE, EXPIRED, ERROR }
 enum PublicationStatus     { PENDING, PUBLISHED, FAILED }
+enum EntityScope           { PROJECT, ORGANIZATION }
+enum EntityLinkType        { ORG_LEVEL, PROJECT_ASSIGNMENT }
+enum EntityModelType       { CONTENT, CAMPAIGN, CHECKLIST, DOCUMENT, EMAIL_SEQUENCE, KEYWORD,
+                             AB_TEST, EMAIL_LIST, COMPETITOR, FUNNEL_STEP }
 ```
 
 ## Database Commands

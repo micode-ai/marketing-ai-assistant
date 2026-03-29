@@ -374,6 +374,67 @@ export class AnalyticsService {
       .slice(0, 50);
   }
 
+  // ── Org-Level Analytics ────────────────────────────────────
+
+  async getOrgSummary(organizationId: string, period: string = '30d') {
+    const days = parseInt(period) || 30;
+    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+    const projects = await this.prisma.project.findMany({
+      where: { organizationId },
+      select: { id: true, name: true },
+    });
+    const projectIds = projects.map(p => p.id);
+
+    const [contentCount, emailEvents, pageViews, conversions] = await Promise.all([
+      this.prisma.content.count({ where: { organizationId, createdAt: { gte: since } } }),
+      this.prisma.analyticsEvent.count({ where: { projectId: { in: projectIds }, type: 'EMAIL_OPEN', timestamp: { gte: since } } }),
+      this.prisma.analyticsEvent.count({ where: { projectId: { in: projectIds }, type: 'PAGE_VIEW', timestamp: { gte: since } } }),
+      this.prisma.analyticsEvent.count({ where: { projectId: { in: projectIds }, type: 'CONVERSION', timestamp: { gte: since } } }),
+    ]);
+
+    const byProject = await Promise.all(
+      projects.map(async (p) => ({
+        projectId: p.id,
+        projectName: p.name,
+        content: await this.prisma.content.count({ where: { projectId: p.id, createdAt: { gte: since } } }),
+        emailsSent: await this.prisma.analyticsEvent.count({ where: { projectId: p.id, type: 'EMAIL_OPEN', timestamp: { gte: since } } }),
+        pageViews: await this.prisma.analyticsEvent.count({ where: { projectId: p.id, type: 'PAGE_VIEW', timestamp: { gte: since } } }),
+        conversions: await this.prisma.analyticsEvent.count({ where: { projectId: p.id, type: 'CONVERSION', timestamp: { gte: since } } }),
+      })),
+    );
+
+    return { totalContent: contentCount, totalEmailsSent: emailEvents, totalPageViews: pageViews, totalConversions: conversions, byProject };
+  }
+
+  async compareProjects(projectIds: string[], period: string = '30d') {
+    const days = parseInt(period) || 30;
+    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+    const projects = await this.prisma.project.findMany({
+      where: { id: { in: projectIds } },
+      select: { id: true, name: true },
+    });
+
+    const data = await Promise.all(
+      projects.map(async (p) => {
+        const [content, emails, views, convs] = await Promise.all([
+          this.prisma.content.count({ where: { projectId: p.id, createdAt: { gte: since } } }),
+          this.prisma.analyticsEvent.count({ where: { projectId: p.id, type: 'EMAIL_OPEN', timestamp: { gte: since } } }),
+          this.prisma.analyticsEvent.count({ where: { projectId: p.id, type: 'PAGE_VIEW', timestamp: { gte: since } } }),
+          this.prisma.analyticsEvent.count({ where: { projectId: p.id, type: 'CONVERSION', timestamp: { gte: since } } }),
+        ]);
+        return {
+          projectId: p.id,
+          projectName: p.name,
+          values: { content, emailsSent: emails, pageViews: views, conversions: convs },
+        };
+      }),
+    );
+
+    return { projectIds, metrics: ['content', 'emailsSent', 'pageViews', 'conversions'], period, data };
+  }
+
   // ── Funnel Steps CRUD ──────────────────────────────────────
 
   async getFunnelSteps(projectId: string) {

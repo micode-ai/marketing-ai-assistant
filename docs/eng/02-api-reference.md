@@ -179,6 +179,8 @@ Archive project (sets status to ARCHIVED).
 
 ## Campaigns (`/campaigns`)
 
+> **Org-level queries:** All list endpoints also accept optional `organizationId` and `aggregated=true` query parameters to retrieve campaigns across all projects in an organization.
+
 ### GET `/campaigns?projectId=<id>` (Protected)
 
 List campaigns for a project.
@@ -194,6 +196,8 @@ Update or delete campaign.
 ---
 
 ## Content (`/content`)
+
+> **Org-level queries:** All list endpoints also accept optional `organizationId` and `aggregated=true` query parameters to retrieve content across all projects in an organization.
 
 ### GET `/content?projectId=<id>&type=<type>&status=<status>&platform=<platform>&from=<date>&to=<date>` (Protected)
 
@@ -274,6 +278,8 @@ Score (0-100) is calculated from views, conversions, and social engagements.
 
 ## Email (`/email`)
 
+> **Org-level queries:** List endpoints also accept optional `organizationId` and `aggregated=true` query parameters for org-level queries.
+
 ### GET `/email/accounts?organizationId=<id>` (Protected)
 
 List email accounts for organization.
@@ -305,6 +311,8 @@ List or send email campaigns. Placeholders replaced at send time: `{{unsubscribe
 ---
 
 ## Email Sequences (`/email-sequences`)
+
+> **Org-level queries:** List endpoints also accept optional `organizationId` and `aggregated=true` query parameters to retrieve sequences across all projects in an organization.
 
 ### GET `/email-sequences?projectId=<id>` (Protected)
 
@@ -371,6 +379,8 @@ List enrollments for a sequence.
 ---
 
 ## Analytics (`/analytics`)
+
+> **Org-level queries:** All list endpoints also accept optional `organizationId` and `aggregated=true` query parameters for org-level queries.
 
 ### GET `/analytics/metrics?projectId=<id>&days=<n>` (Protected)
 
@@ -457,6 +467,8 @@ Manually trigger metrics aggregation for a project.
 
 ## SEO (`/seo`)
 
+> **Org-level queries:** List endpoints also accept optional `organizationId` and `aggregated=true` query parameters for org-level queries.
+
 ### GET `/seo/keywords?projectId=<id>` (Protected)
 
 List all tracked keywords for a project.
@@ -501,6 +513,8 @@ Record a rank position snapshot.
 ---
 
 ## A/B Testing (`/ab-testing`)
+
+> **Org-level queries:** List endpoints also accept optional `organizationId` and `aggregated=true` query parameters for org-level queries.
 
 ### GET `/ab-testing?projectId=<id>` (Protected)
 
@@ -729,6 +743,132 @@ LinkedIn OAuth 2.0 flow.
 ### GET `/social/auth/facebook` (Public) / GET `/social/auth/facebook/callback` (Public)
 
 Facebook OAuth 2.0 flow.
+
+---
+
+## Entity Links (`/entity-links`)
+
+Manage links between marketing entities and organization/project scopes. Used for promoting project-level entities to organization level and vice versa.
+
+### POST `/entity-links/promote` (Protected, OWNER/ADMIN)
+
+Promote a project entity to organization level (makes it visible across all projects).
+
+**Request Body:**
+```json
+{
+  "entityType": "CONTENT",
+  "entityId": "clx...",
+  "organizationId": "clx..."
+}
+```
+
+Entity types: `CONTENT`, `CAMPAIGN`, `CHECKLIST`, `DOCUMENT`, `EMAIL_SEQUENCE`, `KEYWORD`, `AB_TEST`, `EMAIL_LIST`, `COMPETITOR`, `FUNNEL_STEP`
+
+### POST `/entity-links/demote` (Protected, OWNER/ADMIN)
+
+Assign an organization-level entity to a specific project.
+
+**Request Body:**
+```json
+{
+  "entityType": "CONTENT",
+  "entityId": "clx...",
+  "projectId": "clx..."
+}
+```
+
+### GET `/entity-links?entityType=<type>&entityId=<id>` (Protected)
+
+Get all links for a specific entity.
+
+**Response (200):**
+```json
+[
+  {
+    "id": "clx...",
+    "entityType": "CONTENT",
+    "entityId": "clx...",
+    "linkType": "ORG_LEVEL",
+    "organizationId": "clx...",
+    "projectId": null,
+    "createdAt": "2026-03-30T00:00:00Z"
+  }
+]
+```
+
+### DELETE `/entity-links/:id` (Protected)
+
+Remove an entity link.
+
+---
+
+## Organization Analytics (`/analytics/organization`)
+
+Aggregated analytics across all projects in an organization.
+
+### GET `/analytics/organization?organizationId=<id>&period=<period>` (Protected)
+
+Get organization-wide analytics summary aggregated across all projects.
+
+**Query Parameters:**
+- `organizationId` (required) — Organization ID
+- `period` (optional, default: `30d`) — Time period (e.g. `7d`, `30d`, `90d`)
+
+**Response (200):**
+```json
+{
+  "totalProjects": 5,
+  "totalContent": 142,
+  "totalCampaigns": 12,
+  "metrics": {
+    "visitors": 15200,
+    "conversions": 487,
+    "emailOpens": 3200,
+    "socialEngagements": 890
+  },
+  "trend": {
+    "visitors": "up",
+    "conversions": "up"
+  },
+  "period": "30d"
+}
+```
+
+### GET `/analytics/organization/compare?projectIds=<A,B,C>&period=<period>` (Protected)
+
+Compare analytics metrics across multiple projects side by side.
+
+**Query Parameters:**
+- `projectIds` (required) — Comma-separated list of project IDs
+- `period` (optional, default: `30d`) — Time period
+
+**Response (200):**
+```json
+{
+  "projects": [
+    {
+      "projectId": "clx...",
+      "projectName": "Project A",
+      "metrics": {
+        "visitors": 5200,
+        "conversions": 180,
+        "emailOpens": 1100
+      }
+    },
+    {
+      "projectId": "clx...",
+      "projectName": "Project B",
+      "metrics": {
+        "visitors": 3800,
+        "conversions": 142,
+        "emailOpens": 900
+      }
+    }
+  ],
+  "period": "30d"
+}
+```
 
 ---
 

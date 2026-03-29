@@ -55,6 +55,19 @@ export class AnalyticsController {
     return this.analyticsService.getSummary({ projectId, organizationId, aggregated: aggregated === 'true' });
   }
 
+  @Get('organization')
+  @ApiOperation({ summary: 'Get organization analytics summary' })
+  getOrgSummary(@Query('organizationId') organizationId: string, @Query('period') period?: string) {
+    return this.analyticsService.getOrgSummary(organizationId, period);
+  }
+
+  @Get('organization/compare')
+  @ApiOperation({ summary: 'Compare projects side by side' })
+  compareProjects(@Query('projectIds') projectIds: string, @Query('period') period?: string) {
+    const ids = projectIds.split(',').filter(Boolean);
+    return this.analyticsService.compareProjects(ids, period);
+  }
+
   @Post('events')
   trackEvent(@Body() dto: any) {
     return this.analyticsService.trackEvent(dto);
