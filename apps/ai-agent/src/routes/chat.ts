@@ -5,10 +5,11 @@ export const chatRouter = Router();
 
 chatRouter.post('/', async (req: Request, res: Response) => {
   try {
-    const { message, projectId, history = [] } = req.body as {
+    const { message, projectId, history = [], userId } = req.body as {
       message: string;
       projectId?: string;
       history?: Array<{ role: string; content: string }>;
+      userId?: string;
     };
 
     if (!message) {
@@ -16,7 +17,7 @@ chatRouter.post('/', async (req: Request, res: Response) => {
       return;
     }
 
-    const response = await chatWithAssistant({ message, projectId, history });
+    const response = await chatWithAssistant({ message, projectId, history, userId });
     res.json(response);
   } catch (error) {
     console.error('Chat error:', error);

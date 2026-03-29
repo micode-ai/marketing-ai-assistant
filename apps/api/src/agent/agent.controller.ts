@@ -1,13 +1,18 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, Headers, UnauthorizedException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { ConfigService } from '@nestjs/config';
 import { AgentService } from './agent.service';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { Public } from '../common/decorators/public.decorator';
 
 @ApiTags('agent')
 @ApiBearerAuth()
 @Controller('agent')
 export class AgentController {
-  constructor(private agentService: AgentService) {}
+  constructor(
+    private agentService: AgentService,
+    private configService: ConfigService,
+  ) {}
 
   @Post('run')
   @ApiOperation({ summary: 'Run AI agent task' })
@@ -29,8 +34,8 @@ export class AgentController {
 
   @Post('chat')
   @ApiOperation({ summary: 'Chat with AI assistant' })
-  chat(@Body() dto: { projectId?: string; message: string; history?: any[] }) {
-    return this.agentService.chat(dto);
+  chat(@Body() dto: { projectId?: string; message: string; history?: any[] }, @CurrentUser() user: any) {
+    return this.agentService.chat(dto, user.id);
   }
 
   @Get('schedules')
@@ -55,5 +60,18 @@ export class AgentController {
   @ApiOperation({ summary: 'Delete agent schedule' })
   deleteSchedule(@Param('id') id: string) {
     return this.agentService.deleteSchedule(id);
+  }
+
+  @Public()
+  @Post('run-internal')
+  @ApiOperation({ summary: 'Internal: run agent from AI chat (secret-based auth)' })
+  async runInternal(
+    @Headers('x-agent-secret') secret: string,
+    @Body() dto: { userId: string; projectId: string; agentType: string; input: Record<string, unknown> },
+  ) {
+    if (secret !== this.configService.get('AGENT_SECRET')) {
+      throw new UnauthorizedException('Invalid agent secret');
+    }
+    return this.agentService.runAgent(dto);
   }
 }

@@ -1,3 +1,196 @@
+# AI Chat Tool Use Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** Enable AI chat to dispatch specialized agents (CONTENT, CHECKLIST, DOCUMENT, STRATEGY, SEO, EMAIL, ANALYTICS) via existing Bull queue, so users can create entities directly from conversation.
+
+**Architecture:** Chat agent is rewritten from a simple `model.invoke()` to a LangGraph graph with a tool-calling loop. A single `run_agent` tool calls a new `POST /agent/run-internal` endpoint on the NestJS API (secret-based auth, no JWT). The API enqueues the agent run via Bull as it already does for UI-triggered runs.
+
+**Tech Stack:** LangGraph, `@langchain/openai` (bindTools), `@langchain/core` (ToolMessage, tool), NestJS, Bull queue, zod
+
+**Spec:** `docs/superpowers/specs/2026-03-29-chat-tool-use-design.md`
+
+**GitHub Issue:** #24
+
+---
+
+## File Map
+
+| File | Action | Responsibility |
+|------|--------|---------------|
+| `apps/api/src/agent/agent.controller.ts` | Modify | Add `POST /agent/run-internal` endpoint, pass userId to `chat()` |
+| `apps/api/src/agent/agent.service.ts` | Modify | Accept and forward `userId` in `chat()` method |
+| `apps/ai-agent/src/agents/chat-agent.ts` | Rewrite | LangGraph graph with tool-calling loop + `run_agent` tool |
+| `apps/ai-agent/src/routes/chat.ts` | Modify | Pass `userId` to `chatWithAssistant()` |
+| `.env` | Modify | Add `AGENT_SECRET` |
+
+---
+
+### Task 1: Add `AGENT_SECRET` env variable
+
+**Files:**
+- Modify: `.env`
+- Modify: `.env.example` (if exists)
+
+- [ ] **Step 1: Add AGENT_SECRET to .env**
+
+Add to the root `.env` file:
+```
+AGENT_SECRET=chat-agent-internal-secret-key
+```
+
+- [ ] **Step 2: Commit**
+
+```bash
+git add .env.example
+git commit -m "MAS-25 Add AGENT_SECRET env variable for internal agent dispatch"
+```
+
+> Note: Do NOT commit `.env` itself. Only commit `.env.example` if it exists.
+
+---
+
+### Task 2: API — Add `run-internal` endpoint and pass userId to chat
+
+**Files:**
+- Modify: `apps/api/src/agent/agent.controller.ts`
+- Modify: `apps/api/src/agent/agent.service.ts`
+
+- [ ] **Step 1: Modify `agent.service.ts` — pass userId in chat()**
+
+In `apps/api/src/agent/agent.service.ts`, update the `chat()` method to accept and forward `userId`:
+
+```typescript
+async chat(dto: { projectId?: string; message: string; history?: any[] }, userId?: string) {
+  const agentUrl = process.env.AI_AGENT_URL || 'http://localhost:3001';
+  try {
+    const response = await fetch(`${agentUrl}/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...dto, userId }),
+    });
+    return response.json();
+  } catch {
+    return { message: 'AI agent service is unavailable. Please try again later.' };
+  }
+}
+```
+
+- [ ] **Step 2: Modify `agent.controller.ts` — pass userId to chat, add run-internal**
+
+In `apps/api/src/agent/agent.controller.ts`:
+
+Add imports:
+```typescript
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, Headers, UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { Public } from '../common/decorators/public.decorator';
+```
+
+Add `ConfigService` to constructor:
+```typescript
+constructor(
+  private agentService: AgentService,
+  private configService: ConfigService,
+) {}
+```
+
+Update `chat()` method to pass userId:
+```typescript
+@Post('chat')
+@ApiOperation({ summary: 'Chat with AI assistant' })
+chat(@Body() dto: { projectId?: string; message: string; history?: any[] }, @CurrentUser() user: any) {
+  return this.agentService.chat(dto, user.id);
+}
+```
+
+Add new endpoint before the closing brace:
+```typescript
+@Public()
+@Post('run-internal')
+@ApiOperation({ summary: 'Internal: run agent from AI chat (secret-based auth)' })
+async runInternal(
+  @Headers('x-agent-secret') secret: string,
+  @Body() dto: { userId: string; projectId: string; agentType: string; input: Record<string, unknown> },
+) {
+  if (secret !== this.configService.get('AGENT_SECRET')) {
+    throw new UnauthorizedException('Invalid agent secret');
+  }
+  return this.agentService.runAgent(dto);
+}
+```
+
+- [ ] **Step 3: Verify API compiles**
+
+Run: `cd apps/api && npx tsc --noEmit`
+Expected: No errors
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add apps/api/src/agent/agent.controller.ts apps/api/src/agent/agent.service.ts
+git commit -m "MAS-25 Add run-internal endpoint and pass userId to chat"
+```
+
+---
+
+### Task 3: AI Agent route — pass userId
+
+**Files:**
+- Modify: `apps/ai-agent/src/routes/chat.ts`
+
+- [ ] **Step 1: Update chat route to extract and pass userId**
+
+In `apps/ai-agent/src/routes/chat.ts`:
+
+```typescript
+chatRouter.post('/', async (req: Request, res: Response) => {
+  try {
+    const { message, projectId, history = [], userId } = req.body as {
+      message: string;
+      projectId?: string;
+      history?: Array<{ role: string; content: string }>;
+      userId?: string;
+    };
+
+    if (!message) {
+      res.status(400).json({ error: 'message is required' });
+      return;
+    }
+
+    const response = await chatWithAssistant({ message, projectId, history, userId });
+    res.json(response);
+  } catch (error) {
+    console.error('Chat error:', error);
+    res.status(500).json({ error: 'Failed to process chat message', details: String(error) });
+  }
+});
+```
+
+- [ ] **Step 2: Commit**
+
+```bash
+git add apps/ai-agent/src/routes/chat.ts
+git commit -m "MAS-25 Pass userId through chat route to agent"
+```
+
+---
+
+### Task 4: Rewrite chat-agent with LangGraph + tool calling
+
+**Files:**
+- Rewrite: `apps/ai-agent/src/agents/chat-agent.ts`
+
+This is the main task. The chat agent becomes a LangGraph graph with:
+- A `run_agent` tool bound to the model
+- A tool-calling loop (chatNode → toolNode → chatNode)
+- Link generation based on agent type
+
+- [ ] **Step 1: Rewrite chat-agent.ts**
+
+Replace the entire content of `apps/ai-agent/src/agents/chat-agent.ts` with:
+
+```typescript
 import { StateGraph, Annotation, END, START } from '@langchain/langgraph';
 import { ChatOpenAI } from '@langchain/openai';
 import {
@@ -44,11 +237,11 @@ const runAgentTool = tool(
       return 'Error: No project selected. Please ask the user to select a project first before running agents.';
     }
 
-    const apiUrl = process.env['API_URL'] || 'http://localhost:3000';
+    const apiUrl = process.env['API_URL'] || 'http://localhost:3000/api';
     const secret = process.env['AGENT_SECRET'];
 
     try {
-      const response = await fetch(`${apiUrl}/api/agent/run-internal`, {
+      const response = await fetch(`${apiUrl}/agent/run-internal`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -63,7 +256,6 @@ const runAgentTool = tool(
             type: input.type,
             platform: input.platform,
             description: input.description,
-            language: input.language,
           },
         }),
       });
@@ -73,11 +265,10 @@ const runAgentTool = tool(
         return `Error dispatching agent: ${err}`;
       }
 
-      const run = (await response.json()) as { id: string };
+      const run = await response.json();
       const section = AGENT_TYPE_LINKS[input.agentType] || 'overview';
-      const webUrl = process.env['WEB_URL'] || 'http://localhost:5173';
 
-      return `Agent run created successfully (ID: ${run.id}). The ${input.agentType} agent is now working. Direct link to results: ${webUrl}/projects/${projectId}/${section}`;
+      return `Agent run created successfully (ID: ${run.id}). The ${input.agentType} agent is now working. Results will appear at: /projects/${projectId}/${section}`;
     } catch (e) {
       return `Error calling API: ${String(e)}`;
     }
@@ -105,10 +296,6 @@ const runAgentTool = tool(
         .string()
         .optional()
         .describe('Detailed description or instructions for what to create'),
-      language: z
-        .string()
-        .optional()
-        .describe('Language for the output (e.g. "ru", "pl", "en"). Detect from user message language.'),
     }),
   },
 );
@@ -140,11 +327,9 @@ async function chatNode(
   state: typeof ChatState.State,
   config?: { configurable?: Record<string, unknown> },
 ) {
-  console.log('[chat-agent] chatNode: invoking model with', state.messages.length, 'messages');
   const model = getModel().bindTools([runAgentTool]);
   const response = await model.invoke(state.messages, config);
   const { inputTokens, outputTokens, cost } = extractUsage(response, MODEL);
-  console.log('[chat-agent] chatNode: got response, tool_calls:', (response as any).tool_calls?.length || 0);
 
   return {
     messages: [response],
@@ -161,12 +346,9 @@ async function toolNode(
   const lastMessage = state.messages[state.messages.length - 1] as AIMessage;
   const toolCalls = lastMessage.tool_calls || [];
   const results: ToolMessage[] = [];
-  console.log('[chat-agent] toolNode: executing', toolCalls.length, 'tool calls');
 
   for (const tc of toolCalls) {
-    console.log('[chat-agent] toolNode: calling', tc.name, 'with args:', JSON.stringify(tc.args));
-    const result = await runAgentTool.invoke(tc.args as typeof runAgentTool.schema._type, config);
-    console.log('[chat-agent] toolNode: result:', result);
+    const result = await runAgentTool.invoke(tc.args, config);
     results.push(
       new ToolMessage({
         content: typeof result === 'string' ? result : JSON.stringify(result),
@@ -214,7 +396,6 @@ export async function chatWithAssistant({
   history = [],
   userId,
 }: ChatInput) {
-  console.log('[chat-agent] chatWithAssistant called:', { projectId, userId, messageLength: message.length, historyLength: history.length });
   let projectContext = '';
 
   if (projectId) {
@@ -262,9 +443,7 @@ You have a tool called "run_agent" that can create things in the application:
 When the user asks you to CREATE, GENERATE, or BUILD any of these — use the run_agent tool.
 When the user asks questions, wants advice, or just chats — respond normally with text, do NOT use the tool.
 
-IMPORTANT: When calling run_agent, always set the "language" field to match the language the user is writing in (e.g. "ru" for Russian, "pl" for Polish, "en" for English).
-
-When you successfully dispatch an agent, tell the user what you started. Use ONLY the exact link URL returned by the tool result — do NOT invent or modify URLs. Format the link as markdown: [text](url).
+When you successfully dispatch an agent, tell the user what you started and include the link path from the tool result so they can check the results.
 
 Always provide actionable, specific advice. When generating content, make it ready to use.
 Respond in the same language the user writes in (English, Polish, or Russian).`;
@@ -302,3 +481,81 @@ Respond in the same language the user writes in (English, Polish, or Russian).`;
     cost: result.totalCost,
   };
 }
+```
+
+- [ ] **Step 2: Verify ai-agent compiles**
+
+Run: `cd apps/ai-agent && npx tsx --eval "import './src/agents/chat-agent'; console.log('OK')"`
+Expected: "OK" (or at least no TypeScript errors)
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add apps/ai-agent/src/agents/chat-agent.ts
+git commit -m "MAS-25 Rewrite chat agent with LangGraph tool-calling loop"
+```
+
+---
+
+### Task 5: Manual integration test
+
+- [ ] **Step 1: Add AGENT_SECRET to .env**
+
+Ensure root `.env` has:
+```
+AGENT_SECRET=chat-agent-internal-secret-key
+```
+
+- [ ] **Step 2: Start services**
+
+```bash
+docker compose up -d
+pnpm dev
+```
+
+- [ ] **Step 3: Test normal chat (no tool use)**
+
+Open http://localhost:5173, select a project, open AI Chat.
+Send: "What are the best marketing channels for SaaS?"
+Expected: Normal text response, no agent dispatched.
+
+- [ ] **Step 4: Test tool use — create checklist**
+
+Send: "Create a launch checklist for this product"
+Expected: AI responds with something like "I've started creating a launch checklist! Results will appear at [Checklists](/projects/{id}/checklists)."
+Verify: Check AgentRun table has a new PENDING/RUNNING/COMPLETED record with agentType=CHECKLIST.
+
+- [ ] **Step 5: Test tool use — create content**
+
+Send: "Generate a LinkedIn post about our product launch"
+Expected: AI dispatches CONTENT agent, returns confirmation with link.
+
+- [ ] **Step 6: Test without project selected**
+
+Deselect project, send: "Create a blog article about AI marketing"
+Expected: AI responds asking to select a project first.
+
+- [ ] **Step 7: Commit any fixes**
+
+```bash
+git add -A
+git commit -m "MAS-25 Integration fixes for chat tool use"
+```
+
+---
+
+### Task 6: Push and deploy
+
+- [ ] **Step 1: Push to remote**
+
+```bash
+git push
+```
+
+- [ ] **Step 2: Add AGENT_SECRET to production environment**
+
+SSH to production and add `AGENT_SECRET` to the production `.env` file. Must match between API and ai-agent containers.
+
+- [ ] **Step 3: Verify deploy**
+
+After CI deploys, test on https://emarketingai.pl — select a project, ask chat to create a checklist.

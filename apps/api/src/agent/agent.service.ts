@@ -21,7 +21,9 @@ export class AgentService {
       },
     });
 
-    await this.agentQueue.add('run', { runId: run.id, projectId: dto.projectId, agentType: dto.agentType, input });
+    this.agentQueue.add('run', { runId: run.id, projectId: dto.projectId, agentType: dto.agentType, input }).catch(err => {
+      console.error('[AgentService] Failed to enqueue agent run:', err);
+    });
     return run;
   }
 
@@ -78,7 +80,7 @@ export class AgentService {
     return this.prisma.agentSchedule.delete({ where: { id } });
   }
 
-  async chat(dto: { projectId?: string; message: string; history?: any[] }) {
+  async chat(dto: { projectId?: string; message: string; history?: any[] }, userId?: string) {
     // Will be replaced by actual LangChain integration in ai-agent service
     // For now, forward to ai-agent microservice via HTTP
     const agentUrl = process.env.AI_AGENT_URL || 'http://localhost:3001';
@@ -86,7 +88,7 @@ export class AgentService {
       const response = await fetch(`${agentUrl}/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(dto),
+        body: JSON.stringify({ ...dto, userId }),
       });
       return response.json();
     } catch {
