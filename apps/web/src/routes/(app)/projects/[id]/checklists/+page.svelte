@@ -707,9 +707,26 @@
       </div>
     </div>
   {:else}
-    <!-- Checklist tabs -->
+    <!-- Checklist switcher -->
     {#if checklists.length > 1}
-      <div class="flex gap-1 mb-4 overflow-x-auto pb-1 border-b border-gray-200">
+      <!-- Mobile: dropdown -->
+      <div class="sm:hidden mb-4">
+        <select
+          value={activeChecklistId}
+          on:change={(e) => activeChecklistId = e.currentTarget.value}
+          class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+        >
+          {#each checklists as cl}
+            {@const clItems = cl.items || []}
+            {@const clCompleted = clItems.filter((i: any) => i.isCompleted).length}
+            {@const clTotal = clItems.length}
+            {@const clProgress = clTotal > 0 ? Math.round((clCompleted / clTotal) * 100) : 0}
+            <option value={cl.id}>{cl.name} ({clProgress}%)</option>
+          {/each}
+        </select>
+      </div>
+      <!-- Desktop: tabs -->
+      <div class="hidden sm:flex gap-1 mb-4 overflow-x-auto pb-1 border-b border-gray-200">
         {#each checklists as cl}
           {@const clItems = cl.items || []}
           {@const clCompleted = clItems.filter((i: any) => i.isCompleted).length}
@@ -739,29 +756,32 @@
         {@const total = items.length}
         {@const progress = total > 0 ? Math.round((completed / total) * 100) : 0}
         {@const sections = groupBySection(items)}
-        <div class="bg-white rounded-xl border border-gray-200 p-6">
-          <div class="flex items-start justify-between mb-3">
+        <div class="bg-white rounded-xl border border-gray-200 p-4 sm:p-6">
+          <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-3">
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2">
-                <h3 class="font-semibold text-gray-900 text-lg">{checklist.name}</h3>
-                <button on:click={() => openEditChecklist(checklist)} class="p-1 rounded text-gray-400 hover:text-primary-600 hover:bg-primary-50 transition" title={$_('checklists.editChecklist')}>
+                <h3 class="font-semibold text-gray-900 text-lg truncate">{checklist.name}</h3>
+                <button on:click={() => openEditChecklist(checklist)} class="p-1 rounded text-gray-400 hover:text-primary-600 hover:bg-primary-50 transition flex-shrink-0" title={$_('checklists.editChecklist')}>
                   <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Z" /></svg>
                 </button>
               </div>
               {#if checklist.description}<p class="text-sm text-gray-500 mt-0.5">{checklist.description}</p>{/if}
             </div>
-            <div class="flex items-start gap-3 flex-shrink-0 ml-4">
-              <div class="text-right">
-                <div class="text-xl font-bold text-primary-600">{progress}%</div>
-                <div class="text-xs text-gray-400">{completed}/{total} done</div>
+            <div class="flex items-center sm:items-start gap-3 flex-shrink-0">
+              <div class="sm:text-right">
+                <span class="text-xl font-bold text-primary-600">{progress}%</span>
+                <span class="text-xs text-gray-400 ml-1 sm:ml-0 sm:block">{completed}/{total} done</span>
               </div>
               {#if deletingId === checklist.id}
                 <div class="flex items-center gap-1">
-                  <button on:click={() => deleteChecklist(checklist.id)} class="p-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition" title={$_('common.delete')}>
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                  <button on:click={() => deleteChecklist(checklist.id)} class="px-3 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition text-xs font-medium" title={$_('common.delete')}>
+                    <svg class="w-4 h-4 sm:hidden inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                    <span class="hidden sm:inline">{$_('common.delete')}</span>
+                    <span class="sm:hidden">{$_('common.delete')}</span>
                   </button>
-                  <button on:click={() => deletingId = null} class="p-1.5 rounded-lg bg-gray-50 text-gray-500 hover:bg-gray-100 transition">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                  <button on:click={() => deletingId = null} class="px-3 py-1.5 rounded-lg bg-gray-50 text-gray-500 hover:bg-gray-100 transition text-xs font-medium">
+                    <svg class="w-4 h-4 sm:hidden inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                    <span>{$_('common.cancel')}</span>
                   </button>
                 </div>
               {:else}
