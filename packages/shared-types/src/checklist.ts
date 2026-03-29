@@ -1,8 +1,10 @@
-import { ChecklistItemPriority, ChecklistType } from './enums';
+import { ChecklistItemPriority, ChecklistType, EntityScope } from './enums';
 
 export interface Checklist {
   id: string;
-  projectId: string;
+  projectId?: string;
+  scope: EntityScope;
+  organizationId?: string;
   name: string;
   type: ChecklistType;
   description?: string;
@@ -31,7 +33,9 @@ export interface ChecklistItem {
 }
 
 export interface CreateChecklistDto {
-  projectId: string;
+  projectId?: string;
+  scope?: EntityScope;
+  organizationId?: string;
   name: string;
   type: ChecklistType;
   description?: string;

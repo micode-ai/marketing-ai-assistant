@@ -1,6 +1,10 @@
+import { EntityScope } from './enums';
+
 export interface Document {
   id: string;
-  projectId: string;
+  projectId?: string;
+  scope: EntityScope;
+  organizationId?: string;
   type: string;
   title: string;
   content: Record<string, unknown> | string;
@@ -16,7 +20,9 @@ export interface Document {
 }
 
 export interface CreateDocumentDto {
-  projectId: string;
+  projectId?: string;
+  scope?: EntityScope;
+  organizationId?: string;
   type: string;
   title: string;
   content?: Record<string, unknown> | string;

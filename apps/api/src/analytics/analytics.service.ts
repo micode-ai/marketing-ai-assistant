@@ -8,20 +8,47 @@ export class AnalyticsService {
 
   constructor(private prisma: PrismaService) {}
 
-  async getMetrics(projectId: string, days: number | string = 30) {
+  async getMetrics(
+    scope: { projectId?: string; organizationId?: string; aggregated?: boolean },
+    days: number | string = 30,
+  ) {
     days = Number(days) || 30;
     const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+    const where: any = { date: { gte: since } };
+    if (scope.projectId) {
+      where.projectId = scope.projectId;
+    } else if (scope.organizationId) {
+      // DailyMetrics is project-scoped; find all projects in org
+      const projects = await this.prisma.project.findMany({
+        where: { organizationId: scope.organizationId },
+        select: { id: true },
+      });
+      where.projectId = { in: projects.map(p => p.id) };
+    }
+
     const metrics = await this.prisma.dailyMetrics.findMany({
-      where: { projectId, date: { gte: since } },
+      where,
       orderBy: { date: 'asc' },
     });
     return metrics;
   }
 
   async trackEvent(dto: any) {
+    let organizationId = dto.organizationId;
+    if (!organizationId && dto.projectId) {
+      const project = await this.prisma.project.findUnique({
+        where: { id: dto.projectId },
+        select: { organizationId: true },
+      });
+      organizationId = project?.organizationId;
+    }
+
     return this.prisma.analyticsEvent.create({
       data: {
         projectId: dto.projectId,
+        organizationId,
+        scope: dto.scope || 'PROJECT',
         campaignId: dto.campaignId,
         type: dto.type as any,
         metadata: dto.metadata || {},
@@ -29,18 +56,32 @@ export class AnalyticsService {
     });
   }
 
-  async getMetricsTotals(projectId: string, days: number | string = 30) {
+  async getMetricsTotals(
+    scope: { projectId?: string; organizationId?: string; aggregated?: boolean },
+    days: number | string = 30,
+  ) {
     days = Number(days) || 30;
     const now = new Date();
     const currentStart = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
     const previousStart = new Date(now.getTime() - days * 2 * 24 * 60 * 60 * 1000);
 
+    const projectFilter: any = {};
+    if (scope.projectId) {
+      projectFilter.projectId = scope.projectId;
+    } else if (scope.organizationId) {
+      const projects = await this.prisma.project.findMany({
+        where: { organizationId: scope.organizationId },
+        select: { id: true },
+      });
+      projectFilter.projectId = { in: projects.map(p => p.id) };
+    }
+
     const [currentRows, previousRows] = await Promise.all([
       this.prisma.dailyMetrics.findMany({
-        where: { projectId, date: { gte: currentStart } },
+        where: { ...projectFilter, date: { gte: currentStart } },
       }),
       this.prisma.dailyMetrics.findMany({
-        where: { projectId, date: { gte: previousStart, lt: currentStart } },
+        where: { ...projectFilter, date: { gte: previousStart, lt: currentStart } },
       }),
     ]);
 
@@ -72,16 +113,29 @@ export class AnalyticsService {
     return { total: current, change, trend };
   }
 
-  async getSummary(projectId: string) {
+  async getSummary(scope: { projectId?: string; organizationId?: string; aggregated?: boolean }) {
+    const contentWhere: any = { status: 'PUBLISHED' };
+    const campaignWhere: any = { status: 'ACTIVE' };
+    const subscriberWhere: any = { status: 'ACTIVE' };
+    const checklistWhere: any = { isCompleted: true };
+
+    if (scope.projectId) {
+      contentWhere.projectId = scope.projectId;
+      campaignWhere.projectId = scope.projectId;
+      subscriberWhere.list = { projectId: scope.projectId };
+      checklistWhere.checklist = { projectId: scope.projectId };
+    } else if (scope.organizationId) {
+      contentWhere.organizationId = scope.organizationId;
+      campaignWhere.organizationId = scope.organizationId;
+      subscriberWhere.list = { organizationId: scope.organizationId };
+      checklistWhere.checklist = { organizationId: scope.organizationId };
+    }
+
     const [contentCount, campaignCount, subscriberCount, checklistItems] = await Promise.all([
-      this.prisma.content.count({ where: { projectId, status: 'PUBLISHED' } }),
-      this.prisma.campaign.count({ where: { projectId, status: 'ACTIVE' } }),
-      this.prisma.emailSubscriber.count({
-        where: { list: { projectId }, status: 'ACTIVE' },
-      }),
-      this.prisma.checklistItem.count({
-        where: { checklist: { projectId }, isCompleted: true },
-      }),
+      this.prisma.content.count({ where: contentWhere }),
+      this.prisma.campaign.count({ where: campaignWhere }),
+      this.prisma.emailSubscriber.count({ where: subscriberWhere }),
+      this.prisma.checklistItem.count({ where: checklistWhere }),
     ]);
     return { contentCount, campaignCount, subscriberCount, checklistItems };
   }
@@ -138,12 +192,22 @@ export class AnalyticsService {
 
   // ── UTM Attribution ──────────────────────────────────────────
 
-  async getUtmBreakdown(projectId: string, days: number | string = 30) {
+  async getUtmBreakdown(
+    scope: { projectId?: string; organizationId?: string; aggregated?: boolean },
+    days: number | string = 30,
+  ) {
     days = Number(days) || 30;
     const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
+    const where: any = { timestamp: { gte: since } };
+    if (scope.projectId) {
+      where.projectId = scope.projectId;
+    } else if (scope.organizationId) {
+      where.organizationId = scope.organizationId;
+    }
+
     const events = await this.prisma.analyticsEvent.findMany({
-      where: { projectId, timestamp: { gte: since } },
+      where,
       select: { type: true, metadata: true },
     });
 
@@ -192,14 +256,20 @@ export class AnalyticsService {
 
   // ── Conversion Funnel ──────────────────────────────────────
 
-  async getFunnel(projectId: string, days: number | string = 30) {
+  async getFunnel(
+    scope: { projectId?: string; organizationId?: string; aggregated?: boolean },
+    days: number | string = 30,
+  ) {
     days = Number(days) || 30;
     const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
-    const funnelSteps = await this.prisma.funnelStep.findMany({
-      where: { projectId },
-      orderBy: { order: 'asc' },
-    });
+    // Funnel steps are project-scoped; for org scope use defaults
+    const funnelSteps = scope.projectId
+      ? await this.prisma.funnelStep.findMany({
+          where: { projectId: scope.projectId },
+          orderBy: { order: 'asc' },
+        })
+      : [];
 
     const steps = funnelSteps.length > 0
       ? funnelSteps.map(s => ({ name: s.name, eventType: s.eventType }))
@@ -210,8 +280,15 @@ export class AnalyticsService {
           { name: 'Converted', eventType: 'CONVERSION' },
         ];
 
+    const where: any = { timestamp: { gte: since } };
+    if (scope.projectId) {
+      where.projectId = scope.projectId;
+    } else if (scope.organizationId) {
+      where.organizationId = scope.organizationId;
+    }
+
     const events = await this.prisma.analyticsEvent.findMany({
-      where: { projectId, timestamp: { gte: since } },
+      where,
       select: { type: true, metadata: true },
     });
 
@@ -244,16 +321,25 @@ export class AnalyticsService {
 
   // ── Page Analytics ─────────────────────────────────────────
 
-  async getPageAnalytics(projectId: string, days: number | string = 30) {
+  async getPageAnalytics(
+    scope: { projectId?: string; organizationId?: string; aggregated?: boolean },
+    days: number | string = 30,
+  ) {
     days = Number(days) || 30;
     const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
+    const where: any = {
+      timestamp: { gte: since },
+      type: { in: ['PAGE_VIEW', 'CONVERSION'] },
+    };
+    if (scope.projectId) {
+      where.projectId = scope.projectId;
+    } else if (scope.organizationId) {
+      where.organizationId = scope.organizationId;
+    }
+
     const events = await this.prisma.analyticsEvent.findMany({
-      where: {
-        projectId,
-        timestamp: { gte: since },
-        type: { in: ['PAGE_VIEW', 'CONVERSION'] },
-      },
+      where,
       select: { type: true, metadata: true },
     });
 

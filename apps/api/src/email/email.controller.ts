@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Delete, Body, Param, Query } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Body, Param, Query, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { EmailService } from './email.service';
 import { Public } from '../common/decorators/public.decorator';
@@ -31,8 +31,16 @@ export class EmailController {
   }
 
   @Get('lists')
-  getLists(@Query('projectId') projectId: string) {
-    return this.emailService.findAllLists(projectId);
+  @ApiOperation({ summary: 'Get email lists (project-scoped, org-scoped, or aggregated)' })
+  getLists(
+    @Query('projectId') projectId?: string,
+    @Query('organizationId') organizationId?: string,
+    @Query('aggregated') aggregated?: string,
+  ) {
+    if (!projectId && !organizationId) {
+      throw new BadRequestException('Either projectId or organizationId is required');
+    }
+    return this.emailService.findAllLists({ projectId, organizationId, aggregated: aggregated === 'true' });
   }
 
   @Post('lists')

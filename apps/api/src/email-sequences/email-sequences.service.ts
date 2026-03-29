@@ -9,9 +9,20 @@ export class EmailSequencesService {
 
   constructor(private prisma: PrismaService) {}
 
-  async findAll(projectId: string) {
+  async findAll(scope: { projectId?: string; organizationId?: string; aggregated?: boolean }) {
+    const where: any = {};
+
+    if (scope.projectId) {
+      where.projectId = scope.projectId;
+    } else if (scope.organizationId && scope.aggregated) {
+      where.organizationId = scope.organizationId;
+    } else if (scope.organizationId) {
+      where.organizationId = scope.organizationId;
+      where.scope = 'ORGANIZATION';
+    }
+
     return this.prisma.emailSequence.findMany({
-      where: { projectId },
+      where,
       include: {
         steps: { orderBy: { order: 'asc' } },
         _count: { select: { enrollments: true } },
@@ -41,6 +52,8 @@ export class EmailSequencesService {
     description?: string;
     triggerType: string;
     triggerConfig?: Record<string, unknown>;
+    organizationId?: string;
+    scope?: string;
     steps: Array<{
       order: number;
       delayDays: number;
@@ -51,9 +64,20 @@ export class EmailSequencesService {
       templateId?: string;
     }>;
   }) {
+    let organizationId = dto.organizationId;
+    if (!organizationId && dto.projectId) {
+      const project = await this.prisma.project.findUnique({
+        where: { id: dto.projectId },
+        select: { organizationId: true },
+      });
+      organizationId = project?.organizationId;
+    }
+
     return this.prisma.emailSequence.create({
       data: {
         projectId: dto.projectId,
+        organizationId,
+        scope: (dto.scope || 'PROJECT') as any,
         name: dto.name,
         description: dto.description,
         triggerType: dto.triggerType as any,

@@ -1,9 +1,11 @@
-import { ContentStatus, ContentType, SocialPlatform } from './enums';
+import { ContentStatus, ContentType, EntityScope, SocialPlatform } from './enums';
 
 export interface Content {
   id: string;
   campaignId?: string;
-  projectId: string;
+  projectId?: string;
+  scope: EntityScope;
+  organizationId?: string;
   type: ContentType;
   title: string;
   body: string;
@@ -27,7 +29,9 @@ export interface ContentVersion {
 }
 
 export interface CreateContentDto {
-  projectId: string;
+  projectId?: string;
+  scope?: EntityScope;
+  organizationId?: string;
   campaignId?: string;
   type: ContentType;
   title: string;

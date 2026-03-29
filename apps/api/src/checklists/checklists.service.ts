@@ -10,9 +10,20 @@ import { ReorderChecklistItemsDto } from './dto/reorder-checklist-items.dto';
 export class ChecklistsService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll(projectId: string) {
+  async findAll(scope: { projectId?: string; organizationId?: string; aggregated?: boolean }) {
+    const where: any = {};
+
+    if (scope.projectId) {
+      where.projectId = scope.projectId;
+    } else if (scope.organizationId && scope.aggregated) {
+      where.organizationId = scope.organizationId;
+    } else if (scope.organizationId) {
+      where.organizationId = scope.organizationId;
+      where.scope = 'ORGANIZATION';
+    }
+
     return this.prisma.checklist.findMany({
-      where: { projectId },
+      where,
       include: {
         items: { orderBy: { order: 'asc' } },
         _count: { select: { items: true } },
@@ -33,9 +44,20 @@ export class ChecklistsService {
   }
 
   async create(dto: CreateChecklistDto) {
+    let organizationId = (dto as any).organizationId;
+    if (!organizationId && dto.projectId) {
+      const project = await this.prisma.project.findUnique({
+        where: { id: dto.projectId },
+        select: { organizationId: true },
+      });
+      organizationId = project?.organizationId;
+    }
+
     return this.prisma.checklist.create({
       data: {
         projectId: dto.projectId,
+        organizationId,
+        scope: (dto as any).scope || 'PROJECT',
         name: dto.name,
         type: dto.type as any,
         description: dto.description,

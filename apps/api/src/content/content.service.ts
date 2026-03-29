@@ -7,13 +7,24 @@ import { UpdateContentDto } from './dto/update-content.dto';
 export class ContentService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll(projectId: string, filters?: { type?: string; status?: string; platform?: string; from?: string; to?: string }) {
+  async findAll(
+    scope: { projectId?: string; organizationId?: string; aggregated?: boolean },
+    filters?: { type?: string; status?: string; platform?: string; from?: string; to?: string },
+  ) {
     const where: any = {
-      projectId,
       ...(filters?.type && { type: filters.type as any }),
       ...(filters?.status && { status: filters.status as any }),
       ...(filters?.platform && { platform: filters.platform as any }),
     };
+
+    if (scope.projectId) {
+      where.projectId = scope.projectId;
+    } else if (scope.organizationId && scope.aggregated) {
+      where.organizationId = scope.organizationId;
+    } else if (scope.organizationId) {
+      where.organizationId = scope.organizationId;
+      where.scope = 'ORGANIZATION';
+    }
 
     if (filters?.from || filters?.to) {
       const range: any = {};
@@ -45,9 +56,20 @@ export class ContentService {
   }
 
   async create(dto: CreateContentDto, _userId: string) {
+    let organizationId = (dto as any).organizationId;
+    if (!organizationId && dto.projectId) {
+      const project = await this.prisma.project.findUnique({
+        where: { id: dto.projectId },
+        select: { organizationId: true },
+      });
+      organizationId = project?.organizationId;
+    }
+
     return this.prisma.content.create({
       data: {
         projectId: dto.projectId,
+        organizationId,
+        scope: (dto as any).scope || 'PROJECT',
         campaignId: dto.campaignId,
         type: dto.type as any,
         title: dto.title,
@@ -101,6 +123,8 @@ export class ContentService {
     return this.prisma.content.create({
       data: {
         projectId: source.projectId,
+        organizationId: source.organizationId,
+        scope: source.scope,
         campaignId: source.campaignId,
         sourceContentId: source.id,
         type: targetType as any,

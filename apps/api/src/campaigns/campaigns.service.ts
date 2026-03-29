@@ -5,9 +5,20 @@ import { PrismaService } from '../database/prisma.service';
 export class CampaignsService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll(projectId: string) {
+  async findAll(scope: { projectId?: string; organizationId?: string; aggregated?: boolean }) {
+    const where: any = {};
+
+    if (scope.projectId) {
+      where.projectId = scope.projectId;
+    } else if (scope.organizationId && scope.aggregated) {
+      where.organizationId = scope.organizationId;
+    } else if (scope.organizationId) {
+      where.organizationId = scope.organizationId;
+      where.scope = 'ORGANIZATION';
+    }
+
     return this.prisma.campaign.findMany({
-      where: { projectId },
+      where,
       include: { _count: { select: { content: true } } },
       orderBy: { createdAt: 'desc' },
     });
@@ -23,7 +34,23 @@ export class CampaignsService {
   }
 
   async create(dto: any) {
-    return this.prisma.campaign.create({ data: { ...dto, type: dto.type as any } });
+    let organizationId = dto.organizationId;
+    if (!organizationId && dto.projectId) {
+      const project = await this.prisma.project.findUnique({
+        where: { id: dto.projectId },
+        select: { organizationId: true },
+      });
+      organizationId = project?.organizationId;
+    }
+
+    return this.prisma.campaign.create({
+      data: {
+        ...dto,
+        type: dto.type as any,
+        organizationId,
+        scope: dto.scope || 'PROJECT',
+      },
+    });
   }
 
   async update(id: string, dto: any) {

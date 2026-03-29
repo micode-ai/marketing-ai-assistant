@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ContentService } from './content.service';
 import { CreateContentDto } from './dto/create-content.dto';
@@ -12,16 +12,24 @@ export class ContentController {
   constructor(private contentService: ContentService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Get all content for project' })
+  @ApiOperation({ summary: 'Get content (project-scoped, org-scoped, or aggregated)' })
   findAll(
-    @Query('projectId') projectId: string,
+    @Query('projectId') projectId?: string,
+    @Query('organizationId') organizationId?: string,
+    @Query('aggregated') aggregated?: string,
     @Query('type') type?: string,
     @Query('status') status?: string,
     @Query('platform') platform?: string,
     @Query('from') from?: string,
     @Query('to') to?: string,
   ) {
-    return this.contentService.findAll(projectId, { type, status, platform, from, to });
+    if (!projectId && !organizationId) {
+      throw new BadRequestException('Either projectId or organizationId is required');
+    }
+    return this.contentService.findAll(
+      { projectId, organizationId, aggregated: aggregated === 'true' },
+      { type, status, platform, from, to },
+    );
   }
 
   @Get(':id')

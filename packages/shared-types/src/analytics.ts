@@ -1,8 +1,10 @@
-import { AnalyticsEventType } from './enums';
+import { AnalyticsEventType, EntityScope } from './enums';
 
 export interface AnalyticsEvent {
   id: string;
-  projectId: string;
+  projectId?: string;
+  scope: EntityScope;
+  organizationId?: string;
   campaignId?: string;
   type: AnalyticsEventType;
   metadata: Record<string, unknown>;

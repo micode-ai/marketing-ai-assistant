@@ -1,4 +1,5 @@
 export * from './enums';
+export * from './entity-scope';
 export * from './user';
 export * from './organization';
 export * from './project';
