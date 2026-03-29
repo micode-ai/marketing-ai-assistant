@@ -77,4 +77,16 @@ export class ChatService {
       take: limit,
     });
   }
+
+  async deleteMessage(messageId: string, userId: string) {
+    const message = await this.prisma.chatMessage.findUnique({
+      where: { id: messageId },
+      include: { session: { select: { userId: true } } },
+    });
+    if (!message) throw new NotFoundException('Message not found');
+    if (message.session.userId !== userId) {
+      throw new NotFoundException('Message not found');
+    }
+    return this.prisma.chatMessage.delete({ where: { id: messageId } });
+  }
 }

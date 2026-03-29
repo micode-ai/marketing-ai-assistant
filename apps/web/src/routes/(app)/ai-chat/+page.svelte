@@ -17,6 +17,7 @@
   }
 
   interface Message {
+    id?: string;
     role: 'user' | 'assistant';
     content: string;
     time: string;
@@ -93,6 +94,7 @@
     try {
       const msgs = await api.get<any[]>(`/chat/sessions/${sessionId}/messages`);
       messages = msgs.map(m => ({
+        id: m.id,
         role: m.role as 'user' | 'assistant',
         content: m.content,
         time: new Date(m.createdAt).toLocaleTimeString(),
@@ -132,7 +134,8 @@
       } catch { /* ignore */ }
     }
 
-    messages = [...messages, { role: 'user', content: msg, time: new Date().toLocaleTimeString() }];
+    const userMsg: Message = { role: 'user', content: msg, time: new Date().toLocaleTimeString() };
+    messages = [...messages, userMsg];
     loading = true;
     await tick();
     container?.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
@@ -140,7 +143,9 @@
     try {
       // Save user message
       if (currentSessionId) {
-        api.post(`/chat/sessions/${currentSessionId}/messages`, { role: 'user', content: msg }).catch(() => {});
+        api.post<{ id: string }>(`/chat/sessions/${currentSessionId}/messages`, { role: 'user', content: msg })
+          .then(saved => { userMsg.id = saved.id; messages = messages; })
+          .catch(() => {});
       }
 
       const res = await api.post<{ message: string }>('/agent/chat', {
@@ -148,11 +153,14 @@
         projectId: $currentProjectStore?.id,
         history: messages.slice(-10).map(m => ({ role: m.role, content: m.content })),
       });
-      messages = [...messages, { role: 'assistant', content: res.message, time: new Date().toLocaleTimeString() }];
+      const assistantMsg: Message = { role: 'assistant', content: res.message, time: new Date().toLocaleTimeString() };
+      messages = [...messages, assistantMsg];
 
       // Save assistant message
       if (currentSessionId) {
-        api.post(`/chat/sessions/${currentSessionId}/messages`, { role: 'assistant', content: res.message }).catch(() => {});
+        api.post<{ id: string }>(`/chat/sessions/${currentSessionId}/messages`, { role: 'assistant', content: res.message })
+          .then(saved => { assistantMsg.id = saved.id; messages = messages; })
+          .catch(() => {});
       }
 
       // Mark Getting Started "AI Strategy" step as done
@@ -167,6 +175,15 @@
       await tick();
       container?.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
     }
+  }
+
+  async function deleteMessage(msg: Message, index: number) {
+    if (msg.id) {
+      try {
+        await api.delete(`/chat/messages/${msg.id}`);
+      } catch { /* ignore */ }
+    }
+    messages = messages.filter((_, i) => i !== index);
   }
 
   function onKeydown(e: KeyboardEvent) {
@@ -253,8 +270,8 @@
           </div>
         </div>
       {:else}
-        {#each messages as msg}
-          <div class="flex {msg.role === 'user' ? 'justify-end' : 'justify-start'} gap-3">
+        {#each messages as msg, i}
+          <div class="group flex {msg.role === 'user' ? 'justify-end' : 'justify-start'} gap-3">
             {#if msg.role === 'assistant'}
               <div class="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
@@ -272,7 +289,16 @@
                   <p class="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
                 {/if}
               </div>
-              <p class="text-xs text-gray-400 mt-1 {msg.role === 'user' ? 'text-right' : ''}">{msg.time}</p>
+              <div class="flex items-center gap-2 mt-1 {msg.role === 'user' ? 'justify-end' : ''}">
+                <p class="text-xs text-gray-400">{msg.time}</p>
+                <button
+                  on:click={() => deleteMessage(msg, i)}
+                  class="opacity-0 group-hover:opacity-100 p-0.5 text-gray-300 hover:text-red-500 transition-all duration-150 cursor-pointer"
+                  title={$_('aiChat.deleteMessage')}
+                >
+                  <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
             </div>
           </div>
         {/each}

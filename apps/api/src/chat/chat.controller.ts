@@ -49,4 +49,9 @@ export class ChatController {
   ) {
     return this.chatService.addMessage(id, dto.role, dto.content, dto.tokensUsed, dto.cost);
   }
+
+  @Delete('messages/:messageId')
+  deleteMessage(@Param('messageId') messageId: string, @CurrentUser() user: any) {
+    return this.chatService.deleteMessage(messageId, user.id);
+  }
 }
