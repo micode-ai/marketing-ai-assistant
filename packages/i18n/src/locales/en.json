@@ -503,6 +503,7 @@
     "placeholder": "Ask anything about marketing...",
     "send": "Send",
     "clearHistory": "Clear History",
+    "deleteMessage": "Delete message",
     "project": "Project",
     "examples": {
       "1": "Create a LinkedIn post for my product launch",
