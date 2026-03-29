@@ -51,7 +51,19 @@
     "help": "Pomoc",
     "webhooks": "Webhooki",
     "showAdvanced": "Zaawansowane funkcje",
-    "hideAdvanced": "Ukryj zaawansowane"
+    "hideAdvanced": "Ukryj zaawansowane",
+    "marketing": "Marketing",
+    "orgContent": "Treści",
+    "orgChecklists": "Checklisty",
+    "orgDocuments": "Dokumenty",
+    "orgCampaigns": "Kampanie",
+    "orgEmail": "Email",
+    "orgAnalytics": "Analityka",
+    "orgSeo": "SEO",
+    "orgCompetitors": "Konkurencja",
+    "orgExperiments": "Eksperymenty",
+    "orgSequences": "Sekwencje",
+    "orgCalendar": "Kalendarz"
   },
   "auth": {
     "login": "Zaloguj się",
@@ -1080,5 +1092,28 @@
     "declined": "Zaproszenie odrzucone",
     "joinRequestPending": "Twoja prośba o dołączenie do {organization} oczekuje na zatwierdzenie",
     "awaitingApproval": "Oczekuje na zatwierdzenie"
+  },
+  "org": {
+    "tabOrganization": "Organizacja",
+    "tabAllProjects": "Wszystkie projekty",
+    "tabCompare": "Porównaj",
+    "scopeOrg": "Organizacja",
+    "scopeProject": "Projekt"
+  },
+  "entityLinks": {
+    "promoteTitle": "Promuj do organizacji",
+    "demoteTitle": "Przypisz do projektu",
+    "copy": "Kopiuj",
+    "copyDescription": "Utwórz niezależną kopię. Zmiany nie będą synchronizowane.",
+    "link": "Połącz",
+    "linkDescription": "Ten sam element widoczny w obu miejscach. Zmiany synchronizują się automatycznie.",
+    "selectProject": "Wybierz projekt",
+    "choosePlaceholder": "Wybierz projekt...",
+    "promote": "Promuj",
+    "demote": "Przypisz",
+    "linkedTooltip": "Połączony — widoczny w organizacji i projekcie",
+    "copiedTooltip": "Skopiowany z innego zakresu",
+    "org": "Org",
+    "project": "Projekt"
   }
 }

@@ -48,6 +48,18 @@ erDiagram
     Competitor ||--o{ CompetitorSnapshot : "имеет"
 
     SocialAccount ||--o{ ContentPublication : "используется для"
+
+    Organization ||--o{ Content : "уровень орг."
+    Organization ||--o{ Campaign : "уровень орг."
+    Organization ||--o{ Checklist : "уровень орг."
+    Organization ||--o{ Document : "уровень орг."
+    Organization ||--o{ EmailSequence : "уровень орг."
+    Organization ||--o{ Keyword : "уровень орг."
+    Organization ||--o{ ABTest : "уровень орг."
+    Organization ||--o{ EmailList : "уровень орг."
+    Organization ||--o{ Competitor : "уровень орг."
+    Organization ||--o{ FunnelStep : "уровень орг."
+    Organization ||--o{ EntityLink : "имеет"
 ```
 
 ## Основные модели
@@ -107,10 +119,14 @@ erDiagram
 
 ### Content (Контент)
 
+> **Примечание:** Поле `projectId` теперь необязательное. Контент может существовать на уровне организации (с заполненным `organizationId` и пустым `projectId`). Поле `scope` указывает уровень сущности: `PROJECT` или `ORGANIZATION`.
+
 | Колонка | Тип | Описание |
 |---------|-----|----------|
 | id | String (CUID) | Первичный ключ |
-| projectId | String | FK на Project |
+| projectId | String? | FK на Project (необязательно для сущностей уровня организации) |
+| organizationId | String? | FK на Organization (заполняется для сущностей уровня организации) |
+| scope | EntityScope | PROJECT / ORGANIZATION (по умолчанию: PROJECT) |
 | campaignId | String? | FK на Campaign |
 | sourceContentId | String? | FK на Content (переупакован из) |
 | type | ContentType | SOCIAL_POST / BLOG_ARTICLE / EMAIL / NEWSLETTER / AD_COPY / LANDING_PAGE / SEO_ARTICLE / REFERRAL_COPY / IN_APP_MESSAGE |
@@ -257,6 +273,24 @@ erDiagram
 | changes | Json | Обнаруженные изменения |
 | snapshotAt | DateTime | Время снимка |
 
+## Модель связей сущностей
+
+### EntityLink (Связь сущности)
+
+Отслеживает связи между маркетинговыми сущностями и их уровнем принадлежности (организация/проект). Используется при продвижении сущностей проекта на уровень организации или назначении сущностей уровня организации в проекты.
+
+| Колонка | Тип | Описание |
+|---------|-----|----------|
+| id | String (CUID) | Первичный ключ |
+| entityType | EntityModelType | Тип связанной сущности (CONTENT, CAMPAIGN, CHECKLIST и др.) |
+| entityId | String | ID связанной сущности |
+| linkType | EntityLinkType | ORG_LEVEL / PROJECT_ASSIGNMENT |
+| organizationId | String? | FK на Organization (для связей уровня организации) |
+| projectId | String? | FK на Project (для назначений в проект) |
+| createdAt | DateTime | Дата создания |
+
+> **Маркетинговые сущности уровня организации:** Следующие 10 моделей теперь имеют необязательное поле `projectId`, а также поля `organizationId` и `scope` (EntityScope), что позволяет им существовать на уровне организации без привязки к конкретному проекту: **Content**, **Campaign**, **Checklist**, **Document**, **EmailSequence**, **Keyword**, **ABTest**, **EmailList**, **Competitor**, **FunnelStep**.
+
 ## Справочник перечислений
 
 ```prisma
@@ -291,6 +325,10 @@ enum EnrollmentStatus      { ACTIVE, COMPLETED, PAUSED, UNSUBSCRIBED }
 enum KeywordIntent         { INFORMATIONAL, NAVIGATIONAL, COMMERCIAL, TRANSACTIONAL }
 enum SocialAccountStatus   { ACTIVE, INACTIVE, EXPIRED, ERROR }
 enum PublicationStatus     { PENDING, PUBLISHED, FAILED }
+enum EntityScope           { PROJECT, ORGANIZATION }
+enum EntityLinkType        { ORG_LEVEL, PROJECT_ASSIGNMENT }
+enum EntityModelType       { CONTENT, CAMPAIGN, CHECKLIST, DOCUMENT, EMAIL_SEQUENCE, KEYWORD,
+                             AB_TEST, EMAIL_LIST, COMPETITOR, FUNNEL_STEP }
 ```
 
 ## Команды для работы с БД

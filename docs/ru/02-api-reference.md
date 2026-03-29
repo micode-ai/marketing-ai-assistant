@@ -240,6 +240,8 @@ Callback Google OAuth. При успехе перенаправляет на:
 
 ## Кампании (`/campaigns`)
 
+> **Запросы на уровне организации:** Все списковые эндпоинты также принимают необязательные параметры `organizationId` и `aggregated=true` для получения кампаний по всем проектам организации.
+
 ### GET `/campaigns?projectId=<id>` (Защищённый)
 
 Список кампаний проекта.
@@ -280,6 +282,8 @@ Callback Google OAuth. При успехе перенаправляет на:
 ---
 
 ## Контент (`/content`)
+
+> **Запросы на уровне организации:** Все списковые эндпоинты также принимают необязательные параметры `organizationId` и `aggregated=true` для получения контента по всем проектам организации.
 
 ### GET `/content?projectId=<id>&type=<type>&status=<status>&platform=<platform>&from=<date>&to=<date>` (Защищённый)
 
@@ -360,6 +364,8 @@ Callback Google OAuth. При успехе перенаправляет на:
 
 ## Email (`/email`)
 
+> **Запросы на уровне организации:** Списковые эндпоинты также принимают необязательные параметры `organizationId` и `aggregated=true` для запросов на уровне организации.
+
 ### GET `/email/accounts?organizationId=<id>` (Защищённый)
 
 Список email-аккаунтов организации.
@@ -433,6 +439,8 @@ Callback Google OAuth. При успехе перенаправляет на:
 
 ## Drip-последовательности (`/email-sequences`)
 
+> **Запросы на уровне организации:** Списковые эндпоинты также принимают необязательные параметры `organizationId` и `aggregated=true` для получения последовательностей по всем проектам организации.
+
 ### GET `/email-sequences?projectId=<id>` (Защищённый)
 
 Список всех drip-последовательностей проекта.
@@ -498,6 +506,8 @@ Callback Google OAuth. При успехе перенаправляет на:
 ---
 
 ## Аналитика (`/analytics`)
+
+> **Запросы на уровне организации:** Все списковые эндпоинты также принимают необязательные параметры `organizationId` и `aggregated=true` для запросов на уровне организации.
 
 ### GET `/analytics/metrics?projectId=<id>&days=<n>` (Защищённый)
 
@@ -584,6 +594,8 @@ Callback Google OAuth. При успехе перенаправляет на:
 
 ## SEO и ключевые слова (`/seo`)
 
+> **Запросы на уровне организации:** Списковые эндпоинты также принимают необязательные параметры `organizationId` и `aggregated=true` для запросов на уровне организации.
+
 ### GET `/seo/keywords?projectId=<id>` (Защищённый)
 
 Список всех отслеживаемых ключевых слов проекта.
@@ -628,6 +640,8 @@ Callback Google OAuth. При успехе перенаправляет на:
 ---
 
 ## A/B тестирование (`/ab-testing`)
+
+> **Запросы на уровне организации:** Списковые эндпоинты также принимают необязательные параметры `organizationId` и `aggregated=true` для запросов на уровне организации.
 
 ### GET `/ab-testing?projectId=<id>` (Защищённый)
 
@@ -881,6 +895,132 @@ Callback Facebook OAuth.
 
 ---
 
+## Связи сущностей (`/entity-links`)
+
+Управление связями между маркетинговыми сущностями и уровнями организации/проекта. Используется для продвижения сущностей проекта на уровень организации и наоборот.
+
+### POST `/entity-links/promote` (Защищённый, OWNER/ADMIN)
+
+Продвинуть сущность проекта на уровень организации (сделать видимой во всех проектах).
+
+**Тело запроса:**
+```json
+{
+  "entityType": "CONTENT",
+  "entityId": "clx...",
+  "organizationId": "clx..."
+}
+```
+
+Типы сущностей: `CONTENT`, `CAMPAIGN`, `CHECKLIST`, `DOCUMENT`, `EMAIL_SEQUENCE`, `KEYWORD`, `AB_TEST`, `EMAIL_LIST`, `COMPETITOR`, `FUNNEL_STEP`
+
+### POST `/entity-links/demote` (Защищённый, OWNER/ADMIN)
+
+Назначить сущность уровня организации конкретному проекту.
+
+**Тело запроса:**
+```json
+{
+  "entityType": "CONTENT",
+  "entityId": "clx...",
+  "projectId": "clx..."
+}
+```
+
+### GET `/entity-links?entityType=<type>&entityId=<id>` (Защищённый)
+
+Получить все связи для конкретной сущности.
+
+**Ответ (200):**
+```json
+[
+  {
+    "id": "clx...",
+    "entityType": "CONTENT",
+    "entityId": "clx...",
+    "linkType": "ORG_LEVEL",
+    "organizationId": "clx...",
+    "projectId": null,
+    "createdAt": "2026-03-30T00:00:00Z"
+  }
+]
+```
+
+### DELETE `/entity-links/:id` (Защищённый)
+
+Удалить связь сущности.
+
+---
+
+## Аналитика организации (`/analytics/organization`)
+
+Агрегированная аналитика по всем проектам организации.
+
+### GET `/analytics/organization?organizationId=<id>&period=<period>` (Защищённый)
+
+Получить сводку аналитики на уровне организации, агрегированную по всем проектам.
+
+**Параметры запроса:**
+- `organizationId` (обязательный) — ID организации
+- `period` (необязательный, по умолчанию: `30d`) — Период (например, `7d`, `30d`, `90d`)
+
+**Ответ (200):**
+```json
+{
+  "totalProjects": 5,
+  "totalContent": 142,
+  "totalCampaigns": 12,
+  "metrics": {
+    "visitors": 15200,
+    "conversions": 487,
+    "emailOpens": 3200,
+    "socialEngagements": 890
+  },
+  "trend": {
+    "visitors": "up",
+    "conversions": "up"
+  },
+  "period": "30d"
+}
+```
+
+### GET `/analytics/organization/compare?projectIds=<A,B,C>&period=<period>` (Защищённый)
+
+Сравнить метрики аналитики между несколькими проектами.
+
+**Параметры запроса:**
+- `projectIds` (обязательный) — Список ID проектов через запятую
+- `period` (необязательный, по умолчанию: `30d`) — Период
+
+**Ответ (200):**
+```json
+{
+  "projects": [
+    {
+      "projectId": "clx...",
+      "projectName": "Проект A",
+      "metrics": {
+        "visitors": 5200,
+        "conversions": 180,
+        "emailOpens": 1100
+      }
+    },
+    {
+      "projectId": "clx...",
+      "projectName": "Проект B",
+      "metrics": {
+        "visitors": 3800,
+        "conversions": 142,
+        "emailOpens": 900
+      }
+    }
+  ],
+  "period": "30d"
+}
+```
+
+---
+
 ## Отслеживание (`/t`)
 
 Все эндпоинты отслеживания публичны (JWT не требуется). Контроллер подключён по префиксу `/t` (не `/api/t`).
@@ -948,6 +1088,8 @@ JavaScript-сниппет для интеграции на сайт. Возвр�
 
 ## Чек-листы (`/checklists`)
 
+> **Запросы на уровне организации:** Списковые эндпоинты также принимают необязательные параметры `organizationId` и `aggregated=true` для получения чек-листов по всем проектам организации.
+
 ### GET `/checklists?projectId=<id>` (Защищённый)
 
 Список чек-листов проекта.
@@ -979,6 +1121,8 @@ JavaScript-сниппет для интеграции на сайт. Возвр�
 ---
 
 ## Документы (`/documents`)
+
+> **Запросы на уровне организации:** Списковые эндпоинты также принимают необязательные параметры `organizationId` и `aggregated=true` для получения документов по всем проектам организации.
 
 ### GET `/documents?projectId=<id>` (Защищённый)
 

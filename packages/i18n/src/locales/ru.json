@@ -51,7 +51,19 @@
     "help": "Помощь",
     "webhooks": "Вебхуки",
     "showAdvanced": "Расширенные функции",
-    "hideAdvanced": "Скрыть расширенные"
+    "hideAdvanced": "Скрыть расширенные",
+    "marketing": "Маркетинг",
+    "orgContent": "Контент",
+    "orgChecklists": "Чек-листы",
+    "orgDocuments": "Документы",
+    "orgCampaigns": "Кампании",
+    "orgEmail": "Email",
+    "orgAnalytics": "Аналитика",
+    "orgSeo": "SEO",
+    "orgCompetitors": "Конкуренты",
+    "orgExperiments": "Эксперименты",
+    "orgSequences": "Последовательности",
+    "orgCalendar": "Календарь"
   },
   "auth": {
     "login": "Войти",
@@ -1078,5 +1090,28 @@
     "declined": "Приглашение отклонено",
     "joinRequestPending": "Ваш запрос на вступление в {organization} ожидает одобрения",
     "awaitingApproval": "Ожидает одобрения"
+  },
+  "org": {
+    "tabOrganization": "Организация",
+    "tabAllProjects": "Все проекты",
+    "tabCompare": "Сравнение",
+    "scopeOrg": "Организация",
+    "scopeProject": "Проект"
+  },
+  "entityLinks": {
+    "promoteTitle": "Продвинуть в организацию",
+    "demoteTitle": "Назначить в проект",
+    "copy": "Копировать",
+    "copyDescription": "Создать независимую копию. Изменения не синхронизируются.",
+    "link": "Связать",
+    "linkDescription": "Один и тот же элемент виден в обоих местах. Изменения синхронизируются автоматически.",
+    "selectProject": "Выберите проект",
+    "choosePlaceholder": "Выберите проект...",
+    "promote": "Продвинуть",
+    "demote": "Назначить",
+    "linkedTooltip": "Связан — виден в организации и проекте",
+    "copiedTooltip": "Скопирован из другой области",
+    "org": "Орг",
+    "project": "Проект"
   }
 }
