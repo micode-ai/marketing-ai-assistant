@@ -56,7 +56,7 @@ export class EntityLinksService {
     }
 
     // COPY: create new entity at org scope
-    const { id, projectId, scope, createdAt, updatedAt, ...fields } = entity;
+    const { id: sourceId, projectId: _pId, scope: _scope, createdAt: _ca, updatedAt: _ua, ...fields } = entity;
     const newEntity = await delegate.create({
       data: {
         ...fields,
@@ -66,12 +66,12 @@ export class EntityLinksService {
       },
     });
 
-    await this.copyNestedRelations(dto.entityType, id, newEntity.id);
+    await this.copyNestedRelations(dto.entityType, sourceId, newEntity.id);
 
     return this.prisma.entityLink.create({
       data: {
         entityType: dto.entityType as any,
-        sourceId: id,
+        sourceId,
         targetId: newEntity.id,
         linkType: 'COPY',
         sourceScope: 'PROJECT',
@@ -110,7 +110,7 @@ export class EntityLinksService {
     }
 
     // COPY: create new entity at project scope
-    const { id, projectId, scope, createdAt, updatedAt, ...fields } = entity;
+    const { id: sourceId, projectId: _pId2, scope: _scope2, createdAt: _ca2, updatedAt: _ua2, ...fields } = entity;
     const newEntity = await delegate.create({
       data: {
         ...fields,
@@ -120,12 +120,12 @@ export class EntityLinksService {
       },
     });
 
-    await this.copyNestedRelations(dto.entityType, id, newEntity.id);
+    await this.copyNestedRelations(dto.entityType, sourceId, newEntity.id);
 
     return this.prisma.entityLink.create({
       data: {
         entityType: dto.entityType as any,
-        sourceId: id,
+        sourceId,
         targetId: newEntity.id,
         linkType: 'COPY',
         sourceScope: 'ORGANIZATION',
@@ -165,7 +165,7 @@ export class EntityLinksService {
           where: { checklistId: sourceId },
         });
         for (const item of items) {
-          const { id, checklistId, createdAt, updatedAt, completedAt, completedBy, noteUpdatedBy, noteUpdatedAt, ...itemFields } = item;
+          const { id: _iId, checklistId: _cId, createdAt: _iCa, updatedAt: _iUa, completedAt: _cAt, completedBy: _cBy, noteUpdatedBy: _nBy, noteUpdatedAt: _nAt, ...itemFields } = item;
           await this.prisma.checklistItem.create({
             data: {
               ...itemFields,
@@ -183,7 +183,7 @@ export class EntityLinksService {
           where: { testId: sourceId },
         });
         for (const variant of variants) {
-          const { id, testId, createdAt, updatedAt, ...variantFields } = variant;
+          const { id: _vId, testId: _tId, createdAt: _vCa, updatedAt: _vUa, ...variantFields } = variant;
           await (this.prisma as any).aBTestVariant.create({
             data: {
               ...variantFields,
@@ -206,7 +206,7 @@ export class EntityLinksService {
           where: { sequenceId: sourceId },
         });
         for (const step of steps) {
-          const { id, sequenceId, createdAt, updatedAt, ...stepFields } = step;
+          const { id: _sId, sequenceId: _seqId, createdAt: _sCa, updatedAt: _sUa, ...stepFields } = step;
           await this.prisma.emailSequenceStep.create({
             data: {
               ...stepFields,
