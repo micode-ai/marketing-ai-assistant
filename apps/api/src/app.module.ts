@@ -32,11 +32,13 @@ import { MailModule } from './mail/mail.module';
   imports: [
     ConfigModule.forRoot({ isGlobal: true, envFilePath: ['../../.env', '.env'] }),
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
-    BullModule.forRoot({
-      redis: {
-        host: process.env.REDIS_HOST || 'localhost',
-        port: parseInt(process.env.REDIS_PORT || '6380'),
-      },
+    BullModule.forRootAsync({
+      useFactory: () => ({
+        redis: {
+          host: process.env.REDIS_HOST || 'localhost',
+          port: parseInt(process.env.REDIS_PORT || '6380'),
+        },
+      }),
     }),
     ScheduleModule.forRoot(),
     DatabaseModule,
