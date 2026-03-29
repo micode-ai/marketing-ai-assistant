@@ -713,7 +713,11 @@
         </button>
       </div>
       <div class="flex-1 overflow-y-auto p-6">
-        {#if viewingDocument.fileUrl && viewingDocument.mimeType && isImageMime(viewingDocument.mimeType)}
+        {#if viewingDocument.contentMd}
+          <div class="prose prose-sm prose-gray max-w-none prose-headings:mt-4 prose-headings:mb-2 prose-p:my-1.5 prose-ul:my-1.5 prose-ol:my-1.5 prose-li:my-0.5 prose-pre:my-2 prose-code:text-primary-700 prose-code:bg-primary-50 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-[''] prose-code:after:content-['']">
+            {@html renderMarkdown(viewingDocument.contentMd)}
+          </div>
+        {:else if viewingDocument.fileUrl && viewingDocument.mimeType && isImageMime(viewingDocument.mimeType)}
           <!-- Image preview -->
           <div class="flex justify-center">
             <img src="{API_URL.replace('/api', '')}{viewingDocument.fileUrl}" alt={viewingDocument.title} class="max-w-full max-h-[60vh] rounded-lg shadow-sm" />
@@ -726,10 +730,6 @@
             </svg>
             <p class="text-gray-500 mb-1">{viewingDocument.fileName || viewingDocument.title}</p>
             <p class="text-sm text-gray-400">{$_('documents.noPreview')}</p>
-          </div>
-        {:else if viewingDocument.contentMd}
-          <div class="prose prose-sm prose-gray max-w-none">
-            {@html renderMarkdown(viewingDocument.contentMd)}
           </div>
         {:else}
           <div class="text-center py-12 text-gray-400">
