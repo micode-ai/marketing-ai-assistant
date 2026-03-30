@@ -1,11 +1,15 @@
 <script lang="ts">
   import { _ } from 'svelte-i18n';
   import { api } from '$lib/api/client';
-  import { currentProjectStore } from '$lib/stores/projects';
+  import { currentProjectStore, organizationIdStore, projectsStore } from '$lib/stores/projects';
+  import { currentUser } from '$lib/stores/auth';
   import { onMount, tick } from 'svelte';
   import { page } from '$app/stores';
   import { browser } from '$app/environment';
   import { marked } from 'marked';
+
+  $: memberships = ($currentUser as any)?.memberships || [];
+  $: currentOrg = memberships.find((m: any) => m.organization?.id === $organizationIdStore)?.organization;
 
   marked.setOptions({
     breaks: true,
@@ -38,6 +42,14 @@
   let loading = false;
   let sessionsLoading = true;
   let container: HTMLElement;
+  let showScopePicker = false;
+
+  function getSessionProjectName(session: ChatSession): string | null {
+    if (!session.projectId) return null;
+    if ($currentProjectStore?.id === session.projectId) return $currentProjectStore.name;
+    const found = $projectsStore.find(p => p.id === session.projectId);
+    return found?.name || null;
+  }
 
   $: examples = $currentProjectStore
     ? [
@@ -91,6 +103,15 @@
 
   async function selectSession(sessionId: string) {
     currentSessionId = sessionId;
+    showScopePicker = false;
+
+    // Restore project context from session
+    const session = sessions.find(s => s.id === sessionId);
+    if (session?.projectId) {
+      const project = $projectsStore.find(p => p.id === session.projectId);
+      if (project) currentProjectStore.set(project);
+    }
+
     try {
       const msgs = await api.get<any[]>(`/chat/sessions/${sessionId}/messages`);
       messages = msgs.map(m => ({
@@ -106,7 +127,16 @@
     container?.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
   }
 
-  async function deleteSession(sessionId: string) {
+  let deletingSessionId: string | null = null;
+
+  function confirmDeleteSession(sessionId: string) {
+    deletingSessionId = sessionId;
+  }
+
+  async function deleteSession() {
+    if (!deletingSessionId) return;
+    const sessionId = deletingSessionId;
+    deletingSessionId = null;
     try {
       await api.delete(`/chat/sessions/${sessionId}`);
       sessions = sessions.filter(s => s.id !== sessionId);
@@ -193,6 +223,17 @@
   function startNewChat() {
     currentSessionId = '';
     messages = [];
+    showScopePicker = true;
+  }
+
+  function selectScope(projectId: string | null) {
+    if (projectId) {
+      const project = $projectsStore.find(p => p.id === projectId);
+      if (project) currentProjectStore.set(project);
+    } else {
+      currentProjectStore.set(null);
+    }
+    showScopePicker = false;
   }
 </script>
 
@@ -213,19 +254,25 @@
         {/each}
       {:else}
         {#each sessions as session}
-          <div class="group flex items-center gap-1">
+          <div class="group flex items-start gap-1">
             <button
               on:click={() => selectSession(session.id)}
-              class="flex-1 text-left px-3 py-2 text-sm rounded-lg truncate transition-colors duration-150 cursor-pointer
+              class="flex-1 min-w-0 text-left px-3 py-2 rounded-lg transition-colors duration-150 cursor-pointer
                 {currentSessionId === session.id ? 'bg-primary-50 text-primary-700 font-medium' : 'text-gray-600 hover:bg-gray-100'}"
             >
-              {session.title}
+              <span class="block text-sm truncate">{session.title}</span>
+              {#if getSessionProjectName(session)}
+                <span class="block text-[10px] text-gray-400 truncate mt-0.5">{getSessionProjectName(session)}</span>
+              {:else}
+                <span class="block text-[10px] text-gray-400 italic truncate mt-0.5">{$_('aiChat.orgLevel')}</span>
+              {/if}
             </button>
             <button
-              on:click|stopPropagation={() => deleteSession(session.id)}
-              class="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-500 transition-all duration-150 cursor-pointer"
+              on:click|stopPropagation={() => confirmDeleteSession(session.id)}
+              class="{currentSessionId === session.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} mt-2 p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-all duration-150 cursor-pointer flex-shrink-0"
+              title={$_('aiChat.deleteChat.title')}
             >
-              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
             </button>
           </div>
         {/each}
@@ -238,9 +285,24 @@
     <div class="px-6 py-4 border-b border-gray-200 flex-shrink-0 flex items-center justify-between">
       <div>
         <h1 class="text-xl font-bold text-gray-900">{$_('aiChat.title')}</h1>
-        {#if $currentProjectStore}
-          <p class="text-xs text-gray-500 mt-0.5">{$_('aiChat.project')}: <span class="font-medium text-primary-600">{$currentProjectStore.name}</span></p>
-        {/if}
+        <div class="flex items-center gap-1.5 mt-0.5 text-xs text-gray-500">
+          {#if currentOrg}
+            <span class="inline-flex items-center gap-1">
+              <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21" /></svg>
+              <span class="font-medium text-gray-700">{currentOrg.name}</span>
+            </span>
+          {/if}
+          {#if $currentProjectStore}
+            <svg class="w-3 h-3 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+            <span class="inline-flex items-center gap-1">
+              <svg class="w-3 h-3 text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" /></svg>
+              <span class="font-medium text-primary-600">{$currentProjectStore.name}</span>
+            </span>
+          {:else if currentOrg}
+            <svg class="w-3 h-3 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+            <span class="text-gray-400 italic">{$_('aiChat.noProject')}</span>
+          {/if}
+        </div>
       </div>
       {#if messages.length > 0}
         <button on:click={startNewChat} class="text-xs text-gray-400 hover:text-gray-600 transition-colors duration-150 cursor-pointer">{$_('aiChat.clearHistory')}</button>
@@ -248,7 +310,46 @@
     </div>
 
     <div bind:this={container} class="flex-1 overflow-y-auto p-6 space-y-4">
-      {#if messages.length === 0}
+      {#if messages.length === 0 && showScopePicker}
+        <!-- Scope picker: choose org-level or project -->
+        <div class="flex flex-col items-center justify-center h-full text-center py-12">
+          <div class="w-16 h-16 bg-primary-100 rounded-2xl flex items-center justify-center mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z" />
+            </svg>
+          </div>
+          <h2 class="text-xl font-semibold text-gray-900 mb-1">{$_('aiChat.newChat')}</h2>
+          <p class="text-gray-500 mb-6 max-w-sm text-sm">{$_('aiChat.scopePicker.subtitle')}</p>
+          <div class="flex flex-col gap-2 w-full max-w-sm">
+            <!-- Organization-level option -->
+            {#if currentOrg}
+              <button on:click={() => selectScope(null)}
+                class="flex items-center gap-3 px-4 py-3 bg-white border border-gray-200 rounded-xl hover:border-primary-300 hover:bg-primary-50 transition-colors duration-150 text-left cursor-pointer group">
+                <div class="w-9 h-9 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-primary-100">
+                  <svg class="w-5 h-5 text-gray-500 group-hover:text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21" /></svg>
+                </div>
+                <div>
+                  <p class="text-sm font-medium text-gray-900">{currentOrg.name}</p>
+                  <p class="text-xs text-gray-400">{$_('aiChat.scopePicker.orgHint')}</p>
+                </div>
+              </button>
+            {/if}
+            <!-- Project options -->
+            {#each $projectsStore as project}
+              <button on:click={() => selectScope(project.id)}
+                class="flex items-center gap-3 px-4 py-3 bg-white border border-gray-200 rounded-xl hover:border-primary-300 hover:bg-primary-50 transition-colors duration-150 text-left cursor-pointer group">
+                <div class="w-9 h-9 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-primary-100">
+                  <svg class="w-5 h-5 text-gray-500 group-hover:text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" /></svg>
+                </div>
+                <div>
+                  <p class="text-sm font-medium text-gray-900">{project.name}</p>
+                  <p class="text-xs text-gray-400">{project.industry || $_('aiChat.scopePicker.projectHint')}</p>
+                </div>
+              </button>
+            {/each}
+          </div>
+        </div>
+      {:else if messages.length === 0}
         <div class="flex flex-col items-center justify-center h-full text-center py-12">
           <div class="w-16 h-16 bg-primary-100 rounded-2xl flex items-center justify-center mb-4">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
@@ -256,6 +357,11 @@
             </svg>
           </div>
           <h2 class="text-xl font-semibold text-gray-900 mb-1">{$_('aiChat.title')}</h2>
+          {#if $currentProjectStore}
+            <p class="text-gray-500 mb-2 max-w-sm text-sm">{$_('aiChat.chatContext.project', { values: { name: $currentProjectStore.name } })}</p>
+          {:else if currentOrg}
+            <p class="text-gray-500 mb-2 max-w-sm text-sm">{$_('aiChat.chatContext.orgOnly', { values: { org: currentOrg.name } })}</p>
+          {/if}
           <p class="text-gray-500 mb-8 max-w-sm text-sm">{$_('aiChat.examples.title')}</p>
           <div class="flex flex-col gap-2 w-full max-w-md">
             {#if $currentProjectStore}
@@ -344,3 +450,30 @@
     </div>
   </div>
 </div>
+
+<!-- Delete session confirmation modal -->
+{#if deletingSessionId}
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" on:click|self={() => deletingSessionId = null} on:keydown={(e) => e.key === 'Escape' && (deletingSessionId = null)} role="dialog" tabindex="-1">
+    <div class="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full mx-4">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+          <svg class="w-5 h-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
+        </div>
+        <div>
+          <h3 class="text-base font-semibold text-gray-900">{$_('aiChat.deleteChat.title')}</h3>
+          <p class="text-sm text-gray-500 mt-0.5">{$_('aiChat.deleteChat.message')}</p>
+        </div>
+      </div>
+      <div class="flex justify-end gap-2">
+        <button on:click={() => deletingSessionId = null}
+          class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer">
+          {$_('aiChat.deleteChat.cancel')}
+        </button>
+        <button on:click={deleteSession}
+          class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors cursor-pointer">
+          {$_('aiChat.deleteChat.confirm')}
+        </button>
+      </div>
+    </div>
+  </div>
+{/if}

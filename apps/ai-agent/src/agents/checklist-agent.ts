@@ -94,17 +94,23 @@ async function generateChecklist(state: State) {
   const language      = state.input['language'] as string | undefined;
   const project       = state.project;
 
-  const response = await getModel(0.3, 8192).invoke([
+  const response = await getModel(0.3, 16384).invoke([
     new SystemMessage(
-      `You are a senior marketing consultant who creates extremely detailed, actionable checklists.\n` +
+      `You are a senior marketing consultant with 15+ years of experience who creates extremely detailed, actionable checklists.\n` +
       `Respond with ONLY valid JSON, no markdown, no explanations.\n\n` +
       `JSON format:\n${JSON_FORMAT}\n\n` +
       `${DESCRIPTION_EXAMPLE}\n\n` +
-      `RULES:\n` +
-      `- Each "description" MUST be 5-8 detailed sentences (NOT 1-2 generic sentences)\n` +
-      `- Include: specific tools/platforms by name, exact steps to execute, metrics to track, common mistakes to avoid\n` +
-      `- Write as a practical guide that someone can follow step-by-step without additional research\n` +
-      `- Generic descriptions like "Research the market to understand your audience" are FORBIDDEN — be specific` +
+      `CRITICAL RULES (violating any rule makes the checklist useless):\n` +
+      `1. Generate 25-35 items total — a professional checklist must be comprehensive\n` +
+      `2. Each "description" MUST be 6-10 detailed sentences. This is the MOST IMPORTANT rule.\n` +
+      `   - Sentence 1-2: WHAT to do and WHY it matters\n` +
+      `   - Sentence 3-4: HOW to do it step-by-step (name specific tools: Google Analytics, Ahrefs, Mailchimp, Canva, etc.)\n` +
+      `   - Sentence 5-6: WHAT metrics to track and what numbers to aim for\n` +
+      `   - Sentence 7-8: Common MISTAKES to avoid and PRO TIPS\n` +
+      `   - Sentence 9-10: How to VERIFY the task is done correctly\n` +
+      `3. FORBIDDEN: descriptions shorter than 4 sentences, generic advice like "do research", vague goals like "improve performance"\n` +
+      `4. Each item must be specific enough that a junior marketer can execute it without asking questions\n` +
+      `5. Group items into 4-6 logical sections with clear phase names` +
       getLanguageInstruction(language),
     ),
     new HumanMessage(
@@ -113,10 +119,12 @@ async function generateChecklist(state: State) {
       `Description: ${project.description || ''}\n` +
       `Industry: ${project.industry || 'general'}\n` +
       `Target Audience: ${project.targetAudience || 'general'}\n` +
+      `Website: ${project.website || 'N/A'}\n` +
       (context ? `Additional context: ${context}\n` : '') +
-      `\nInclude 10-15 specific, actionable items. Mark critical items appropriately.\n` +
-      `Group items into 3-5 logical sections. Each item must have a "section" field with the section name.\n` +
-      `Remember: each item description must be a detailed mini-guide (5-8 sentences) with specific tools, steps, and metrics.`,
+      `\nGenerate 25-35 detailed items grouped into 4-6 sections.\n` +
+      `Mark 4-6 most important items as CRITICAL priority, 8-10 as HIGH, rest as MEDIUM or LOW.\n` +
+      `Each item description must be a detailed mini-guide (6-10 sentences) that a person can follow step-by-step.\n` +
+      `Include specific tool recommendations, exact metrics to track, benchmarks to aim for, and common pitfalls to avoid.`,
     ),
   ]);
 

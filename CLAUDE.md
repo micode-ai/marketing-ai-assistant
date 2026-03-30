@@ -104,6 +104,31 @@ packages/
 ### Agent Types
 `CONTENT`, `CHECKLIST`, `DOCUMENT`, `STRATEGY`, `SEO`, `EMAIL`, `ANALYTICS`, `SUPERVISOR`
 
+### Templates System (`/templates`)
+- Templates page uses AI agents to generate checklists/documents (not hardcoded content).
+- Checklist templates dispatch `POST /agent/run` with `agentType: 'CHECKLIST'`, `input.type` (e.g., `LAUNCH`, `SEO`), and `input.language`.
+- Document templates dispatch `POST /agent/run` with `agentType: 'DOCUMENT'`, `input.type` (e.g., `REPORT`, `MARKETING_PLAN`, `COMPETITIVE_ANALYSIS`).
+- Frontend polls `GET /agent/runs/:id` until `COMPLETED`, then redirects to checklists/documents page.
+- Checklist agent (`checklist-agent.ts`): generates 25-35 items with detailed descriptions (6-10 sentences each), grouped by sections, personalized to project context and language.
+- Document agent (`document-agent.ts`): for `REPORT` type, loads real project data (content, campaigns, subscribers, social accounts, checklists) and instructs AI to use only real data.
+- `input.language` comes from `svelte-i18n` `$locale` — all generated content is in the user's language.
+
+### AI Chat Context
+- Chat page (`/ai-chat`) shows organization + project context in breadcrumb header.
+- When selecting an existing session, `currentProjectStore` is restored from the session's `projectId`.
+- "New Chat" shows a scope picker: user chooses organization-level or a specific project.
+- Session sidebar shows project name (or "Organization chat") under each session title.
+- Delete chat shows confirmation modal.
+
+### Getting Started Steps (Project Overview)
+- `ai_strategy`: checks `localStorage` flag, prompt is i18n-localized via `projects.gs.aiStrategyPrompt`.
+- `first_content`: checks `summary.contentCountAll > 0` (all statuses, not just PUBLISHED).
+- `first_checklist`: checks `summary.checklistCount > 0` (checklist existence, not completed items).
+- `share_social`: checks `summary.socialAccountCount > 0` (active social accounts in org).
+
+### Analytics Summary API
+`GET /analytics/summary` returns: `contentCount` (published), `campaignCount` (active), `subscriberCount` (active), `checklistItems` (completed), `checklistCount` (total checklists), `contentCountAll` (all statuses), `socialAccountCount` (active social accounts).
+
 ## Claude Code Slash Commands
 
 Custom commands for the team. Use as `/command <args>` in Claude Code.

@@ -87,40 +87,62 @@ Generates marketing content for all supported formats and platforms.
 
 **File:** `apps/ai-agent/src/agents/checklist-agent.ts`
 
-Generates task checklists for marketing activities.
+Generates detailed task checklists for marketing activities.
 
 **Input:**
 ```json
 {
   "type": "LAUNCH | WEEKLY | CAMPAIGN_PREP | SEO | SOCIAL_MEDIA | EMAIL_CAMPAIGN | PRODUCT_HUNT_LAUNCH",
-  "description": "Optional context"
+  "language": "en | pl | ru",
+  "context": "Optional additional context"
 }
 ```
 
 **Behavior:**
-- Generates prioritized checklist items with LOW/MEDIUM/HIGH/CRITICAL priorities
-- Creates Checklist and ChecklistItem records in DB
-- Supports `PRODUCT_HUNT_LAUNCH` type for launch day checklists
+- Generates 25-35 items grouped into 4-6 sections
+- Each item has a 6-10 sentence description: specific steps, tools, metrics, common mistakes
+- Priorities: CRITICAL (4-6 items), HIGH (8-10), MEDIUM, LOW
+- `maxTokens: 16384`, temperature: 0.3
+- Language support via `getLanguageInstruction(language)`
+- LangGraph flow: `loadContext → generateChecklist → parseJson → [fixJson] → saveChecklist`
+- Creates Checklist + ChecklistItem records in DB
 
 ### Document Agent
 
 **File:** `apps/ai-agent/src/agents/document-agent.ts`
 
-Generates marketing documents.
+Generates marketing documents in Markdown format.
 
 **Input:**
 ```json
 {
   "type": "MARKETING_PLAN | REPORT | COMPETITIVE_ANALYSIS | BRAND_GUIDELINES | CONTENT_CALENDAR | PRODUCT_HUNT_BRIEF",
-  "topic": "Q1 2026 marketing strategy",
-  "additionalContext": "Focus on B2B SaaS"
+  "language": "en | pl | ru",
+  "title": "Performance Report",
+  "context": "Optional additional context"
 }
 ```
 
 **Behavior:**
-- Generates structured Markdown documents with sections, headers, and actionable recommendations
+- `maxTokens: 8192`, temperature: 0.4
+- For `REPORT` type, loads real project data from DB:
+  - Content (statuses, types, recent entries)
+  - Campaigns (statuses)
+  - Email subscribers (count)
+  - Connected social accounts
+  - Checklists (task completion %)
+- AI is instructed to use **only real data**, not invent metrics
+- If data is missing, states "no data available" and recommends what to set up
 - `PRODUCT_HUNT_BRIEF` output includes: tagline, description, maker comment, launch-day social posts
 - Creates Document record in DB
+
+### Templates Page Integration
+
+The `/templates` page uses CHECKLIST and DOCUMENT agents:
+- Frontend sends `POST /agent/run` with `agentType`, `input.type`, `input.language` (from `$locale`)
+- Polls `GET /agent/runs/:id` every 2 seconds until `COMPLETED`
+- Shows generation overlay with animation (30-60 seconds)
+- Redirects to checklists/documents page on completion
 
 ### SEO Agent
 

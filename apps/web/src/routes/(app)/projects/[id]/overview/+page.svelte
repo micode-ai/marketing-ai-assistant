@@ -10,7 +10,7 @@
   import { API_URL } from '$lib/config';
   import type { Project, ProjectExportSection } from '@marketing-ai/shared-types';
 
-  let summary: { contentCount: number; campaignCount: number; subscriberCount: number; checklistItems: number } | null = null;
+  let summary: { contentCount: number; campaignCount: number; subscriberCount: number; checklistItems: number; checklistCount: number; contentCountAll: number; socialAccountCount: number } | null = null;
   let loading = true;
   $: projectId = $page.params['id'];
 
@@ -101,7 +101,7 @@
       id: 'ai_strategy',
       labelKey: 'projects.gs.aiStrategy',
       descKey: 'projects.gs.aiStrategyDesc',
-      href: `/ai-chat?prompt=${encodeURIComponent('Give me a 30-day marketing plan for my product')}`,
+      href: `/ai-chat?prompt=${encodeURIComponent($_('projects.gs.aiStrategyPrompt'))}`,
       done: browser && localStorage.getItem(`gs_ai_strategy_${projectId}`) === 'true',
       external: true,
     },
@@ -110,7 +110,7 @@
       labelKey: 'projects.gs.firstContent',
       descKey: 'projects.gs.firstContentDesc',
       href: 'content',
-      done: (summary?.contentCount ?? 0) > 0,
+      done: (summary?.contentCountAll ?? 0) > 0,
       external: false,
     },
     {
@@ -118,7 +118,7 @@
       labelKey: 'projects.gs.firstChecklist',
       descKey: 'projects.gs.firstChecklistDesc',
       href: 'checklists',
-      done: (summary?.checklistItems ?? 0) > 0,
+      done: (summary?.checklistCount ?? 0) > 0,
       external: false,
     },
     {
@@ -126,7 +126,7 @@
       labelKey: 'projects.gs.shareContent',
       descKey: 'projects.gs.shareContentDesc',
       href: '/settings/integrations',
-      done: false,
+      done: (summary?.socialAccountCount ?? 0) > 0,
       external: true,
     },
   ];

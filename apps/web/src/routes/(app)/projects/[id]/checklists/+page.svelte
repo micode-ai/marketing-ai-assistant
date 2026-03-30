@@ -172,8 +172,10 @@
   function preCollapseSections(data: any[]) {
     for (const checklist of data) {
       const sections = groupBySection(checklist.items || []);
-      for (const g of sections) {
-        if (g.section) collapsedSections.add(`${checklist.id}::${g.section}`);
+      for (let i = 0; i < sections.length; i++) {
+        const g = sections[i];
+        // Keep the first section expanded, collapse the rest
+        if (g.section && i > 0) collapsedSections.add(`${checklist.id}::${g.section}`);
       }
     }
     collapsedSections = collapsedSections;
@@ -312,9 +314,9 @@
   async function deleteChecklist(id: string) {
     try {
       await api.delete(`/checklists/${id}`);
-      checklists = checklists.filter(c => c.id !== id);
-    } catch (e: any) { alert(e.message); }
-    finally { deletingId = null; }
+    } catch { /* ignore — may already be deleted */ }
+    checklists = checklists.filter(c => c.id !== id);
+    deletingId = null;
   }
 
   // ── MD Parsing ──
@@ -798,7 +800,7 @@
             <div class="bg-primary-600 h-1.5 rounded-full transition-all duration-500" style="width: {progress}%"></div>
           </div>
           <div class="space-y-1">
-            {#each sections as group, gi (group.section ?? `__${gi}`)}
+            {#each sections as group, gi (`${gi}::${group.section ?? ''}`)}
               {#if group.section}
                 {@const sectionKey = `${checklist.id}::${group.section}`}
                 {@const sectionDone = group.items.filter((i: any) => i.isCompleted).length}

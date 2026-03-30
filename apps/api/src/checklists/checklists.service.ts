@@ -96,6 +96,8 @@ export class ChecklistsService {
   }
 
   async delete(id: string) {
+    const checklist = await this.prisma.checklist.findUnique({ where: { id } });
+    if (!checklist) throw new NotFoundException('Checklist not found');
     return this.prisma.checklist.delete({ where: { id } });
   }
 

@@ -41,6 +41,43 @@ Marketing AI Assistant uses OpenAI's GPT-4o model to help you create marketing c
 - **Iterate** — Generate multiple versions and combine the best parts
 - **Edit the output** — AI provides a strong starting point; always review and personalize
 
+## Templates
+
+The **Templates** section in the main menu contains ready-made marketing templates that are AI-generated and personalized for your project.
+
+### Checklist Templates
+
+| Template | Type | Description |
+|----------|------|-------------|
+| Product Launch | LAUNCH | Full checklist from research to post-launch |
+| Email Campaign | EMAIL_CAMPAIGN | Strategy, list prep, testing, analytics |
+| SEO Audit | SEO | Technical SEO, on-page, content, link building |
+| Social Media Launch | SOCIAL_MEDIA | Strategy, content planning, community, analytics |
+| Campaign Prep | CAMPAIGN_PREP | Strategy, creative, technical setup, launch |
+
+### Document Templates
+
+| Template | Type | Description |
+|----------|------|-------------|
+| Marketing Plan | MARKETING_PLAN | Quarterly strategy document |
+| Performance Report | REPORT | Report based on **real project data** |
+| Competitive Analysis | COMPETITIVE_ANALYSIS | Market and competitor research |
+
+### How It Works
+
+1. Go to **Templates** in the main navigation
+2. Click any template card
+3. If no project is selected, a project picker will appear
+4. AI starts generation (30-60 seconds) with a loading indicator
+5. Once complete, you are redirected to the checklists or documents page
+
+### Key Features
+
+- **Personalization** — AI uses your project name, industry, target audience, and website
+- **Language** — content is generated in your interface language (English, Polish, Russian)
+- **Detailed descriptions** — each checklist item contains a mini-guide of 6-10 sentences with specific tools, steps, and metrics
+- **Real data** — the "Performance Report" template analyzes real project data (content, campaigns, subscribers, social accounts, checklists) and does not invent metrics
+
 ## AI Checklist Generation
 
 ### How It Works
@@ -58,13 +95,12 @@ Marketing AI Assistant uses OpenAI's GPT-4o model to help you create marketing c
 4. Add optional context describing your specific needs
 5. Click **Generate**
 
-The AI creates a prioritized checklist with tasks relevant to your project and chosen type.
-
 ### What You Get
 
-- Task items with clear, actionable descriptions
-- Priority assignments (Low, Medium, High, Critical)
-- Logical ordering of tasks
+- 25-35 tasks grouped into 4-6 sections
+- Each task with a detailed description (6-10 sentences): specific steps, tools, metrics, common mistakes
+- Priorities: Critical (4-6 tasks), High (8-10), Medium and Low
+- First section expanded by default, others collapsed
 
 ### Switching Between Checklists
 
@@ -130,8 +166,21 @@ The AI generates a structured document covering positioning, competitive landsca
 ### How It Works
 
 1. Click **AI Chat** in the main navigation
-2. Type your question or request
-3. The AI responds with marketing advice and guidance
+2. When creating a new chat, choose the context:
+   - **Organization** — general questions without project context
+   - **Specific project** — AI loads project context (description, audience, industry)
+3. Type your question or request
+4. The AI responds with marketing advice and guidance
+
+### Chat Context
+
+The chat header shows the current context as breadcrumbs:
+- **Organization > Project** — when a project is selected
+- **Organization > No project selected** — for organization-level chat
+
+When selecting an existing chat session, the project is automatically restored from the session.
+
+The sessions sidebar shows the project name (or "Organization chat") under each session title.
 
 ### What You Can Ask
 
@@ -184,9 +233,11 @@ AI Chat responses are rendered with full Markdown formatting:
 - `Code blocks` for technical content
 - [Links]() to relevant pages
 
-### Managing Messages
+### Managing Messages and Sessions
 
-- **Delete a message** — hover over any message and click the X button to remove it
+- **Delete a message** — hover over any message and click the delete button
+- **Delete a session** — click the trash icon next to the session; a confirmation dialog will appear
+- The delete button is always visible for the active session; for others it appears on hover
 - Only you (the chat session creator) can delete messages
 
 ## AI Usage Tracking

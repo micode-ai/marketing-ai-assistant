@@ -12,7 +12,7 @@ function getModel() {
   return new ChatOpenAI({
     model:       MODEL,
     temperature: 0.4,
-    maxTokens:   4096,
+    maxTokens:   8192,
     apiKey:      process.env['OPENAI_API_KEY'],
   });
 }
@@ -30,16 +30,19 @@ Structure:
 8. KPIs & Measurement
 9. Timeline`,
 
-  REPORT: `Create a marketing performance report.
+  REPORT: `Create a marketing performance report based ONLY on the REAL PROJECT DATA provided above.
+CRITICAL: Do NOT invent numbers, percentages, traffic stats, or conversion rates. Use ONLY the data given.
+If certain data is missing, clearly state "No data available" and recommend what to set up to track it.
+
 Structure:
-1. Executive Summary
-2. Campaign Performance Overview
-3. Key Metrics & Results (vs. targets)
-4. Channel Performance (email, social, organic)
-5. Wins & Highlights
-6. Challenges & Learnings
-7. Recommendations
-8. Next Steps`,
+1. Executive Summary (honest overview of current state)
+2. Content Performance (based on real content data: how many pieces, statuses, types)
+3. Campaign Status (based on real campaign data, or state that no campaigns exist yet)
+4. Email Marketing (subscriber count, or recommend setting it up)
+5. Social Media Presence (connected accounts, or recommend connecting)
+6. Task & Checklist Progress (completion rates from real checklist data)
+7. Gaps & Missing Data (what is NOT being tracked and should be)
+8. Recommendations & Next Steps (specific, actionable based on current state)`,
 
   COMPETITIVE_ANALYSIS: `Create a comprehensive competitive analysis.
 Structure:
@@ -98,7 +101,82 @@ async function loadContext(state: State) {
     include: { _count: { select: { campaigns: true, content: true } } },
   });
   if (!project) throw new Error('Project not found');
-  return { project };
+
+  // For REPORT type, load real project data
+  const docType = (state.input['type'] as string) || 'MARKETING_PLAN';
+  let projectData = '';
+
+  if (docType === 'REPORT') {
+    const [contents, campaigns, checklists, subscribers, socialAccounts] = await Promise.all([
+      prisma.content.findMany({
+        where: { projectId: state.projectId },
+        select: { title: true, type: true, status: true, platform: true, createdAt: true },
+        orderBy: { createdAt: 'desc' },
+        take: 50,
+      }),
+      prisma.campaign.findMany({
+        where: { projectId: state.projectId },
+        select: { name: true, status: true, type: true, createdAt: true },
+        orderBy: { createdAt: 'desc' },
+        take: 20,
+      }),
+      prisma.checklist.findMany({
+        where: { projectId: state.projectId },
+        include: {
+          items: { select: { title: true, isCompleted: true, section: true } },
+        },
+      }),
+      prisma.emailSubscriber.count({
+        where: { list: { projectId: state.projectId }, status: 'ACTIVE' },
+      }),
+      prisma.socialAccount.findMany({
+        where: { organization: { projects: { some: { id: state.projectId } } }, status: 'ACTIVE' },
+        select: { platform: true, accountName: true },
+      }),
+    ]);
+
+    // Content stats
+    const contentByStatus: Record<string, number> = {};
+    const contentByType: Record<string, number> = {};
+    for (const c of contents) {
+      contentByStatus[c.status] = (contentByStatus[c.status] || 0) + 1;
+      contentByType[c.type] = (contentByType[c.type] || 0) + 1;
+    }
+
+    // Campaign stats
+    const campaignByStatus: Record<string, number> = {};
+    for (const c of campaigns) {
+      campaignByStatus[c.status] = (campaignByStatus[c.status] || 0) + 1;
+    }
+
+    // Checklist stats
+    let totalItems = 0, completedItems = 0;
+    for (const cl of checklists) {
+      totalItems += cl.items.length;
+      completedItems += cl.items.filter(i => i.isCompleted).length;
+    }
+
+    projectData =
+      `\n\n=== REAL PROJECT DATA (use this for the report) ===\n` +
+      `\nCONTENT (${contents.length} total):\n` +
+      `- By status: ${Object.entries(contentByStatus).map(([k, v]) => `${k}: ${v}`).join(', ') || 'none'}\n` +
+      `- By type: ${Object.entries(contentByType).map(([k, v]) => `${k}: ${v}`).join(', ') || 'none'}\n` +
+      (contents.length > 0 ? `- Recent: ${contents.slice(0, 5).map(c => `"${c.title}" (${c.type}, ${c.status})`).join('; ')}\n` : '') +
+      `\nCAMPAIGNS (${campaigns.length} total):\n` +
+      `- By status: ${Object.entries(campaignByStatus).map(([k, v]) => `${k}: ${v}`).join(', ') || 'none'}\n` +
+      (campaigns.length > 0 ? `- List: ${campaigns.map(c => `"${c.name}" (${c.status})`).join('; ')}\n` : '') +
+      `\nEMAIL:\n- Active subscribers: ${subscribers}\n` +
+      `\nSOCIAL ACCOUNTS: ${socialAccounts.length > 0 ? socialAccounts.map(a => `${a.platform} (${a.accountName})`).join(', ') : 'none connected'}\n` +
+      `\nCHECKLISTS (${checklists.length} total):\n` +
+      `- Tasks: ${completedItems}/${totalItems} completed (${totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0}%)\n` +
+      (checklists.length > 0 ? `- List: ${checklists.map(cl => `"${cl.name}" (${cl.items.filter(i => i.isCompleted).length}/${cl.items.length})`).join('; ')}\n` : '') +
+      `\n=== END OF REAL DATA ===\n` +
+      `\nIMPORTANT: Base the report ONLY on real data above. Do NOT invent metrics, traffic numbers, or conversion rates that are not in the data. ` +
+      `If data is missing (e.g., no campaigns), state that clearly and provide recommendations for what to track. ` +
+      `Be honest about the current state — a useful report reflects reality, not fiction.`;
+  }
+
+  return { project: { ...project, _projectData: projectData } };
 }
 
 async function generateDocument(state: State) {
@@ -119,6 +197,7 @@ async function generateDocument(state: State) {
     `Active Campaigns: ${project._count.campaigns}\n` +
     `Content Published: ${project._count.content}\n` +
     (extraContext ? `\nAdditional Context: ${extraContext}\n` : '') +
+    (project._projectData || '') +
     `\nCreate a detailed, professional, actionable document. Use Markdown formatting with headers, bullet points, and tables where appropriate.` +
     getLanguageInstruction(language);
 
