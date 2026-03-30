@@ -205,6 +205,7 @@
       "doItNow": "Do it now",
       "aiStrategy": "Get your AI marketing strategy",
       "aiStrategyDesc": "Ask AI for a personalized 30-day plan",
+      "aiStrategyPrompt": "Create a detailed 30-day marketing strategy for my product. Include weekly goals, specific daily tasks, recommended channels (social media, email, content marketing, SEO), KPIs to track, content ideas for each week, and budget allocation tips. Make it actionable and step-by-step.",
       "firstContent": "Create your first social media post",
       "firstContentDesc": "Generate AI content in Content Studio",
       "firstChecklist": "Set up your marketing checklist",
@@ -527,7 +528,24 @@
     },
     "thinking": "Thinking...",
     "error": "Failed to get a response. Please try again.",
+    "deleteChat": {
+      "title": "Delete chat",
+      "message": "This chat and all its messages will be permanently deleted.",
+      "cancel": "Cancel",
+      "confirm": "Delete"
+    },
     "newChat": "New Chat",
+    "noProject": "No project selected",
+    "orgLevel": "Organization chat",
+    "chatContext": {
+      "project": "Chatting in the context of project \"{name}\". The AI knows your project details.",
+      "orgOnly": "Chatting at the organization level ({org}). Select a project for context-aware answers."
+    },
+    "scopePicker": {
+      "subtitle": "Choose the context for this conversation",
+      "orgHint": "General questions, no project context",
+      "projectHint": "Project-specific chat"
+    },
     "contextualHint": "Suggested for {name}:",
     "contextual": {
       "socialWeek": "Create a week of social posts for {name}",
@@ -655,23 +673,27 @@
   "templates": {
     "subtitle": "Ready-to-use marketing templates powered by AI",
     "productLaunch": "Product Launch",
-    "productLaunchDesc": "30+ steps to launch your product",
+    "productLaunchDesc": "AI-generated: research, messaging, content, launch day & post-launch",
     "emailCampaign": "Email Campaign",
-    "emailCampaignDesc": "From list to results",
+    "emailCampaignDesc": "AI-generated: strategy, list prep, content, testing & analytics",
     "marketingPlan": "Marketing Plan",
-    "marketingPlanDesc": "Quarterly strategy template",
+    "marketingPlanDesc": "AI-generated quarterly strategy document",
     "seoAudit": "SEO Audit",
-    "seoAuditDesc": "Technical & content SEO",
+    "seoAuditDesc": "AI-generated: technical SEO, on-page, content & link building",
     "socialMediaLaunch": "Social Media Launch",
-    "socialMediaLaunchDesc": "Platform setup & strategy",
+    "socialMediaLaunchDesc": "AI-generated: strategy, content planning, community & analytics",
     "performanceReport": "Performance Report",
-    "performanceReportDesc": "Monthly metrics template",
+    "performanceReportDesc": "AI-generated monthly metrics report",
     "campaignPrep": "Campaign Prep",
-    "campaignPrepDesc": "Pre-launch campaign checklist",
+    "campaignPrepDesc": "AI-generated: strategy, creative, technical setup & launch",
     "competitiveAnalysis": "Competitive Analysis",
-    "competitiveAnalysisDesc": "Market & competitor research",
+    "competitiveAnalysisDesc": "AI-generated: research, product, marketing & battle cards",
     "checklist": "checklist",
-    "document": "document"
+    "document": "document",
+    "pickProject": "Select a project",
+    "pickProjectDesc": "Choose which project to apply this template to",
+    "generating": "AI is generating your template...",
+    "generatingHint": "This may take 30-60 seconds. Creating detailed, actionable items personalized for your project."
   },
   "social": {
     "title": "Connected Accounts",

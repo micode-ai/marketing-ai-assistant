@@ -203,6 +203,7 @@
       "doItNow": "Zrób teraz",
       "aiStrategy": "Uzyskaj strategię marketingową AI",
       "aiStrategyDesc": "Poproś AI o spersonalizowany 30-dniowy plan",
+      "aiStrategyPrompt": "Stwórz szczegółową 30-dniową strategię marketingową dla mojego produktu. Uwzględnij cele tygodniowe, konkretne codzienne zadania, rekomendowane kanały (media społecznościowe, email, content marketing, SEO), KPI do śledzenia, pomysły na treści na każdy tydzień oraz wskazówki dotyczące budżetu. Zrób to praktycznym i krok po kroku.",
       "firstContent": "Utwórz swój pierwszy post w mediach społecznościowych",
       "firstContentDesc": "Wygeneruj treść AI w Content Studio",
       "firstChecklist": "Skonfiguruj checklistę marketingową",
@@ -518,7 +519,24 @@
     },
     "thinking": "Myślę...",
     "error": "Nie udało się uzyskać odpowiedzi. Spróbuj ponownie.",
+    "deleteChat": {
+      "title": "Usuń czat",
+      "message": "Ten czat i wszystkie jego wiadomości zostaną trwale usunięte.",
+      "cancel": "Anuluj",
+      "confirm": "Usuń"
+    },
     "newChat": "Nowy czat",
+    "noProject": "Nie wybrano projektu",
+    "orgLevel": "Czat organizacji",
+    "chatContext": {
+      "project": "Czat w kontekście projektu \"{name}\". AI zna szczegóły Twojego projektu.",
+      "orgOnly": "Czat na poziomie organizacji ({org}). Wybierz projekt, aby uzyskać kontekstowe odpowiedzi."
+    },
+    "scopePicker": {
+      "subtitle": "Wybierz kontekst dla tej rozmowy",
+      "orgHint": "Ogólne pytania, bez kontekstu projektu",
+      "projectHint": "Czat w kontekście projektu"
+    },
     "contextualHint": "Sugestie dla {name}:",
     "contextual": {
       "socialWeek": "Utwórz tydzień postów społecznościowych dla {name}",
@@ -635,23 +653,27 @@
   "templates": {
     "subtitle": "Gotowe szablony marketingowe wspierane przez AI",
     "productLaunch": "Uruchomienie produktu",
-    "productLaunchDesc": "30+ kroków do uruchomienia produktu",
+    "productLaunchDesc": "Generowane przez AI: badania, komunikacja, treści, dzień premiery i po premierze",
     "emailCampaign": "Kampania email",
-    "emailCampaignDesc": "Od listy do wyników",
+    "emailCampaignDesc": "Generowane przez AI: strategia, przygotowanie listy, treść, testy i analityka",
     "marketingPlan": "Plan marketingowy",
-    "marketingPlanDesc": "Kwartalny szablon strategii",
+    "marketingPlanDesc": "Generowanie kwartalnego dokumentu strategicznego przez AI",
     "seoAudit": "Audyt SEO",
-    "seoAuditDesc": "Techniczne i treściowe SEO",
+    "seoAuditDesc": "Generowane przez AI: techniczne SEO, on-page, treści i link building",
     "socialMediaLaunch": "Uruchomienie w social media",
-    "socialMediaLaunchDesc": "Konfiguracja platform i strategia",
+    "socialMediaLaunchDesc": "Generowane przez AI: strategia, planowanie treści, społeczność i analityka",
     "performanceReport": "Raport wyników",
-    "performanceReportDesc": "Szablon miesięcznych metryk",
+    "performanceReportDesc": "Generowanie miesięcznego raportu metryk przez AI",
     "campaignPrep": "Przygotowanie kampanii",
-    "campaignPrepDesc": "Lista kontrolna przed uruchomieniem",
+    "campaignPrepDesc": "Generowane przez AI: strategia, kreacja, konfiguracja techniczna i start",
     "competitiveAnalysis": "Analiza konkurencji",
-    "competitiveAnalysisDesc": "Badanie rynku i konkurentów",
+    "competitiveAnalysisDesc": "Generowane przez AI: badania, produkt, marketing i karty konkurencji",
     "checklist": "lista kontrolna",
-    "document": "dokument"
+    "document": "dokument",
+    "pickProject": "Wybierz projekt",
+    "pickProjectDesc": "Wybierz projekt, do którego zastosować ten szablon",
+    "generating": "AI generuje twój szablon...",
+    "generatingHint": "To może zająć 30-60 sekund. Tworzymy szczegółowe, spersonalizowane punkty dla twojego projektu."
   },
   "social": {
     "title": "Połączone konta",

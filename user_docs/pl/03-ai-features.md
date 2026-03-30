@@ -41,6 +41,43 @@ Marketing AI Assistant wykorzystuje model OpenAI GPT-4o do tworzenia tresci mark
 - **Iteruj** — generuj wiele wersji i lacz najlepsze czesci
 - **Edytuj wynik** — AI daje swietny punkt wyjscia; zawsze przegladaj i personalizuj
 
+## Szablony
+
+Sekcja **Szablony** w glownym menu zawiera gotowe szablony marketingowe generowane przez AI i personalizowane dla Twojego projektu.
+
+### Szablony list kontrolnych
+
+| Szablon | Typ | Opis |
+|---------|-----|------|
+| Wprowadzenie produktu | LAUNCH | Pelna lista od badan do post-premiery |
+| Kampania e-mail | EMAIL_CAMPAIGN | Strategia, przygotowanie listy, testy, analityka |
+| Audyt SEO | SEO | Techniczne SEO, on-page, tresci, link building |
+| Start w mediach spolecznosciowych | SOCIAL_MEDIA | Strategia, planowanie tresci, spolecznosc, analityka |
+| Przygotowanie kampanii | CAMPAIGN_PREP | Strategia, kreacja, konfiguracja techniczna, start |
+
+### Szablony dokumentow
+
+| Szablon | Typ | Opis |
+|---------|-----|------|
+| Plan marketingowy | MARKETING_PLAN | Kwartalny dokument strategiczny |
+| Raport wynikow | REPORT | Raport oparty na **rzeczywistych danych projektu** |
+| Analiza konkurencji | COMPETITIVE_ANALYSIS | Badanie rynku i konkurentow |
+
+### Jak to dziala
+
+1. Przejdz do **Szablony** w glownej nawigacji
+2. Kliknij wybrany szablon
+3. Jesli projekt nie jest wybrany — pojawi sie wybor projektu
+4. AI rozpocznie generowanie (30-60 sekund) — zobaczysz wskaznik ladowania
+5. Po zakonczeniu zostaniesz przekierowany na strone list kontrolnych lub dokumentow
+
+### Kluczowe cechy
+
+- **Personalizacja** — AI uwzglednia nazwe, branze, grupe docelowa i strone projektu
+- **Jezyk** — tresc generowana w jezyku interfejsu (angielski, polski, rosyjski)
+- **Szczegolowe opisy** — kazdy punkt listy kontrolnej zawiera mini-przewodnik na 6-10 zdan z konkretnymi narzedziami, krokami i metrykami
+- **Rzeczywiste dane** — szablon „Raport wynikow" analizuje rzeczywiste dane projektu (tresci, kampanie, subskrybenci, media spolecznosciowe, listy kontrolne) i nie wymysla metryk
+
 ## Generowanie list kontrolnych AI
 
 ### Jak to dziala
@@ -60,9 +97,10 @@ Marketing AI Assistant wykorzystuje model OpenAI GPT-4o do tworzenia tresci mark
 
 ### Co otrzymasz
 
-- Elementy zadan z jasnymi, wykonalnymi opisami
-- Przydzielone priorytety (Niski, Sredni, Wysoki, Krytyczny)
-- Logiczna kolejnosc zadan
+- 25-35 zadan pogrupowanych w 4-6 sekcji
+- Kazde zadanie ze szczegolowym opisem (6-10 zdan): konkretne kroki, narzedzia, metryki, typowe bledy
+- Priorytety: Krytyczny (4-6 zadan), Wysoki (8-10), Sredni i Niski
+- Pierwsza sekcja rozwinieta domyslnie, pozostale zwiniete
 
 ### Przelaczanie miedzy listami kontrolnymi
 
@@ -101,8 +139,21 @@ Gdy projekt ma wiele list kontrolnych, na gorze strony List kontrolnych pojawiaj
 ### Jak to dziala
 
 1. Kliknij **Czat AI** w glownej nawigacji
-2. Wpisz swoje pytanie lub zapytanie
-3. AI odpowie poradami marketingowymi
+2. Podczas tworzenia nowego czatu wybierz kontekst:
+   - **Organizacja** — ogolne pytania bez kontekstu projektu
+   - **Konkretny projekt** — AI zaladuje kontekst projektu (opis, grupa docelowa, branza)
+3. Wpisz swoje pytanie lub zapytanie
+4. AI odpowie poradami marketingowymi
+
+### Kontekst czatu
+
+Naglowek czatu pokazuje biezacy kontekst w formie „okruszków chleba":
+- **Organizacja > Projekt** — gdy projekt jest wybrany
+- **Organizacja > Nie wybrano projektu** — dla czatu na poziomie organizacji
+
+Przy wyborze istniejącej sesji czatu projekt jest automatycznie przywracany z sesji.
+
+Panel boczny sesji pokazuje nazwe projektu (lub „Czat organizacji") pod kazda nazwa sesji.
 
 ### O co mozesz pytac
 
@@ -155,9 +206,11 @@ Odpowiedzi czatu AI sa renderowane z pelnym formatowaniem Markdown:
 - `Bloki kodu` dla tresci technicznych
 - [Linki]() do odpowiednich stron
 
-### Zarzadzanie wiadomosciami
+### Zarzadzanie wiadomosciami i sesjami
 
-- **Usun wiadomosc** — najedz kursorem na wiadomosc i kliknij przycisk X, aby ja usunac
+- **Usun wiadomosc** — najedz kursorem na wiadomosc i kliknij przycisk usuwania
+- **Usun sesje** — kliknij ikone kosza obok sesji; pojawi sie okno potwierdzenia
+- Przycisk usuwania jest zawsze widoczny dla aktywnej sesji; dla pozostalych pojawia sie po najechaniu
 - Tylko Ty (tworca sesji czatu) mozesz usuwac wiadomosci
 
 ## Generowanie strategii AI

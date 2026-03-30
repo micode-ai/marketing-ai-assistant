@@ -131,13 +131,35 @@ export class AnalyticsService {
       checklistWhere.checklist = { organizationId: scope.organizationId };
     }
 
-    const [contentCount, campaignCount, subscriberCount, checklistItems] = await Promise.all([
+    const checklistCountWhere: any = {};
+    const contentAllWhere: any = {};
+    if (scope.projectId) {
+      checklistCountWhere.projectId = scope.projectId;
+      contentAllWhere.projectId = scope.projectId;
+    } else if (scope.organizationId) {
+      checklistCountWhere.organizationId = scope.organizationId;
+      contentAllWhere.organizationId = scope.organizationId;
+    }
+
+    const socialAccountWhere: any = { status: 'ACTIVE' };
+    if (scope.projectId) {
+      // Social accounts are org-scoped; resolve org from project
+      const project = await this.prisma.project.findUnique({ where: { id: scope.projectId }, select: { organizationId: true } });
+      if (project) socialAccountWhere.organizationId = project.organizationId;
+    } else if (scope.organizationId) {
+      socialAccountWhere.organizationId = scope.organizationId;
+    }
+
+    const [contentCount, campaignCount, subscriberCount, checklistItems, checklistCount, contentCountAll, socialAccountCount] = await Promise.all([
       this.prisma.content.count({ where: contentWhere }),
       this.prisma.campaign.count({ where: campaignWhere }),
       this.prisma.emailSubscriber.count({ where: subscriberWhere }),
       this.prisma.checklistItem.count({ where: checklistWhere }),
+      this.prisma.checklist.count({ where: checklistCountWhere }),
+      this.prisma.content.count({ where: contentAllWhere }),
+      this.prisma.socialAccount.count({ where: socialAccountWhere }),
     ]);
-    return { contentCount, campaignCount, subscriberCount, checklistItems };
+    return { contentCount, campaignCount, subscriberCount, checklistItems, checklistCount, contentCountAll, socialAccountCount };
   }
 
   @Cron('0 1 * * *')
