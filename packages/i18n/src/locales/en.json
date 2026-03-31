@@ -709,6 +709,7 @@
     "connect": "Connect",
     "disconnect": "Disconnect",
     "connected": "Connected",
+    "addAnother": "+ Add another",
     "noAccounts": "No accounts connected",
     "noAccountsDesc": "Connect a social media account to start publishing content",
     "linkedin": "LinkedIn",

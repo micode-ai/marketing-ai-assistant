@@ -179,7 +179,7 @@
             <div class="text-xs text-gray-500">{$_('social.linkedinDesc')}</div>
           </div>
         </div>
-        <div class="flex items-center gap-2 flex-wrap">
+        <div class="flex flex-col gap-2">
           {#each accounts.filter(a => a.platform === 'LINKEDIN') as account}
             <div class="flex items-center gap-2">
               {#if account.profileImageUrl}
@@ -192,11 +192,9 @@
               </button>
             </div>
           {/each}
-          {#if !accounts.some(a => a.platform === 'LINKEDIN')}
-            <button on:click={() => showLinkedInModal = true} class="text-sm px-4 py-2 bg-[#0077B5] text-white rounded-lg hover:bg-[#006097] transition-colors duration-150 cursor-pointer font-medium">
-              {$_('social.connectLinkedIn')}
-            </button>
-          {/if}
+          <button on:click={() => showLinkedInModal = true} class="text-sm px-4 py-2 bg-[#0077B5] text-white rounded-lg hover:bg-[#006097] transition-colors duration-150 cursor-pointer font-medium self-start">
+            {accounts.some(a => a.platform === 'LINKEDIN') ? $_('social.addAnother') : $_('social.connectLinkedIn')}
+          </button>
         </div>
       </div>
     </div>
@@ -213,7 +211,7 @@
             <div class="text-xs text-gray-500">{$_('social.twitterDesc')}</div>
           </div>
         </div>
-        <div class="flex items-center gap-2 flex-wrap">
+        <div class="flex flex-col gap-2">
           {#each accounts.filter(a => a.platform === 'TWITTER') as account}
             <div class="flex items-center gap-2">
               {#if account.profileImageUrl}
@@ -226,11 +224,9 @@
               </button>
             </div>
           {/each}
-          {#if !accounts.some(a => a.platform === 'TWITTER')}
-            <button on:click={() => showTwitterModal = true} class="text-sm px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-700 transition-colors duration-150 cursor-pointer font-medium">
-              {$_('social.connectTwitter')}
-            </button>
-          {/if}
+          <button on:click={() => showTwitterModal = true} class="text-sm px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-700 transition-colors duration-150 cursor-pointer font-medium self-start">
+            {accounts.some(a => a.platform === 'TWITTER') ? $_('social.addAnother') : $_('social.connectTwitter')}
+          </button>
         </div>
       </div>
     </div>
@@ -247,7 +243,7 @@
             <div class="text-xs text-gray-500">{$_('social.facebookDesc')}</div>
           </div>
         </div>
-        <div class="flex items-center gap-2 flex-wrap">
+        <div class="flex flex-col gap-2">
           {#each accounts.filter(a => a.platform === 'FACEBOOK') as account}
             <div class="flex items-center gap-2">
               {#if account.profileImageUrl}
@@ -260,11 +256,9 @@
               </button>
             </div>
           {/each}
-          {#if !accounts.some(a => a.platform === 'FACEBOOK')}
-            <button on:click={() => showFacebookModal = true} class="text-sm px-4 py-2 bg-[#1877F2] text-white rounded-lg hover:bg-[#1565d8] transition-colors duration-150 cursor-pointer font-medium">
-              {$_('social.connectFacebook')}
-            </button>
-          {/if}
+          <button on:click={() => showFacebookModal = true} class="text-sm px-4 py-2 bg-[#1877F2] text-white rounded-lg hover:bg-[#1565d8] transition-colors duration-150 cursor-pointer font-medium self-start">
+            {accounts.some(a => a.platform === 'FACEBOOK') ? $_('social.addAnother') : $_('social.connectFacebook')}
+          </button>
         </div>
       </div>
     </div>
@@ -281,7 +275,7 @@
             <div class="text-xs text-gray-500">{$_('social.telegramDesc')}</div>
           </div>
         </div>
-        <div class="flex items-center gap-2 flex-wrap">
+        <div class="flex flex-col gap-2">
           {#each accounts.filter(a => a.platform === 'TELEGRAM') as account}
             <div class="flex items-center gap-2">
               <span class="text-sm text-gray-700 font-medium">{account.accountName}</span>
@@ -291,11 +285,9 @@
               </button>
             </div>
           {/each}
-          {#if !accounts.some(a => a.platform === 'TELEGRAM')}
-            <button on:click={() => showTelegramModal = true} class="text-sm px-4 py-2 bg-[#26A5E4] text-white rounded-lg hover:bg-[#1e8ec4] transition-colors duration-150 cursor-pointer font-medium">
-              {$_('social.connectTelegram')}
-            </button>
-          {/if}
+          <button on:click={() => showTelegramModal = true} class="text-sm px-4 py-2 bg-[#26A5E4] text-white rounded-lg hover:bg-[#1e8ec4] transition-colors duration-150 cursor-pointer font-medium self-start">
+            {accounts.some(a => a.platform === 'TELEGRAM') ? $_('social.addAnother') : $_('social.connectTelegram')}
+          </button>
         </div>
       </div>
     </div>
