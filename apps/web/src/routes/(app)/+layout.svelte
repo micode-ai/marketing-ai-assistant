@@ -3,7 +3,7 @@
   import { goto, afterNavigate } from '$app/navigation';
   import { onMount } from 'svelte';
   import { api } from '$lib/api/client';
-  import { organizationIdStore } from '$lib/stores/projects';
+  import { organizationIdStore, projectsStore, currentProjectStore, projectsLoaded, _storedProjectId } from '$lib/stores/projects';
   import { page } from '$app/stores';
   import Sidebar from '$lib/components/layout/Sidebar.svelte';
   import Header from '$lib/components/layout/Header.svelte';
@@ -73,6 +73,31 @@
       goto('/login');
       return;
     }
+
+      // Fetch projects for the validated org — needed by ProjectPicker and project restoration
+      const orgId = $organizationIdStore;
+      if (orgId) {
+        try {
+          const projects = await api.get<any[]>('/projects', { organizationId: orgId });
+          projectsStore.set(projects);
+          projectsLoaded.set(true);
+
+          // Restore sticky project from localStorage
+          if (_storedProjectId) {
+            const savedProject = projects.find((p: any) => p.id === _storedProjectId);
+            if (savedProject) {
+              currentProjectStore.set(savedProject);
+            } else {
+              // Project no longer exists or belongs to different org — clear
+              currentProjectStore.set(null);
+            }
+          }
+        } catch {
+          projectsStore.set([]);
+          projectsLoaded.set(true);
+        }
+      }
+
     // Default sidebar closed on mobile
     if (window.innerWidth < 768) {
       sidebarOpen = false;

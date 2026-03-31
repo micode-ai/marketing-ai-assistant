@@ -17,6 +17,7 @@
   function switchOrg(orgId: string) {
     organizationIdStore.set(orgId);
     showOrgDropdown = false;
+    currentProjectStore.set(null);
     window.location.href = '/dashboard';
   }
 
@@ -28,6 +29,7 @@
       await api.post(`/organizations/${leavingOrg.organization.id}/leave`);
       leavingOrg = null;
       showOrgDropdown = false;
+      currentProjectStore.set(null);
       organizationIdStore.set(null);
       window.location.href = '/dashboard';
     } catch {
@@ -73,13 +75,16 @@
     { href: '/templates', iconKey: 'clipboard', labelKey: 'nav.templates' },
   ];
 
-  const orgMarketingLinks = [
+  const marketingLinks = [
     { href: '/content',     iconKey: 'pencil',       labelKey: 'nav.orgContent' },
     { href: '/checklists',  iconKey: 'checkcircle',  labelKey: 'nav.orgChecklists' },
     { href: '/documents',   iconKey: 'document',     labelKey: 'nav.orgDocuments' },
     { href: '/campaigns',   iconKey: 'megaphone',    labelKey: 'nav.orgCampaigns' },
     { href: '/email',       iconKey: 'envelope',     labelKey: 'nav.orgEmail' },
     { href: '/analytics',   iconKey: 'presentation', labelKey: 'nav.orgAnalytics' },
+  ];
+
+  const advancedMarketingLinks = [
     { href: '/seo',         iconKey: 'globe',         labelKey: 'nav.orgSeo' },
     { href: '/competitors', iconKey: 'eye',           labelKey: 'nav.orgCompetitors' },
     { href: '/experiments', iconKey: 'beaker',        labelKey: 'nav.orgExperiments' },
@@ -96,23 +101,6 @@
     { href: '/settings/webhooks', iconKey: 'webhook', labelKey: 'nav.webhooks' },
   ];
 
-  const essentialLinks = [
-    { path: 'overview',   iconKey: 'chartbar',    labelKey: 'projects.overview' },
-    { path: 'content',    iconKey: 'pencil',      labelKey: 'projects.content' },
-    { path: 'checklists', iconKey: 'checkcircle', labelKey: 'projects.checklists' },
-    { path: 'email',      iconKey: 'envelope',    labelKey: 'projects.email' },
-    { path: 'campaigns',  iconKey: 'megaphone',   labelKey: 'projects.campaigns' },
-  ];
-
-  const advancedLinks = [
-    { path: 'documents',   iconKey: 'document',     labelKey: 'projects.documents' },
-    { path: 'analytics',   iconKey: 'presentation', labelKey: 'projects.analytics' },
-    { path: 'seo',         iconKey: 'globe',         labelKey: 'projects.seo' },
-    { path: 'experiments', iconKey: 'beaker',        labelKey: 'projects.experiments' },
-    { path: 'sequences',   iconKey: 'mailstack',     labelKey: 'projects.sequences' },
-    { path: 'competitors', iconKey: 'eye',           labelKey: 'projects.competitors' },
-    { path: 'calendar',    iconKey: 'calendar',      labelKey: 'projects.calendar' },
-  ];
 
   let showAdvanced = browser ? localStorage.getItem('sidebarAdvanced') === 'true' : false;
 
@@ -122,19 +110,30 @@
   }
 
   $: currentPath = $page.url.pathname;
-  $: projectId = $currentProjectStore?.id;
+
+  const marketingPathSegments = ['content', 'checklists', 'documents', 'campaigns', 'email', 'analytics', 'seo', 'competitors', 'experiments', 'sequences', 'calendar'];
+
+  function isActive(href: string): boolean {
+    if (currentPath === href || currentPath.startsWith(href + '/')) return true;
+    const segment = href.replace('/', '');
+    if (marketingPathSegments.includes(segment)) {
+      const projectRouteMatch = currentPath.match(/^\/projects\/[^/]+\/(.+)/);
+      if (projectRouteMatch) {
+        const subPath = projectRouteMatch[1].split('/')[0];
+        return subPath === segment;
+      }
+    }
+    return false;
+  }
 
   // Auto-expand advanced section when navigating to an advanced route
-  $: if ($currentProjectStore && projectId && !showAdvanced) {
-    const onAdvanced = advancedLinks.some(l => currentPath === `/projects/${projectId}/${l.path}`);
-    if (onAdvanced) {
+  $: {
+    const advancedHrefs = advancedMarketingLinks.map(l => l.href);
+    const isOnAdvanced = advancedHrefs.some(h => isActive(h));
+    if (isOnAdvanced && !showAdvanced) {
       showAdvanced = true;
       if (browser) localStorage.setItem('sidebarAdvanced', 'true');
     }
-  }
-
-  function isActive(href: string) {
-    return currentPath === href || currentPath.startsWith(href + '/');
   }
 </script>
 
@@ -243,11 +242,28 @@
         </ul>
       </div>
 
-      <!-- Org Marketing Sections -->
+      <!-- Marketing -->
       <div>
         <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-widest px-3 mb-2">{$_('nav.marketing')}</p>
         <ul class="space-y-0.5">
-          {#each orgMarketingLinks as link}
+          <!-- Overview — only when project selected -->
+          {#if $currentProjectStore}
+            {@const overviewHref = `/projects/${$currentProjectStore.id}/overview`}
+            <li>
+              <a
+                href={overviewHref}
+                class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-150 cursor-pointer
+                  {currentPath === overviewHref || currentPath.startsWith(overviewHref)
+                    ? 'bg-primary-50 text-primary-700 border-l-2 border-primary-600'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 border-l-2 border-transparent'}"
+              >
+                {@html icons['chartbar']}
+                <span>{$_('projects.overview')}</span>
+              </a>
+            </li>
+          {/if}
+
+          {#each marketingLinks as link}
             <li>
               <a
                 href={link.href}
@@ -261,24 +277,30 @@
               </a>
             </li>
           {/each}
-        </ul>
-      </div>
 
-      <!-- Current project navigation -->
-      {#if $currentProjectStore && projectId}
-        <div>
-          <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-widest px-3 mb-2 truncate" title={$currentProjectStore.name}>
-            {$currentProjectStore.name}
-          </p>
-          <ul class="space-y-0.5">
-            <!-- Essential links — always visible -->
-            {#each essentialLinks as link}
-              {@const href = `/projects/${projectId}/${link.path}`}
+          <!-- Advanced toggle -->
+          <li>
+            <button
+              on:click={toggleAdvanced}
+              class="w-full flex items-center justify-between px-3 py-2 text-xs font-medium text-gray-400 hover:text-gray-600 cursor-pointer transition-colors duration-150 mt-1"
+            >
+              <span>{showAdvanced ? $_('nav.hideAdvanced') : $_('nav.showAdvanced')}</span>
+              <svg
+                class="w-3.5 h-3.5 transition-transform duration-200 {showAdvanced ? 'rotate-180' : ''}"
+                fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+          </li>
+
+          {#if showAdvanced}
+            {#each advancedMarketingLinks as link}
               <li>
                 <a
-                  href={href}
+                  href={link.href}
                   class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-150 cursor-pointer
-                    {currentPath === href
+                    {isActive(link.href)
                       ? 'bg-primary-50 text-primary-700 border-l-2 border-primary-600'
                       : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 border-l-2 border-transparent'}"
                 >
@@ -287,44 +309,9 @@
                 </a>
               </li>
             {/each}
-
-            <!-- Advanced toggle button -->
-            <li>
-              <button
-                on:click={toggleAdvanced}
-                class="w-full flex items-center justify-between px-3 py-2 text-xs font-medium text-gray-400 hover:text-gray-600 cursor-pointer transition-colors duration-150 mt-1"
-              >
-                <span>{showAdvanced ? $_('nav.hideAdvanced') : $_('nav.showAdvanced')}</span>
-                <svg
-                  class="w-3.5 h-3.5 transition-transform duration-200 {showAdvanced ? 'rotate-180' : ''}"
-                  fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
-                >
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-            </li>
-
-            <!-- Advanced links — conditionally visible -->
-            {#if showAdvanced}
-              {#each advancedLinks as link}
-                {@const href = `/projects/${projectId}/${link.path}`}
-                <li>
-                  <a
-                    href={href}
-                    class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-150 cursor-pointer
-                      {currentPath === href
-                        ? 'bg-primary-50 text-primary-700 border-l-2 border-primary-600'
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 border-l-2 border-transparent'}"
-                  >
-                    {@html icons[link.iconKey]}
-                    <span>{$_(link.labelKey)}</span>
-                  </a>
-                </li>
-              {/each}
-            {/if}
-          </ul>
-        </div>
-      {/if}
+          {/if}
+        </ul>
+      </div>
 
       <!-- Settings -->
       <div>

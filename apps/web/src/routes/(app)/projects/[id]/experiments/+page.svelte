@@ -4,10 +4,19 @@
   import { onMount } from 'svelte';
   import { api } from '$lib/api/client';
   import SectionHint from '$lib/components/SectionHint.svelte';
+  import { currentProjectStore, projectsStore } from '$lib/stores/projects';
 
   let experiments: any[] = [];
   let loading = true;
   $: projectId = $page.params['id'];
+
+  // Sync picker with this project
+  $: if ($projectsStore.length > 0 && projectId) {
+    const project = $projectsStore.find((p: any) => p.id === projectId);
+    if (project && $currentProjectStore?.id !== projectId) {
+      currentProjectStore.set(project);
+    }
+  }
 
   // Create modal
   let showCreateModal = false;

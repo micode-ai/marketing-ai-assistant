@@ -4,6 +4,7 @@
   import { goto } from '$app/navigation';
   import { setLocale } from '$lib/i18n';
   import { locale } from 'svelte-i18n';
+  import ProjectPicker from './ProjectPicker.svelte';
 
   export let sidebarOpen: boolean;
 
@@ -30,6 +31,8 @@
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
     </svg>
   </button>
+
+  <ProjectPicker />
 
   <div class="flex items-center gap-3">
     <!-- Language switcher -->

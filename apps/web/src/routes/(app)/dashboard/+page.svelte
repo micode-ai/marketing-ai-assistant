@@ -1,24 +1,11 @@
 <script lang="ts">
   import { _ } from 'svelte-i18n';
-  import { onMount } from 'svelte';
   import { api } from '$lib/api/client';
-  import { organizationIdStore, projectsStore } from '$lib/stores/projects';
+  import { currentProjectStore, organizationIdStore, projectsStore } from '$lib/stores/projects';
   import type { Project, ProjectExportData, ProjectExportSection, ImportValidationResult } from '@marketing-ai/shared-types';
   import { goto } from '$app/navigation';
 
-  let loading = true;
-
-  onMount(async () => {
-    if ($organizationIdStore) {
-      try {
-        const projects = await api.get<Project[]>('/projects', { organizationId: $organizationIdStore });
-        projectsStore.set(projects);
-      } catch (e) {
-        console.error('Failed to load projects', e);
-      }
-    }
-    loading = false;
-  });
+  $: projects = $projectsStore;
 
   // ── Import ──
   let showImportModal = false;
@@ -146,23 +133,7 @@
     </div>
   </div>
 
-  {#if loading}
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {#each Array(3) as _}
-        <div class="bg-white rounded-xl border border-gray-200 p-6 animate-pulse">
-          <div class="flex items-center gap-3 mb-4">
-            <div class="w-10 h-10 bg-gray-200 rounded-lg"></div>
-            <div class="flex-1">
-              <div class="h-4 bg-gray-200 rounded w-3/4 mb-1"></div>
-              <div class="h-3 bg-gray-200 rounded w-1/2"></div>
-            </div>
-          </div>
-          <div class="h-3 bg-gray-200 rounded mb-2"></div>
-          <div class="h-3 bg-gray-200 rounded w-2/3"></div>
-        </div>
-      {/each}
-    </div>
-  {:else if $projectsStore.length === 0}
+  {#if $projectsStore.length === 0}
     <div class="flex flex-col items-center justify-center py-24 text-center">
       <div class="w-20 h-20 bg-primary-50 rounded-2xl flex items-center justify-center mb-6">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
@@ -180,6 +151,7 @@
       {#each $projectsStore as project}
         <a
           href="/projects/{project.id}/overview"
+          on:click={() => currentProjectStore.set(project)}
           class="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md hover:border-primary-200 transition-all duration-150 group block cursor-pointer border-t-4
             {project.status === 'ACTIVE' ? 'border-t-green-400' : project.status === 'PAUSED' ? 'border-t-amber-400' : 'border-t-gray-200'}"
         >

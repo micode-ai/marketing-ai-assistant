@@ -35,7 +35,9 @@
     "optional": "Optional",
     "new": "New",
     "noData": "No data found",
-    "tryAgain": "Try again"
+    "tryAgain": "Try again",
+    "selectProjectToCreate": "Select a project to create",
+    "openInProject": "Open in project"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -64,6 +66,12 @@
     "orgExperiments": "Experiments",
     "orgSequences": "Sequences",
     "orgCalendar": "Calendar"
+  },
+  "header": {
+    "orgContext": "Organization",
+    "selectProject": "Select project...",
+    "switchContext": "Switch context",
+    "noProjects": "No projects — Create one"
   },
   "auth": {
     "login": "Sign In",
