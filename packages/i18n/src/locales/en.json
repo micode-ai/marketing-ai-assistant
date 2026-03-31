@@ -1157,5 +1157,16 @@
     "copiedTooltip": "Copied from another scope",
     "org": "Org",
     "project": "Project"
+  },
+  "help": {
+    "title": "Help Center",
+    "subtitle": "Documentation and guides",
+    "searchPlaceholder": "Search articles...",
+    "openFull": "Open full help",
+    "noResults": "No articles found",
+    "loading": "Loading...",
+    "drawer": {
+      "title": "Help"
+    }
   }
 }

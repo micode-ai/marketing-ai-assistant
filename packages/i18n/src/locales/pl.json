@@ -1137,5 +1137,16 @@
     "copiedTooltip": "Skopiowany z innego zakresu",
     "org": "Org",
     "project": "Projekt"
+  },
+  "help": {
+    "title": "Centrum pomocy",
+    "subtitle": "Dokumentacja i przewodniki",
+    "searchPlaceholder": "Szukaj artykułów...",
+    "openFull": "Otwórz pełną pomoc",
+    "noResults": "Nie znaleziono artykułów",
+    "loading": "Ładowanie...",
+    "drawer": {
+      "title": "Pomoc"
+    }
   }
 }
