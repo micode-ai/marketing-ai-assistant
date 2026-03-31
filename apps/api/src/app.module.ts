@@ -28,6 +28,7 @@ import { GoogleIntegrationsModule } from './google-integrations/google-integrati
 import { InvitationsModule } from './invitations/invitations.module';
 import { MailModule } from './mail/mail.module';
 import { EntityLinksModule } from './entity-links/entity-links.module';
+import { DocsModule } from './docs/docs.module';
 
 @Module({
   imports: [
@@ -67,6 +68,7 @@ import { EntityLinksModule } from './entity-links/entity-links.module';
     WebhooksModule,
     GoogleIntegrationsModule,
     EntityLinksModule,
+    DocsModule,
   ],
 })
 export class AppModule {}
