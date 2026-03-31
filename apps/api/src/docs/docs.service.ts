@@ -1,12 +1,24 @@
 import { Injectable } from '@nestjs/common';
 import { readFileSync, existsSync, readdirSync } from 'fs';
-import { join } from 'path';
+import { join, resolve } from 'path';
 
 @Injectable()
 export class DocsService {
+  private readonly docsRoot: string;
+
+  constructor() {
+    // Resolve user_docs from multiple possible locations
+    const candidates = [
+      join(process.cwd(), 'user_docs'),           // repo root (production, Docker)
+      join(process.cwd(), '../../user_docs'),      // from apps/api/ (dev with cwd=apps/api)
+      resolve(__dirname, '../../../../user_docs'),  // relative to compiled file
+    ];
+    this.docsRoot = candidates.find(p => existsSync(p)) || candidates[0];
+  }
+
   private getDocsDir(lang: string): string {
     const langMap: Record<string, string> = { en: 'eng', pl: 'pl', ru: 'ru' };
-    return join(process.cwd(), '../../user_docs', langMap[lang] || 'eng');
+    return join(this.docsRoot, langMap[lang] || 'eng');
   }
 
   getDocsList(lang: string): { slug: string; title: string }[] {
