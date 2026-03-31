@@ -63,8 +63,9 @@ Each Marketing page (`/content`, `/checklists`, `/campaigns`, `/email`, `/docume
 **Data loading:**
 ```
 if ($currentProjectStore) → API call with projectId
-else → API call with organizationId
+else → API call with organizationId (org-scoped items only, NOT aggregated)
 ```
+Note: In org context, pages show only organization-scoped items (same as the current "Organization" tab). The "All Projects" aggregated view is removed — users who want project-specific data should select that project in the picker.
 
 **Breadcrumb** under page title (rendered in component, using i18n keys for labels):
 - Project context: `Organization Name › Project Name › Content`
@@ -113,6 +114,12 @@ Note: `label` is NOT in the store — components derive display labels using `$_
 **Organization switch (`switchOrg` in Sidebar.svelte):**
 - Add `currentProjectStore.set(null)` and `localStorage.removeItem('currentProjectId')` before `window.location.href = '/dashboard'`
 
+**Leave organization (`leaveOrg` in Sidebar.svelte):**
+- Also add `currentProjectStore.set(null)` and `localStorage.removeItem('currentProjectId')` before redirect, same as `switchOrg`
+
+**Dashboard project fetch deduplication:**
+- Once `projectsStore` is loaded in `+layout.svelte`, remove the duplicate fetch from `dashboard/+page.svelte` onMount
+
 ### 5. Routing
 
 **Deep link redirects (`/projects/[id]/*`):**
@@ -120,23 +127,31 @@ Note: `label` is NOT in the store — components derive display labels using `$_
 - `/projects/[id]/checklists` → redirect to `/checklists`
 - Same pattern for: documents, campaigns, email, analytics, seo, competitors, experiments, sequences, calendar
 
-**Implementation:** Each redirect route uses a `+page.svelte` with `onMount`:
+**Implementation:** Each redirect route uses a `+page.svelte` with reactive block to handle the race condition where `projectsStore` may not yet be populated on direct navigation (bookmark/refresh):
 ```svelte
 <script>
-  import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
   import { currentProjectStore, projectsStore } from '$lib/stores/projects';
 
-  onMount(() => {
-    const projectId = $page.params.id;
+  const projectId = $page.params.id;
+
+  // Save projectId to localStorage immediately so +layout.svelte restoration
+  // can pick it up even if projectsStore hasn't loaded yet
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem('currentProjectId', projectId);
+  }
+
+  // Wait for projectsStore to be populated (loaded by +layout.svelte),
+  // then set the full project object and redirect
+  $: if ($projectsStore.length > 0) {
     const project = $projectsStore.find(p => p.id === projectId);
     if (project) currentProjectStore.set(project);
-    goto('/content', { replaceState: true });
-  });
+    goto('/content' + $page.url.search, { replaceState: true });
+  }
 </script>
 ```
-Reason: SvelteKit `+page.ts` load functions cannot access client-side stores. Using `onMount` + `goto` is the correct SvelteKit pattern.
+Reason: SvelteKit `+page.ts` load functions cannot access client-side stores. Using a reactive `$:` block ensures we wait for store data before redirecting.
 
 **Query parameters:** Redirects forward query params: `goto('/content' + $page.url.search, { replaceState: true })`.
 
@@ -154,7 +169,8 @@ Reason: SvelteKit `+page.ts` load functions cannot access client-side stores. Us
 **Picker context change behavior:**
 - On Marketing page → data reloads reactively via `$:` statements watching `$contextStore`
 - If on `/projects/[id]/overview` and picker switched to "Organization" → `goto('/dashboard')`
-- Owner of this redirect: ProjectPicker's onChange handler checks `$page.url.pathname` — if it starts with `/projects/`, navigate to `/dashboard`
+- If on `/projects/X/overview` and picker switched to project Y → `goto('/projects/Y/overview')`
+- Owner of this redirect: ProjectPicker's onChange handler checks `$page.url.pathname` — if it starts with `/projects/`, either navigate to `/dashboard` (org selected) or replace the project ID in the URL (different project selected)
 
 **URL sharing / bookmarking:**
 - `/content` without context params shows data based on the viewer's own picker state. This is acceptable because Marketing pages are workspace-scoped, not shareable public URLs.
