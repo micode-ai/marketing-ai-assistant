@@ -9,8 +9,8 @@ import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { Public } from '../common/decorators/public.decorator';
 import { DocsService } from './docs.service';
 
-@ApiTags('docs')
-@Controller('docs')
+@ApiTags('help')
+@Controller('help')
 export class DocsController {
   constructor(private docsService: DocsService) {}
 
