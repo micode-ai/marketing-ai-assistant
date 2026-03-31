@@ -34,7 +34,7 @@
   async function loadArticles() {
     loadingList = true;
     try {
-      articles = await api.get<ArticleSummary[]>('/docs', { lang: currentLang() });
+      articles = await api.get<ArticleSummary[]>('/help', { lang: currentLang() });
     } catch (e) {
       console.error('Failed to load help articles:', e);
       articles = [];
@@ -49,7 +49,7 @@
     article = null;
     renderedContent = '';
     try {
-      article = await api.get<Article>('/docs/' + slug, { lang: currentLang() });
+      article = await api.get<Article>('/help/' + slug, { lang: currentLang() });
       renderedContent = marked.parse(article.content, { async: false }) as string;
     } catch (e) {
       console.error('Failed to load article:', e);
@@ -79,10 +79,12 @@
     if (activeSlug) {
       loadArticle(activeSlug);
     }
+    mounted = true;
   });
 
-  // Re-load when locale changes
-  $: if ($locale) {
+  // Re-load when locale changes (skip initial mount)
+  let mounted = false;
+  $: if ($locale && mounted) {
     loadArticles().then(() => {
       if (activeSlug) loadArticle(activeSlug);
     });

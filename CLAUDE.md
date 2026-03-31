@@ -130,8 +130,8 @@ packages/
 `GET /analytics/summary` returns: `contentCount` (published), `campaignCount` (active), `subscriberCount` (active), `checklistItems` (completed), `checklistCount` (total checklists), `contentCountAll` (all statuses), `socialAccountCount` (active social accounts).
 
 ### Help System
-- `GET /api/docs?lang=ru` — list all docs (slug + title). `@Public()`, no auth required.
-- `GET /api/docs/:slug?lang=ru` — single doc content (slug, title, content, lang). Falls back to English if locale file missing.
+- `GET /api/help?lang=ru` — list all docs (slug + title). `@Public()`, no auth required.
+- `GET /api/help/:slug?lang=ru` — single doc content (slug, title, content, lang). Falls back to English if locale file missing.
 - API reads markdown from `user_docs/{eng,pl,ru}/` filesystem.
 - `/help` page: sidebar left (article list) + content right (rendered markdown). URL query `?article=slug` for direct links.
 - `HelpDrawer.svelte`: 400px slide-in panel from right, triggered by floating `?` button (bottom-right, all pages except `/help`).

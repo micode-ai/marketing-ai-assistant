@@ -23,7 +23,7 @@
     htmlContent = '';
     try {
       const data = await api.get<{ title: string; content: string }>(
-        '/docs/' + articleSlug,
+        '/help/' + articleSlug,
         { lang: $locale || 'en' }
       );
       title = data.title;
