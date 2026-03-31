@@ -129,6 +129,15 @@ packages/
 ### Analytics Summary API
 `GET /analytics/summary` returns: `contentCount` (published), `campaignCount` (active), `subscriberCount` (active), `checklistItems` (completed), `checklistCount` (total checklists), `contentCountAll` (all statuses), `socialAccountCount` (active social accounts).
 
+### Help System
+- `GET /api/docs?lang=ru` — list all docs (slug + title). `@Public()`, no auth required.
+- `GET /api/docs/:slug?lang=ru` — single doc content (slug, title, content, lang). Falls back to English if locale file missing.
+- API reads markdown from `user_docs/{eng,pl,ru}/` filesystem.
+- `/help` page: sidebar left (article list) + content right (rendered markdown). URL query `?article=slug` for direct links.
+- `HelpDrawer.svelte`: 400px slide-in panel from right, triggered by floating `?` button (bottom-right, all pages except `/help`).
+- Context mapping in `+layout.svelte`: route regex → doc slug (e.g., `/checklists` → `03-ai-features`).
+- Help link at bottom of Sidebar with `?` icon.
+
 ## Claude Code Slash Commands
 
 Custom commands for the team. Use as `/command <args>` in Claude Code.
