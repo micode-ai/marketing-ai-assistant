@@ -3,7 +3,7 @@
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
   import { api } from '$lib/api/client';
-  import { currentProjectStore } from '$lib/stores/projects';
+  import { currentProjectStore, projectsStore } from '$lib/stores/projects';
   import { browser } from '$app/environment';
   import { get } from 'svelte/store';
   import { authStore } from '$stores/auth';
@@ -13,6 +13,14 @@
   let summary: { contentCount: number; campaignCount: number; subscriberCount: number; checklistItems: number; checklistCount: number; contentCountAll: number; socialAccountCount: number } | null = null;
   let loading = true;
   $: projectId = $page.params['id'];
+
+  // Sync picker with this project
+  $: if ($projectsStore.length > 0 && projectId) {
+    const project = $projectsStore.find((p: any) => p.id === projectId);
+    if (project && $currentProjectStore?.id !== projectId) {
+      currentProjectStore.set(project);
+    }
+  }
 
   // ── Export ──
   let showExportModal = false;

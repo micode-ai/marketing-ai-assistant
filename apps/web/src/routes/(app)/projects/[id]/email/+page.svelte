@@ -3,10 +3,18 @@
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
   import { api } from '$lib/api/client';
-  import { organizationIdStore } from '$stores/projects';
+  import { organizationIdStore, currentProjectStore, projectsStore } from '$stores/projects';
   import SectionHint from '$lib/components/SectionHint.svelte';
 
   $: projectId = $page.params['id'];
+
+  // Sync picker with this project
+  $: if ($projectsStore.length > 0 && projectId) {
+    const project = $projectsStore.find((p: any) => p.id === projectId);
+    if (project && $currentProjectStore?.id !== projectId) {
+      currentProjectStore.set(project);
+    }
+  }
 
   // ── Types ────────────────────────────────────────────────────────────────
   interface EmailList {

@@ -35,7 +35,9 @@
     "optional": "Opcjonalne",
     "new": "Nowy",
     "noData": "Brak danych",
-    "tryAgain": "Spróbuj ponownie"
+    "tryAgain": "Spróbuj ponownie",
+    "selectProjectToCreate": "Wybierz projekt, aby utworzyć",
+    "openInProject": "Otwórz w projekcie"
   },
   "nav": {
     "dashboard": "Panel główny",
@@ -64,6 +66,12 @@
     "orgExperiments": "Eksperymenty",
     "orgSequences": "Sekwencje",
     "orgCalendar": "Kalendarz"
+  },
+  "header": {
+    "orgContext": "Organizacja",
+    "selectProject": "Wybierz projekt...",
+    "switchContext": "Przełącz kontekst",
+    "noProjects": "Brak projektów — Utwórz"
   },
   "auth": {
     "login": "Zaloguj się",

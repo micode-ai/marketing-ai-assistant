@@ -5,6 +5,7 @@
   import { api } from '$lib/api/client';
   import SectionHint from '$lib/components/SectionHint.svelte';
   import { marked } from 'marked';
+  import { currentProjectStore, projectsStore } from '$lib/stores/projects';
 
   // Configure marked for inline rendering (no wrapping <p> tags for short content)
   marked.setOptions({ breaks: true, gfm: true });
@@ -39,6 +40,15 @@
   let creating = false;
   let expandedItems = new Set<string>();
   $: projectId = $page.params['id'];
+
+  // Sync picker with this project
+  $: if ($projectsStore.length > 0 && projectId) {
+    const project = $projectsStore.find((p: any) => p.id === projectId);
+    if (project && $currentProjectStore?.id !== projectId) {
+      currentProjectStore.set(project);
+    }
+  }
+
   let aiForm = { type: 'LAUNCH' };
 
   // ── MD Import state ──

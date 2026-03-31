@@ -6,6 +6,7 @@
   import { API_URL } from '$lib/config';
   import { marked } from 'marked';
   import SectionHint from '$lib/components/SectionHint.svelte';
+  import { currentProjectStore, projectsStore } from '$lib/stores/projects';
 
   marked.setOptions({ breaks: true, gfm: true });
 
@@ -25,6 +26,14 @@
   let documents: any[] = [];
   let loading = true;
   $: projectId = $page.params['id'];
+
+  // Sync picker with this project
+  $: if ($projectsStore.length > 0 && projectId) {
+    const project = $projectsStore.find((p: any) => p.id === projectId);
+    if (project && $currentProjectStore?.id !== projectId) {
+      currentProjectStore.set(project);
+    }
+  }
 
   // AI generation
   let showGenerateModal = false;

@@ -35,7 +35,9 @@
     "optional": "Опционально",
     "new": "Новый",
     "noData": "Данные не найдены",
-    "tryAgain": "Попробовать снова"
+    "tryAgain": "Попробовать снова",
+    "selectProjectToCreate": "Выберите проект для создания",
+    "openInProject": "Открыть в проекте"
   },
   "nav": {
     "dashboard": "Дашборд",
@@ -64,6 +66,12 @@
     "orgExperiments": "Эксперименты",
     "orgSequences": "Последовательности",
     "orgCalendar": "Календарь"
+  },
+  "header": {
+    "orgContext": "Организация",
+    "selectProject": "Выбрать проект...",
+    "switchContext": "Переключить контекст",
+    "noProjects": "Нет проектов — Создайте"
   },
   "auth": {
     "login": "Войти",

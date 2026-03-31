@@ -4,13 +4,21 @@
   import { onMount } from 'svelte';
   import { api } from '$lib/api/client';
   import SectionHint from '$lib/components/SectionHint.svelte';
-  import { organizationIdStore } from '$lib/stores/projects';
+  import { organizationIdStore, currentProjectStore, projectsStore } from '$lib/stores/projects';
 
   let contents: any[] = [];
   let loading = true;
   let showModal = false;
   let generating = false;
   $: projectId = $page.params['id'];
+
+  // Sync picker with this project
+  $: if ($projectsStore.length > 0 && projectId) {
+    const project = $projectsStore.find((p: any) => p.id === projectId);
+    if (project && $currentProjectStore?.id !== projectId) {
+      currentProjectStore.set(project);
+    }
+  }
 
   let form = { type: 'SOCIAL_POST', platform: '', topic: '', tone: 'professional', length: 'medium' };
 
