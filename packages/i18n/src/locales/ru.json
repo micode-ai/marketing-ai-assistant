@@ -65,7 +65,8 @@
     "orgCompetitors": "Конкуренты",
     "orgExperiments": "Эксперименты",
     "orgSequences": "Последовательности",
-    "orgCalendar": "Календарь"
+    "orgCalendar": "Календарь",
+    "orgFinances": "Финансы"
   },
   "header": {
     "orgContext": "Организация",
@@ -235,7 +236,9 @@
     "seo": "Ключевые слова SEO",
     "experiments": "A/B Тесты",
     "sequences": "Email-цепочки",
-    "competitors": "Конкуренты"
+    "competitors": "Конкуренты",
+    "baseCurrency": "Базовая валюта",
+    "baseCurrencyWarning": "Изменение базовой валюты не пересчитает существующие финансовые записи"
   },
   "content": {
     "title": "Контент-студия",
@@ -1154,6 +1157,61 @@
     "loading": "Загрузка...",
     "drawer": {
       "title": "Справка"
+    }
+  },
+  "finances": {
+    "title": "Финансы",
+    "subtitle": "Отслеживайте доходы, расходы и прибыльность",
+    "income": "Доход",
+    "expense": "Расход",
+    "expenses": "Расходы",
+    "profit": "Прибыль",
+    "addRecord": "Добавить запись",
+    "editRecord": "Редактировать запись",
+    "deleteRecord": "Удалить запись",
+    "deleteRecordConfirm": "Вы уверены, что хотите удалить эту запись?",
+    "type": "Тип",
+    "category": "Категория",
+    "amount": "Сумма",
+    "currency": "Валюта",
+    "description": "Описание",
+    "date": "Дата",
+    "amountInBase": "Сумма ({currency})",
+    "exchangeRate": "Курс обмена",
+    "exchangeRateInfo": "Курс {from} → {to}",
+    "exchangeRateSource": "Курс на {date} от exchangerate-api.com",
+    "save": "Сохранить",
+    "cancel": "Отмена",
+    "period": "Период",
+    "month": "Месяц",
+    "quarter": "Квартал",
+    "year": "Год",
+    "custom": "Произвольный",
+    "all": "Все",
+    "filterByCategory": "Категория: Все",
+    "manageCategories": "Управление категориями",
+    "emptyState": "Финансовых записей пока нет. Нажмите \"Добавить запись\", чтобы начать.",
+    "incomeVsExpenses": "Доходы vs Расходы",
+    "byCategory": "По категориям",
+    "vsLastPeriod": "к пред. периоду",
+    "categories": {
+      "title": "Управление категориями",
+      "expenseCategories": "Категории расходов",
+      "incomeCategories": "Категории доходов",
+      "addCategory": "Добавить категорию",
+      "newCategory": "Новая категория...",
+      "default": "по умолчанию",
+      "cannotDeleteWithRecords": "Нельзя удалить категорию с записями",
+      "advertising": "Реклама",
+      "content": "Контент",
+      "design": "Дизайн",
+      "tools": "Инструменты и сервисы",
+      "freelance": "Фриланс",
+      "other": "Прочее",
+      "sales": "Продажи",
+      "services": "Услуги",
+      "partnership": "Партнёрство",
+      "otherIncome": "Прочее"
     }
   }
 }

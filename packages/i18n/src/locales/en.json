@@ -65,7 +65,8 @@
     "orgCompetitors": "Competitors",
     "orgExperiments": "Experiments",
     "orgSequences": "Sequences",
-    "orgCalendar": "Calendar"
+    "orgCalendar": "Calendar",
+    "orgFinances": "Finances"
   },
   "header": {
     "orgContext": "Organization",
@@ -239,7 +240,9 @@
     "seo": "SEO Keywords",
     "experiments": "A/B Tests",
     "sequences": "Email Sequences",
-    "competitors": "Competitors"
+    "competitors": "Competitors",
+    "baseCurrency": "Base Currency",
+    "baseCurrencyWarning": "Changing base currency will not recalculate existing financial records"
   },
   "content": {
     "title": "Content Studio",
@@ -1176,6 +1179,61 @@
     "loading": "Loading...",
     "drawer": {
       "title": "Help"
+    }
+  },
+  "finances": {
+    "title": "Finances",
+    "subtitle": "Track income, expenses, and profitability",
+    "income": "Income",
+    "expense": "Expense",
+    "expenses": "Expenses",
+    "profit": "Profit",
+    "addRecord": "Add Record",
+    "editRecord": "Edit Record",
+    "deleteRecord": "Delete Record",
+    "deleteRecordConfirm": "Are you sure you want to delete this record?",
+    "type": "Type",
+    "category": "Category",
+    "amount": "Amount",
+    "currency": "Currency",
+    "description": "Description",
+    "date": "Date",
+    "amountInBase": "Amount ({currency})",
+    "exchangeRate": "Exchange Rate",
+    "exchangeRateInfo": "Rate {from} → {to}",
+    "exchangeRateSource": "Rate as of {date} from exchangerate-api.com",
+    "save": "Save",
+    "cancel": "Cancel",
+    "period": "Period",
+    "month": "Month",
+    "quarter": "Quarter",
+    "year": "Year",
+    "custom": "Custom",
+    "all": "All",
+    "filterByCategory": "Category: All",
+    "manageCategories": "Manage Categories",
+    "emptyState": "No financial records yet. Click \"Add Record\" to start tracking.",
+    "incomeVsExpenses": "Income vs Expenses",
+    "byCategory": "By Category",
+    "vsLastPeriod": "vs previous period",
+    "categories": {
+      "title": "Manage Categories",
+      "expenseCategories": "Expense Categories",
+      "incomeCategories": "Income Categories",
+      "addCategory": "Add Category",
+      "newCategory": "New category...",
+      "default": "default",
+      "cannotDeleteWithRecords": "Cannot delete category that has records",
+      "advertising": "Advertising",
+      "content": "Content",
+      "design": "Design",
+      "tools": "Tools & Services",
+      "freelance": "Freelance",
+      "other": "Other",
+      "sales": "Sales",
+      "services": "Services",
+      "partnership": "Partnership",
+      "otherIncome": "Other"
     }
   }
 }
