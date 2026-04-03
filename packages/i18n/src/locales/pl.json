@@ -65,7 +65,8 @@
     "orgCompetitors": "Konkurencja",
     "orgExperiments": "Eksperymenty",
     "orgSequences": "Sekwencje",
-    "orgCalendar": "Kalendarz"
+    "orgCalendar": "Kalendarz",
+    "orgFinances": "Finanse"
   },
   "header": {
     "orgContext": "Organizacja",
@@ -237,7 +238,9 @@
     "seo": "Słowa kluczowe SEO",
     "experiments": "Testy A/B",
     "sequences": "Sekwencje Email",
-    "competitors": "Konkurenci"
+    "competitors": "Konkurenci",
+    "baseCurrency": "Waluta bazowa",
+    "baseCurrencyWarning": "Zmiana waluty bazowej nie przelicza istniejących wpisów finansowych"
   },
   "content": {
     "title": "Studio treści",
@@ -1156,6 +1159,61 @@
     "loading": "Ładowanie...",
     "drawer": {
       "title": "Pomoc"
+    }
+  },
+  "finances": {
+    "title": "Finanse",
+    "subtitle": "Śledź przychody, wydatki i rentowność",
+    "income": "Przychód",
+    "expense": "Wydatek",
+    "expenses": "Wydatki",
+    "profit": "Zysk",
+    "addRecord": "Dodaj wpis",
+    "editRecord": "Edytuj wpis",
+    "deleteRecord": "Usuń wpis",
+    "deleteRecordConfirm": "Czy na pewno chcesz usunąć ten wpis?",
+    "type": "Typ",
+    "category": "Kategoria",
+    "amount": "Kwota",
+    "currency": "Waluta",
+    "description": "Opis",
+    "date": "Data",
+    "amountInBase": "Kwota ({currency})",
+    "exchangeRate": "Kurs wymiany",
+    "exchangeRateInfo": "Kurs {from} → {to}",
+    "exchangeRateSource": "Kurs z dnia {date} z exchangerate-api.com",
+    "save": "Zapisz",
+    "cancel": "Anuluj",
+    "period": "Okres",
+    "month": "Miesiąc",
+    "quarter": "Kwartał",
+    "year": "Rok",
+    "custom": "Własny",
+    "all": "Wszystko",
+    "filterByCategory": "Kategoria: Wszystkie",
+    "manageCategories": "Zarządzaj kategoriami",
+    "emptyState": "Brak wpisów finansowych. Kliknij \"Dodaj wpis\", aby rozpocząć.",
+    "incomeVsExpenses": "Przychody vs Wydatki",
+    "byCategory": "Wg kategorii",
+    "vsLastPeriod": "vs poprzedni okres",
+    "categories": {
+      "title": "Zarządzanie kategoriami",
+      "expenseCategories": "Kategorie wydatków",
+      "incomeCategories": "Kategorie przychodów",
+      "addCategory": "Dodaj kategorię",
+      "newCategory": "Nowa kategoria...",
+      "default": "domyślna",
+      "cannotDeleteWithRecords": "Nie można usunąć kategorii z wpisami",
+      "advertising": "Reklama",
+      "content": "Treść",
+      "design": "Projekt",
+      "tools": "Narzędzia i usługi",
+      "freelance": "Freelance",
+      "other": "Inne",
+      "sales": "Sprzedaż",
+      "services": "Usługi",
+      "partnership": "Partnerstwo",
+      "otherIncome": "Inne"
     }
   }
 }
