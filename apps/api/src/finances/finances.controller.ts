@@ -72,8 +72,7 @@ export class FinancesController {
   @ApiOperation({ summary: 'Get exchange rate between two currencies' })
   async getExchangeRate(@Query('from') from: string, @Query('to') to: string) {
     if (!from || !to) throw new BadRequestException('from and to are required');
-    const rate = await this.financesService.getExchangeRate(from, to);
-    return { from, to, rate };
+    return this.financesService.getExchangeRate(from, to);
   }
 
   // ── Record routes ────────────────────────────────────────────────────

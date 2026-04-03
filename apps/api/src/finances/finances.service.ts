@@ -51,26 +51,29 @@ export class FinancesService {
     return project;
   }
 
-  async getExchangeRate(from: string, to: string): Promise<number> {
-    if (from === to) return 1;
+  async getExchangeRate(from: string, to: string): Promise<{ rate: number; date: string }> {
+    const today = new Date().toISOString().slice(0, 10);
+    if (from === to) return { rate: 1, date: today };
 
-    const cacheKey = `exchange_rate_${from}_${to}`;
-    const cached = await this.cacheManager.get<number>(cacheKey);
-    if (cached) return cached;
+    const cacheKey = `exchange_rate_${from}`;
+    const cached = await this.cacheManager.get<{ rates: Record<string, number>; date: string }>(cacheKey);
+    if (cached && cached.rates[to] !== undefined) {
+      return { rate: cached.rates[to], date: cached.date };
+    }
 
     try {
       const response = await fetch(`https://open.er-api.com/v6/latest/${from}`);
-      const data = (await response.json()) as { rates?: Record<string, number> };
+      const data = (await response.json()) as { result?: string; rates?: Record<string, number>; time_last_update_utc?: string };
       if (data && data.rates && data.rates[to]) {
-        const rate = data.rates[to];
-        await this.cacheManager.set(cacheKey, rate, 3600000);
-        return rate;
+        const rateDate = data.time_last_update_utc?.slice(0, 10) || today;
+        await this.cacheManager.set(cacheKey, { rates: data.rates, date: rateDate }, 3600000);
+        return { rate: data.rates[to], date: rateDate };
       }
     } catch {
       // Fall through to default
     }
 
-    return 1;
+    return { rate: 1, date: today };
   }
 
   // ── Categories ──────────────────────────────────────────────────────
@@ -123,6 +126,9 @@ export class FinancesService {
     if (category.project.organizationId !== userOrgId) {
       throw new ForbiddenException('Access denied');
     }
+    if (category.isDefault) {
+      throw new ForbiddenException('Cannot edit default categories');
+    }
 
     return this.prisma.financeCategory.update({
       where: { id },
@@ -142,6 +148,9 @@ export class FinancesService {
     if (!category) throw new NotFoundException('Category not found');
     if (category.project.organizationId !== userOrgId) {
       throw new ForbiddenException('Access denied');
+    }
+    if (category.isDefault) {
+      throw new ForbiddenException('Cannot delete default categories');
     }
 
     try {
@@ -210,8 +219,9 @@ export class FinancesService {
   async createRecord(dto: CreateFinanceRecordDto, userOrgId: string) {
     const project = await this.verifyProjectAccess(dto.projectId, userOrgId);
 
-    const exchangeRate = await this.getExchangeRate(dto.currency, project.baseCurrency);
-    const amountInBaseCurrency = dto.amount * exchangeRate;
+    const rateData = await this.getExchangeRate(dto.currency, project.baseCurrency);
+    const exchangeRate = rateData.rate;
+    const amountInBaseCurrency = Math.round(dto.amount * exchangeRate * 100) / 100;
 
     const record = await this.prisma.financeRecord.create({
       data: {
@@ -256,11 +266,11 @@ export class FinancesService {
     const newAmount = dto.amount ?? Number(existing.amount);
     const newCurrency = dto.currency ?? existing.currency;
     if (dto.amount !== undefined || dto.currency !== undefined) {
-      const exchangeRate = await this.getExchangeRate(newCurrency, existing.project.baseCurrency);
+      const rateData = await this.getExchangeRate(newCurrency, existing.project.baseCurrency);
       data.amount = newAmount;
       data.currency = newCurrency;
-      data.exchangeRate = exchangeRate;
-      data.amountInBaseCurrency = newAmount * exchangeRate;
+      data.exchangeRate = rateData.rate;
+      data.amountInBaseCurrency = Math.round(newAmount * rateData.rate * 100) / 100;
     }
 
     const record = await this.prisma.financeRecord.update({
