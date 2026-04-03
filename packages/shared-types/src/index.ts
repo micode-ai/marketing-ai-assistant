@@ -20,3 +20,4 @@ export * from './competitor';
 export * from './webhook';
 export * from './chat';
 export * from './funnel';
+export * from './finances';
