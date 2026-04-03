@@ -20,6 +20,12 @@ Add a per-project financial tracking feature — income and expense records with
 baseCurrency String @default("USD") // ISO 4217 code
 ```
 
+Also add relation fields to the `Project` model:
+```prisma
+financeCategories FinanceCategory[]
+financeRecords    FinanceRecord[]
+```
+
 ### New enum `FinanceRecordType`
 
 ```prisma
@@ -51,14 +57,19 @@ model FinanceCategory {
   isDefault Boolean              @default(false)
   color     String               // hex color for charts
   createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
 
   records FinanceRecord[]
 
+  @@unique([projectId, name])
   @@index([projectId])
+  @@map("finance_categories")
 }
 ```
 
 ### New model `FinanceRecord`
+
+Uses `Decimal` types for monetary precision — Prisma returns these as strings, so the service layer calls `.toNumber()` when building responses.
 
 ```prisma
 model FinanceRecord {
@@ -66,13 +77,13 @@ model FinanceRecord {
   projectId            String
   project              Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
   categoryId           String
-  category             FinanceCategory   @relation(fields: [categoryId], references: [id])
+  category             FinanceCategory   @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   type                 FinanceRecordType
-  amount               Float             // amount in original currency
+  amount               Decimal           @db.Decimal(12, 2) // amount in original currency
   currency             String            // ISO 4217 (USD, EUR, etc.)
-  amountInBaseCurrency Float             // converted to project.baseCurrency
-  exchangeRate         Float             // rate at time of creation (1.0 if same currency)
-  description          String?
+  amountInBaseCurrency Decimal           @db.Decimal(12, 2) // converted to project.baseCurrency
+  exchangeRate         Decimal           @db.Decimal(10, 6) // rate at time of creation (1.0 if same currency)
+  description          String?           @db.Text
   date                 DateTime          // transaction date
   createdAt            DateTime          @default(now())
   updatedAt            DateTime          @updatedAt
@@ -80,12 +91,13 @@ model FinanceRecord {
   @@index([projectId])
   @@index([projectId, type])
   @@index([projectId, date])
+  @@map("finance_records")
 }
 ```
 
 ### Default categories
 
-Created lazily on first `GET /api/finances/categories?projectId=X` if none exist for the project.
+Created lazily on first `GET /api/finances/categories?projectId=X` if none exist for the project. Use `createMany` with `skipDuplicates: true` to handle concurrent requests safely (the `@@unique([projectId, name])` constraint prevents duplicates).
 
 **Expense categories:**
 | Name | Color | i18n key |
@@ -105,7 +117,7 @@ Created lazily on first `GET /api/finances/categories?projectId=X` if none exist
 | Partnership | `#a78bfa` | `finances.categories.partnership` |
 | Other | `#f97316` | `finances.categories.otherIncome` |
 
-Category `name` is stored as the i18n key (e.g., `finances.categories.advertising`). The frontend resolves it via `$_()`. Custom categories store the user-entered name directly.
+Category `name` is stored as the i18n key (e.g., `finances.categories.advertising`). The frontend resolves it via `$_()` — if the key is not found in i18n (custom categories), the raw name is displayed. Custom categories store the user-entered name directly. Note: expense "Other" uses key `finances.categories.other`, income "Other" uses `finances.categories.otherIncome` — distinct keys avoid `@@unique` collision.
 
 ## API
 
@@ -117,17 +129,28 @@ Register in `app.module.ts`.
 
 All endpoints are JWT-protected (default guard). All endpoints require `projectId` and verify the user belongs to the project's organization.
 
+### Authorization
+
+Every mutating endpoint (`POST`, `PUT`, `DELETE`) must verify ownership:
+1. Extract user from `@CurrentUser()` decorator
+2. Load the target record (or use `projectId` from body)
+3. Follow `projectId → project.organizationId`
+4. Check that `user.organizationId === project.organizationId`
+5. Return 403 Forbidden if mismatch
+
+For `PUT /finances/:id` and `DELETE /finances/:id`: load the record first, then verify via its `projectId`.
+
 ### Endpoints
 
 #### Finance Records
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `GET` | `/api/finances?projectId=X` | List records. Query params: `dateFrom`, `dateTo`, `type` (INCOME/EXPENSE), `categoryId`. Sorted by `date` desc. Paginated (`page`, `limit`). |
+| `GET` | `/api/finances?projectId=X` | List records. Query params: `dateFrom`, `dateTo`, `type` (INCOME/EXPENSE), `categoryId`. Sorted by `date` desc. Paginated (`page`, `limit`, defaults: page=1, limit=20, max=100). Response: `{ data: FinanceRecord[], total: number, page: number, limit: number, totalPages: number }`. |
 | `POST` | `/api/finances` | Create record. Body: `projectId`, `categoryId`, `type`, `amount`, `currency`, `description?`, `date`. Service fetches exchange rate if `currency ≠ baseCurrency`, computes `amountInBaseCurrency` and `exchangeRate`. |
 | `PUT` | `/api/finances/:id` | Update record. Same body fields. Recalculates conversion if amount/currency changed. |
 | `DELETE` | `/api/finances/:id` | Delete record. |
-| `GET` | `/api/finances/summary?projectId=X` | Aggregated data. Query params: `dateFrom`, `dateTo`. Returns: `totalIncome`, `totalExpense`, `profit`, `incomeByCategory[]`, `expenseByCategory[]`, `monthlyData[]` (for bar chart). All amounts in base currency. |
+| `GET` | `/api/finances/summary?projectId=X` | Aggregated data. Query params: `dateFrom`, `dateTo`. Returns: `totalIncome`, `totalExpense`, `profit`, `incomeByCategory[]`, `expenseByCategory[]`, `monthlyData[]` (for bar chart). All amounts in base currency. Uses Prisma `groupBy` for aggregation. |
 
 #### Finance Categories
 
@@ -147,7 +170,7 @@ All endpoints are JWT-protected (default guard). All endpoints require `projectI
 ### Exchange Rate Service
 
 - Uses free tier of `https://open.er-api.com/v6/latest/{base}` (no API key required, 1500 requests/month).
-- Caches rates in Redis for 1 hour (key: `exchange-rate:{base}:{target}`).
+- Caches rates using `@nestjs/cache-manager` with Redis store (`cache-manager-ioredis-yet`). TTL: 1 hour. Cache key: `exchange-rate:{base}`. Register `CacheModule` in `FinancesModule` with Redis connection from env vars (`REDIS_HOST`, `REDIS_PORT`).
 - Fallback: if API unreachable, return error — user must retry or enter amount in base currency.
 
 ### DTOs
@@ -227,13 +250,17 @@ All endpoints are JWT-protected (default guard). All endpoints require `projectI
 
 ### Navigation
 
-New sidebar item "Finances" with banknote/wallet icon, placed between "Analytics" and "Settings" in the project navigation.
+New sidebar item "Finances" with banknote/wallet icon, placed between "Analytics" and "Settings" in the project navigation. Add to `marketingLinks` array in `Sidebar.svelte` and add `'finances'` to `marketingPathSegments` for `isActive()` matching. The link points to `/projects/{projectId}/finances`.
 
 ### Supported currencies
 
-Select dropdown includes: USD, EUR, GBP, PLN, RUB, UAH, BYN, KZT, TRY, JPY, CNY.
+Supported currencies are defined once in `packages/shared-types/src/finances.ts` as `SUPPORTED_CURRENCIES` constant: `USD, EUR, GBP, PLN, RUB, UAH, BYN, KZT, TRY, JPY, CNY`. Both frontend select and backend DTO validation reference this list.
 
 Project base currency is set via a new field in project settings page (`baseCurrency` select).
+
+### Base currency change behavior
+
+Changing `baseCurrency` does NOT retroactively recalculate existing records. Historical `amountInBaseCurrency` values are point-in-time conversions at their original exchange rate. Only new records use the new base currency. The UI shows a warning when changing base currency if records already exist.
 
 ### Charts library
 
@@ -290,7 +317,7 @@ Adds:
 ## Error Handling
 
 - Exchange rate API failure: show error toast, user can save in base currency or retry
-- Delete category with records: return 409 Conflict with message
+- Delete category with records: `onDelete: Restrict` on the FK prevents deletion at DB level. Service catches Prisma `P2003` error and returns 409 Conflict with a user-friendly message
 - Invalid currency code: validate against hardcoded list in DTO
 - Amount must be positive: DTO validation
 - Date must not be in the future: optional, depends on user preference (allow future dates for planned expenses)
