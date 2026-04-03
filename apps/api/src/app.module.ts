@@ -29,6 +29,7 @@ import { InvitationsModule } from './invitations/invitations.module';
 import { MailModule } from './mail/mail.module';
 import { EntityLinksModule } from './entity-links/entity-links.module';
 import { DocsModule } from './docs/docs.module';
+import { FinancesModule } from './finances/finances.module';
 
 @Module({
   imports: [
@@ -69,6 +70,7 @@ import { DocsModule } from './docs/docs.module';
     GoogleIntegrationsModule,
     EntityLinksModule,
     DocsModule,
+    FinancesModule,
   ],
 })
 export class AppModule {}
