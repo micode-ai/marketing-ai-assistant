@@ -226,6 +226,17 @@ enum EntityLinkType {
   LINK
 }
 
+enum FinanceRecordType {
+  INCOME
+  EXPENSE
+}
+
+enum FinanceCategoryType {
+  INCOME
+  EXPENSE
+  BOTH
+}
+
 enum EntityModelType {
   CONTENT
   CHECKLIST
@@ -361,6 +372,7 @@ model Project {
   goals          Json?
   socialLinks    Json?
   status         ProjectStatus @default(ACTIVE)
+  baseCurrency   String        @default("USD") @db.VarChar(3)
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 
@@ -382,7 +394,9 @@ model Project {
   chatSessions    ChatSession[]
   competitors     Competitor[]
   funnelSteps     FunnelStep[]
-  trackedUsers    TrackedUser[]
+  trackedUsers      TrackedUser[]
+  financeCategories FinanceCategory[]
+  financeRecords    FinanceRecord[]
 
   @@index([organizationId])
   @@map("projects")
@@ -1184,4 +1198,49 @@ model Webhook {
 
   @@index([organizationId])
   @@map("webhooks")
+}
+
+// =============================================================================
+// Finance
+// =============================================================================
+
+model FinanceCategory {
+  id        String              @id @default(cuid())
+  projectId String
+  name      String
+  type      FinanceCategoryType
+  isDefault Boolean             @default(false)
+  color     String
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+
+  project Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  records FinanceRecord[]
+
+  @@unique([projectId, name])
+  @@index([projectId])
+  @@map("finance_categories")
+}
+
+model FinanceRecord {
+  id                   String            @id @default(cuid())
+  projectId            String
+  categoryId           String
+  type                 FinanceRecordType
+  amount               Decimal           @db.Decimal(12, 2)
+  currency             String            @db.VarChar(3)
+  amountInBaseCurrency Decimal           @db.Decimal(12, 2)
+  exchangeRate         Decimal           @db.Decimal(10, 6)
+  description          String?           @db.Text
+  date                 DateTime
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+
+  project  Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  category FinanceCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  @@index([projectId])
+  @@index([projectId, type])
+  @@index([projectId, date])
+  @@map("finance_records")
 }
