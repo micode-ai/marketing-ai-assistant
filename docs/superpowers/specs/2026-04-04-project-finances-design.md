@@ -17,7 +17,7 @@ Add a per-project financial tracking feature — income and expense records with
 ### New field on `Project`
 
 ```prisma
-baseCurrency String @default("USD") // ISO 4217 code
+baseCurrency String @default("USD") @db.VarChar(3) // ISO 4217 code
 ```
 
 Also add relation fields to the `Project` model:
@@ -80,7 +80,7 @@ model FinanceRecord {
   category             FinanceCategory   @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   type                 FinanceRecordType
   amount               Decimal           @db.Decimal(12, 2) // amount in original currency
-  currency             String            // ISO 4217 (USD, EUR, etc.)
+  currency             String            @db.VarChar(3) // ISO 4217 (USD, EUR, etc.)
   amountInBaseCurrency Decimal           @db.Decimal(12, 2) // converted to project.baseCurrency
   exchangeRate         Decimal           @db.Decimal(10, 6) // rate at time of creation (1.0 if same currency)
   description          String?           @db.Text
@@ -127,11 +127,11 @@ Files: `finances.module.ts`, `finances.controller.ts`, `finances.service.ts`, `d
 
 Register in `app.module.ts`.
 
-All endpoints are JWT-protected (default guard). All endpoints require `projectId` and verify the user belongs to the project's organization.
+All endpoints are JWT-protected (default guard). All endpoints (both read and write) require `projectId` and verify the user belongs to the project's organization.
 
 ### Authorization
 
-Every mutating endpoint (`POST`, `PUT`, `DELETE`) must verify ownership:
+Every endpoint must verify ownership. For mutating endpoints (`POST`, `PUT`, `DELETE`) the check is mandatory before any write; for read endpoints (`GET`), the service filters by `projectId` after verifying org membership. Steps for mutation:
 1. Extract user from `@CurrentUser()` decorator
 2. Load the target record (or use `projectId` from body)
 3. Follow `projectId → project.organizationId`
