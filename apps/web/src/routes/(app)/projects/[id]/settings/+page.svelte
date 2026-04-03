@@ -7,6 +7,10 @@
 
   $: projectId = $page.params['id'];
 
+  const currencies = ['USD', 'EUR', 'GBP', 'PLN', 'RUB', 'UAH', 'BYN', 'KZT', 'TRY', 'JPY', 'CNY'];
+  let baseCurrency = 'USD';
+  let currencySaved = false;
+
   let allAccounts: any[] = [];
   let enabledIds: Set<string> = new Set();
   let loading = true;
@@ -33,20 +37,32 @@
   onMount(async () => {
     if (!$organizationIdStore) { loading = false; return; }
     try {
-      const [all, enabled, tracking] = await Promise.all([
+      const [all, enabled, tracking, project] = await Promise.all([
         api.get<any[]>('/social/accounts', { organizationId: $organizationIdStore }),
         api.get<any[]>('/social/project-accounts', { projectId }),
         api.get<{ trackingId: string; snippetUrl: string }>(`/projects/${projectId}/tracking`),
+        api.get<any>(`/projects/${projectId}`),
       ]);
       allAccounts = all;
       enabledIds = new Set(enabled.map((a: any) => a.id));
       trackingInfo = tracking;
+      if (project.baseCurrency) baseCurrency = project.baseCurrency;
     } catch (e) {
       console.error(e);
     } finally {
       loading = false;
     }
   });
+
+  async function saveBaseCurrency() {
+    try {
+      await api.put(`/projects/${projectId}`, { baseCurrency });
+      currencySaved = true;
+      setTimeout(() => { currencySaved = false; }, 2500);
+    } catch (e: any) {
+      console.error(e);
+    }
+  }
 
   function toggle(id: string) {
     const next = new Set(enabledIds);
@@ -89,6 +105,31 @@
 <div class="p-6 max-w-2xl">
   <div class="mb-6">
     <h1 class="text-2xl font-bold text-gray-900">{$_('projects.settings')}</h1>
+  </div>
+
+  <!-- Base Currency section -->
+  <div class="bg-white rounded-xl border border-gray-200 p-5 mb-6">
+    <div class="mb-4">
+      <h2 class="text-base font-semibold text-gray-900">{$_('projects.baseCurrency')}</h2>
+    </div>
+    <select
+      bind:value={baseCurrency}
+      on:change={saveBaseCurrency}
+      class="w-full max-w-xs px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+    >
+      {#each currencies as c}
+        <option value={c}>{c}</option>
+      {/each}
+    </select>
+    <p class="text-sm text-gray-500 mt-2">{$_('projects.baseCurrencyWarning')}</p>
+    {#if currencySaved}
+      <span class="text-sm text-green-600 flex items-center gap-1 mt-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+        </svg>
+        {$_('common.saved')}
+      </span>
+    {/if}
   </div>
 
   <!-- Social Networks section -->
