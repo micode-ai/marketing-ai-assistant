@@ -244,14 +244,11 @@
 
   onDestroy(() => { destroyCharts(); });
 
-  // Refetch on filter/period change
-  let prevPeriod = periodMode;
-  let prevFilter = filterType;
-  let prevCatFilter = filterCategoryId;
-  $: if (ChartJS && orgId && isOrgPage && (periodMode !== prevPeriod || filterType !== prevFilter || filterCategoryId !== prevCatFilter)) {
-    prevPeriod = periodMode;
-    prevFilter = filterType;
-    prevCatFilter = filterCategoryId;
+  // Refetch when page becomes active (org mode) or filters change
+  // Reference reactive deps explicitly to trigger on changes
+  $: if (ChartJS && orgId && isOrgPage) {
+    // Touch filter vars so Svelte tracks them as dependencies
+    void periodMode; void filterType; void filterCategoryId;
     fetchAll();
   }
 </script>
