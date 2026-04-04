@@ -3,12 +3,13 @@
   import { goto } from '$app/navigation';
   import { onMount, onDestroy, tick } from 'svelte';
   import { api } from '$lib/api/client';
-  import { organizationIdStore, currentProjectStore } from '$lib/stores/projects';
+  import { organizationIdStore, currentProjectStore, projectsStore } from '$lib/stores/projects';
   import { contextStore } from '$lib/stores/context';
 
-  // If project selected, redirect to project finances
-  $: if ($currentProjectStore) {
-    goto(`/projects/${$currentProjectStore.id}/finances`, { replaceState: true });
+  // Redirect to project finances when a project is actively selected via context
+  $: ctx = $contextStore;
+  $: if (ctx.type === 'project' && ctx.projectId) {
+    goto(`/projects/${ctx.projectId}/finances`, { replaceState: true });
   }
 
   const SUPPORTED_CURRENCIES = ['USD','EUR','GBP','PLN','RUB','UAH','BYN','KZT','TRY','JPY','CNY'];
@@ -46,6 +47,7 @@
     currency: 'USD',
     description: '',
     date: new Date().toISOString().substring(0, 10),
+    projectId: '' as string, // '' = org-level
   };
 
   // Categories modal
@@ -58,6 +60,8 @@
   let deletingId: string | null = null;
 
   $: orgId = $organizationIdStore;
+  $: projects = $projectsStore || [];
+  $: isOrgPage = ctx.type !== 'project';
 
   function getDateRange(): { dateFrom: string; dateTo: string } {
     const now = new Date();
@@ -88,7 +92,7 @@
   }
 
   async function fetchAll() {
-    if (!orgId || $currentProjectStore) return;
+    if (!orgId || !isOrgPage) return;
     loading = true;
     try { await Promise.all([fetchSummary(), fetchRecords(), fetchCategories()]); }
     finally { loading = false; }
@@ -165,13 +169,21 @@
   // CRUD
   function openAddModal() {
     editingRecord = null;
-    recordForm = { type: 'EXPENSE', categoryId: '', amount: '', currency: baseCurrency, description: '', date: new Date().toISOString().substring(0, 10) };
+    recordForm = { type: 'EXPENSE', categoryId: '', amount: '', currency: baseCurrency, description: '', date: new Date().toISOString().substring(0, 10), projectId: '' };
     showRecordModal = true;
   }
 
   function openEditModal(record: any) {
     editingRecord = record;
-    recordForm = { type: record.type, categoryId: record.categoryId, amount: record.amount, currency: record.currency, description: record.description || '', date: record.date?.substring(0, 10) };
+    recordForm = {
+      type: record.type,
+      categoryId: record.categoryId,
+      amount: record.amount,
+      currency: record.currency,
+      description: record.description || '',
+      date: record.date?.substring(0, 10),
+      projectId: record.projectId || '',
+    };
     showRecordModal = true;
   }
 
@@ -179,11 +191,21 @@
     if (recordSaving) return;
     recordSaving = true;
     try {
-      const body: any = { ...recordForm, amount: Number(recordForm.amount) };
-      // Org-level record (no projectId)
+      const body: any = {
+        type: recordForm.type,
+        categoryId: recordForm.categoryId,
+        amount: Number(recordForm.amount),
+        currency: recordForm.currency,
+        description: recordForm.description,
+        date: recordForm.date,
+      };
       if (editingRecord) {
+        // Include projectId for reassignment (null = org-level)
+        body.projectId = recordForm.projectId || null;
         await api.put(`/finances/${editingRecord.id}`, body);
       } else {
+        // New record: projectId only if selected
+        if (recordForm.projectId) body.projectId = recordForm.projectId;
         await api.post('/finances', body);
       }
       showRecordModal = false;
@@ -224,15 +246,24 @@
   onMount(async () => {
     const { Chart } = await import('chart.js/auto');
     ChartJS = Chart;
-    if (!$currentProjectStore) await fetchAll();
+    if (isOrgPage) await fetchAll();
   });
 
   onDestroy(() => { destroyCharts(); });
 
-  $: periodMode, filterType, filterCategoryId, (() => { if (ChartJS && orgId && !$currentProjectStore) fetchAll(); })();
+  // Refetch on filter/period change
+  let prevPeriod = periodMode;
+  let prevFilter = filterType;
+  let prevCatFilter = filterCategoryId;
+  $: if (ChartJS && orgId && isOrgPage && (periodMode !== prevPeriod || filterType !== prevFilter || filterCategoryId !== prevCatFilter)) {
+    prevPeriod = periodMode;
+    prevFilter = filterType;
+    prevCatFilter = filterCategoryId;
+    fetchAll();
+  }
 </script>
 
-{#if !$currentProjectStore}
+{#if isOrgPage}
 <div class="p-4 sm:p-6">
   <div class="flex items-center justify-between mb-6">
     <div>
@@ -243,12 +274,12 @@
       <div class="flex bg-gray-800 rounded-lg overflow-hidden text-sm">
         {#each ['month', 'quarter', 'year'] as p}
           <button
-            class="px-3 py-1.5 {periodMode === p ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-gray-200'}"
+            class="px-3 py-1.5 cursor-pointer {periodMode === p ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-gray-200'}"
             on:click={() => { periodMode = p; }}
           >{$_(`finances.${p}`)}</button>
         {/each}
       </div>
-      <button on:click={openAddModal} class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
+      <button on:click={openAddModal} class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 cursor-pointer">
         + {$_('finances.addRecord')}
       </button>
     </div>
@@ -285,7 +316,7 @@
       <div class="col-span-2 bg-gray-800 rounded-xl p-4" style="min-height: 250px">
         <div class="flex items-center justify-between mb-3">
           <h3 class="text-sm font-semibold">{$_('finances.byCategory')}</h3>
-          <button on:click={toggleDoughnut} class="text-xs px-2 py-1 rounded {doughnutMode === 'EXPENSE' ? 'text-red-400 bg-red-500/10' : 'text-green-400 bg-green-500/10'}">
+          <button on:click={toggleDoughnut} class="text-xs px-2 py-1 rounded cursor-pointer {doughnutMode === 'EXPENSE' ? 'text-red-400 bg-red-500/10' : 'text-green-400 bg-green-500/10'}">
             {doughnutMode === 'EXPENSE' ? $_('finances.expenses') : $_('finances.income')}
           </button>
         </div>
@@ -299,52 +330,72 @@
       <div class="flex items-center justify-between px-4 py-3 border-b border-gray-700">
         <div class="flex gap-2 text-sm">
           {#each ['ALL', 'INCOME', 'EXPENSE'] as t}
-            <button class="px-3 py-1 rounded {filterType === t ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-white'}" on:click={() => { filterType = t; }}>
+            <button class="px-3 py-1 rounded cursor-pointer {filterType === t ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-white'}" on:click={() => { filterType = t; }}>
               {t === 'ALL' ? $_('finances.all') : t === 'INCOME' ? $_('finances.income') : $_('finances.expenses')}
             </button>
           {/each}
         </div>
-        <button on:click={() => showCategoriesModal = true} class="text-sm text-indigo-400 hover:text-indigo-300">{$_('finances.manageCategories')}</button>
+        <button on:click={() => showCategoriesModal = true} class="text-sm text-indigo-400 hover:text-indigo-300 cursor-pointer">{$_('finances.manageCategories')}</button>
       </div>
 
       {#if records.length === 0}
         <div class="text-center py-12 text-gray-500">{$_('finances.emptyState')}</div>
       {:else}
-        <table class="w-full text-sm">
-          <thead class="text-xs text-gray-500 border-b border-gray-700">
-            <tr><th class="px-4 py-2 text-left">{$_('finances.date')}</th><th class="px-4 py-2 text-left">{$_('finances.type')}</th><th class="px-4 py-2 text-left">{$_('finances.category')}</th><th class="px-4 py-2 text-left">Project</th><th class="px-4 py-2 text-left">{$_('finances.description')}</th><th class="px-4 py-2 text-right">{$_('finances.amount')}</th><th class="w-20"></th></tr>
-          </thead>
-          <tbody>
-            {#each records as record}
-              <tr class="border-b border-gray-700/50 hover:bg-gray-700/30">
-                <td class="px-4 py-2.5 text-gray-400">{formatDate(record.date)}</td>
-                <td class="px-4 py-2.5">
-                  <span class="px-2 py-0.5 rounded text-xs {record.type === 'INCOME' ? 'bg-green-500/15 text-green-400' : 'bg-red-500/15 text-red-400'}">
-                    {record.type === 'INCOME' ? $_('finances.income') : $_('finances.expense')}
-                  </span>
-                </td>
-                <td class="px-4 py-2.5">{getCategoryName(record.category)}</td>
-                <td class="px-4 py-2.5 text-gray-500">{record.project?.name || $_('finances.orgLevel') || 'Organization'}</td>
-                <td class="px-4 py-2.5 text-gray-400 max-w-[200px] truncate">{record.description || ''}</td>
-                <td class="px-4 py-2.5 text-right {record.type === 'INCOME' ? 'text-green-400' : 'text-red-400'}">{formatCurrency(record.amountInBaseCurrency)}</td>
-                <td class="px-4 py-2.5 text-right">
-                  <button on:click={() => openEditModal(record)} class="text-gray-500 hover:text-gray-300 mr-2">✏️</button>
-                  {#if deletingId === record.id}
-                    <button on:click={() => deleteRecord(record.id)} class="text-red-400 text-xs">✓</button>
-                    <button on:click={() => deletingId = null} class="text-gray-400 text-xs ml-1">✗</button>
-                  {:else}
-                    <button on:click={() => deletingId = record.id} class="text-gray-500 hover:text-red-400">🗑️</button>
-                  {/if}
-                </td>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead class="text-xs text-gray-500 border-b border-gray-700">
+              <tr>
+                <th class="px-4 py-2 text-left whitespace-nowrap">{$_('finances.date')}</th>
+                <th class="px-4 py-2 text-left whitespace-nowrap">{$_('finances.type')}</th>
+                <th class="px-4 py-2 text-left whitespace-nowrap">{$_('finances.category')}</th>
+                <th class="px-4 py-2 text-left whitespace-nowrap">Project</th>
+                <th class="px-4 py-2 text-left">{$_('finances.description')}</th>
+                <th class="px-4 py-2 text-right whitespace-nowrap">{$_('finances.amount')}</th>
+                <th class="px-4 py-2 text-right whitespace-nowrap w-24"></th>
               </tr>
-            {/each}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {#each records as record}
+                <tr class="border-b border-gray-700/50 hover:bg-gray-700/30">
+                  <td class="px-4 py-2.5 text-gray-400 whitespace-nowrap">{formatDate(record.date)}</td>
+                  <td class="px-4 py-2.5 whitespace-nowrap">
+                    <span class="px-2 py-0.5 rounded text-xs {record.type === 'INCOME' ? 'bg-green-500/15 text-green-400' : 'bg-red-500/15 text-red-400'}">
+                      {record.type === 'INCOME' ? $_('finances.income') : $_('finances.expense')}
+                    </span>
+                  </td>
+                  <td class="px-4 py-2.5 whitespace-nowrap">{getCategoryName(record.category)}</td>
+                  <td class="px-4 py-2.5 text-gray-500 whitespace-nowrap">{record.project?.name || 'Organization'}</td>
+                  <td class="px-4 py-2.5 text-gray-400 max-w-[200px] truncate">{record.description || ''}</td>
+                  <td class="px-4 py-2.5 text-right whitespace-nowrap {record.type === 'INCOME' ? 'text-green-400' : 'text-red-400'}">{formatCurrency(record.amountInBaseCurrency)}</td>
+                  <td class="px-4 py-2.5 whitespace-nowrap text-right">
+                    <div class="inline-flex items-center gap-1">
+                      <button on:click={() => openEditModal(record)} class="p-1 text-gray-500 hover:text-gray-300 cursor-pointer" title="Edit">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z" /></svg>
+                      </button>
+                      {#if deletingId === record.id}
+                        <button on:click={() => deleteRecord(record.id)} class="p-1 text-red-400 hover:text-red-300 cursor-pointer" title="Confirm">
+                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                        </button>
+                        <button on:click={() => deletingId = null} class="p-1 text-gray-400 hover:text-gray-300 cursor-pointer" title="Cancel">
+                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                        </button>
+                      {:else}
+                        <button on:click={() => deletingId = record.id} class="p-1 text-gray-500 hover:text-red-400 cursor-pointer" title="Delete">
+                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
+                        </button>
+                      {/if}
+                    </div>
+                  </td>
+                </tr>
+              {/each}
+            </tbody>
+          </table>
+        </div>
         {#if totalPages > 1}
           <div class="flex items-center justify-center gap-2 py-3 text-sm text-gray-400">
-            <button disabled={currentPage <= 1} on:click={() => { currentPage--; fetchRecords(); }} class="px-2 py-1 disabled:opacity-30">←</button>
+            <button disabled={currentPage <= 1} on:click={() => { currentPage--; fetchRecords(); }} class="px-2 py-1 disabled:opacity-30 cursor-pointer">←</button>
             <span>{currentPage} / {totalPages}</span>
-            <button disabled={currentPage >= totalPages} on:click={() => { currentPage++; fetchRecords(); }} class="px-2 py-1 disabled:opacity-30">→</button>
+            <button disabled={currentPage >= totalPages} on:click={() => { currentPage++; fetchRecords(); }} class="px-2 py-1 disabled:opacity-30 cursor-pointer">→</button>
           </div>
         {/if}
       {/if}
@@ -358,10 +409,21 @@
   <div class="bg-gray-800 rounded-xl w-full max-w-md p-6">
     <h3 class="text-lg font-semibold text-white mb-4">{editingRecord ? $_('finances.editRecord') : $_('finances.addRecord')}</h3>
 
+    <!-- Project assignment -->
+    <div class="mb-4">
+      <label class="block text-sm text-gray-400 mb-1">Project</label>
+      <select bind:value={recordForm.projectId} class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white">
+        <option value="">Organization (general)</option>
+        {#each projects as proj}
+          <option value={proj.id}>{proj.name}</option>
+        {/each}
+      </select>
+    </div>
+
     <div class="mb-4">
       <div class="flex bg-gray-700 rounded-lg overflow-hidden">
-        <button class="flex-1 py-2 text-sm {recordForm.type === 'EXPENSE' ? 'bg-red-500/20 text-red-400 font-semibold' : 'text-gray-400'}" on:click={() => recordForm.type = 'EXPENSE'}>{$_('finances.expense')}</button>
-        <button class="flex-1 py-2 text-sm {recordForm.type === 'INCOME' ? 'bg-green-500/20 text-green-400 font-semibold' : 'text-gray-400'}" on:click={() => recordForm.type = 'INCOME'}>{$_('finances.income')}</button>
+        <button class="flex-1 py-2 text-sm cursor-pointer {recordForm.type === 'EXPENSE' ? 'bg-red-500/20 text-red-400 font-semibold' : 'text-gray-400'}" on:click={() => recordForm.type = 'EXPENSE'}>{$_('finances.expense')}</button>
+        <button class="flex-1 py-2 text-sm cursor-pointer {recordForm.type === 'INCOME' ? 'bg-green-500/20 text-green-400 font-semibold' : 'text-gray-400'}" on:click={() => recordForm.type = 'INCOME'}>{$_('finances.income')}</button>
       </div>
     </div>
 
@@ -399,8 +461,8 @@
     </div>
 
     <div class="flex gap-3 justify-end">
-      <button on:click={() => showRecordModal = false} class="px-4 py-2 text-gray-400 hover:text-white">{$_('finances.cancel')}</button>
-      <button on:click={saveRecord} disabled={recordSaving || !recordForm.categoryId || !recordForm.amount} class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+      <button on:click={() => showRecordModal = false} class="px-4 py-2 text-gray-400 hover:text-white cursor-pointer">{$_('finances.cancel')}</button>
+      <button on:click={saveRecord} disabled={recordSaving || !recordForm.categoryId || !recordForm.amount} class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 cursor-pointer">
         {recordSaving ? '...' : $_('finances.save')}
       </button>
     </div>
@@ -414,7 +476,7 @@
   <div class="bg-gray-800 rounded-xl w-full max-w-md p-6 max-h-[80vh] overflow-y-auto">
     <div class="flex items-center justify-between mb-4">
       <h3 class="text-lg font-semibold text-white">{$_('finances.categories.title')}</h3>
-      <button on:click={() => showCategoriesModal = false} class="text-gray-400 hover:text-white">✕</button>
+      <button on:click={() => showCategoriesModal = false} class="text-gray-400 hover:text-white cursor-pointer">✕</button>
     </div>
 
     {#each ['EXPENSE', 'INCOME'] as catType}
@@ -428,7 +490,7 @@
           {#if cat.isDefault}
             <span class="text-xs text-gray-500">{$_('finances.categories.default')}</span>
           {:else}
-            <button on:click={() => deleteCategoryById(cat.id)} class="text-gray-500 hover:text-red-400 text-xs">🗑️</button>
+            <button on:click={() => deleteCategoryById(cat.id)} class="text-gray-500 hover:text-red-400 text-xs cursor-pointer">🗑️</button>
           {/if}
         </div>
       {/each}
@@ -441,7 +503,7 @@
         <option value="INCOME">{$_('finances.income')}</option>
       </select>
       <input type="color" bind:value={newCatColor} class="w-8 h-8 rounded cursor-pointer" />
-      <button on:click={addCategory} disabled={catSaving || !newCatName.trim()} class="px-3 py-1.5 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700 disabled:opacity-50">{$_('finances.categories.addCategory')}</button>
+      <button on:click={addCategory} disabled={catSaving || !newCatName.trim()} class="px-3 py-1.5 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700 disabled:opacity-50 cursor-pointer">{$_('finances.categories.addCategory')}</button>
     </div>
   </div>
 </div>

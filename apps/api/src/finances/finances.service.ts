@@ -312,6 +312,20 @@ export class FinancesService {
     if (dto.description !== undefined) data.description = dto.description;
     if (dto.date !== undefined) data.date = new Date(dto.date);
 
+    // Reassign project: null = move to org-level, string = move to project
+    if (dto.projectId !== undefined) {
+      if (dto.projectId === null || dto.projectId === '') {
+        data.projectId = null;
+        data.organizationId = userOrgId;
+        data.scope = 'ORGANIZATION';
+      } else {
+        await this.resolveScope({ projectId: dto.projectId, organizationId: userOrgId });
+        data.projectId = dto.projectId;
+        data.organizationId = null;
+        data.scope = 'PROJECT';
+      }
+    }
+
     const newAmount = dto.amount ?? Number(existing.amount);
     const newCurrency = dto.currency ?? existing.currency;
     if (dto.amount !== undefined || dto.currency !== undefined) {
