@@ -2,9 +2,20 @@ import { IsString, IsEnum, IsOptional, IsBoolean, IsArray } from 'class-validato
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateChecklistDto {
-  @ApiProperty()
+  @ApiPropertyOptional()
+  @IsOptional()
   @IsString()
-  projectId: string;
+  projectId?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  organizationId?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  scope?: string;
 
   @ApiProperty()
   @IsString()
