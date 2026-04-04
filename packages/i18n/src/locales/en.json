@@ -440,6 +440,8 @@
     "empty": "No checklists yet",
     "emptyDesc": "Create a checklist or generate one with AI",
     "askAI": "Ask AI about this task...",
+    "scope": "Assign to",
+    "description": "Description",
     "createManual": "Create Checklist",
     "importFromMD": "Import from MD",
     "importTitle": "Import Checklist from Markdown",

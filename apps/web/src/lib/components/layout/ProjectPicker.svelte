@@ -17,7 +17,15 @@
     currentProjectStore.set(null);
     open = false;
     if ($page.url.pathname.startsWith('/projects/')) {
-      goto('/dashboard');
+      // Extract the section from project URL (e.g. /projects/123/finances → /finances)
+      const match = $page.url.pathname.match(/^\/projects\/[^/]+\/(.+)/);
+      const section = match?.[1]?.split('/')[0];
+      const orgSections = ['content', 'checklists', 'documents', 'campaigns', 'email', 'analytics', 'finances', 'seo', 'competitors', 'experiments', 'sequences', 'calendar'];
+      if (section && orgSections.includes(section)) {
+        goto(`/${section}`);
+      } else {
+        goto('/dashboard');
+      }
     }
   }
 

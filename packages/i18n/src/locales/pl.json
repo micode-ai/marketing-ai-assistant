@@ -431,6 +431,8 @@
     "empty": "Brak list kontrolnych",
     "emptyDesc": "Utwórz listę lub wygeneruj ją z AI",
     "askAI": "Zapytaj AI o to zadanie...",
+    "scope": "Przypisz do",
+    "description": "Opis",
     "createManual": "Utwórz checklistę",
     "importFromMD": "Importuj z MD",
     "importTitle": "Importuj checklistę z Markdown",
