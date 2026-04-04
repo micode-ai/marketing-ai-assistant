@@ -426,6 +426,13 @@
     await fetchAll();
   });
 
+  // Re-fetch when projectId changes (e.g. project picker)
+  let prevProjectId = '';
+  $: if (projectId && projectId !== prevProjectId) {
+    prevProjectId = projectId;
+    if (ChartJS) fetchAll();
+  }
+
   onDestroy(() => {
     destroyCharts();
   });
