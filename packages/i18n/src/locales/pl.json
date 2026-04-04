@@ -1046,6 +1046,10 @@
     "calendar": {
       "title": "Kalendarz treści — planuj harmonogram publikacji",
       "desc": "Tu widać wszystkie treści z datami publikacji w widoku miesięcznym. Aby użyć — twórz treści w Content Studio z datą publikacji, a pojawią się tutaj automatycznie."
+    },
+    "finances": {
+      "title": "Finanse — śledź przychody i wydatki projektu",
+      "desc": "Spróbuj: kliknij \"Dodaj wpis\", aby zapisać wydatek lub przychód. Możesz używać różnych walut — kursy wymiany pobierane są automatycznie. Zobacz P&L na wykresach i podsumowaniach."
     }
   },
   "seo": {
