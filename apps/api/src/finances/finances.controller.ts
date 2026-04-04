@@ -27,13 +27,29 @@ export class FinancesController {
     return user.memberships?.[0]?.organizationId;
   }
 
+  private buildScope(user: any, projectId?: string, organizationId?: string, aggregated?: string) {
+    const orgId = this.getOrgId(user);
+    if (!projectId && !organizationId) {
+      throw new BadRequestException('Either projectId or organizationId is required');
+    }
+    return {
+      projectId: projectId || undefined,
+      organizationId: organizationId || orgId,
+      aggregated: aggregated === 'true',
+    };
+  }
+
   // ── Category routes BEFORE :id routes ────────────────────────────────
 
   @Get('categories')
-  @ApiOperation({ summary: 'Get finance categories for a project' })
-  findCategories(@Query('projectId') projectId: string, @CurrentUser() user: any) {
-    if (!projectId) throw new BadRequestException('projectId is required');
-    return this.financesService.findCategories(projectId, this.getOrgId(user));
+  @ApiOperation({ summary: 'Get finance categories (project-scoped, org-scoped, or aggregated)' })
+  findCategories(
+    @Query('projectId') projectId?: string,
+    @Query('organizationId') organizationId?: string,
+    @Query('aggregated') aggregated?: string,
+    @CurrentUser() user?: any,
+  ) {
+    return this.financesService.findCategories(this.buildScope(user, projectId, organizationId, aggregated));
   }
 
   @Post('categories')
@@ -61,15 +77,20 @@ export class FinancesController {
   // ── Summary & Exchange Rate ──────────────────────────────────────────
 
   @Get('summary')
-  @ApiOperation({ summary: 'Get financial summary for a project' })
+  @ApiOperation({ summary: 'Get financial summary (project-scoped, org-scoped, or aggregated)' })
   getSummary(
-    @Query('projectId') projectId: string,
+    @Query('projectId') projectId?: string,
+    @Query('organizationId') organizationId?: string,
+    @Query('aggregated') aggregated?: string,
     @Query('dateFrom') dateFrom?: string,
     @Query('dateTo') dateTo?: string,
     @CurrentUser() user?: any,
   ) {
-    if (!projectId) throw new BadRequestException('projectId is required');
-    return this.financesService.getSummary(projectId, this.getOrgId(user), dateFrom, dateTo);
+    return this.financesService.getSummary(
+      this.buildScope(user, projectId, organizationId, aggregated),
+      dateFrom,
+      dateTo,
+    );
   }
 
   @Get('exchange-rate')
@@ -82,9 +103,11 @@ export class FinancesController {
   // ── Record routes ────────────────────────────────────────────────────
 
   @Get()
-  @ApiOperation({ summary: 'Get finance records for a project' })
+  @ApiOperation({ summary: 'Get finance records (project-scoped, org-scoped, or aggregated)' })
   findRecords(
-    @Query('projectId') projectId: string,
+    @Query('projectId') projectId?: string,
+    @Query('organizationId') organizationId?: string,
+    @Query('aggregated') aggregated?: string,
     @Query('type') type?: 'INCOME' | 'EXPENSE',
     @Query('categoryId') categoryId?: string,
     @Query('dateFrom') dateFrom?: string,
@@ -93,15 +116,17 @@ export class FinancesController {
     @Query('limit') limit?: string,
     @CurrentUser() user?: any,
   ) {
-    if (!projectId) throw new BadRequestException('projectId is required');
-    return this.financesService.findRecords(projectId, this.getOrgId(user), {
-      type,
-      categoryId,
-      dateFrom,
-      dateTo,
-      page: page ? parseInt(page, 10) : undefined,
-      limit: limit ? parseInt(limit, 10) : undefined,
-    });
+    return this.financesService.findRecords(
+      this.buildScope(user, projectId, organizationId, aggregated),
+      {
+        type,
+        categoryId,
+        dateFrom,
+        dateTo,
+        page: page ? parseInt(page, 10) : undefined,
+        limit: limit ? parseInt(limit, 10) : undefined,
+      },
+    );
   }
 
   @Post()

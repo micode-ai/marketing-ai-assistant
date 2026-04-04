@@ -3,6 +3,7 @@ import {
   NotFoundException,
   ForbiddenException,
   ConflictException,
+  BadRequestException,
   Inject,
 } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
@@ -30,6 +31,12 @@ const DEFAULT_INCOME_CATEGORIES = [
   { name: 'finances.categories.otherIncome', type: 'INCOME' as const, color: '#f97316' },
 ];
 
+interface Scope {
+  projectId?: string;
+  organizationId: string;
+  aggregated?: boolean;
+}
+
 @Injectable()
 export class FinancesService {
   constructor(
@@ -37,19 +44,55 @@ export class FinancesService {
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
-  private async verifyProjectAccess(projectId: string, userOrgId: string) {
-    const project = await this.prisma.project.findUnique({
-      where: { id: projectId },
-      select: { id: true, organizationId: true, baseCurrency: true },
-    });
-    if (!project) {
-      throw new NotFoundException('Project not found');
+  // ── Helpers ───────────────────────────────────────────────────────
+
+  private async resolveScope(scope: Scope) {
+    if (scope.projectId) {
+      const project = await this.prisma.project.findUnique({
+        where: { id: scope.projectId },
+        select: { id: true, organizationId: true, baseCurrency: true },
+      });
+      if (!project) throw new NotFoundException('Project not found');
+      if (project.organizationId !== scope.organizationId) throw new ForbiddenException('Access denied');
+      return { type: 'project' as const, project, baseCurrency: project.baseCurrency };
     }
-    if (project.organizationId !== userOrgId) {
-      throw new ForbiddenException('Access denied');
-    }
-    return project;
+    // Org-level: use USD as default base currency (org has no baseCurrency field)
+    return { type: 'org' as const, project: null, baseCurrency: 'USD' };
   }
+
+  private buildWhere(scope: Scope): any {
+    if (scope.aggregated && scope.organizationId) {
+      // All records across all projects in this org + org-level records
+      return {
+        OR: [
+          { project: { organizationId: scope.organizationId } },
+          { organizationId: scope.organizationId, scope: 'ORGANIZATION' },
+        ],
+      };
+    }
+    if (scope.projectId) {
+      return { projectId: scope.projectId };
+    }
+    // Org-level only
+    return { organizationId: scope.organizationId, scope: 'ORGANIZATION' };
+  }
+
+  private buildCategoryWhere(scope: Scope): any {
+    if (scope.aggregated && scope.organizationId) {
+      return {
+        OR: [
+          { project: { organizationId: scope.organizationId } },
+          { organizationId: scope.organizationId, scope: 'ORGANIZATION' },
+        ],
+      };
+    }
+    if (scope.projectId) {
+      return { projectId: scope.projectId };
+    }
+    return { organizationId: scope.organizationId, scope: 'ORGANIZATION' };
+  }
+
+  // ── Exchange rate ─────────────────────────────────────────────────
 
   async getExchangeRate(from: string, to: string): Promise<{ rate: number; date: string }> {
     const today = new Date().toISOString().slice(0, 10);
@@ -76,18 +119,23 @@ export class FinancesService {
     return { rate: 1, date: today };
   }
 
-  // ── Categories ──────────────────────────────────────────────────────
+  // ── Categories ────────────────────────────────────────────────────
 
-  async findCategories(projectId: string, userOrgId: string) {
-    await this.verifyProjectAccess(projectId, userOrgId);
+  async findCategories(scope: Scope) {
+    await this.resolveScope(scope);
 
-    // Lazy-init default categories
-    const count = await this.prisma.financeCategory.count({ where: { projectId } });
+    // Lazy-init default categories for project or org
+    const countWhere = scope.projectId
+      ? { projectId: scope.projectId }
+      : { organizationId: scope.organizationId, scope: 'ORGANIZATION' as const };
+    const count = await this.prisma.financeCategory.count({ where: countWhere });
     if (count === 0) {
       const allDefaults = [...DEFAULT_EXPENSE_CATEGORIES, ...DEFAULT_INCOME_CATEGORIES];
       await this.prisma.financeCategory.createMany({
         data: allDefaults.map((c) => ({
-          projectId,
+          ...(scope.projectId
+            ? { projectId: scope.projectId, scope: 'PROJECT' as const }
+            : { organizationId: scope.organizationId, scope: 'ORGANIZATION' as const }),
           name: c.name,
           type: c.type,
           color: c.color,
@@ -98,17 +146,21 @@ export class FinancesService {
     }
 
     return this.prisma.financeCategory.findMany({
-      where: { projectId },
+      where: this.buildCategoryWhere(scope),
       orderBy: { createdAt: 'asc' },
     });
   }
 
-  async createCategory(dto: CreateFinanceCategoryDto, userOrgId: string) {
-    await this.verifyProjectAccess(dto.projectId, userOrgId);
+  async createCategory(dto: CreateFinanceCategoryDto, orgId: string) {
+    if (dto.projectId) {
+      await this.resolveScope({ projectId: dto.projectId, organizationId: orgId });
+    }
 
     return this.prisma.financeCategory.create({
       data: {
-        projectId: dto.projectId,
+        ...(dto.projectId
+          ? { projectId: dto.projectId, scope: 'PROJECT' as const }
+          : { organizationId: orgId, scope: 'ORGANIZATION' as const }),
         name: dto.name,
         type: dto.type,
         color: dto.color,
@@ -123,12 +175,9 @@ export class FinancesService {
       include: { project: { select: { organizationId: true } } },
     });
     if (!category) throw new NotFoundException('Category not found');
-    if (category.project.organizationId !== userOrgId) {
-      throw new ForbiddenException('Access denied');
-    }
-    if (category.isDefault) {
-      throw new ForbiddenException('Cannot edit default categories');
-    }
+    const catOrgId = category.organizationId || category.project?.organizationId;
+    if (catOrgId !== userOrgId) throw new ForbiddenException('Access denied');
+    if (category.isDefault) throw new ForbiddenException('Cannot edit default categories');
 
     return this.prisma.financeCategory.update({
       where: { id },
@@ -146,12 +195,9 @@ export class FinancesService {
       include: { project: { select: { organizationId: true } } },
     });
     if (!category) throw new NotFoundException('Category not found');
-    if (category.project.organizationId !== userOrgId) {
-      throw new ForbiddenException('Access denied');
-    }
-    if (category.isDefault) {
-      throw new ForbiddenException('Cannot delete default categories');
-    }
+    const catOrgId = category.organizationId || category.project?.organizationId;
+    if (catOrgId !== userOrgId) throw new ForbiddenException('Access denied');
+    if (category.isDefault) throw new ForbiddenException('Cannot delete default categories');
 
     try {
       return await this.prisma.financeCategory.delete({ where: { id } });
@@ -163,11 +209,10 @@ export class FinancesService {
     }
   }
 
-  // ── Records ─────────────────────────────────────────────────────────
+  // ── Records ───────────────────────────────────────────────────────
 
   async findRecords(
-    projectId: string,
-    userOrgId: string,
+    scope: Scope,
     filters?: {
       type?: 'INCOME' | 'EXPENSE';
       categoryId?: string;
@@ -177,15 +222,15 @@ export class FinancesService {
       limit?: number;
     },
   ) {
-    const project = await this.verifyProjectAccess(projectId, userOrgId);
+    const resolved = await this.resolveScope(scope);
 
-    const where: any = { projectId };
+    const where: any = this.buildWhere(scope);
     if (filters?.type) where.type = filters.type;
     if (filters?.categoryId) where.categoryId = filters.categoryId;
     if (filters?.dateFrom || filters?.dateTo) {
       where.date = {};
-      if (filters.dateFrom) where.date.gte = new Date(filters.dateFrom);
-      if (filters.dateTo) where.date.lte = new Date(filters.dateTo);
+      if (filters?.dateFrom) where.date.gte = new Date(filters.dateFrom);
+      if (filters?.dateTo) where.date.lte = new Date(filters.dateTo);
     }
 
     const page = filters?.page || 1;
@@ -194,7 +239,7 @@ export class FinancesService {
     const [records, total] = await Promise.all([
       this.prisma.financeRecord.findMany({
         where,
-        include: { category: true },
+        include: { category: true, project: { select: { name: true } } },
         orderBy: { date: 'desc' },
         skip: (page - 1) * limit,
         take: limit,
@@ -212,20 +257,27 @@ export class FinancesService {
       total,
       page,
       limit,
-      baseCurrency: project.baseCurrency,
+      baseCurrency: resolved.baseCurrency,
     };
   }
 
-  async createRecord(dto: CreateFinanceRecordDto, userOrgId: string) {
-    const project = await this.verifyProjectAccess(dto.projectId, userOrgId);
+  async createRecord(dto: CreateFinanceRecordDto, orgId: string) {
+    let baseCurrency = 'USD';
 
-    const rateData = await this.getExchangeRate(dto.currency, project.baseCurrency);
+    if (dto.projectId) {
+      const resolved = await this.resolveScope({ projectId: dto.projectId, organizationId: orgId });
+      baseCurrency = resolved.baseCurrency;
+    }
+
+    const rateData = await this.getExchangeRate(dto.currency, baseCurrency);
     const exchangeRate = rateData.rate;
     const amountInBaseCurrency = Math.round(dto.amount * exchangeRate * 100) / 100;
 
     const record = await this.prisma.financeRecord.create({
       data: {
-        projectId: dto.projectId,
+        ...(dto.projectId
+          ? { projectId: dto.projectId, scope: 'PROJECT' as const }
+          : { organizationId: orgId, scope: 'ORGANIZATION' as const }),
         categoryId: dto.categoryId,
         type: dto.type,
         amount: dto.amount,
@@ -252,9 +304,8 @@ export class FinancesService {
       include: { project: { select: { organizationId: true, baseCurrency: true } } },
     });
     if (!existing) throw new NotFoundException('Record not found');
-    if (existing.project.organizationId !== userOrgId) {
-      throw new ForbiddenException('Access denied');
-    }
+    const recOrgId = existing.organizationId || existing.project?.organizationId;
+    if (recOrgId !== userOrgId) throw new ForbiddenException('Access denied');
 
     const data: any = {};
     if (dto.categoryId !== undefined) data.categoryId = dto.categoryId;
@@ -262,11 +313,11 @@ export class FinancesService {
     if (dto.description !== undefined) data.description = dto.description;
     if (dto.date !== undefined) data.date = new Date(dto.date);
 
-    // Recalculate if amount or currency changed
     const newAmount = dto.amount ?? Number(existing.amount);
     const newCurrency = dto.currency ?? existing.currency;
     if (dto.amount !== undefined || dto.currency !== undefined) {
-      const rateData = await this.getExchangeRate(newCurrency, existing.project.baseCurrency);
+      const baseCurrency = existing.project?.baseCurrency || 'USD';
+      const rateData = await this.getExchangeRate(newCurrency, baseCurrency);
       data.amount = newAmount;
       data.currency = newCurrency;
       data.exchangeRate = rateData.rate;
@@ -293,24 +344,18 @@ export class FinancesService {
       include: { project: { select: { organizationId: true } } },
     });
     if (!record) throw new NotFoundException('Record not found');
-    if (record.project.organizationId !== userOrgId) {
-      throw new ForbiddenException('Access denied');
-    }
+    const recOrgId = record.organizationId || record.project?.organizationId;
+    if (recOrgId !== userOrgId) throw new ForbiddenException('Access denied');
 
     return this.prisma.financeRecord.delete({ where: { id } });
   }
 
-  // ── Summary ─────────────────────────────────────────────────────────
+  // ── Summary ───────────────────────────────────────────────────────
 
-  async getSummary(
-    projectId: string,
-    userOrgId: string,
-    dateFrom?: string,
-    dateTo?: string,
-  ) {
-    const project = await this.verifyProjectAccess(projectId, userOrgId);
+  async getSummary(scope: Scope, dateFrom?: string, dateTo?: string) {
+    const resolved = await this.resolveScope(scope);
 
-    const where: any = { projectId };
+    const where: any = this.buildWhere(scope);
     if (dateFrom || dateTo) {
       where.date = {};
       if (dateFrom) where.date.gte = new Date(dateFrom);
@@ -341,7 +386,6 @@ export class FinancesService {
       }),
     ]);
 
-    // Build monthly breakdown
     const monthlyMap = new Map<string, { income: number; expense: number }>();
     for (const r of monthlyData) {
       const key = `${r.date.getFullYear()}-${String(r.date.getMonth() + 1).padStart(2, '0')}`;
@@ -361,7 +405,6 @@ export class FinancesService {
         profit: Math.round((data.income - data.expense) * 100) / 100,
       }));
 
-    // Fetch category names for the breakdown
     const categoryIds = byCategory.map((c) => c.categoryId);
     const categories = await this.prisma.financeCategory.findMany({
       where: { id: { in: categoryIds } },
@@ -377,7 +420,7 @@ export class FinancesService {
       profit: Math.round((totalIncome - totalExpense) * 100) / 100,
       incomeCount: incomeAgg._count,
       expenseCount: expenseAgg._count,
-      baseCurrency: project.baseCurrency,
+      baseCurrency: resolved.baseCurrency,
       byCategory: byCategory.map((c) => {
         const cat = categoryMap.get(c.categoryId);
         return {

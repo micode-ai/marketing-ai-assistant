@@ -4,9 +4,10 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 const SUPPORTED_CURRENCIES = ['USD', 'EUR', 'GBP', 'PLN', 'RUB', 'UAH', 'BYN', 'KZT', 'TRY', 'JPY', 'CNY'];
 
 export class CreateFinanceRecordDto {
-  @ApiProperty()
+  @ApiPropertyOptional()
+  @IsOptional()
   @IsString()
-  projectId: string;
+  projectId?: string;
 
   @ApiProperty()
   @IsString()
