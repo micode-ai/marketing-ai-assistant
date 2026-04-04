@@ -23,19 +23,23 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 export class FinancesController {
   constructor(private financesService: FinancesService) {}
 
+  private getOrgId(user: any): string {
+    return user.memberships?.[0]?.organizationId;
+  }
+
   // ── Category routes BEFORE :id routes ────────────────────────────────
 
   @Get('categories')
   @ApiOperation({ summary: 'Get finance categories for a project' })
   findCategories(@Query('projectId') projectId: string, @CurrentUser() user: any) {
     if (!projectId) throw new BadRequestException('projectId is required');
-    return this.financesService.findCategories(projectId, user.organizationId);
+    return this.financesService.findCategories(projectId, this.getOrgId(user));
   }
 
   @Post('categories')
   @ApiOperation({ summary: 'Create a finance category' })
   createCategory(@Body() dto: CreateFinanceCategoryDto, @CurrentUser() user: any) {
-    return this.financesService.createCategory(dto, user.organizationId);
+    return this.financesService.createCategory(dto, this.getOrgId(user));
   }
 
   @Put('categories/:id')
@@ -45,13 +49,13 @@ export class FinancesController {
     @Body() dto: UpdateFinanceCategoryDto,
     @CurrentUser() user: any,
   ) {
-    return this.financesService.updateCategory(id, dto, user.organizationId);
+    return this.financesService.updateCategory(id, dto, this.getOrgId(user));
   }
 
   @Delete('categories/:id')
   @ApiOperation({ summary: 'Delete a finance category' })
   deleteCategory(@Param('id') id: string, @CurrentUser() user: any) {
-    return this.financesService.deleteCategory(id, user.organizationId);
+    return this.financesService.deleteCategory(id, this.getOrgId(user));
   }
 
   // ── Summary & Exchange Rate ──────────────────────────────────────────
@@ -65,7 +69,7 @@ export class FinancesController {
     @CurrentUser() user?: any,
   ) {
     if (!projectId) throw new BadRequestException('projectId is required');
-    return this.financesService.getSummary(projectId, user.organizationId, dateFrom, dateTo);
+    return this.financesService.getSummary(projectId, this.getOrgId(user), dateFrom, dateTo);
   }
 
   @Get('exchange-rate')
@@ -90,7 +94,7 @@ export class FinancesController {
     @CurrentUser() user?: any,
   ) {
     if (!projectId) throw new BadRequestException('projectId is required');
-    return this.financesService.findRecords(projectId, user.organizationId, {
+    return this.financesService.findRecords(projectId, this.getOrgId(user), {
       type,
       categoryId,
       dateFrom,
@@ -103,7 +107,7 @@ export class FinancesController {
   @Post()
   @ApiOperation({ summary: 'Create a finance record' })
   createRecord(@Body() dto: CreateFinanceRecordDto, @CurrentUser() user: any) {
-    return this.financesService.createRecord(dto, user.organizationId);
+    return this.financesService.createRecord(dto, this.getOrgId(user));
   }
 
   @Put(':id')
@@ -113,12 +117,12 @@ export class FinancesController {
     @Body() dto: UpdateFinanceRecordDto,
     @CurrentUser() user: any,
   ) {
-    return this.financesService.updateRecord(id, dto, user.organizationId);
+    return this.financesService.updateRecord(id, dto, this.getOrgId(user));
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a finance record' })
   deleteRecord(@Param('id') id: string, @CurrentUser() user: any) {
-    return this.financesService.deleteRecord(id, user.organizationId);
+    return this.financesService.deleteRecord(id, this.getOrgId(user));
   }
 }
