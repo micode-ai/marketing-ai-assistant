@@ -24,7 +24,16 @@
     projectId: '' as string, // '' = org-level
   };
 
-  const checklistTypes = ['LAUNCH', 'WEEKLY', 'CAMPAIGN_PREP', 'SEO', 'SOCIAL_MEDIA', 'EMAIL_CAMPAIGN', 'COMPETITIVE_ANALYSIS', 'CUSTOM'];
+  const checklistTypes: { value: string; labelKey: string }[] = [
+    { value: 'LAUNCH', labelKey: 'checklists.launch' },
+    { value: 'WEEKLY', labelKey: 'checklists.weekly' },
+    { value: 'CAMPAIGN_PREP', labelKey: 'checklists.campaignPrep' },
+    { value: 'SEO', labelKey: 'checklists.seo' },
+    { value: 'SOCIAL_MEDIA', labelKey: 'checklists.socialMedia' },
+    { value: 'EMAIL_CAMPAIGN', labelKey: 'checklists.emailCampaign' },
+    { value: 'COMPETITIVE_ANALYSIS', labelKey: 'checklists.competitiveAnalysis' },
+    { value: 'CUSTOM', labelKey: 'checklists.custom' },
+  ];
 
   async function loadData() {
     if (!ctx.organizationId) return;
@@ -140,13 +149,13 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => showCreateModal = false}>
   <div class="bg-white dark:bg-gray-800 rounded-xl w-full max-w-md p-6 shadow-xl">
-    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">{$_('common.create')} {$_('nav.orgChecklists')}</h3>
+    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">{$_('checklists.create')}</h3>
 
-    <!-- Project assignment -->
+    <!-- Scope selector -->
     <div class="mb-4">
-      <label class="block text-sm text-gray-500 dark:text-gray-400 mb-1">Project</label>
+      <label class="block text-sm text-gray-500 dark:text-gray-400 mb-1">{$_('checklists.scope') || $_('common.filter')}</label>
       <select bind:value={createForm.projectId} class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-900 dark:text-white">
-        <option value="">Organization (general)</option>
+        <option value="">{currentOrg?.name || $_('header.orgContext')}</option>
         {#each projects as proj}
           <option value={proj.id}>{proj.name}</option>
         {/each}
@@ -154,28 +163,28 @@
     </div>
 
     <div class="mb-4">
-      <label class="block text-sm text-gray-500 dark:text-gray-400 mb-1">{$_('checklists.name') || 'Name'}</label>
-      <input type="text" bind:value={createForm.name} class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-900 dark:text-white" placeholder="Checklist name..." />
+      <label class="block text-sm text-gray-500 dark:text-gray-400 mb-1">{$_('checklists.name')}</label>
+      <input type="text" bind:value={createForm.name} class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-900 dark:text-white" />
     </div>
 
     <div class="mb-4">
-      <label class="block text-sm text-gray-500 dark:text-gray-400 mb-1">{$_('checklists.type') || 'Type'}</label>
+      <label class="block text-sm text-gray-500 dark:text-gray-400 mb-1">{$_('checklists.type')}</label>
       <select bind:value={createForm.type} class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-900 dark:text-white">
         {#each checklistTypes as t}
-          <option value={t}>{t.replace(/_/g, ' ')}</option>
+          <option value={t.value}>{$_(t.labelKey)}</option>
         {/each}
       </select>
     </div>
 
     <div class="mb-4">
-      <label class="block text-sm text-gray-500 dark:text-gray-400 mb-1">{$_('checklists.description') || 'Description'}</label>
-      <textarea bind:value={createForm.description} rows="2" class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-900 dark:text-white" placeholder="Optional description..."></textarea>
+      <label class="block text-sm text-gray-500 dark:text-gray-400 mb-1">{$_('checklists.description') || $_('finances.description')}</label>
+      <textarea bind:value={createForm.description} rows="2" class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-900 dark:text-white"></textarea>
     </div>
 
     <div class="flex gap-3 justify-end">
-      <button on:click={() => showCreateModal = false} class="px-4 py-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white cursor-pointer">{$_('finances.cancel') || 'Cancel'}</button>
+      <button on:click={() => showCreateModal = false} class="px-4 py-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white cursor-pointer">{$_('common.cancel')}</button>
       <button on:click={createChecklist} disabled={creating || !createForm.name.trim()} class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 cursor-pointer">
-        {creating ? '...' : $_('common.create')}
+        {creating ? $_('common.loading') : $_('checklists.createManual')}
       </button>
     </div>
   </div>
