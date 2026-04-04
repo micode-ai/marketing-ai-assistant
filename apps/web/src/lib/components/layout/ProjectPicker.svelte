@@ -20,7 +20,6 @@
       // Extract the section from project URL (e.g. /projects/123/finances → /finances)
       const match = $page.url.pathname.match(/^\/projects\/[^/]+\/(.+)/);
       const section = match?.[1]?.split('/')[0];
-      const orgSections = ['content', 'checklists', 'documents', 'campaigns', 'email', 'analytics', 'finances', 'seo', 'competitors', 'experiments', 'sequences', 'calendar'];
       if (section && orgSections.includes(section)) {
         goto(`/${section}`);
       } else {
@@ -29,14 +28,23 @@
     }
   }
 
+  const orgSections = ['content', 'checklists', 'documents', 'campaigns', 'email', 'analytics', 'finances', 'seo', 'competitors', 'experiments', 'sequences', 'calendar'];
+
   function selectProject(project: any) {
     const prevId = $currentProjectStore?.id;
     currentProjectStore.set(project);
     open = false;
     const path = $page.url.pathname;
     if (path.startsWith('/projects/') && prevId !== project.id) {
+      // Switch between projects
       const newPath = path.replace(/\/projects\/[^/]+/, `/projects/${project.id}`);
       goto(newPath);
+    } else if (!path.startsWith('/projects/')) {
+      // On org-level section page — redirect to project-level equivalent
+      const section = path.split('/').filter(Boolean)[0];
+      if (section && orgSections.includes(section)) {
+        goto(`/projects/${project.id}/${section}`);
+      }
     }
   }
 

@@ -1,16 +1,9 @@
 <script lang="ts">
   import { _ } from 'svelte-i18n';
-  import { goto } from '$app/navigation';
   import { onMount, onDestroy, tick } from 'svelte';
   import { api } from '$lib/api/client';
   import { organizationIdStore, currentProjectStore, projectsStore } from '$lib/stores/projects';
-  import { contextStore } from '$lib/stores/context';
-
-  // Redirect to project finances when a project is actively selected via context
-  $: ctx = $contextStore;
-  $: if (ctx.type === 'project' && ctx.projectId) {
-    goto(`/projects/${ctx.projectId}/finances`, { replaceState: true });
-  }
+  // Navigation between org/project is handled by ProjectPicker — no redirect needed here
 
   const SUPPORTED_CURRENCIES = ['USD','EUR','GBP','PLN','RUB','UAH','BYN','KZT','TRY','JPY','CNY'];
 
@@ -61,7 +54,7 @@
 
   $: orgId = $organizationIdStore;
   $: projects = $projectsStore || [];
-  $: isOrgPage = ctx.type !== 'project';
+  $: isOrgPage = !$currentProjectStore;
 
   function getDateRange(): { dateFrom: string; dateTo: string } {
     const now = new Date();
