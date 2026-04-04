@@ -1066,6 +1066,10 @@
     "calendar": {
       "title": "Content Calendar — plan your publishing schedule",
       "desc": "This shows all your content with scheduled dates in a monthly view. To use it, create content in Content Studio and set a publish date — it will appear here automatically."
+    },
+    "finances": {
+      "title": "Finances — track your project income and expenses",
+      "desc": "Try it: click \"Add Record\" to log an expense or income. You can use different currencies — exchange rates are fetched automatically. See your P&L at a glance with charts and summaries."
     }
   },
   "seo": {
