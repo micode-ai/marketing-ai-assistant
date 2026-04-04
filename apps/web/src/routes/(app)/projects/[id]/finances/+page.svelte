@@ -386,12 +386,13 @@
       type: 'doughnut',
       data: {
         labels: byCategory.map((c: any) => {
-          const translated = $_(c.name);
-          return translated === c.name ? c.name : translated;
+          const name = c.categoryName || c.name || '';
+          const translated = $_(name);
+          return translated === name ? name : translated;
         }),
         datasets: [{
           data: byCategory.map((c: any) => c.total),
-          backgroundColor: byCategory.map((c: any) => c.color || '#6366F1'),
+          backgroundColor: byCategory.map((c: any) => c.categoryColor || c.color || '#6366F1'),
         }],
       },
       options: {
