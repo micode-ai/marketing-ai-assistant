@@ -267,11 +267,11 @@
 <div class="p-4 sm:p-6">
   <div class="flex items-center justify-between mb-6">
     <div>
-      <h1 class="text-2xl font-bold text-white">{$_('finances.title')}</h1>
-      <p class="text-sm text-gray-400 mt-1">{$_('finances.subtitle')}</p>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{$_('finances.title')}</h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{$_('finances.subtitle')}</p>
     </div>
     <div class="flex items-center gap-3">
-      <div class="flex bg-gray-800 rounded-lg overflow-hidden text-sm">
+      <div class="flex bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden text-sm">
         {#each ['month', 'quarter', 'year'] as p}
           <button
             class="px-3 py-1.5 cursor-pointer {periodMode === p ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-gray-200'}"
@@ -309,11 +309,11 @@
     <!-- Charts -->
     {#if summary?.monthly?.length > 0 || summary?.byCategory?.length > 0}
     <div class="grid grid-cols-5 gap-4 mb-6">
-      <div class="col-span-3 bg-gray-800 rounded-xl p-4" style="min-height: 250px">
+      <div class="col-span-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4" style="min-height: 250px">
         <h3 class="text-sm font-semibold mb-3">{$_('finances.incomeVsExpenses')}</h3>
         <div style="height: 200px"><canvas bind:this={barCanvas}></canvas></div>
       </div>
-      <div class="col-span-2 bg-gray-800 rounded-xl p-4" style="min-height: 250px">
+      <div class="col-span-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4" style="min-height: 250px">
         <div class="flex items-center justify-between mb-3">
           <h3 class="text-sm font-semibold">{$_('finances.byCategory')}</h3>
           <button on:click={toggleDoughnut} class="text-xs px-2 py-1 rounded cursor-pointer {doughnutMode === 'EXPENSE' ? 'text-red-400 bg-red-500/10' : 'text-green-400 bg-green-500/10'}">
@@ -326,8 +326,8 @@
     {/if}
 
     <!-- Table -->
-    <div class="bg-gray-800 rounded-xl overflow-hidden">
-      <div class="flex items-center justify-between px-4 py-3 border-b border-gray-700">
+    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+      <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
         <div class="flex gap-2 text-sm">
           {#each ['ALL', 'INCOME', 'EXPENSE'] as t}
             <button class="px-3 py-1 rounded cursor-pointer {filterType === t ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-white'}" on:click={() => { filterType = t; }}>
@@ -343,7 +343,7 @@
       {:else}
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
-            <thead class="text-xs text-gray-500 border-b border-gray-700">
+            <thead class="text-xs text-gray-500 border-b border-gray-200 dark:border-gray-700">
               <tr>
                 <th class="px-4 py-2 text-left whitespace-nowrap">{$_('finances.date')}</th>
                 <th class="px-4 py-2 text-left whitespace-nowrap">{$_('finances.type')}</th>
@@ -356,7 +356,7 @@
             </thead>
             <tbody>
               {#each records as record}
-                <tr class="border-b border-gray-700/50 hover:bg-gray-700/30">
+                <tr class="border-b border-gray-200 dark:border-gray-100 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30">
                   <td class="px-4 py-2.5 text-gray-400 whitespace-nowrap">{formatDate(record.date)}</td>
                   <td class="px-4 py-2.5 whitespace-nowrap">
                     <span class="px-2 py-0.5 rounded text-xs {record.type === 'INCOME' ? 'bg-green-500/15 text-green-400' : 'bg-red-500/15 text-red-400'}">
@@ -406,13 +406,13 @@
 <!-- Record Modal -->
 {#if showRecordModal}
 <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => showRecordModal = false}>
-  <div class="bg-gray-800 rounded-xl w-full max-w-md p-6">
-    <h3 class="text-lg font-semibold text-white mb-4">{editingRecord ? $_('finances.editRecord') : $_('finances.addRecord')}</h3>
+  <div class="bg-white dark:bg-gray-800 rounded-xl w-full max-w-md p-6 shadow-xl">
+    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">{editingRecord ? $_('finances.editRecord') : $_('finances.addRecord')}</h3>
 
     <!-- Project assignment -->
     <div class="mb-4">
-      <label class="block text-sm text-gray-400 mb-1">Project</label>
-      <select bind:value={recordForm.projectId} class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white">
+      <label class="block text-sm text-gray-500 dark:text-gray-400 mb-1">Project</label>
+      <select bind:value={recordForm.projectId} class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-900 dark:text-white">
         <option value="">Organization (general)</option>
         {#each projects as proj}
           <option value={proj.id}>{proj.name}</option>
@@ -421,15 +421,15 @@
     </div>
 
     <div class="mb-4">
-      <div class="flex bg-gray-700 rounded-lg overflow-hidden">
+      <div class="flex bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden">
         <button class="flex-1 py-2 text-sm cursor-pointer {recordForm.type === 'EXPENSE' ? 'bg-red-500/20 text-red-400 font-semibold' : 'text-gray-400'}" on:click={() => recordForm.type = 'EXPENSE'}>{$_('finances.expense')}</button>
         <button class="flex-1 py-2 text-sm cursor-pointer {recordForm.type === 'INCOME' ? 'bg-green-500/20 text-green-400 font-semibold' : 'text-gray-400'}" on:click={() => recordForm.type = 'INCOME'}>{$_('finances.income')}</button>
       </div>
     </div>
 
     <div class="mb-4">
-      <label class="block text-sm text-gray-400 mb-1">{$_('finances.category')}</label>
-      <select bind:value={recordForm.categoryId} class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white">
+      <label class="block text-sm text-gray-500 dark:text-gray-400 mb-1">{$_('finances.category')}</label>
+      <select bind:value={recordForm.categoryId} class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-900 dark:text-white">
         <option value="">—</option>
         {#each filteredCategories as cat}
           <option value={cat.id}>{getCategoryName(cat)}</option>
@@ -439,25 +439,25 @@
 
     <div class="grid grid-cols-3 gap-3 mb-4">
       <div class="col-span-2">
-        <label class="block text-sm text-gray-400 mb-1">{$_('finances.amount')}</label>
-        <input type="number" step="0.01" min="0.01" bind:value={recordForm.amount} class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white" />
+        <label class="block text-sm text-gray-500 dark:text-gray-400 mb-1">{$_('finances.amount')}</label>
+        <input type="number" step="0.01" min="0.01" bind:value={recordForm.amount} class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-900 dark:text-white" />
       </div>
       <div>
-        <label class="block text-sm text-gray-400 mb-1">{$_('finances.currency')}</label>
-        <select bind:value={recordForm.currency} class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white">
+        <label class="block text-sm text-gray-500 dark:text-gray-400 mb-1">{$_('finances.currency')}</label>
+        <select bind:value={recordForm.currency} class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-900 dark:text-white">
           {#each SUPPORTED_CURRENCIES as c}<option value={c}>{c}</option>{/each}
         </select>
       </div>
     </div>
 
     <div class="mb-4">
-      <label class="block text-sm text-gray-400 mb-1">{$_('finances.date')}</label>
-      <input type="date" bind:value={recordForm.date} class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white" />
+      <label class="block text-sm text-gray-500 dark:text-gray-400 mb-1">{$_('finances.date')}</label>
+      <input type="date" bind:value={recordForm.date} class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-900 dark:text-white" />
     </div>
 
     <div class="mb-4">
-      <label class="block text-sm text-gray-400 mb-1">{$_('finances.description')}</label>
-      <textarea bind:value={recordForm.description} rows="2" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"></textarea>
+      <label class="block text-sm text-gray-500 dark:text-gray-400 mb-1">{$_('finances.description')}</label>
+      <textarea bind:value={recordForm.description} rows="2" class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-900 dark:text-white"></textarea>
     </div>
 
     <div class="flex gap-3 justify-end">
@@ -473,16 +473,16 @@
 <!-- Categories Modal -->
 {#if showCategoriesModal}
 <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => showCategoriesModal = false}>
-  <div class="bg-gray-800 rounded-xl w-full max-w-md p-6 max-h-[80vh] overflow-y-auto">
+  <div class="bg-white dark:bg-gray-800 rounded-xl w-full max-w-md p-6 shadow-xl max-h-[80vh] overflow-y-auto">
     <div class="flex items-center justify-between mb-4">
-      <h3 class="text-lg font-semibold text-white">{$_('finances.categories.title')}</h3>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{$_('finances.categories.title')}</h3>
       <button on:click={() => showCategoriesModal = false} class="text-gray-400 hover:text-white cursor-pointer">✕</button>
     </div>
 
     {#each ['EXPENSE', 'INCOME'] as catType}
       <h4 class="text-sm font-medium text-gray-400 mb-2 mt-4">{catType === 'EXPENSE' ? $_('finances.categories.expenseCategories') : $_('finances.categories.incomeCategories')}</h4>
       {#each categories.filter(c => c.type === catType || c.type === 'BOTH') as cat}
-        <div class="flex items-center justify-between py-2 px-3 bg-gray-700/30 rounded mb-1">
+        <div class="flex items-center justify-between py-2 px-3 bg-gray-50 dark:bg-gray-700/30 rounded mb-1">
           <div class="flex items-center gap-2">
             <div class="w-3 h-3 rounded" style="background: {cat.color}"></div>
             <span class="text-sm">{getCategoryName(cat)}</span>
@@ -497,8 +497,8 @@
     {/each}
 
     <div class="mt-4 flex gap-2">
-      <input bind:value={newCatName} placeholder={$_('finances.categories.newCategory')} class="flex-1 bg-gray-700 border border-gray-600 rounded px-3 py-1.5 text-sm text-white" />
-      <select bind:value={newCatType} class="bg-gray-700 border border-gray-600 rounded px-2 py-1.5 text-sm text-white">
+      <input bind:value={newCatName} placeholder={$_('finances.categories.newCategory')} class="flex-1 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-3 py-1.5 text-sm text-gray-900 dark:text-white" />
+      <select bind:value={newCatType} class="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-2 py-1.5 text-sm text-gray-900 dark:text-white">
         <option value="EXPENSE">{$_('finances.expense')}</option>
         <option value="INCOME">{$_('finances.income')}</option>
       </select>
