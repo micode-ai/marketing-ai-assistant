@@ -4,12 +4,12 @@
   import { onMount, onDestroy, tick } from 'svelte';
   import { api } from '$lib/api/client';
   import SectionHint from '$lib/components/SectionHint.svelte';
-  import { currentProjectStore, projectsStore } from '$lib/stores/projects';
+  import { currentProjectStore, projectsStore, navigatingToOrg } from '$lib/stores/projects';
 
   $: projectId = $page.params['id'];
 
-  // Sync picker with this project
-  $: if ($projectsStore.length > 0 && projectId) {
+  // Sync picker with this project — skip if navigating to org view
+  $: if ($projectsStore.length > 0 && projectId && !$navigatingToOrg) {
     const project = $projectsStore.find((p: any) => p.id === projectId);
     if (project && $currentProjectStore?.id !== projectId) {
       currentProjectStore.set(project);
