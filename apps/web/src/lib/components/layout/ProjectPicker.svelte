@@ -16,13 +16,12 @@
   function selectOrg() {
     currentProjectStore.set(null);
     open = false;
-    if ($page.url.pathname.startsWith('/projects/')) {
-      // Extract the section from project URL (e.g. /projects/123/finances → /finances)
-      const match = $page.url.pathname.match(/^\/projects\/[^/]+\/(.+)/);
+    const path = $page.url.pathname;
+    if (path.startsWith('/projects/')) {
+      const match = path.match(/^\/projects\/[^/]+\/(.+)/);
       const section = match?.[1]?.split('/')[0];
       const target = section && orgSections.includes(section) ? `/${section}` : '/dashboard';
-      // Use full page navigation to ensure clean component remount
-      window.location.href = target;
+      goto(target);
     }
   }
 
