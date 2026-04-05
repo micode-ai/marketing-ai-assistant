@@ -2,7 +2,7 @@
   import { _ } from 'svelte-i18n';
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
-  import { currentProjectStore, projectsStore, organizationIdStore, projectsLoaded } from '$lib/stores/projects';
+  import { currentProjectStore, projectsStore, organizationIdStore, projectsLoaded, navigatingToOrg } from '$lib/stores/projects';
   import { currentUser } from '$lib/stores/auth';
 
   let open = false;
@@ -14,6 +14,7 @@
   $: loaded = $projectsLoaded;
 
   function selectOrg() {
+    navigatingToOrg.set(true);
     currentProjectStore.set(null);
     open = false;
     const path = $page.url.pathname;
@@ -21,7 +22,9 @@
       const match = path.match(/^\/projects\/[^/]+\/(.+)/);
       const section = match?.[1]?.split('/')[0];
       const target = section && orgSections.includes(section) ? `/${section}` : '/dashboard';
-      goto(target);
+      goto(target).then(() => navigatingToOrg.set(false));
+    } else {
+      navigatingToOrg.set(false);
     }
   }
 

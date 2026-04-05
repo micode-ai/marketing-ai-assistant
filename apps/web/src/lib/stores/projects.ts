@@ -19,6 +19,9 @@ if (browser) {
   });
 }
 
+// Flag to prevent project pages from re-setting currentProjectStore during org navigation
+export const navigatingToOrg = writable(false);
+
 const storedOrgId = browser ? localStorage.getItem('organizationId') : null;
 export const organizationIdStore = writable<string | null>(storedOrgId);
 
