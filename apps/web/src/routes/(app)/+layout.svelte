@@ -82,13 +82,18 @@
           projectsStore.set(projects);
           projectsLoaded.set(true);
 
-          // Restore sticky project from localStorage
-          if (_storedProjectId) {
+          // Restore sticky project from localStorage — but only if on a project page
+          // (if user navigated to an org-level section like /finances, don't restore)
+          const currentPath = window.location.pathname;
+          const isProjectPage = currentPath.startsWith('/projects/');
+          if (_storedProjectId && !$currentProjectStore) {
             const savedProject = projects.find((p: any) => p.id === _storedProjectId);
-            if (savedProject) {
+            if (savedProject && isProjectPage) {
               currentProjectStore.set(savedProject);
+            } else if (!isProjectPage) {
+              // On org page — don't restore, clear the stored id
+              currentProjectStore.set(null);
             } else {
-              // Project no longer exists or belongs to different org — clear
               currentProjectStore.set(null);
             }
           }
