@@ -33,6 +33,10 @@
   function selectProject(project: any) {
     const prevId = $currentProjectStore?.id;
     currentProjectStore.set(project);
+    // Sync org store with the project's organization
+    if (project.organizationId && project.organizationId !== $organizationIdStore) {
+      organizationIdStore.set(project.organizationId);
+    }
     open = false;
     const path = $page.url.pathname;
     if (path.startsWith('/projects/') && prevId !== project.id) {

@@ -120,34 +120,39 @@ export class FinancesService {
 
   // ── Categories ────────────────────────────────────────────────────
 
-  async findCategories(scope: Scope) {
-    await this.resolveScope(scope);
+  async findCategories(reqScope: Scope) {
+    try {
+      await this.resolveScope(reqScope);
 
-    // Lazy-init default categories for project or org
-    const countWhere = scope.projectId
-      ? { projectId: scope.projectId }
-      : { organizationId: scope.organizationId, scope: 'ORGANIZATION' as const };
-    const count = await this.prisma.financeCategory.count({ where: countWhere });
-    if (count === 0) {
-      const allDefaults = [...DEFAULT_EXPENSE_CATEGORIES, ...DEFAULT_INCOME_CATEGORIES];
-      await this.prisma.financeCategory.createMany({
-        data: allDefaults.map((c) => ({
-          ...(scope.projectId
-            ? { projectId: scope.projectId, scope: 'PROJECT' as const }
-            : { organizationId: scope.organizationId, scope: 'ORGANIZATION' as const }),
-          name: c.name,
-          type: c.type,
-          color: c.color,
-          isDefault: true,
-        })),
-        skipDuplicates: true,
+      // Lazy-init default categories for project or org
+      const countWhere: any = reqScope.projectId
+        ? { projectId: reqScope.projectId }
+        : { organizationId: reqScope.organizationId, scope: 'ORGANIZATION' };
+      const count = await this.prisma.financeCategory.count({ where: countWhere });
+      if (count === 0) {
+        const allDefaults = [...DEFAULT_EXPENSE_CATEGORIES, ...DEFAULT_INCOME_CATEGORIES];
+        await this.prisma.financeCategory.createMany({
+          data: allDefaults.map((c) => ({
+            ...(reqScope.projectId
+              ? { projectId: reqScope.projectId, scope: 'PROJECT' as any }
+              : { organizationId: reqScope.organizationId, scope: 'ORGANIZATION' as any }),
+            name: c.name,
+            type: c.type,
+            color: c.color,
+            isDefault: true,
+          })),
+          skipDuplicates: true,
+        });
+      }
+
+      return await this.prisma.financeCategory.findMany({
+        where: this.buildCategoryWhere(reqScope),
+        orderBy: { createdAt: 'asc' },
       });
+    } catch (e) {
+      console.error('[findCategories] Error:', e, 'Scope:', JSON.stringify(reqScope));
+      throw e;
     }
-
-    return this.prisma.financeCategory.findMany({
-      where: this.buildCategoryWhere(scope),
-      orderBy: { createdAt: 'asc' },
-    });
   }
 
   async createCategory(dto: CreateFinanceCategoryDto, orgId: string) {
