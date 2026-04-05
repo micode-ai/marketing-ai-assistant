@@ -20,11 +20,9 @@
       // Extract the section from project URL (e.g. /projects/123/finances → /finances)
       const match = $page.url.pathname.match(/^\/projects\/[^/]+\/(.+)/);
       const section = match?.[1]?.split('/')[0];
-      if (section && orgSections.includes(section)) {
-        goto(`/${section}`);
-      } else {
-        goto('/dashboard');
-      }
+      const target = section && orgSections.includes(section) ? `/${section}` : '/dashboard';
+      // Use full page navigation to ensure clean component remount
+      window.location.href = target;
     }
   }
 
