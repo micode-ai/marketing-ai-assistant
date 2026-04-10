@@ -1,9 +1,9 @@
-import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../database/prisma.service';
-import * as crypto from 'crypto';
 import axios from 'axios';
 import { TwitterApi } from 'twitter-api-v2';
+import { encryptData, decryptData } from '../common/crypto.util';
 
 @Injectable()
 export class SocialService {
@@ -314,34 +314,11 @@ export class SocialService {
     };
   }
 
-  private getEncryptionKey(): Buffer {
-    const raw = this.config.get<string>('ENCRYPTION_KEY', '');
-    const key = Buffer.from(raw, 'hex');
-    if (key.length !== 32) {
-      throw new InternalServerErrorException(
-        'ENCRYPTION_KEY must be a 64-character hex string (32 bytes). ' +
-        'Generate one with: openssl rand -hex 32',
-      );
-    }
-    return key;
-  }
-
   private encryptTokens(data: object): string {
-    const key = this.getEncryptionKey();
-    const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
-    let encrypted = cipher.update(JSON.stringify(data), 'utf8', 'hex');
-    encrypted += cipher.final('hex');
-    return iv.toString('hex') + ':' + encrypted;
+    return encryptData(data, this.config.get<string>('ENCRYPTION_KEY', ''));
   }
 
   private decryptTokens(encrypted: string): any {
-    const key = this.getEncryptionKey();
-    const [ivHex, data] = encrypted.split(':');
-    const iv = Buffer.from(ivHex, 'hex');
-    const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
-    let decrypted = decipher.update(data!, 'hex', 'utf8');
-    decrypted += decipher.final('utf8');
-    return JSON.parse(decrypted);
+    return decryptData(encrypted, this.config.get<string>('ENCRYPTION_KEY', ''));
   }
 }

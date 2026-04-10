@@ -56,6 +56,7 @@ enum SocialPlatform {
   INSTAGRAM
   GOOGLE
   TELEGRAM
+  GOOGLE_PLAY
 }
 
 enum CampaignType {
@@ -399,6 +400,8 @@ model Project {
   trackedUsers      TrackedUser[]
   financeCategories FinanceCategory[]
   financeRecords    FinanceRecord[]
+  appStoreMetrics   AppStoreMetrics[]
+  appReviews        AppReview[]
 
   @@index([organizationId])
   @@map("projects")
@@ -1256,4 +1259,65 @@ model FinanceRecord {
   @@index([organizationId])
   @@index([scope, organizationId])
   @@map("finance_records")
+}
+
+model AppStoreMetrics {
+  id                     String   @id @default(cuid())
+  projectId              String
+  date                   DateTime @db.Date
+  installs               Int      @default(0)
+  uninstalls             Int      @default(0)
+  updates                Int      @default(0)
+  activeDeviceInstalls   Int      @default(0)
+  storeListingVisitors   Int      @default(0)
+  storeListingConversions Float   @default(0)
+  crashes                Int      @default(0)
+  anrs                   Int      @default(0)
+  crashRate              Float    @default(0)
+  anrRate                Float    @default(0)
+  averageRating          Float    @default(0)
+  totalRatings           Int      @default(0)
+  ratingsCount1          Int      @default(0)
+  ratingsCount2          Int      @default(0)
+  ratingsCount3          Int      @default(0)
+  ratingsCount4          Int      @default(0)
+  ratingsCount5          Int      @default(0)
+  revenue                Float?
+  revenuePerUser         Float?
+  newSubscriptions       Int?
+  cancelledSubscriptions Int?
+  activeSubscriptions    Int?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, date])
+  @@index([projectId, date])
+  @@map("app_store_metrics")
+}
+
+model AppReview {
+  id               String    @id @default(cuid())
+  projectId        String
+  reviewId         String
+  authorName       String
+  language         String    @default("en")
+  starRating       Int
+  text             String
+  reviewCreatedAt  DateTime
+  replyText        String?
+  replyCreatedAt   DateTime?
+  aiSuggestedReply String?
+  isReplied        Boolean   @default(false)
+  metadata         Json?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, reviewId])
+  @@index([projectId, starRating])
+  @@index([projectId, isReplied])
+  @@map("app_reviews")
 }
