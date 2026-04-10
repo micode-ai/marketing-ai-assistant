@@ -6,7 +6,6 @@ import {
   Query,
   Param,
   Body,
-  Req,
   Res,
   UseGuards,
   Logger,
