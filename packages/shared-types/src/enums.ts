@@ -39,6 +39,8 @@ export enum SocialPlatform {
   FACEBOOK = 'FACEBOOK',
   INSTAGRAM = 'INSTAGRAM',
   GOOGLE = 'GOOGLE',
+  TELEGRAM = 'TELEGRAM',
+  GOOGLE_PLAY = 'GOOGLE_PLAY',
 }
 
 export enum CampaignType {
@@ -207,4 +209,10 @@ export enum EntityModelType {
   ANALYTICS_EVENT = 'ANALYTICS_EVENT',
   AB_TEST = 'AB_TEST',
   EMAIL_SEQUENCE = 'EMAIL_SEQUENCE',
+}
+
+export enum GoogleIntegrationType {
+  SEARCH_CONSOLE = 'SEARCH_CONSOLE',
+  ANALYTICS = 'ANALYTICS',
+  PLAY_CONSOLE = 'PLAY_CONSOLE',
 }

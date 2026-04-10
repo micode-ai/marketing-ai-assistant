@@ -1221,5 +1221,90 @@
       "partnership": "Partnerstwo",
       "otherIncome": "Inne"
     }
+  },
+  "googlePlay": {
+    "title": "Analityka Google Play",
+    "tabs": {
+      "overview": "Przegląd",
+      "installs": "Instalacje",
+      "storeListing": "Strona w Store",
+      "stability": "Stabilność",
+      "revenue": "Przychody",
+      "reviews": "Recenzje"
+    },
+    "kpi": {
+      "installs": "Instalacje",
+      "rating": "Średnia ocena",
+      "revenue": "Przychody",
+      "crashRate": "Wskaźnik awarii"
+    },
+    "metrics": {
+      "installs": "Instalacje",
+      "uninstalls": "Odinstalowania",
+      "updates": "Aktualizacje",
+      "activeDevices": "Aktywne urządzenia",
+      "visitors": "Odwiedzający Store",
+      "conversion": "Konwersja instalacji",
+      "crashes": "Awarie",
+      "anrs": "ANR",
+      "averageRating": "Średnia ocena",
+      "totalRatings": "Łączna liczba ocen",
+      "newSubscriptions": "Nowe subskrypcje",
+      "cancelledSubscriptions": "Anulowane",
+      "activeSubscriptions": "Aktywne subskrypcje",
+      "revenuePerUser": "Przychód na użytkownika"
+    },
+    "connection": {
+      "title": "Google Play Console",
+      "description": "Połącz Google Play Console, aby zobaczyć instalacje, oceny, przychody, raporty awarii i zarządzać recenzjami z AI.",
+      "connectOAuth": "Połącz przez Google",
+      "connectServiceAccount": "Konto usługi",
+      "connected": "Połączono",
+      "disconnected": "Nie połączono",
+      "disconnect": "Odłącz",
+      "disconnectConfirm": "Czy na pewno chcesz odłączyć Google Play Console?",
+      "disconnectDeleteData": "Usuń również wszystkie zsynchronizowane dane",
+      "syncNow": "Synchronizuj teraz",
+      "syncing": "Synchronizacja...",
+      "lastSync": "Ostatnia synchronizacja: {time}",
+      "packageName": "Nazwa pakietu",
+      "uploadJson": "Prześlij JSON konta usługi",
+      "enterPackageName": "Wprowadź nazwę pakietu (np. com.example.app)",
+      "status": {
+        "ok": "Połączono",
+        "error": "Błąd synchronizacji",
+        "syncing": "Synchronizacja"
+      },
+      "errors": {
+        "invalidKey": "Nieprawidłowy klucz JSON konta usługi",
+        "noAccess": "Brak dostępu do Google Play Console",
+        "syncFailed": "Synchronizacja nie powiodła się. Automatyczna ponowna próba.",
+        "revoked": "Dostęp odwołany. Połącz ponownie."
+      }
+    },
+    "reviews": {
+      "title": "Recenzje",
+      "filterByRating": "Filtruj po ocenie",
+      "allRatings": "Wszystkie oceny",
+      "unreplied": "Bez odpowiedzi",
+      "aiReply": "Odpowiedź AI",
+      "sendReply": "Wyślij odpowiedź",
+      "sending": "Wysyłanie...",
+      "generating": "Generowanie...",
+      "replySent": "Odpowiedź wysłana",
+      "editReply": "Edytuj przed wysłaniem",
+      "noReviews": "Nie znaleziono recenzji",
+      "anonymous": "Anonim"
+    },
+    "notConnected": {
+      "title": "Połącz Google Play Console",
+      "description": "Połącz Google Play Console, aby zobaczyć analitykę aplikacji — instalacje, oceny, przychody, awarie i recenzje.",
+      "connectButton": "Połącz w ustawieniach"
+    },
+    "upgrade": {
+      "title": "Analityka Google Play",
+      "description": "Przejdź na PRO, aby połączyć Google Play Console i uzyskać dostęp do analityki aplikacji mobilnej.",
+      "button": "Przejdź na PRO"
+    }
   }
 }

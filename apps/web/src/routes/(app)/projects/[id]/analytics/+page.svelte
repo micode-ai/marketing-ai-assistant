@@ -4,6 +4,7 @@
   import { onMount, onDestroy, tick } from 'svelte';
   import { api } from '$lib/api/client';
   import SectionHint from '$lib/components/SectionHint.svelte';
+  import MobileAnalyticsDashboard from '$lib/components/analytics/MobileAnalyticsDashboard.svelte';
   import { currentProjectStore, projectsStore } from '$lib/stores/projects';
 
   $: projectId = $page.params['id'];
@@ -280,10 +281,16 @@
     { id: 'funnel' as const, labelKey: 'analytics.tabFunnel' },
     { id: 'pages' as const, labelKey: 'analytics.tabPages' },
   ];
+
+  $: isMobileApp = $currentProjectStore?.projectType === 'MOBILE_APP';
 </script>
 
 <div class="p-4 sm:p-6">
   <SectionHint sectionKey="analytics" titleKey="hints.analytics.title" descKey="hints.analytics.desc" />
+
+  {#if isMobileApp}
+    <MobileAnalyticsDashboard {projectId} days={selectedPeriod} />
+  {:else}
   <div class="flex items-center justify-between mb-6">
     <div>
       <h1 class="text-2xl font-bold text-gray-900">{$_('analytics.title')}</h1>
@@ -504,5 +511,6 @@
         </table>
       </div>
     {/if}
+  {/if}
   {/if}
 </div>
