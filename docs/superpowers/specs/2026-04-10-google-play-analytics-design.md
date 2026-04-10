@@ -31,11 +31,11 @@ Daily metrics for mobile apps (analogous to `DailyMetrics` for web):
 | `averageRating` | Float | Average rating on that day |
 | `totalRatings` | Int | Cumulative total ratings |
 | `ratingsCount1`..`ratingsCount5` | Int | Ratings distribution |
-| `revenue` | Float | Daily revenue (in project's baseCurrency) |
-| `revenuePerUser` | Float | ARPU |
-| `newSubscriptions` | Int | New subscriptions |
-| `cancelledSubscriptions` | Int | Cancelled subscriptions |
-| `activeSubscriptions` | Int | Total active subscriptions |
+| `revenue` | Float? | Daily revenue (in project's baseCurrency). Null if no monetization. |
+| `revenuePerUser` | Float? | ARPU. Computed: revenue / activeDeviceInstalls. |
+| `newSubscriptions` | Int? | New subscriptions. Null if app has no subscriptions. |
+| `cancelledSubscriptions` | Int? | Cancelled subscriptions. |
+| `activeSubscriptions` | Int? | Total active subscriptions. |
 
 **Unique constraint:** `@@unique([projectId, date])`
 
@@ -81,7 +81,9 @@ Cached Google Play reviews:
 }
 ```
 
-**New enum `GoogleIntegrationType`:** `SEARCH_CONSOLE`, `ANALYTICS`, `PLAY_CONSOLE` — used in config JSON to distinguish Google integrations within the `GOOGLE` platform.
+**New `SocialPlatform` enum value:** Add `GOOGLE_PLAY` to the existing `SocialPlatform` enum in Prisma schema. This avoids a unique constraint conflict with the existing `GOOGLE` platform used by GSC/GA4 in `ProjectApiKey` (`@@unique([projectId, platform])`).
+
+**New enum `GoogleIntegrationType`** in `packages/shared-types/src/enums.ts`: `SEARCH_CONSOLE`, `ANALYTICS`, `PLAY_CONSOLE` — for type safety across API and frontend.
 
 ## 2. API Module
 
@@ -118,7 +120,10 @@ apps/api/src/google-play/
 | `POST` | `/google-play/reviews/:reviewId/ai-reply` | Generate AI reply (returns suggested text) |
 | `POST` | `/google-play/sync` | Manual sync trigger |
 
-All endpoints are project-scoped (projectId from query params), protected by JWT auth guard.
+All endpoints are project-scoped (projectId from query params), protected by JWT auth guard, **except:**
+- `GET /google-play/auth/callback` — marked `@Public()` (Google redirect, no JWT). Uses signed `state` parameter (HMAC of projectId + nonce) to prevent CSRF.
+
+**Access control:** All endpoints verify that the authenticated user's organization owns the target project (lookup `project.organizationId` and match against `user.memberships`).
 
 ### Auth flows
 
@@ -136,16 +141,20 @@ All endpoints are project-scoped (projectId from query params), protected by JWT
 
 ### Background sync
 
-- **Cron:** Every 6 hours (PRO), every 1 hour (ENTERPRISE)
+- **Cron:** Runs every 1 hour via `@Cron('0 * * * *')`. Skips PRO projects synced less than 6 hours ago (checks `lastSyncAt` in config JSON). ENTERPRISE projects sync every cycle.
 - **Initial sync:** Pulls max history — 6 months (PRO), 12 months (ENTERPRISE)
-- Uses `@Cron()` decorator, iterates over all projects with active Google Play integration
+- Iterates over all projects with active Google Play integration
 - Syncs: `AppStoreMetrics` (daily rows) + `AppReview` (new/updated reviews)
-- On sync failure: logs error, retries next cycle, does not disconnect
+- **Failure handling:** Logs error, increments `consecutiveFailures` counter in config JSON. After 5 consecutive failures, marks integration status as `ERROR` (shown in settings UI). On `invalid_grant` (revoked token), auto-disconnects and notifies user.
+
+### Disconnect behavior
+
+`DELETE /google-play/disconnect` removes the `ProjectApiKey` entry. Historical `AppStoreMetrics` and `AppReview` records are **retained** by default (user can still see past data). Optional `?deleteData=true` query param deletes all associated data for clean removal.
 
 ### Dependencies
 
-- `googleapis` package (Google APIs Node.js client) — for Play Developer API v3
-- Reuses existing encryption utils from social module
+- `googleapis` package (Google APIs Node.js client) — for Play Developer Reporting API v1beta1 + Reviews API v3
+- Encryption: extract AES-256-CBC encrypt/decrypt from `social.service.ts` into a shared utility (`apps/api/src/common/crypto.util.ts`), reuse in both social and google-play modules. Note: existing google-integrations uses Base64 (not encrypted) — tech debt to migrate later.
 
 ## 3. Frontend — Mobile Analytics Dashboard
 
@@ -228,7 +237,7 @@ In project settings page, alongside existing Google integrations (GSC, GA4). **O
 
 ### Mechanism
 
-Synchronous call via `ChatOpenAI` in `google-play-reviews.service.ts` — no Bull queue needed (short request).
+Synchronous call to ai-agent via `POST /generate-reply` endpoint (new). Keeps all OpenAI calls in one app — no need to configure `OPENAI_API_KEY` in the API app.
 
 ### Prompt design
 
@@ -281,9 +290,18 @@ FREE plan: Google Play section visible in settings with upgrade banner ("Upgrade
 
 ### APIs used
 
-- **Google Play Developer API v3** (`androidpublisher` scope)
-  - `reviews.list` / `reviews.get` / `reviews.reply` — review management
-  - Reporting API — stats download (installs, crashes, ratings, revenue)
+Two separate Google APIs:
+
+1. **Google Play Developer API v3** (`androidpublisher` scope)
+   - `reviews.list` / `reviews.get` / `reviews.reply` — review management
+   - `monetization.subscriptions` — subscription data
+
+2. **Google Play Developer Reporting API v1beta1** (`playdeveloperreporting` scope)
+   - `vitals.crashrate.query` — crash metrics
+   - `vitals.anrrate.query` — ANR metrics
+   - `stats.query` — install/uninstall stats, store listing performance, ratings
+
+   This is the correct API for aggregated metrics. The older "Reporting" via Cloud Storage CSV exports is NOT used.
 
 ### Rate limits
 
@@ -293,18 +311,30 @@ FREE plan: Google Play section visible in settings with upgrade banner ("Upgrade
 
 ### Data mapping
 
-| Google Play metric | → AppStoreMetrics field |
-|-------------------|------------------------|
-| `installEvents` | `installs` |
-| `uninstallEvents` | `uninstalls` |
-| `updateEvents` | `updates` |
-| `activeDeviceInstalls` | `activeDeviceInstalls` |
-| `storeListingVisitors` | `storeListingVisitors` |
-| `storeListingInstalls / visitors` | `storeListingConversions` |
-| `crashes` | `crashes` |
-| `anrs` | `anrs` |
-| `crashes / activeDevices` | `crashRate` |
-| `averageRating` | `averageRating` |
-| `totalRatingCount` | `totalRatings` |
-| `earnings` | `revenue` |
-| `newSubscriptions` | `newSubscriptions` |
+| API / method | Google Play metric | → AppStoreMetrics field |
+|-------------|-------------------|------------------------|
+| Reporting v1beta1 `stats` | `installEvents` | `installs` |
+| Reporting v1beta1 `stats` | `uninstallEvents` | `uninstalls` |
+| Reporting v1beta1 `stats` | `updateEvents` | `updates` |
+| Reporting v1beta1 `stats` | `activeDeviceInstalls` | `activeDeviceInstalls` |
+| Reporting v1beta1 `stats` | `storeListingVisitors` | `storeListingVisitors` |
+| Computed | `installs / storeListingVisitors` | `storeListingConversions` |
+| Reporting v1beta1 `vitals` | `crashRate.userPerceivedCrashRate` | `crashes`, `crashRate` |
+| Reporting v1beta1 `vitals` | `anrRate.userPerceivedAnrRate` | `anrs`, `anrRate` |
+| Reporting v1beta1 `stats` | `averageRating` | `averageRating` |
+| Reporting v1beta1 `stats` | `totalRatingCount` | `totalRatings` |
+| Reporting v1beta1 `stats` | `star1Count`..`star5Count` | `ratingsCount1`..`ratingsCount5` |
+| Monetization API | `earnings` | `revenue` |
+| Computed | `revenue / activeDeviceInstalls` | `revenuePerUser` |
+| Monetization API | `newSubscriptions` | `newSubscriptions` |
+| Monetization API | `cancelledSubscriptions` | `cancelledSubscriptions` |
+| Monetization API | `activeSubscriptions` | `activeSubscriptions` |
+
+**Note:** Some metrics (e.g., `cancelledSubscriptions`, `activeSubscriptions`) may not be available for all apps. Fields are nullable — `null` means data not available from API.
+
+## 9. Shared Types
+
+New interfaces in `packages/shared-types/src/`:
+
+- `google-play.ts`: `AppStoreMetrics`, `AppReview`, `GooglePlayStatus`, `GooglePlayMetricsQuery`, `GooglePlayMetricsTotals`, `ReviewReplyDto`, `ConnectServiceAccountDto`, `ReviewFilters`
+- Update `enums.ts`: add `GoogleIntegrationType` enum, add `GOOGLE_PLAY` to `SocialPlatform`
