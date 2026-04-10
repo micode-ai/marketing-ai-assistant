@@ -16,7 +16,7 @@ FROM base AS builder
 COPY --from=deps /app ./
 COPY . .
 RUN pnpm --filter=@marketing-ai/database db:generate
-RUN pnpm --filter=@marketing-ai/api build
+RUN NODE_OPTIONS="--max-old-space-size=4096" pnpm --filter=@marketing-ai/api build
 
 FROM builder AS migrator
 CMD ["sh", "-c", "pnpm --filter=@marketing-ai/database db:migrate"]
