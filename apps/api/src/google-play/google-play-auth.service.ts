@@ -20,6 +20,7 @@ export interface GooglePlayConfig {
   lastSyncAt?: string | null;
   initialSyncCompleted?: boolean;
   consecutiveFailures?: number;
+  gcsBucketUri?: string | null;
 }
 
 @Injectable()
@@ -46,6 +47,7 @@ export class GooglePlayAuthService {
     const scopes = [
       'https://www.googleapis.com/auth/androidpublisher',
       'https://www.googleapis.com/auth/playdeveloperreporting',
+      'https://www.googleapis.com/auth/devstorage.read_only',
     ].join(' ');
 
     const params = new URLSearchParams({

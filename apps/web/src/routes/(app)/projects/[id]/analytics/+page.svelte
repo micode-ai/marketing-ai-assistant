@@ -50,7 +50,28 @@
   onMount(async () => {
     const { Chart } = await import('chart.js/auto');
     ChartJS = Chart;
-    await fetchData();
+
+    // Wait for project store to load before deciding which analytics to show
+    if (!$currentProjectStore && $projectsStore.length === 0) {
+      const unsub = projectsStore.subscribe((projects) => {
+        if (projects.length > 0) {
+          unsub();
+          const project = projects.find((p: any) => p.id === projectId);
+          if (project) {
+            currentProjectStore.set(project);
+            // Use project directly — store may not have updated yet
+            if (project.projectType !== 'MOBILE_APP') {
+              fetchData();
+            }
+          }
+        }
+      });
+    } else {
+      const project = $currentProjectStore || $projectsStore.find((p: any) => p.id === projectId);
+      if (project?.projectType !== 'MOBILE_APP') {
+        await fetchData();
+      }
+    }
   });
 
   onDestroy(() => {

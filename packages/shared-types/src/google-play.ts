@@ -50,6 +50,7 @@ export interface GooglePlayStatusDto {
   initialSyncCompleted: boolean;
   consecutiveFailures: number;
   status: 'OK' | 'ERROR' | 'SYNCING' | null;
+  gcsBucketUri?: string | null;
 }
 
 export interface GooglePlayMetricsQuery {

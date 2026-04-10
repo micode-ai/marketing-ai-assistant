@@ -28,8 +28,8 @@
       if (filterRating !== null) params['starRating'] = filterRating;
       if (filterUnreplied) params['hasReply'] = 0;
 
-      const result = await api.get<{ data: AppReviewDto[]; total: number; page: number; totalPages: number }>('/google-play/reviews', params);
-      reviews = result.data;
+      const result = await api.get<{ reviews: AppReviewDto[]; total: number; page: number; totalPages: number }>('/google-play/reviews', params);
+      reviews = result.reviews || [];
       totalPages = result.totalPages;
       currentPage = result.page;
     } catch (e) {

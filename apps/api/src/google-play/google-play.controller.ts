@@ -9,6 +9,7 @@ import {
   Res,
   UseGuards,
   Logger,
+  BadRequestException,
   ParseIntPipe,
   DefaultValuePipe,
   ParseBoolPipe,
@@ -113,6 +114,7 @@ export class GooglePlayController {
         lastSyncAt: config.lastSyncAt,
         initialSyncCompleted: config.initialSyncCompleted,
         consecutiveFailures: config.consecutiveFailures || 0,
+        gcsBucketUri: config.gcsBucketUri || null,
       };
     } catch {
       return { connected: false };
@@ -152,12 +154,20 @@ export class GooglePlayController {
     @Query('sortBy') sortBy?: 'reviewCreatedAt' | 'starRating',
     @Query('sortOrder') sortOrder?: 'asc' | 'desc',
   ) {
+    // Map frontend-friendly sort names to Prisma field names
+    const sortByMap: Record<string, 'reviewCreatedAt' | 'starRating'> = {
+      date: 'reviewCreatedAt',
+      rating: 'starRating',
+      reviewCreatedAt: 'reviewCreatedAt',
+      starRating: 'starRating',
+    };
+
     return this.reviewsService.getReviews(projectId, {
       page,
       limit,
       starRating: starRating ? parseInt(starRating, 10) : undefined,
       hasReply: hasReply !== undefined ? hasReply === 'true' : undefined,
-      sortBy,
+      sortBy: sortBy ? sortByMap[sortBy] || 'reviewCreatedAt' : undefined,
       sortOrder,
     });
   }
@@ -186,8 +196,45 @@ export class GooglePlayController {
   @Post('sync')
   @UseGuards(ProjectAccessGuard)
   @ApiOperation({ summary: 'Trigger a manual sync' })
-  async triggerSync(@Query('projectId') projectId: string) {
+  async triggerSync(
+    @Query('projectId') queryProjectId: string,
+    @Body('projectId') bodyProjectId: string,
+  ) {
+    const projectId = queryProjectId || bodyProjectId;
     await this.syncService.triggerManualSync(projectId);
     return { synced: true };
+  }
+
+  @Post('config/package-name')
+  @UseGuards(ProjectAccessGuard)
+  @ApiOperation({ summary: 'Set package name for the connected app' })
+  async setPackageName(
+    @Body() dto: { projectId: string; packageName: string },
+  ) {
+    if (!dto.packageName?.match(/^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$/i)) {
+      throw new BadRequestException('Invalid package name format');
+    }
+    await this.authService.updateConfig(dto.projectId, {
+      packageName: dto.packageName,
+    });
+    return { success: true };
+  }
+
+  @Post('config/bucket')
+  @UseGuards(ProjectAccessGuard)
+  @ApiOperation({ summary: 'Set Google Cloud Storage bucket URI for CSV exports' })
+  async setBucketUri(
+    @Body() dto: { projectId: string; gcsBucketUri: string },
+  ) {
+    if (!dto.gcsBucketUri?.startsWith('gs://')) {
+      throw new BadRequestException('Bucket URI must start with gs://');
+    }
+    // Normalize: strip trailing slashes and any /stats/* subpath — we need the bucket root
+    let uri = dto.gcsBucketUri.replace(/\/+$/, '');
+    uri = uri.replace(/\/stats\/.+$/, '');
+    await this.authService.updateConfig(dto.projectId, {
+      gcsBucketUri: uri,
+    });
+    return { success: true };
   }
 }

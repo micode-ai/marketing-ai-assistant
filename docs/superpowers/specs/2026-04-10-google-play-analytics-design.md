@@ -1,11 +1,37 @@
 # Google Play Console Analytics for Mobile App Projects
 
 **Date:** 2026-04-10
-**Status:** Approved
+**Updated:** 2026-04-11
+**Status:** Fully Implemented (Phase 1 + Phase 2)
 
 ## Overview
 
 Add Google Play Console integration for projects with `projectType === MOBILE_APP`. The analytics page switches entirely to mobile-specific metrics for these projects. Users connect via OAuth2 or Service Account at the project level. Includes AI-generated replies to app reviews.
+
+## Implementation Status
+
+### Phase 1 — API-based data (implemented 2026-04-10)
+- **Reviews** — fetched from Android Publisher API v3 (`reviews.list`, `reviews.reply`)
+- **Crash Rate / ANR Rate** — from Play Developer Reporting API v1beta1 (`crashRateMetricSet`, `anrRateMetricSet`)
+- **AI-powered review replies** — via ai-agent `POST /generate-reply`
+- **OAuth2 + Service Account** connection flow
+- **Background sync** — cron hourly, plan-based throttling
+- **Auto-sync on page visit** — triggers sync if data stale > 10 min, refreshes every 5 min
+
+### Phase 2 — Cloud Storage CSV exports (implemented 2026-04-11, Issue #35)
+- **Install/Uninstall/Update counts** — from `stats/installs/` CSV files
+- **Store Listing performance** — from `stats/store_performance/` CSV files
+- **Ratings distribution (1-5 stars)** — from `stats/ratings/` CSV files
+- **Revenue data** — from CSV exports (when available)
+
+**Data source architecture:** Google Play Developer Reporting API v1beta1 only provides vitals data (crashes, ANR). Install counts, store listing, ratings, and revenue data come from Cloud Storage CSV exports. Users must configure their GCS bucket URI (`gs://pubsite_prod_rev_XXXX`) in project settings. The `devstorage.read_only` OAuth scope grants read access to these exports.
+
+### User setup for full data
+1. Connect Google Play via OAuth or Service Account
+2. Set package name (e.g., `com.example.app`)
+3. In Google Play Console → Download Reports → copy Cloud Storage URI
+4. Paste URI in project settings → Save
+5. Sync Now or wait for auto-sync
 
 ## 1. Data Models (Prisma)
 

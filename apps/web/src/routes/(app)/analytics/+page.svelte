@@ -19,7 +19,12 @@
       const params: Record<string, string> = ctx.type === 'project' && ctx.projectId
         ? { projectId: ctx.projectId }
         : { organizationId: ctx.organizationId };
-      const res = await api.get<any[]>('/analytics', params);
+      // If project context, redirect to project analytics page
+      if (ctx.type === 'project' && ctx.projectId) {
+        window.location.href = `/projects/${ctx.projectId}/analytics`;
+        return;
+      }
+      const res = await api.get<any>('/analytics/organization', { organizationId: ctx.organizationId });
       items = res;
     } catch (e) {
       console.error('Failed to load analytics:', e);
