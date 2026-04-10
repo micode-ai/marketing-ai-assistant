@@ -1219,5 +1219,90 @@
       "partnership": "Партнёрство",
       "otherIncome": "Прочее"
     }
+  },
+  "googlePlay": {
+    "title": "Аналитика Google Play",
+    "tabs": {
+      "overview": "Обзор",
+      "installs": "Установки",
+      "storeListing": "Страница в Store",
+      "stability": "Стабильность",
+      "revenue": "Доход",
+      "reviews": "Отзывы"
+    },
+    "kpi": {
+      "installs": "Установки",
+      "rating": "Средний рейтинг",
+      "revenue": "Доход",
+      "crashRate": "Частота крэшей"
+    },
+    "metrics": {
+      "installs": "Установки",
+      "uninstalls": "Удаления",
+      "updates": "Обновления",
+      "activeDevices": "Активные устройства",
+      "visitors": "Посетители Store",
+      "conversion": "Конверсия в установку",
+      "crashes": "Крэши",
+      "anrs": "ANR",
+      "averageRating": "Средний рейтинг",
+      "totalRatings": "Всего оценок",
+      "newSubscriptions": "Новые подписки",
+      "cancelledSubscriptions": "Отменённые",
+      "activeSubscriptions": "Активные подписки",
+      "revenuePerUser": "Доход на пользователя"
+    },
+    "connection": {
+      "title": "Google Play Console",
+      "description": "Подключите Google Play Console, чтобы видеть установки, рейтинги, доход, отчёты о крэшах и управлять отзывами с помощью AI.",
+      "connectOAuth": "Подключить через Google",
+      "connectServiceAccount": "Сервисный аккаунт",
+      "connected": "Подключено",
+      "disconnected": "Не подключено",
+      "disconnect": "Отключить",
+      "disconnectConfirm": "Вы уверены, что хотите отключить Google Play Console?",
+      "disconnectDeleteData": "Также удалить все синхронизированные данные",
+      "syncNow": "Синхронизировать",
+      "syncing": "Синхронизация...",
+      "lastSync": "Последняя синхронизация: {time}",
+      "packageName": "Имя пакета",
+      "uploadJson": "Загрузить JSON сервисного аккаунта",
+      "enterPackageName": "Введите имя пакета (например com.example.app)",
+      "status": {
+        "ok": "Подключено",
+        "error": "Ошибка синхронизации",
+        "syncing": "Синхронизация"
+      },
+      "errors": {
+        "invalidKey": "Недействительный JSON-ключ сервисного аккаунта",
+        "noAccess": "Нет доступа к Google Play Console",
+        "syncFailed": "Синхронизация не удалась. Повторная попытка автоматически.",
+        "revoked": "Доступ отозван. Пожалуйста, подключитесь заново."
+      }
+    },
+    "reviews": {
+      "title": "Отзывы",
+      "filterByRating": "Фильтр по рейтингу",
+      "allRatings": "Все оценки",
+      "unreplied": "Без ответа",
+      "aiReply": "AI-ответ",
+      "sendReply": "Отправить ответ",
+      "sending": "Отправка...",
+      "generating": "Генерация...",
+      "replySent": "Ответ отправлен",
+      "editReply": "Редактировать перед отправкой",
+      "noReviews": "Отзывы не найдены",
+      "anonymous": "Аноним"
+    },
+    "notConnected": {
+      "title": "Подключите Google Play Console",
+      "description": "Подключите Google Play Console для просмотра аналитики — установки, рейтинги, доход, крэши и отзывы.",
+      "connectButton": "Подключить в настройках"
+    },
+    "upgrade": {
+      "title": "Аналитика Google Play",
+      "description": "Перейдите на PRO, чтобы подключить Google Play Console и получить доступ к аналитике мобильного приложения.",
+      "button": "Перейти на PRO"
+    }
   }
 }

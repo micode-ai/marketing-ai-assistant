@@ -1241,5 +1241,90 @@
       "partnership": "Partnership",
       "otherIncome": "Other"
     }
+  },
+  "googlePlay": {
+    "title": "Google Play Analytics",
+    "tabs": {
+      "overview": "Overview",
+      "installs": "Installs",
+      "storeListing": "Store Listing",
+      "stability": "Stability",
+      "revenue": "Revenue",
+      "reviews": "Reviews"
+    },
+    "kpi": {
+      "installs": "Installs",
+      "rating": "Average Rating",
+      "revenue": "Revenue",
+      "crashRate": "Crash Rate"
+    },
+    "metrics": {
+      "installs": "Installs",
+      "uninstalls": "Uninstalls",
+      "updates": "Updates",
+      "activeDevices": "Active Devices",
+      "visitors": "Store Visitors",
+      "conversion": "Install Conversion",
+      "crashes": "Crashes",
+      "anrs": "ANR",
+      "averageRating": "Average Rating",
+      "totalRatings": "Total Ratings",
+      "newSubscriptions": "New Subscriptions",
+      "cancelledSubscriptions": "Cancelled",
+      "activeSubscriptions": "Active Subscriptions",
+      "revenuePerUser": "Revenue per User"
+    },
+    "connection": {
+      "title": "Google Play Console",
+      "description": "Connect your Google Play Console to see app installs, ratings, revenue, crash reports, and manage reviews with AI.",
+      "connectOAuth": "Connect with Google",
+      "connectServiceAccount": "Use Service Account",
+      "connected": "Connected",
+      "disconnected": "Not Connected",
+      "disconnect": "Disconnect",
+      "disconnectConfirm": "Are you sure you want to disconnect Google Play Console?",
+      "disconnectDeleteData": "Also delete all synced data",
+      "syncNow": "Sync Now",
+      "syncing": "Syncing...",
+      "lastSync": "Last sync: {time}",
+      "packageName": "Package Name",
+      "uploadJson": "Upload Service Account JSON",
+      "enterPackageName": "Enter package name (e.g. com.example.app)",
+      "status": {
+        "ok": "Connected",
+        "error": "Sync Error",
+        "syncing": "Syncing"
+      },
+      "errors": {
+        "invalidKey": "Invalid service account JSON key",
+        "noAccess": "No access to Google Play Console",
+        "syncFailed": "Sync failed. Will retry automatically.",
+        "revoked": "Access revoked. Please reconnect."
+      }
+    },
+    "reviews": {
+      "title": "Reviews",
+      "filterByRating": "Filter by rating",
+      "allRatings": "All ratings",
+      "unreplied": "Unreplied only",
+      "aiReply": "AI Reply",
+      "sendReply": "Send Reply",
+      "sending": "Sending...",
+      "generating": "Generating...",
+      "replySent": "Reply sent successfully",
+      "editReply": "Edit before sending",
+      "noReviews": "No reviews found",
+      "anonymous": "Anonymous"
+    },
+    "notConnected": {
+      "title": "Connect Google Play Console",
+      "description": "Connect your Google Play Console to see your app analytics — installs, ratings, revenue, crash reports, and reviews.",
+      "connectButton": "Connect in Settings"
+    },
+    "upgrade": {
+      "title": "Google Play Analytics",
+      "description": "Upgrade to PRO to connect Google Play Console and access mobile app analytics.",
+      "button": "Upgrade to PRO"
+    }
   }
 }

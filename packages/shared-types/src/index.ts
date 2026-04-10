@@ -21,3 +21,4 @@ export * from './webhook';
 export * from './chat';
 export * from './funnel';
 export * from './finances';
+export * from './google-play';
