@@ -1,8 +1,8 @@
 <script lang="ts">
   import { _ } from 'svelte-i18n';
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import { api } from '$lib/api/client';
-  import type { AppStoreMetricsDto, GooglePlayMetricsTotals, GooglePlayStatusDto } from '@marketing-ai/shared-types';
+  import type { AppStoreMetricsDto, GooglePlayStatusDto } from '@marketing-ai/shared-types';
   import MobileKpiCards from './MobileKpiCards.svelte';
   import InstallsChart from './InstallsChart.svelte';
   import StabilityChart from './StabilityChart.svelte';
@@ -14,37 +14,98 @@
   export let days: number = 30;
 
   let activeTab: 'overview' | 'installs' | 'storeListing' | 'stability' | 'revenue' | 'reviews' = 'overview';
+  let hasGcsBucket = false;
   let loading = true;
+  let syncing = false;
   let metrics: AppStoreMetricsDto[] = [];
-  let totals: GooglePlayMetricsTotals | null = null;
   let status: GooglePlayStatusDto | null = null;
   let selectedPeriod = days;
+  let syncInterval: ReturnType<typeof setInterval> | null = null;
+  let lastSyncLabel = '';
+  let refreshKey = 0;
 
-  const tabs = [
+  const SYNC_STALE_MS = 10 * 60 * 1000; // 10 minutes
+  const SYNC_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+
+  $: tabs = [
     { id: 'overview' as const, labelKey: 'googlePlay.tabs.overview' },
-    { id: 'installs' as const, labelKey: 'googlePlay.tabs.installs' },
-    { id: 'storeListing' as const, labelKey: 'googlePlay.tabs.storeListing' },
+    ...(hasGcsBucket ? [
+      { id: 'installs' as const, labelKey: 'googlePlay.tabs.installs' },
+      { id: 'storeListing' as const, labelKey: 'googlePlay.tabs.storeListing' },
+    ] : []),
     { id: 'stability' as const, labelKey: 'googlePlay.tabs.stability' },
-    { id: 'revenue' as const, labelKey: 'googlePlay.tabs.revenue' },
+    ...(hasGcsBucket ? [
+      { id: 'revenue' as const, labelKey: 'googlePlay.tabs.revenue' },
+    ] : []),
     { id: 'reviews' as const, labelKey: 'googlePlay.tabs.reviews' },
   ];
 
   onMount(async () => {
     await checkStatus();
     if (status?.connected) {
+      await syncIfStale();
       await fetchData();
+      // Periodic sync while on page
+      syncInterval = setInterval(async () => {
+        await syncAndRefresh();
+      }, SYNC_INTERVAL_MS);
     } else {
       loading = false;
+    }
+  });
+
+  onDestroy(() => {
+    if (syncInterval) {
+      clearInterval(syncInterval);
+      syncInterval = null;
     }
   });
 
   async function checkStatus() {
     try {
       status = await api.get<GooglePlayStatusDto>('/google-play/status', { projectId });
+      hasGcsBucket = !!status?.gcsBucketUri;
+      updateSyncLabel();
     } catch (e) {
       console.error('Failed to check Google Play status:', e);
       status = { connected: false, authMethod: null, packageName: null, lastSyncAt: null, initialSyncCompleted: false, consecutiveFailures: 0, status: null };
     }
+  }
+
+  function updateSyncLabel() {
+    if (!status?.lastSyncAt) {
+      lastSyncLabel = '';
+      return;
+    }
+    const ago = Date.now() - new Date(status.lastSyncAt).getTime();
+    if (ago < 60_000) lastSyncLabel = '< 1 min ago';
+    else if (ago < 3600_000) lastSyncLabel = `${Math.round(ago / 60_000)} min ago`;
+    else lastSyncLabel = `${Math.round(ago / 3600_000)}h ago`;
+  }
+
+  async function syncIfStale() {
+    const lastSync = status?.lastSyncAt ? new Date(status.lastSyncAt).getTime() : 0;
+    if (Date.now() - lastSync > SYNC_STALE_MS) {
+      await triggerSync();
+    }
+  }
+
+  async function triggerSync() {
+    syncing = true;
+    try {
+      await api.post('/google-play/sync?projectId=' + projectId);
+      await checkStatus();
+    } catch (e) {
+      console.error('Sync failed:', e);
+    } finally {
+      syncing = false;
+    }
+  }
+
+  async function syncAndRefresh() {
+    await triggerSync();
+    await fetchData();
+    refreshKey++;
   }
 
   async function fetchData() {
@@ -53,12 +114,7 @@
       const endDate = new Date().toISOString().split('T')[0];
       const startDate = new Date(Date.now() - selectedPeriod * 86400000).toISOString().split('T')[0];
 
-      const [metricsResult, totalsResult] = await Promise.all([
-        api.get<AppStoreMetricsDto[]>('/google-play/metrics', { projectId, startDate, endDate }),
-        api.get<GooglePlayMetricsTotals>('/google-play/metrics/totals', { projectId, days: selectedPeriod }),
-      ]);
-      metrics = metricsResult;
-      totals = totalsResult;
+      metrics = await api.get<AppStoreMetricsDto[]>('/google-play/metrics', { projectId, startDate, endDate });
     } catch (e) {
       console.error('Failed to load Google Play metrics:', e);
     } finally {
@@ -94,22 +150,57 @@
     </a>
   </div>
 {:else}
-  <!-- Header with period selector -->
+  <!-- Header with period selector + sync status -->
   <div class="flex items-center justify-between mb-6">
     <div>
-      <h1 class="text-2xl font-bold text-gray-900">{$_('googlePlay.title')}</h1>
-      {#if status.packageName}
-        <p class="text-sm text-gray-500 mt-1">{status.packageName}</p>
-      {/if}
+      <div class="flex items-center gap-3">
+        <h1 class="text-2xl font-bold text-gray-900">{$_('googlePlay.title')}</h1>
+        {#if syncing}
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 text-blue-600 rounded-full text-xs font-medium">
+            <svg class="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            {$_('googlePlay.connection.syncing')}
+          </span>
+        {/if}
+      </div>
+      <div class="flex items-center gap-2 mt-1">
+        {#if status.packageName}
+          <span class="text-sm text-gray-500">{status.packageName}</span>
+        {/if}
+        {#if lastSyncLabel}
+          <span class="text-xs text-gray-400">· {$_('googlePlay.connection.lastSync', { values: { time: lastSyncLabel } })}</span>
+        {/if}
+      </div>
     </div>
-    <div class="flex bg-gray-100 rounded-lg p-0.5">
-      {#each [7, 30, 90] as period}
-        <button on:click={() => switchPeriod(period)}
-          class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-150 cursor-pointer
-            {selectedPeriod === period ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}">
-          {$_('analytics.period' + period)}
-        </button>
-      {/each}
+    <div class="flex items-center gap-3">
+      <button
+        on:click={syncAndRefresh}
+        disabled={syncing}
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-150 disabled:opacity-40 cursor-pointer"
+      >
+        {#if syncing}
+          <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+        {:else}
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
+          </svg>
+        {/if}
+        {$_('googlePlay.connection.syncNow')}
+      </button>
+      <div class="flex bg-gray-100 rounded-lg p-0.5">
+        {#each [7, 30, 90] as period}
+          <button on:click={() => switchPeriod(period)}
+            class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-150 cursor-pointer
+              {selectedPeriod === period ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}">
+            {$_('analytics.period' + period)}
+          </button>
+        {/each}
+      </div>
     </div>
   </div>
 
@@ -132,33 +223,24 @@
       <div class="bg-gray-200 rounded-xl h-80"></div>
     </div>
   {:else if activeTab === 'overview'}
-    {#if metrics.length === 0}
-      <div class="flex flex-col items-center justify-center py-20 text-center">
-        <div class="w-20 h-20 bg-pink-50 rounded-2xl flex items-center justify-center mb-6">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-pink-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
-          </svg>
-        </div>
-        <h2 class="text-xl font-semibold text-gray-900 mb-2">{$_('analytics.empty')}</h2>
-        <p class="text-gray-500 max-w-md">{$_('analytics.emptyDesc')}</p>
+    {#if hasGcsBucket}
+      <MobileKpiCards totals={null} {metrics} />
+      <div class="mt-6">
+        <InstallsChart {metrics} days={selectedPeriod} />
+      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+        <StoreListingStats {metrics} days={selectedPeriod} />
+        <StabilityChart {metrics} days={selectedPeriod} />
       </div>
     {:else}
-      <MobileKpiCards {totals} />
-
-      <div class="space-y-6">
-        <InstallsChart {metrics} days={selectedPeriod} />
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <StoreListingStats {metrics} days={selectedPeriod} />
-          <StabilityChart {metrics} days={selectedPeriod} />
-        </div>
-
-        <RevenueChart {metrics} days={selectedPeriod} />
-      </div>
+      <StabilityChart {metrics} days={selectedPeriod} />
     {/if}
 
+    <div class="mt-6">
+      {#key refreshKey}<ReviewsList {projectId} />{/key}
+    </div>
+
   {:else if activeTab === 'installs'}
-    <MobileKpiCards {totals} />
     <InstallsChart {metrics} days={selectedPeriod} />
 
   {:else if activeTab === 'storeListing'}
@@ -171,6 +253,6 @@
     <RevenueChart {metrics} days={selectedPeriod} />
 
   {:else if activeTab === 'reviews'}
-    <ReviewsList {projectId} />
+    {#key refreshKey}<ReviewsList {projectId} />{/key}
   {/if}
 {/if}

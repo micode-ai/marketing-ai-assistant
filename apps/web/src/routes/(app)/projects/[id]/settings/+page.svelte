@@ -41,6 +41,8 @@
   let gpConnecting = false;
   let gpError = '';
   let gpSuccess = '';
+  let gpBucketUri = '';
+  let gpBucketSaving = false;
   let showDisconnectConfirm = false;
 
   const platformIcon: Record<string, string> = {
@@ -151,6 +153,7 @@
     gpLoading = true;
     try {
       gpStatus = await api.get<GooglePlayStatusDto>('/google-play/status', { projectId });
+      gpBucketUri = gpStatus?.gcsBucketUri || '';
     } catch {
       gpStatus = null;
     } finally {
@@ -200,6 +203,41 @@
       setTimeout(() => { gpError = ''; }, 5000);
     } finally {
       gpConnecting = false;
+    }
+  }
+
+  async function savePackageName() {
+    if (!gpPackageName.trim()) return;
+    try {
+      await api.post('/google-play/config/package-name', {
+        projectId,
+        packageName: gpPackageName.trim(),
+      });
+      gpSuccess = 'Package name saved!';
+      setTimeout(() => { gpSuccess = ''; }, 3000);
+      await fetchGpStatus();
+    } catch (e: any) {
+      gpError = e.message || 'Failed to save';
+      setTimeout(() => { gpError = ''; }, 5000);
+    }
+  }
+
+  async function saveBucketUri() {
+    if (!gpBucketUri.trim()) return;
+    gpBucketSaving = true;
+    gpError = '';
+    try {
+      await api.post('/google-play/config/bucket', {
+        projectId,
+        gcsBucketUri: gpBucketUri.trim(),
+      });
+      gpSuccess = 'Cloud Storage URI saved! Install data will sync on next refresh.';
+      setTimeout(() => { gpSuccess = ''; }, 5000);
+    } catch (e: any) {
+      gpError = e.message || 'Failed to save bucket URI';
+      setTimeout(() => { gpError = ''; }, 5000);
+    } finally {
+      gpBucketSaving = false;
     }
   }
 
@@ -437,12 +475,28 @@
             {/if}
           </div>
 
-          {#if gpStatus.packageName}
-            <div>
-              <span class="text-xs font-medium text-gray-500">{$_('googlePlay.connection.packageName')}</span>
+          <div>
+            <span class="text-xs font-medium text-gray-500">{$_('googlePlay.connection.packageName')}</span>
+            {#if gpStatus.packageName}
               <code class="ml-2 text-sm bg-gray-50 px-2 py-0.5 rounded border border-gray-200 font-mono">{gpStatus.packageName}</code>
-            </div>
-          {/if}
+            {:else}
+              <div class="flex gap-2 mt-1">
+                <input
+                  type="text"
+                  bind:value={gpPackageName}
+                  placeholder={$_('googlePlay.connection.enterPackageName')}
+                  class="flex-1 px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 font-mono"
+                />
+                <button
+                  on:click={savePackageName}
+                  disabled={!gpPackageName.trim()}
+                  class="px-3 py-1.5 bg-gray-800 text-white rounded-lg text-sm font-medium hover:bg-gray-900 transition-colors duration-150 disabled:opacity-40 cursor-pointer"
+                >
+                  {$_('common.save')}
+                </button>
+              </div>
+            {/if}
+          </div>
 
           <div class="text-xs text-gray-500">
             {$_('googlePlay.connection.lastSync', { values: { time: formatLastSync(gpStatus.lastSyncAt) } })}
@@ -453,6 +507,34 @@
               {$_('googlePlay.connection.errors.syncFailed')}
             </div>
           {/if}
+
+          <!-- Cloud Storage Bucket URI -->
+          <div class="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+            <label class="block text-xs font-medium text-gray-600 mb-1.5">
+              Cloud Storage URI
+              <span class="font-normal text-gray-400">(Google Play Console → Download reports → Copy Cloud Storage URI)</span>
+            </label>
+            <div class="flex gap-2">
+              <input
+                type="text"
+                bind:value={gpBucketUri}
+                placeholder="gs://pubsite_prod_rev_XXXXXXXXXXXX"
+                class="flex-1 px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 font-mono"
+              />
+              <button
+                on:click={saveBucketUri}
+                disabled={gpBucketSaving || !gpBucketUri.trim() || !gpBucketUri.startsWith('gs://')}
+                class="px-3 py-1.5 bg-gray-800 text-white rounded-lg text-sm font-medium hover:bg-gray-900 transition-colors duration-150 disabled:opacity-40 cursor-pointer whitespace-nowrap"
+              >
+                {#if gpBucketSaving}
+                  Saving...
+                {:else}
+                  Save
+                {/if}
+              </button>
+            </div>
+            <p class="text-xs text-gray-400 mt-1.5">Required for install counts, ratings distribution, and store listing performance data.</p>
+          </div>
 
           <div class="flex items-center gap-3">
             <button

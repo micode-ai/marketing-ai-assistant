@@ -20,7 +20,7 @@
   async function generateAiReply() {
     generating = true;
     try {
-      const result = await api.post<{ reply: string }>(`/google-play/reviews/${review.id}/generate-reply`, { projectId });
+      const result = await api.post<{ reply: string }>(`/google-play/reviews/${review.reviewId}/ai-reply?projectId=${projectId}`);
       replyText = result.reply;
       showReplyBox = true;
     } catch (e: any) {
@@ -34,7 +34,7 @@
     if (!replyText.trim()) return;
     sending = true;
     try {
-      await api.post(`/google-play/reviews/${review.id}/reply`, { text: replyText.trim() });
+      await api.post(`/google-play/reviews/${review.reviewId}/reply?projectId=${projectId}`, { text: replyText.trim() });
       review.replyText = replyText.trim();
       review.isReplied = true;
       replySent = true;

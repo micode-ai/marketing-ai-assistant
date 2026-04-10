@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
+import { parse } from 'csv-parse/sync';
 import { PrismaService } from '../database/prisma.service';
 import {
   GooglePlayAuthService,
@@ -92,10 +93,19 @@ export class GooglePlaySyncService {
     try {
       const accessToken = await this.authService.getValidAccessToken(projectId);
 
-      await Promise.all([
+      const syncTasks: Promise<void>[] = [
         this.syncMetrics(projectId, config.packageName, accessToken, startDate, endDate),
         this.syncReviews(projectId, config.packageName, accessToken),
-      ]);
+      ];
+
+      // If GCS bucket URI is configured, sync CSV exports (installs, ratings, store performance)
+      if (config.gcsBucketUri) {
+        syncTasks.push(
+          this.syncCsvExports(projectId, config.packageName, accessToken, config.gcsBucketUri, startDate, endDate),
+        );
+      }
+
+      await Promise.all(syncTasks);
 
       await this.authService.updateConfig(projectId, {
         lastSyncAt: endDate.toISOString(),
@@ -153,13 +163,24 @@ export class GooglePlaySyncService {
       },
     };
 
-    // Fetch crash rate metrics
+    // Fetch crash rate metrics (valid combo: crashRate, userPerceivedCrashRate, distinctUsers)
     const crashData = await this.queryMetricSet(
       `${baseUrl}/${appName}/crashRateMetricSet:query`,
       accessToken,
       {
         timelineSpec,
-        metrics: ['crashRate', 'crashCount', 'anrRate', 'anrCount'],
+        metrics: ['crashRate', 'userPerceivedCrashRate', 'distinctUsers'],
+        dimensions: [],
+      },
+    );
+
+    // Fetch ANR rate metrics separately
+    const anrData = await this.queryMetricSet(
+      `${baseUrl}/${appName}/anrRateMetricSet:query`,
+      accessToken,
+      {
+        timelineSpec,
+        metrics: ['anrRate', 'userPerceivedAnrRate', 'distinctUsers'],
         dimensions: [],
       },
     );
@@ -183,10 +204,13 @@ export class GooglePlaySyncService {
     const metricsMap = new Map<string, any>();
 
     this.processMetricRows(crashData, metricsMap, (dateKey, row) => ({
-      crashes: this.extractMetricValue(row, 'crashCount'),
-      anrs: this.extractMetricValue(row, 'anrCount'),
       crashRate: this.extractMetricValue(row, 'crashRate'),
+      crashes: Math.round(this.extractMetricValue(row, 'distinctUsers') * this.extractMetricValue(row, 'crashRate')),
+    }));
+
+    this.processMetricRows(anrData, metricsMap, (dateKey, row) => ({
       anrRate: this.extractMetricValue(row, 'anrRate'),
+      anrs: Math.round(this.extractMetricValue(row, 'distinctUsers') * this.extractMetricValue(row, 'anrRate')),
     }));
 
     this.processMetricRows(storeData, metricsMap, (dateKey, row) => ({
@@ -364,11 +388,208 @@ export class GooglePlaySyncService {
         });
       }
 
+      // Remove reviews that no longer exist in Google Play
+      const apiReviewIds = data.reviews.map((r: any) => r.reviewId);
+      const dbReviews = await this.prisma.appReview.findMany({
+        where: { projectId },
+        select: { reviewId: true },
+      });
+      const orphanIds = dbReviews
+        .filter((r) => !apiReviewIds.includes(r.reviewId))
+        .map((r) => r.reviewId);
+      if (orphanIds.length > 0) {
+        await this.prisma.appReview.deleteMany({
+          where: { projectId, reviewId: { in: orphanIds } },
+        });
+        this.logger.log(`Removed ${orphanIds.length} deleted reviews for project ${projectId}`);
+      }
+
       this.logger.log(
         `Synced ${data.reviews.length} reviews for project ${projectId}`,
       );
     } catch (error) {
       this.logger.warn(`Reviews sync error: ${error}`);
+    }
+  }
+
+  /**
+   * Sync install, rating, and store performance data from GCS CSV exports.
+   * Uses GCS JSON API directly with OAuth access token (no @google-cloud/storage SDK).
+   */
+  private async syncCsvExports(
+    projectId: string,
+    packageName: string,
+    accessToken: string,
+    gcsBucketUri: string,
+    startDate: Date,
+    endDate: Date,
+  ): Promise<void> {
+    this.logger.log(`Syncing CSV exports from ${gcsBucketUri} for ${packageName}`);
+
+    try {
+      // Parse gs://bucket-name/optional-prefix
+      const uriMatch = gcsBucketUri.match(/^gs:\/\/([^/]+)(?:\/(.*))?$/);
+      if (!uriMatch) {
+        this.logger.warn('Invalid GCS bucket URI format');
+        return;
+      }
+      const bucketName = uriMatch[1];
+      const basePath = uriMatch[2]?.replace(/\/+$/, '') || '';
+
+      // Sync installs
+      await this.syncCsvReport(bucketName, basePath, 'stats/installs', accessToken, packageName, projectId, startDate, endDate,
+        (row) => {
+          const p = (s: string | undefined) => parseInt(s || '0', 10) || 0;
+          return {
+            installs: Math.max(p(row['Daily Device Installs']), p(row['Daily User Installs']), p(row['Install events'])),
+            uninstalls: Math.max(p(row['Daily Device Uninstalls']), p(row['Daily User Uninstalls']), p(row['Uninstall events'])),
+            updates: Math.max(p(row['Daily Device Upgrades']), p(row['Update events'])),
+            activeDeviceInstalls: Math.max(p(row['Active Device Installs']), p(row['Current Device Installs'])),
+          };
+        },
+      );
+
+      // Sync ratings
+      await this.syncCsvReport(bucketName, basePath, 'stats/ratings', accessToken, packageName, projectId, startDate, endDate,
+        (row) => ({
+          averageRating: parseFloat(row['Daily Average Rating'] || row['Total Average Rating'] || '0'),
+          totalRatings: parseInt(row['Total Ratings'] || '0', 10),
+          ratingsCount1: parseInt(row['1 Star'] || row['1-star'] || '0', 10),
+          ratingsCount2: parseInt(row['2 Stars'] || row['2-star'] || '0', 10),
+          ratingsCount3: parseInt(row['3 Stars'] || row['3-star'] || '0', 10),
+          ratingsCount4: parseInt(row['4 Stars'] || row['4-star'] || '0', 10),
+          ratingsCount5: parseInt(row['5 Stars'] || row['5-star'] || '0', 10),
+        }),
+      );
+
+      // Sync store performance
+      await this.syncCsvReport(bucketName, basePath, 'stats/store_performance', accessToken, packageName, projectId, startDate, endDate,
+        (row) => ({
+          storeListingVisitors: parseInt(row['Store Listing Visitors'] || row['Store listing visitors'] || '0', 10),
+          storeListingConversions: parseFloat(row['Conversion Rate'] || row['Store listing conversion rate'] || '0'),
+        }),
+      );
+
+      this.logger.log(`CSV export sync completed for ${packageName}`);
+    } catch (error) {
+      this.logger.warn(`CSV export sync error: ${error}`);
+    }
+  }
+
+  /**
+   * List and download CSV files from GCS using the JSON API.
+   */
+  private async syncCsvReport(
+    bucketName: string,
+    basePath: string,
+    reportPath: string,
+    accessToken: string,
+    packageName: string,
+    projectId: string,
+    startDate: Date,
+    endDate: Date,
+    mapper: (row: Record<string, string>) => Record<string, number>,
+  ): Promise<void> {
+    try {
+      // Build prefix: if basePath already contains stats/, don't double it
+      let prefix: string;
+      if (basePath && basePath.includes('stats/')) {
+        // User pasted full path like gs://bucket/stats/installs/
+        prefix = basePath;
+      } else {
+        prefix = basePath ? `${basePath}/${reportPath}` : reportPath;
+      }
+
+      // List objects via GCS JSON API
+      const listUrl = `https://storage.googleapis.com/storage/v1/b/${encodeURIComponent(bucketName)}/o?prefix=${encodeURIComponent(prefix)}&maxResults=50`;
+      const listRes = await fetch(listUrl, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+
+      if (!listRes.ok) {
+        const errText = await listRes.text();
+        this.logger.warn(`GCS list failed (${listRes.status}) for ${prefix}: ${errText.substring(0, 200)}`);
+        return;
+      }
+
+      const listData = await listRes.json() as { items?: Array<{ name: string; mediaLink?: string }> };
+      const csvFiles = (listData.items || [])
+        .filter((f) => f.name.endsWith('.csv') && f.name.includes('_overview'))
+        .sort((a, b) => a.name.localeCompare(b.name));
+
+      if (csvFiles.length === 0) {
+        this.logger.log(`No CSV files found at ${prefix}`);
+        return;
+      }
+
+      let totalRows = 0;
+
+      for (const file of csvFiles) {
+        try {
+          // Download file content via GCS JSON API
+          const downloadUrl = `https://storage.googleapis.com/storage/v1/b/${encodeURIComponent(bucketName)}/o/${encodeURIComponent(file.name)}?alt=media`;
+          const dlRes = await fetch(downloadUrl, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          });
+
+          if (!dlRes.ok) {
+            this.logger.warn(`Failed to download ${file.name}: ${dlRes.status}`);
+            continue;
+          }
+
+          // Google Play CSV exports are UTF-16LE encoded — convert to UTF-8
+          const rawBuffer = Buffer.from(await dlRes.arrayBuffer());
+          let csvText: string;
+          if (rawBuffer[0] === 0xFF && rawBuffer[1] === 0xFE) {
+            // UTF-16LE BOM detected
+            csvText = rawBuffer.toString('utf16le').replace(/^\uFEFF/, '');
+          } else if (rawBuffer[0] === 0x00 || rawBuffer[1] === 0x00) {
+            // UTF-16LE without BOM (null bytes present)
+            csvText = rawBuffer.toString('utf16le');
+          } else {
+            csvText = rawBuffer.toString('utf-8');
+          }
+
+          const records = parse(csvText, {
+            columns: true,
+            skip_empty_lines: true,
+            trim: true,
+          }) as Record<string, string>[];
+
+          for (const row of records) {
+            const dateStr = row['Date'] || row['date'];
+            if (!dateStr) continue;
+
+            const rowDate = new Date(dateStr);
+            if (isNaN(rowDate.getTime())) continue;
+            // No startDate filter for CSV — monthly files contain all data for the month
+            if (rowDate > endDate) continue;
+
+            const rowPkg = row['Package Name'] || row['Package name'] || '';
+            if (rowPkg && rowPkg !== packageName) continue;
+
+            const mapped = mapper(row);
+            const cleanMapped: Record<string, number> = {};
+            for (const [k, v] of Object.entries(mapped)) {
+              if (!isNaN(v)) cleanMapped[k] = v;
+            }
+            if (Object.keys(cleanMapped).length === 0) continue;
+
+            await this.prisma.appStoreMetrics.upsert({
+              where: { projectId_date: { projectId, date: rowDate } },
+              create: { projectId, date: rowDate, ...cleanMapped },
+              update: cleanMapped,
+            });
+            totalRows++;
+          }
+        } catch (fileErr) {
+          this.logger.warn(`Failed to parse CSV file ${file.name}: ${fileErr}`);
+        }
+      }
+
+      this.logger.log(`Synced ${totalRows} rows from ${reportPath} for ${packageName}`);
+    } catch (error) {
+      this.logger.warn(`CSV report sync error (${reportPath}): ${error}`);
     }
   }
 

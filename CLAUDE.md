@@ -129,6 +129,23 @@ packages/
 ### Analytics Summary API
 `GET /analytics/summary` returns: `contentCount` (published), `campaignCount` (active), `subscriberCount` (active), `checklistItems` (completed), `checklistCount` (total checklists), `contentCountAll` (all statuses), `socialAccountCount` (active social accounts).
 
+### Google Play Analytics (Mobile App Projects)
+- Module: `apps/api/src/google-play/` — auth, metrics, reviews, sync services + controller with 12 endpoints.
+- `ProjectAccessGuard` on all endpoints except `@Public()` OAuth callback.
+- OAuth2 + Service Account auth, credentials encrypted AES-256-CBC in `ProjectApiKey` (platform: `GOOGLE_PLAY`).
+- OAuth scopes: `androidpublisher`, `playdeveloperreporting`, `devstorage.read_only`.
+- `packageName` must be set after OAuth connection (not auto-detected from callback).
+- **Data sources:**
+  - Reviews — Android Publisher API v3 (`reviews.list`, `reviews.reply`).
+  - Crash/ANR rates — Play Developer Reporting API v1beta1 (`crashRateMetricSet`, `anrRateMetricSet`).
+  - Installs, ratings, store listing — Cloud Storage CSV exports from Play Console. User must provide GCS bucket URI (`gs://pubsite_prod_rev_XXXX`). Configured via `POST /google-play/config/bucket`.
+- AI reply to reviews via ai-agent `POST /generate-reply`.
+- **Sync:** Cron `@Cron('0 * * * *')` hourly. PRO skips if < 6h. FREE disabled. Auto-sync on analytics page visit (if stale > 10 min) + periodic refresh every 5 min while on page.
+- Frontend: `MobileAnalyticsDashboard.svelte` — tabs: Overview, Stability, Reviews (always); Installs, Store Listing, Revenue (when GCS bucket configured). Shown when `project.projectType === 'MOBILE_APP'`.
+- Settings: Google Play section in project settings (only MOBILE_APP) — OAuth/Service Account connection + GCS bucket URI input.
+- Env: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` required. Production uses `.env.production`.
+- Dependencies: `googleapis`, `@google-cloud/storage`, `csv-parse` (in apps/api).
+
 ### Help System
 - `GET /api/help?lang=ru` — list all docs (slug + title). `@Public()`, no auth required.
 - `GET /api/help/:slug?lang=ru` — single doc content (slug, title, content, lang). Falls back to English if locale file missing.
