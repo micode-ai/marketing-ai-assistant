@@ -121,7 +121,7 @@ export class GooglePlayMetricsService {
       result.uninstalls += row.uninstalls || 0;
       result.activeDeviceInstalls = Math.max(result.activeDeviceInstalls, row.activeDeviceInstalls || 0);
       result.storeListingVisitors += row.storeListingVisitors || 0;
-      result.storeListingConversions += row.storeListingConversions || 0;
+      // storeListingConversions computed after loop from totals (not summed)
       result.crashes += row.crashes || 0;
       result.anrs += row.anrs || 0;
       result.totalRatings = Math.max(result.totalRatings, row.totalRatings || 0);
@@ -141,8 +141,10 @@ export class GooglePlayMetricsService {
     result.crashRate = Math.round(result.crashRate * 1000) / 1000;
     result.anrRate = Math.round(result.anrRate * 1000) / 1000;
     result.averageRating = Math.round(result.averageRating * 100) / 100;
-    result.storeListingConversions =
-      Math.round(result.storeListingConversions * 100) / 100;
+    // Compute conversion rate from period totals (not sum of daily rates)
+    result.storeListingConversions = result.storeListingVisitors > 0
+      ? Math.round((result.installs / result.storeListingVisitors) * 10000) / 100
+      : 0;
     result.revenue = Math.round(result.revenue * 100) / 100;
 
     return result;

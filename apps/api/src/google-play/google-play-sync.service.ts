@@ -72,9 +72,15 @@ export class GooglePlaySyncService {
     let startDate: Date;
 
     if (!config.initialSyncCompleted) {
-      // Initial sync: last 90 days
+      // Initial sync: duration based on plan
+      const project = await this.prisma.project.findUnique({
+        where: { id: projectId },
+        include: { organization: { include: { subscription: true } } },
+      });
+      const plan = project?.organization?.subscription?.plan || 'PRO';
+      const months = plan === 'ENTERPRISE' ? 12 : 6;
       startDate = new Date();
-      startDate.setDate(startDate.getDate() - 90);
+      startDate.setMonth(startDate.getMonth() - months);
     } else if (config.lastSyncAt) {
       // Incremental sync: from last sync
       startDate = new Date(config.lastSyncAt);
@@ -110,6 +116,10 @@ export class GooglePlaySyncService {
       await this.authService.updateConfig(projectId, {
         consecutiveFailures: failures,
       }).catch(() => {});
+
+      if (failures >= 5) {
+        this.logger.warn(`Project ${projectId} reached ${failures} consecutive sync failures — marked as ERROR`);
+      }
 
       this.logger.error(`Sync failed for project ${projectId} (failure #${failures}): ${error}`);
       throw error;
