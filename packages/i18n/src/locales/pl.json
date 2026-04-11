@@ -66,7 +66,9 @@
     "orgExperiments": "Eksperymenty",
     "orgSequences": "Sekwencje",
     "orgCalendar": "Kalendarz",
-    "orgFinances": "Finanse"
+    "orgFinances": "Finanse",
+    "darkMode": "Tryb ciemny",
+    "lightMode": "Tryb jasny"
   },
   "header": {
     "orgContext": "Organizacja",

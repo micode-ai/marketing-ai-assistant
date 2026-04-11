@@ -27,18 +27,15 @@
   const SYNC_STALE_MS = 10 * 60 * 1000; // 10 minutes
   const SYNC_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
 
-  $: tabs = [
-    { id: 'overview' as const, labelKey: 'googlePlay.tabs.overview' },
-    ...(hasGcsBucket ? [
-      { id: 'installs' as const, labelKey: 'googlePlay.tabs.installs' },
-      { id: 'storeListing' as const, labelKey: 'googlePlay.tabs.storeListing' },
-    ] : []),
-    { id: 'stability' as const, labelKey: 'googlePlay.tabs.stability' },
-    ...(hasGcsBucket ? [
-      { id: 'revenue' as const, labelKey: 'googlePlay.tabs.revenue' },
-    ] : []),
-    { id: 'reviews' as const, labelKey: 'googlePlay.tabs.reviews' },
+  const allTabs = [
+    { id: 'overview', labelKey: 'googlePlay.tabs.overview', needsBucket: false },
+    { id: 'installs', labelKey: 'googlePlay.tabs.installs', needsBucket: true },
+    { id: 'storeListing', labelKey: 'googlePlay.tabs.storeListing', needsBucket: true },
+    { id: 'stability', labelKey: 'googlePlay.tabs.stability', needsBucket: false },
+    { id: 'revenue', labelKey: 'googlePlay.tabs.revenue', needsBucket: true },
+    { id: 'reviews', labelKey: 'googlePlay.tabs.reviews', needsBucket: false },
   ];
+  $: tabs = allTabs.filter(t => !t.needsBucket || hasGcsBucket);
 
   onMount(async () => {
     await checkStatus();
