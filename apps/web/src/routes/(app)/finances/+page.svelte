@@ -85,7 +85,7 @@
   }
 
   async function fetchAll() {
-    if (!orgId || !isOrgPage) return;
+    if (!orgId) return;
     loading = true;
     try { await Promise.all([fetchSummary(), fetchRecords(), fetchCategories()]); }
     finally { loading = false; }
@@ -239,21 +239,20 @@
   onMount(async () => {
     const { Chart } = await import('chart.js/auto');
     ChartJS = Chart;
-    if (isOrgPage) await fetchAll();
+    await fetchAll();
   });
 
   onDestroy(() => { destroyCharts(); });
 
   // Refetch when page becomes active (org mode) or filters change
   // Reference reactive deps explicitly to trigger on changes
-  $: if (ChartJS && orgId && isOrgPage) {
+  $: if (ChartJS && orgId) {
     // Touch filter vars so Svelte tracks them as dependencies
     void periodMode; void filterType; void filterCategoryId;
     fetchAll();
   }
 </script>
 
-{#if isOrgPage}
 <div class="p-4 sm:p-6">
   <div class="flex items-center justify-between mb-6">
     <div>
@@ -497,5 +496,4 @@
     </div>
   </div>
 </div>
-{/if}
 {/if}
