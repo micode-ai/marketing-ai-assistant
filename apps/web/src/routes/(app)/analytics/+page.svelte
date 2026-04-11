@@ -1,6 +1,5 @@
 <script lang="ts">
   import { _ } from 'svelte-i18n';
-  import { goto } from '$app/navigation';
   import { organizationIdStore, currentProjectStore } from '$lib/stores/projects';
   import { contextStore } from '$lib/stores/context';
   import { currentUser } from '$lib/stores/auth';
@@ -15,16 +14,12 @@
 
   async function loadData() {
     if (!ctx.organizationId) return;
-
-    // If project context, navigate to project analytics page
-    if (ctx.type === 'project' && ctx.projectId) {
-      goto(`/projects/${ctx.projectId}/analytics`);
-      return;
-    }
-
     loading = true;
     try {
-      const res = await api.get<any>('/analytics/organization', { organizationId: ctx.organizationId });
+      const params: Record<string, string> = ctx.type === 'project' && ctx.projectId
+        ? { projectId: ctx.projectId }
+        : { organizationId: ctx.organizationId };
+      const res = await api.get<any>('/analytics/organization', params);
       items = Array.isArray(res) ? res : [];
     } catch (e) {
       console.error('Failed to load analytics:', e);
