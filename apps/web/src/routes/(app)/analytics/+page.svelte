@@ -4,6 +4,7 @@
   import { contextStore } from '$lib/stores/context';
   import { currentUser } from '$lib/stores/auth';
   import { api } from '$lib/api/client';
+  import MobileAnalyticsDashboard from '$lib/components/analytics/MobileAnalyticsDashboard.svelte';
 
   let items: any[] = [];
   let loading = true;
@@ -11,15 +12,15 @@
   $: ctx = $contextStore;
   $: memberships = ($currentUser as any)?.memberships || [];
   $: currentOrg = memberships.find((m: any) => m.organization?.id === $organizationIdStore)?.organization;
+  $: hasProject = !!$currentProjectStore;
+  $: isMobileApp = $currentProjectStore?.projectType === 'MOBILE_APP';
+  $: projectId = $currentProjectStore?.id;
 
-  async function loadData() {
-    if (!ctx.organizationId) return;
+  async function loadOrgData() {
+    if (!ctx.organizationId || hasProject) return;
     loading = true;
     try {
-      const params: Record<string, string> = ctx.type === 'project' && ctx.projectId
-        ? { projectId: ctx.projectId }
-        : { organizationId: ctx.organizationId };
-      const res = await api.get<any>('/analytics/organization', params);
+      const res = await api.get<any>('/analytics/organization', { organizationId: ctx.organizationId });
       items = Array.isArray(res) ? res : [];
     } catch (e) {
       console.error('Failed to load analytics:', e);
@@ -29,58 +30,61 @@
     }
   }
 
-  $: $contextStore, loadData();
+  $: if (!hasProject && ctx.organizationId) {
+    loadOrgData();
+  }
+  $: if (hasProject) {
+    loading = false;
+  }
 </script>
 
 <div class="p-4 sm:p-6">
-  <div class="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 mb-1">
-    <span>{currentOrg?.name || $_('header.orgContext')}</span>
-    {#if $currentProjectStore}
-      <span class="text-gray-300">›</span>
-      <span class="text-indigo-600 dark:text-indigo-400">{$currentProjectStore.name}</span>
-    {/if}
-    <span class="text-gray-300">›</span>
-    <span class="text-gray-700 dark:text-gray-200">{$_('nav.orgAnalytics')}</span>
-  </div>
-
-  <div class="flex items-center justify-between mb-6">
-    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{$_('nav.orgAnalytics')}</h1>
-    {#if $currentProjectStore}
-      <a href="/projects/{$currentProjectStore.id}/analytics" class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors">
-        + {$_('common.create')}
-      </a>
-    {:else}
-      <button disabled class="inline-flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-400 text-sm font-medium rounded-lg cursor-not-allowed" title={$_('common.selectProjectToCreate')}>
-        + {$_('common.create')}
-      </button>
-    {/if}
-  </div>
-
-  {#if loading}
-    <div class="flex justify-center py-12">
-      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
+  {#if hasProject && isMobileApp && projectId}
+    <!-- Mobile App project: show Google Play dashboard -->
+    <MobileAnalyticsDashboard {projectId} days={30} />
+  {:else if hasProject && projectId}
+    <!-- Non-mobile project: link to project analytics -->
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl font-bold text-gray-900">{$_('nav.orgAnalytics')}</h1>
     </div>
-  {:else if items.length === 0}
-    <div class="text-center py-12 text-gray-500 dark:text-gray-400">
-      <p>{$_('common.noData')}</p>
+    <div class="text-center py-12">
+      <a href="/projects/{projectId}/analytics" class="px-5 py-2.5 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors">
+        {$_('nav.orgAnalytics')} → {$currentProjectStore?.name}
+      </a>
     </div>
   {:else}
-    <div class="space-y-3">
-      {#each items as item}
-        <a href="/projects/{item.projectId}/analytics" class="block bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 hover:border-indigo-300 dark:hover:border-indigo-600 hover:shadow-sm transition-all cursor-pointer">
-          <div class="flex items-center justify-between">
-            <div>
-              <h3 class="font-medium text-gray-900 dark:text-white">{item.name || item.title || 'Analytics'}</h3>
-              <p class="text-sm text-gray-500 dark:text-gray-400">{item.type || ''}</p>
-            </div>
-            {#if ctx.type === 'organization'}
-              <span class="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
-                {item.projectName || $_('org.scopeProject')}
-              </span>
-            {/if}
-          </div>
-        </a>
-      {/each}
+    <!-- Org-level analytics -->
+    <div class="flex items-center gap-1.5 text-sm text-gray-500 mb-1">
+      <span>{currentOrg?.name || $_('header.orgContext')}</span>
+      <span class="text-gray-300">›</span>
+      <span class="text-gray-700">{$_('nav.orgAnalytics')}</span>
     </div>
+
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl font-bold text-gray-900">{$_('nav.orgAnalytics')}</h1>
+    </div>
+
+    {#if loading}
+      <div class="flex justify-center py-12">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
+      </div>
+    {:else if items.length === 0}
+      <div class="text-center py-12 text-gray-500">
+        <p>{$_('common.noData')}</p>
+      </div>
+    {:else}
+      <div class="space-y-3">
+        {#each items as item}
+          <a href="/projects/{item.projectId}/analytics" class="block bg-white rounded-lg border border-gray-200 p-4 hover:border-indigo-300 hover:shadow-sm transition-all cursor-pointer">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="font-medium text-gray-900">{item.name || item.title || 'Analytics'}</h3>
+                <p class="text-sm text-gray-500">{item.type || ''}</p>
+              </div>
+            </div>
+          </a>
+        {/each}
+      </div>
+    {/if}
   {/if}
 </div>
