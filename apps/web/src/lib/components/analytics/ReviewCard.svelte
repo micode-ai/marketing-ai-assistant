@@ -6,7 +6,7 @@
   export let review: AppReviewDto;
   export let projectId: string;
 
-  let replyText = review.replyText || review.aiSuggestedReply || '';
+  let replyText = '';
   let generating = false;
   let sending = false;
   let replySent = false;
@@ -20,8 +20,8 @@
   async function generateAiReply() {
     generating = true;
     try {
-      const result = await api.post<{ reply: string }>(`/google-play/reviews/${review.reviewId}/ai-reply?projectId=${projectId}`);
-      replyText = result.reply;
+      const result = await api.post<{ suggestion?: string; reply?: string }>(`/google-play/reviews/${review.reviewId}/ai-reply?projectId=${projectId}`);
+      replyText = result.suggestion || result.reply || '';
       showReplyBox = true;
     } catch (e: any) {
       console.error('Failed to generate AI reply:', e);
@@ -31,7 +31,7 @@
   }
 
   async function sendReply() {
-    if (!replyText.trim()) return;
+    if (!replyText || !replyText.trim()) return;
     sending = true;
     try {
       await api.post(`/google-play/reviews/${review.reviewId}/reply?projectId=${projectId}`, { text: replyText.trim() });
@@ -49,6 +49,7 @@
 </script>
 
 <div class="bg-white rounded-xl border border-gray-200 p-5">
+  <!-- Header: author + rating -->
   <div class="flex items-start justify-between mb-3">
     <div class="flex items-center gap-3">
       <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 font-bold text-sm flex-shrink-0">
@@ -68,8 +69,10 @@
     </div>
   </div>
 
+  <!-- Review text -->
   <p class="text-sm text-gray-700 mb-3 whitespace-pre-wrap">{review.text}</p>
 
+  <!-- Metadata badges -->
   {#if review.metadata}
     {@const meta = review.metadata}
     <div class="flex flex-wrap gap-2 mb-3">
@@ -88,6 +91,7 @@
     </div>
   {/if}
 
+  <!-- Existing reply -->
   {#if review.isReplied && review.replyText && !showReplyBox}
     <div class="bg-gray-50 rounded-lg p-3 border border-gray-100 mb-3">
       <div class="flex items-center gap-1.5 mb-1">
@@ -103,6 +107,7 @@
     </div>
   {/if}
 
+  <!-- Actions -->
   {#if replySent}
     <div class="flex items-center gap-1.5 text-sm text-green-600">
       <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -110,39 +115,29 @@
       </svg>
       {$_('googlePlay.reviews.replySent')}
     </div>
-  {:else}
-    <div class="flex items-center gap-2">
-      {#if !showReplyBox}
-        <button
-          on:click={generateAiReply}
-          disabled={generating}
-          class="px-3 py-1.5 text-sm font-medium text-primary-600 border border-primary-200 rounded-lg hover:bg-primary-50 transition-colors duration-150 disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
-        >
-          {#if generating}
-            <svg class="animate-spin w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            {$_('googlePlay.reviews.generating')}
-          {:else}
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
-            </svg>
-            {$_('googlePlay.reviews.aiReply')}
-          {/if}
-        </button>
-        {#if !review.isReplied}
-          <button
-            on:click={() => { showReplyBox = true; }}
-            class="px-3 py-1.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-150 cursor-pointer"
-          >
-            {$_('googlePlay.reviews.editReply')}
-          </button>
+  {:else if !review.isReplied}
+    {#if !showReplyBox}
+      <!-- Initial state: AI Reply button -->
+      <button
+        on:click={generateAiReply}
+        disabled={generating}
+        class="px-3 py-1.5 text-sm font-medium text-primary-600 border border-primary-200 rounded-lg hover:bg-primary-50 transition-colors duration-150 disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
+      >
+        {#if generating}
+          <svg class="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          {$_('googlePlay.reviews.generating')}
+        {:else}
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
+          </svg>
+          {$_('googlePlay.reviews.aiReply')}
         {/if}
-      {/if}
-    </div>
-
-    {#if showReplyBox}
+      </button>
+    {:else}
+      <!-- Reply editor: textarea + send/regenerate/cancel -->
       <div class="mt-3 space-y-2">
         <textarea
           bind:value={replyText}
@@ -153,7 +148,7 @@
         <div class="flex items-center gap-2">
           <button
             on:click={sendReply}
-            disabled={sending || !replyText.trim()}
+            disabled={sending || !replyText || !replyText.trim()}
             class="px-4 py-1.5 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors duration-150 disabled:opacity-50 cursor-pointer"
           >
             {sending ? $_('googlePlay.reviews.sending') : $_('googlePlay.reviews.sendReply')}
@@ -164,7 +159,7 @@
             class="px-3 py-1.5 text-sm font-medium text-primary-600 border border-primary-200 rounded-lg hover:bg-primary-50 transition-colors duration-150 disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
           >
             {#if generating}
-              <svg class="animate-spin w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <svg class="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
@@ -174,10 +169,10 @@
             {/if}
           </button>
           <button
-            on:click={() => { showReplyBox = false; }}
+            on:click={() => { showReplyBox = false; replyText = ''; }}
             class="px-3 py-1.5 text-sm text-gray-500 hover:text-gray-700 cursor-pointer"
           >
-            Cancel
+            {$_('common.cancel')}
           </button>
         </div>
       </div>
