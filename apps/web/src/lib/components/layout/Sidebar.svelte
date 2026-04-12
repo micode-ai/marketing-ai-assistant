@@ -126,11 +126,11 @@
 
   const marketingPathSegments = ['content', 'checklists', 'documents', 'campaigns', 'email', 'analytics', 'finances', 'seo', 'competitors', 'experiments', 'sequences', 'calendar'];
 
-  function isActive(href: string): boolean {
-    if (currentPath === href || currentPath.startsWith(href + '/')) return true;
+  function isActive(href: string, path: string = currentPath): boolean {
+    if (path === href || path.startsWith(href + '/')) return true;
     const segment = href.replace('/', '');
     if (marketingPathSegments.includes(segment)) {
-      const projectRouteMatch = currentPath.match(/^\/projects\/[^/]+\/(.+)/);
+      const projectRouteMatch = path.match(/^\/projects\/[^/]+\/(.+)/);
       if (projectRouteMatch) {
         const subPath = projectRouteMatch[1].split('/')[0];
         return subPath === segment;
@@ -142,7 +142,7 @@
   // Auto-expand advanced section when navigating to an advanced route
   $: {
     const advancedHrefs = advancedMarketingLinks.map(l => l.href);
-    const isOnAdvanced = advancedHrefs.some(h => isActive(h));
+    const isOnAdvanced = advancedHrefs.some(h => isActive(h, currentPath));
     if (isOnAdvanced && !showAdvanced) {
       showAdvanced = true;
       if (browser) localStorage.setItem('sidebarAdvanced', 'true');
@@ -243,7 +243,7 @@
               <a
                 href={link.href}
                 class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-150 cursor-pointer
-                  {isActive(link.href)
+                  {isActive(link.href, currentPath)
                     ? 'bg-primary-50 text-primary-700 border-l-2 border-primary-600'
                     : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 border-l-2 border-transparent'}"
               >
@@ -281,7 +281,7 @@
               <a
                 href={link.href}
                 class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-150 cursor-pointer
-                  {isActive(link.href)
+                  {isActive(link.href, currentPath)
                     ? 'bg-primary-50 text-primary-700 border-l-2 border-primary-600'
                     : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 border-l-2 border-transparent'}"
               >
@@ -313,7 +313,7 @@
                 <a
                   href={link.href}
                   class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-150 cursor-pointer
-                    {isActive(link.href)
+                    {isActive(link.href, currentPath)
                       ? 'bg-primary-50 text-primary-700 border-l-2 border-primary-600'
                       : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 border-l-2 border-transparent'}"
                 >
@@ -335,7 +335,7 @@
               <a
                 href={link.href}
                 class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-150 cursor-pointer
-                  {isActive(link.href)
+                  {isActive(link.href, currentPath)
                     ? 'bg-primary-50 text-primary-700 border-l-2 border-primary-600'
                     : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 border-l-2 border-transparent'}"
               >

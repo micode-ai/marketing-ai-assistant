@@ -198,7 +198,8 @@ export class GooglePlayAuthService {
       expiresAt,
       lastSyncAt: existing?.lastSyncAt || null,
       initialSyncCompleted: existing?.initialSyncCompleted || false,
-      consecutiveFailures: 0,
+      consecutiveFailures: existing?.consecutiveFailures || 0,
+      gcsBucketUri: existing?.gcsBucketUri || null,
     };
 
     const encrypted = encryptData(configData, encryptionKey);
