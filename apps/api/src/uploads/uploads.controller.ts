@@ -1,3 +1,4 @@
+/// <reference types="multer" />
 import { Controller, Post, Delete, Param, Body, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiConsumes } from '@nestjs/swagger';
@@ -12,6 +13,7 @@ export class UploadsController {
   @Post('image')
   @UseInterceptors(FileInterceptor('file'))
   @ApiConsumes('multipart/form-data')
+  // eslint-disable-next-line no-undef
   async uploadImage(@UploadedFile() file: Express.Multer.File) {
     return this.uploadsService.saveFile(file);
   }

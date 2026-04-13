@@ -1,3 +1,4 @@
+/// <reference types="multer" />
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import * as path from 'path';
@@ -15,6 +16,7 @@ export class UploadsService {
     }
   }
 
+  // eslint-disable-next-line no-undef
   async saveFile(file: Express.Multer.File): Promise<{ url: string; filename: string }> {
     const allowedMimes = ['image/jpeg', 'image/png', 'image/webp'];
     if (!allowedMimes.includes(file.mimetype)) {
