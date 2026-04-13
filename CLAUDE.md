@@ -104,6 +104,27 @@ packages/
 ### Agent Types
 `CONTENT`, `CHECKLIST`, `DOCUMENT`, `STRATEGY`, `SEO`, `EMAIL`, `ANALYTICS`, `SUPERVISOR`
 
+Content agent supports **multilingual generation**: pass `languages: ['en', 'pl', 'ru']` in input — agent iterates via LangGraph loop (`loadContext → generateContent → reviewQuality → saveContent → switchLanguage → loop`), creating one Content record per language, all linked by `contentGroupId`.
+
+### Uploads Module (`/uploads`)
+- Module: `apps/api/src/uploads/` — 3 endpoints.
+- `POST /uploads/image` — multipart upload, accepts jpeg/png/webp, max 5 MB.
+- `POST /uploads/generate-image` — DALL-E 3 image generation, rate-limited.
+- `DELETE /uploads/image/:filename` — delete file.
+- Files stored in `uploads/images/`, served via `ServeStaticModule`.
+
+### Multilingual Content
+- `Content` model has `language String?` and `contentGroupId String?` (indexed).
+- `SocialAccount` model has `language String?` for language-aware publishing.
+- Frontend groups content by `contentGroupId` — each group contains one record per language.
+- Create/Generate modals support language selection; publish modal is language-aware.
+
+### MarkdownEditor Component
+- `apps/web/src/lib/components/MarkdownEditor.svelte` — split-view editor with toolbar.
+- Uses DOMPurify for HTML sanitization.
+- Supports drag-and-drop image upload (calls `POST /uploads/image`).
+- Used on content detail/edit pages.
+
 ### Templates System (`/templates`)
 - Templates page uses AI agents to generate checklists/documents (not hardcoded content).
 - Checklist templates dispatch `POST /agent/run` with `agentType: 'CHECKLIST'`, `input.type` (e.g., `LAUNCH`, `SEO`), and `input.language`.

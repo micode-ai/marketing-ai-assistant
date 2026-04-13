@@ -301,7 +301,22 @@
     "repurposeDesc": "Utwórz nową treść na podstawie oryginału, dostosowaną do innego formatu lub kanału.",
     "targetType": "Format docelowy",
     "score": "Wynik",
-    "performance": "Wydajność"
+    "performance": "Wydajność",
+    "createContent": "Utwórz treść",
+    "createAllLanguages": "Utwórz we wszystkich językach",
+    "generateAllLanguages": "Generuj we wszystkich językach",
+    "attachedImages": "Załączone obrazy",
+    "generateImage": "Generuj obraz",
+    "imagePrompt": "Opisz obraz, który chcesz wygenerować...",
+    "generating_image": "Generowanie obrazu...",
+    "uploadImage": "Prześlij obraz",
+    "dragDropImage": "Przeciągnij i upuść obraz tutaj",
+    "languageBadge": "Język",
+    "deleteAllLanguages": "Usuń wszystkie wersje językowe",
+    "confirmDeleteAll": "Czy na pewno chcesz usunąć wszystkie wersje językowe tej treści?",
+    "imagePromptPlaceholder": "Opisz obraz, który chcesz wygenerować...",
+    "generateImageBtn": "Generuj obraz",
+    "bodyPlaceholder": "Napisz swoją treść tutaj..."
   },
   "campaigns": {
     "title": "Kampanie",
@@ -756,7 +771,10 @@
       "PENDING": "Oczekuje",
       "PUBLISHED": "Opublikowano",
       "FAILED": "Błąd"
-    }
+    },
+    "accountLanguage": "Język konta",
+    "noLanguage": "Brak domyślnego języka",
+    "selectLanguageVersion": "Wybierz wersję językową"
   },
   "analytics": {
     "title": "Analityka",

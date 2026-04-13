@@ -32,7 +32,10 @@ export class SocialController {
 
   @Post('publish')
   @ApiOperation({ summary: 'Publish content to selected social accounts' })
-  publish(@CurrentUser() user: any, @Body() dto: { contentId: string; socialAccountIds: string[] }) {
+  async publish(
+    @Body() dto: { contentId?: string; socialAccountIds?: string[]; publications?: Array<{ socialAccountId: string; contentId: string }> },
+    @CurrentUser() user: any,
+  ) {
     const organizationId: string = user.memberships?.[0]?.organizationId;
     return this.socialService.publish(dto, organizationId);
   }

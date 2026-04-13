@@ -76,12 +76,30 @@ Generates marketing content for all supported formats and platforms.
 }
 ```
 
+**Input (multilingual):**
+```json
+{
+  "type": "SOCIAL_POST | BLOG_ARTICLE | ...",
+  "platform": "TWITTER | LINKEDIN | ...",
+  "topic": "Product launch announcement",
+  "keywords": ["innovation", "tech"],
+  "tone": "professional | casual | humorous | formal",
+  "length": "short | medium | long",
+  "languages": ["en", "pl", "ru"],
+  "contentGroupId": "clx..."
+}
+```
+
 **Behavior:**
 - Loads project context (name, description, target audience, brand voice, industry)
+- **Multilingual loop (LangGraph):** `loadContext → generateContent → reviewQuality → saveContent → switchLanguage → loop`. When `languages` contains multiple values, the agent iterates through each language, generating a separate Content record per language. All records share the same `contentGroupId` so the frontend can group them.
+- Uses `baseSystemPrompt` for structure + a per-language instruction for tone and locale.
+- `retries` reducer uses replacement (not append) to avoid state bloat across iterations.
+- Returns `contentIds[]` (one per language) and `contentGroupId` in the agent output.
 - For `SEO_ARTICLE`: performs SERP analysis, outputs `metaTitle`, `metaDescription`, `suggestedSlug`, `keywordDensity`
 - For `LANDING_PAGE`: structured JSON output (hero, features, social proof, pricing CTA, FAQ)
 - Model: GPT-4o, temperature: 0.8
-- Creates Content record in database with `seoMetadata` field populated for SEO articles
+- Creates Content records in database with `language` field and `contentGroupId` set
 
 ### Checklist Agent
 

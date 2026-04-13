@@ -23,12 +23,16 @@ const S = Annotation.Root({
   input:             Annotation<Record<string, unknown>>,
   project:           Annotation<any>({ default: () => null,  reducer: (_, b) => b }),
   systemPrompt:      Annotation<string>({ default: () => '', reducer: (_, b) => b }),
+  baseSystemPrompt:  Annotation<string>({ default: () => '', reducer: (_, b) => b }),
   userPrompt:        Annotation<string>({ default: () => '', reducer: (_, b) => b }),
   generatedContent:  Annotation<string>({ default: () => '', reducer: (_, b) => b }),
   qualityScore:      Annotation<number>({ default: () => 0,  reducer: (_, b) => b }),
-  // retries accumulate: each reviewQuality call adds 1
-  retries:           Annotation<number>({ default: () => 0,  reducer: (a, b) => a + b }),
+  retries:           Annotation<number>({ default: () => 0,  reducer: (_, b) => b }),
   savedContentId:    Annotation<string>({ default: () => '', reducer: (_, b) => b }),
+  savedContentIds:      Annotation<string[]>({ reducer: (_, b) => b, default: () => [] }),
+  contentGroupId:       Annotation<string>({ reducer: (_, b) => b, default: () => '' }),
+  languages:            Annotation<string[]>({ reducer: (_, b) => b, default: () => [] }),
+  currentLanguageIndex: Annotation<number>({ reducer: (_, b) => b, default: () => 0 }),
   // token/cost fields accumulate across all LLM calls in the graph
   totalInputTokens:  Annotation<number>({ default: () => 0,  reducer: (a, b) => a + b }),
   totalOutputTokens: Annotation<number>({ default: () => 0,  reducer: (a, b) => a + b }),
@@ -40,6 +44,9 @@ type State = typeof S.State;
 // ── Nodes ─────────────────────────────────────────────────────
 
 async function loadContext(state: State) {
+  const languages = (state.input['languages'] as string[]) || [];
+  const contentGroupId = languages.length > 1 ? randomUUID() : '';
+
   const project = await prisma.project.findUnique({ where: { id: state.projectId } });
   if (!project) throw new Error('Project not found');
 
@@ -62,7 +69,7 @@ async function loadContext(state: State) {
   const language = (input['language'] as string) || undefined;
   const isSeoArticle = contentType === 'SEO_ARTICLE';
 
-  const systemPrompt = `You are an expert marketing copywriter for ${project.name}.
+  const baseSystemPrompt = `You are an expert marketing copywriter for ${project.name}.
 Brand: ${project.name} — ${project.description || ''}
 Target Audience: ${project.targetAudience || 'general audience'}
 Industry: ${project.industry || 'general'}
@@ -70,7 +77,10 @@ Brand Voice: ${JSON.stringify(brandVoice) || 'professional and engaging'}
 ${isSeoArticle ? `Website: ${project.websiteUrl || 'not specified'}
 
 You are also an SEO expert. Optimize content for search engines while maintaining readability.` : ''}
-Create compelling content that resonates with the target audience.${getLanguageInstruction(language)}`;
+Create compelling content that resonates with the target audience.`;
+
+  const currentLang = languages.length > 0 ? languages[0] : language;
+  const systemPrompt = baseSystemPrompt + getLanguageInstruction(currentLang);
 
   let userPrompt: string;
 
@@ -110,12 +120,20 @@ Length: approximately ${lengthGuide}
 Return ONLY the final content text, ready to publish. No explanations, no meta-commentary.`;
   }
 
-  return { project, systemPrompt, userPrompt };
+  return { project, systemPrompt, userPrompt, baseSystemPrompt, languages, contentGroupId, currentLanguageIndex: 0 };
 }
 
 async function generateContent(state: State) {
+  const lang = state.languages.length > 0
+    ? state.languages[state.currentLanguageIndex]
+    : (state.input['language'] as string) || undefined;
+
+  const systemPrompt = state.baseSystemPrompt
+    ? state.baseSystemPrompt + getLanguageInstruction(lang)
+    : state.systemPrompt;
+
   const response = await getModel(0.8).invoke([
-    new SystemMessage(state.systemPrompt),
+    new SystemMessage(systemPrompt),
     new HumanMessage(state.userPrompt),
   ]);
 
@@ -154,7 +172,7 @@ async function reviewQuality(state: State) {
 
   return {
     qualityScore:      score,
-    retries:           1,         // accumulates
+    retries:           state.retries + 1,
     totalInputTokens:  inputTokens,
     totalOutputTokens: outputTokens,
     totalCost:         cost,
@@ -199,18 +217,38 @@ async function saveContent(state: State) {
       aiGenerated: true,
       mediaUrls:   [],
       seoMetadata: seoMetadata ? (seoMetadata as any) : undefined,
+      language:    state.languages[state.currentLanguageIndex] || (state.input['language'] as string) || undefined,
+      contentGroupId: state.contentGroupId || undefined,
     },
   });
 
-  return { savedContentId: content.id };
+  const updatedIds = [...state.savedContentIds, content.id];
+  return { savedContentIds: updatedIds, savedContentId: content.id };
 }
 
-// ── Router ────────────────────────────────────────────────────
+// ── Routers ───────────────────────────────────────────────────
 
 function routeAfterReview(state: State): 'generateContent' | 'saveContent' {
   // Accept if quality is good enough OR we've already retried twice
   if (state.qualityScore >= 7 || state.retries >= 2) return 'saveContent';
   return 'generateContent';
+}
+
+function routeAfterSave(state: State): 'switchLanguage' | '__end__' {
+  if (state.languages.length > 0 && state.currentLanguageIndex < state.languages.length - 1) {
+    return 'switchLanguage';
+  }
+  return '__end__';
+}
+
+// ── Language switching ────────────────────────────────────────
+
+async function switchLanguage(state: State) {
+  return {
+    currentLanguageIndex: state.currentLanguageIndex + 1,
+    retries: 0,
+    qualityScore: 0,
+  };
 }
 
 // ── Graph ─────────────────────────────────────────────────────
@@ -220,6 +258,7 @@ const graph = new StateGraph(S)
   .addNode('generateContent', generateContent)
   .addNode('reviewQuality',   reviewQuality)
   .addNode('saveContent',     saveContent)
+  .addNode('switchLanguage',  switchLanguage)
   .addEdge(START, 'loadContext')
   .addEdge('loadContext',     'generateContent')
   .addEdge('generateContent', 'reviewQuality')
@@ -227,7 +266,11 @@ const graph = new StateGraph(S)
     generateContent: 'generateContent',
     saveContent:     'saveContent',
   })
-  .addEdge('saveContent', END)
+  .addConditionalEdges('saveContent', routeAfterSave, {
+    switchLanguage: 'switchLanguage',
+    __end__:        END,
+  })
+  .addEdge('switchLanguage', 'generateContent')
   .compile();
 
 // ── Public API ────────────────────────────────────────────────
@@ -247,6 +290,8 @@ export async function runContentAgent({
 
   return {
     contentId:      result.savedContentId,
+    contentIds:     result.savedContentIds,
+    contentGroupId: result.contentGroupId,
     title:          (input['topic'] as string) || '',
     body:           result.generatedContent,
     qualityScore:   result.qualityScore,

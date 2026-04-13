@@ -853,13 +853,23 @@ Callback Google OAuth. Сохраняет access- и refresh-токены.
 
 ### POST `/social/publish` (Защищённый)
 
-Опубликовать контент в социальных сетях.
+Опубликовать контент в социальных сетях. Поддерживает два формата запроса (обратная совместимость).
 
-**Тело запроса:**
+**Тело запроса (простой формат):**
 ```json
 {
   "contentId": "clx...",
   "socialAccountIds": ["clx...", "clx..."]
+}
+```
+
+**Тело запроса (множественный формат):**
+```json
+{
+  "publications": [
+    { "socialAccountId": "clx...", "contentId": "clx..." },
+    { "socialAccountId": "clx...", "contentId": "clx..." }
+  ]
 }
 ```
 
@@ -892,6 +902,52 @@ Callback LinkedIn OAuth.
 ### GET `/social/auth/facebook/callback` (Публичный)
 
 Callback Facebook OAuth.
+
+> **Примечание:** `GET /social/accounts` и `POST /social/accounts` включают поле `language` (например, `"en"`, `"pl"`, `"ru"`) в каждом аккаунте — используется для языкозависимой публикации контента.
+
+---
+
+## Загрузка файлов (`/uploads`)
+
+Обработка загрузки изображений для редактора контента. Файлы хранятся в `uploads/images/` и раздаются статически.
+
+### POST `/uploads/image` (Защищённый)
+
+Загрузить изображение. Принимает `multipart/form-data` с полем `file`.
+
+- Допустимые типы: `image/jpeg`, `image/png`, `image/webp`
+- Максимальный размер: 5 МБ
+
+**Ответ (201):**
+```json
+{
+  "url": "/uploads/images/abc123.jpg",
+  "filename": "abc123.jpg"
+}
+```
+
+### POST `/uploads/generate-image` (Защищённый)
+
+Сгенерировать изображение с помощью DALL-E 3. Ограничен по частоте запросов.
+
+**Тело запроса:**
+```json
+{
+  "prompt": "Футуристичный маркетинговый дашборд с цветными графиками"
+}
+```
+
+**Ответ (201):**
+```json
+{
+  "url": "/uploads/images/generated-abc123.png",
+  "filename": "generated-abc123.png"
+}
+```
+
+### DELETE `/uploads/image/:filename` (Защищённый)
+
+Удалить загруженное изображение по имени файла.
 
 ---
 

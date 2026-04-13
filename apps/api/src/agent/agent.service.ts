@@ -21,9 +21,10 @@ export class AgentService {
       },
     });
 
-    this.agentQueue.add('run', { runId: run.id, projectId: dto.projectId, agentType: dto.agentType, input }).catch(err => {
-      console.error('[AgentService] Failed to enqueue agent run:', err);
-    });
+    console.log('[AgentService] Enqueueing agent run:', run.id, 'queue isReady:', typeof this.agentQueue.isReady);
+    this.agentQueue.add('run', { runId: run.id, projectId: dto.projectId, agentType: dto.agentType, input })
+      .then(job => console.log('[AgentService] Job added:', job.id))
+      .catch(err => console.error('[AgentService] Failed to enqueue agent run:', err));
     return run;
   }
 

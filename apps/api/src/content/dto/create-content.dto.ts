@@ -1,4 +1,4 @@
-import { IsString, IsEnum, IsOptional, IsArray, IsBoolean, IsDateString } from 'class-validator';
+import { IsString, IsEnum, IsOptional, IsArray, IsBoolean, IsDateString, IsIn } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateContentDto {
@@ -42,4 +42,14 @@ export class CreateContentDto {
   @IsOptional()
   @IsBoolean()
   aiGenerated?: boolean;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsIn(['en', 'pl', 'ru'])
+  language?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  contentGroupId?: string;
 }

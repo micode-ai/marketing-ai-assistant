@@ -78,6 +78,8 @@ export class ContentService {
         platform: dto.platform as any,
         scheduledAt: dto.scheduledAt,
         aiGenerated: dto.aiGenerated || false,
+        language: dto.language || undefined,
+        contentGroupId: dto.contentGroupId || undefined,
       },
     });
   }

@@ -3,6 +3,9 @@ import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { BullModule } from '@nestjs/bull';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
+import { UploadsModule } from './uploads/uploads.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { OrganizationsModule } from './organizations/organizations.module';
@@ -39,8 +42,9 @@ import { FinancesModule } from './finances/finances.module';
     BullModule.forRootAsync({
       useFactory: () => ({
         redis: {
-          host: process.env.REDIS_HOST || 'localhost',
+          host: process.env.REDIS_HOST || '127.0.0.1',
           port: parseInt(process.env.REDIS_PORT || '6380'),
+          maxRetriesPerRequest: null,
         },
       }),
     }),
@@ -73,6 +77,12 @@ import { FinancesModule } from './finances/finances.module';
     EntityLinksModule,
     DocsModule,
     FinancesModule,
+    UploadsModule,
+    ServeStaticModule.forRoot({
+      rootPath: join(process.cwd(), '../../uploads'),
+      serveRoot: '/uploads',
+      serveStaticOptions: { index: false },
+    }),
   ],
 })
 export class AppModule {}

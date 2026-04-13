@@ -44,8 +44,8 @@ coverage/
 playwright-report/
 test-results/
 
-# Uploaded files
-uploads/
+# Uploaded files (root-level runtime directory)
+/uploads/
 
 # Docker volumes
 docker/data/

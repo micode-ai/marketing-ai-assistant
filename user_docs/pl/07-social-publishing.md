@@ -89,6 +89,35 @@ Kazda proba publikacji jest sledzona:
    - Komunikat bledu (jesli wystapil blad)
    - Znacznik czasu
 
+## Publikowanie z uwzglednieniem jezyka
+
+### Domyslny jezyk konta spolecznosciowego
+
+Kazde polaczone konto spolecznosciowe moze miec przypisany **domyslny jezyk**. Informuje to system, ktorej wersji jezykowej tresci uzyc przy publikowaniu na tym koncie.
+
+Na przyklad:
+- Twoje konto LinkedIn jest ustawione na **angielski**
+- Twoja strona Facebook jest ustawiona na **polski**
+- Twoj kanal Telegram jest ustawiony na **rosyjski**
+
+### Publikowanie tresci wielojezycznych
+
+Gdy publikujesz tresc z wieloma wersjami jezykowymi (EN/PL/RU), system automatycznie dopasowuje odpowiednia wersje jezykowa do kazdego konta na podstawie jego domyslnego ustawienia jezykowego:
+
+1. Kliknij **Publikuj** na karcie tresci wielojezycznej
+2. Wybierz konta do opublikowania
+3. System automatycznie wybiera odpowiednia wersje jezykowa dla kazdego konta
+4. Przejrzyj mapowanie i kliknij **Publikuj**
+
+Jesli konto nie ma ustawionego domyslnego jezyka, zostaniesz poproszony o wybranie wersji jezykowej do wyslania na to konto.
+
+### Ustawianie domyslnego jezyka
+
+1. Przejdz do **Ustawienia > Integracje**
+2. Kliknij **Edytuj** na polaczonym koncie
+3. Wybierz **Domyslny jezyk** (angielski, polski lub rosyjski)
+4. Zapisz zmiany
+
 ## Zarzadzanie kontami
 
 ### Odlaczanie

@@ -89,6 +89,35 @@ Each publication attempt is tracked:
    - Error message (if failed)
    - Timestamp
 
+## Language-Aware Publishing
+
+### Social Account Default Language
+
+Each connected social account can have a **default language** assigned to it. This tells the system which language version of your content to use when publishing to that account.
+
+For example:
+- Your LinkedIn account is set to **English**
+- Your Facebook page is set to **Polish**
+- Your Telegram channel is set to **Russian**
+
+### Publishing Multilingual Content
+
+When you publish content that has multiple language versions (EN/PL/RU), the system automatically maps the right language version to each account based on its default language setting:
+
+1. Click **Publish** on a multilingual content card
+2. Select the accounts to publish to
+3. The system auto-selects the correct language version for each account
+4. Review the mapping and click **Publish**
+
+If an account has no default language set, you will be prompted to select which language version to send to that account.
+
+### Setting a Default Language
+
+1. Go to **Settings > Integrations**
+2. Click **Edit** on a connected account
+3. Select the **Default Language** (English, Polish, or Russian)
+4. Save the changes
+
 ## Managing Accounts
 
 ### Disconnecting

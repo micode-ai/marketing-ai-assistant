@@ -162,7 +162,11 @@ Unique constraint: `(userId, organizationId)`
 | scheduledAt | DateTime? | Scheduled publish date |
 | publishedAt | DateTime? | Publication date |
 | seoMetadata | Json? | SEO fields: metaTitle, metaDescription, suggestedSlug, keywordDensity |
+| language | String? | Content language code (`en`, `pl`, `ru`). Set by content agent for multilingual generation. |
+| contentGroupId | String? | Groups multilingual variants of the same content (indexed). All language variants generated together share this ID. |
 | aiGenerated | Boolean | Whether AI generated this content |
+
+Index: `contentGroupId` (for efficient grouping queries)
 
 ### ContentVersion
 
@@ -370,6 +374,7 @@ Unique constraint: `(projectId, keyword)`
 | encryptedTokens | String | AES-256-CBC encrypted OAuth tokens or API credentials |
 | status | SocialAccountStatus | ACTIVE / INACTIVE / EXPIRED / ERROR |
 | expiresAt | DateTime? | Token expiration date |
+| language | String? | Preferred content language for this account (`en`, `pl`, `ru`) |
 
 ### ContentPublication
 
