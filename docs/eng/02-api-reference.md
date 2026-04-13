@@ -722,13 +722,23 @@ Disconnect a social account.
 
 ### POST `/social/publish` (Protected)
 
-Publish content to social platforms.
+Publish content to social platforms. Supports two request formats (backward compatible).
 
-**Request Body:**
+**Request Body (simple):**
 ```json
 {
   "contentId": "clx...",
   "socialAccountIds": ["clx...", "clx..."]
+}
+```
+
+**Request Body (multi-content):**
+```json
+{
+  "publications": [
+    { "socialAccountId": "clx...", "contentId": "clx..." },
+    { "socialAccountId": "clx...", "contentId": "clx..." }
+  ]
 }
 ```
 
@@ -743,6 +753,52 @@ LinkedIn OAuth 2.0 flow.
 ### GET `/social/auth/facebook` (Public) / GET `/social/auth/facebook/callback` (Public)
 
 Facebook OAuth 2.0 flow.
+
+> **Note:** `GET /social/accounts` and `POST /social/accounts` include a `language` field (e.g. `"en"`, `"pl"`, `"ru"`) on each account, used for language-aware content publishing.
+
+---
+
+## Uploads (`/uploads`)
+
+Handles image uploads for content editing. Files are stored in `uploads/images/` and served statically.
+
+### POST `/uploads/image` (Protected)
+
+Upload an image file. Accepts `multipart/form-data` with field name `file`.
+
+- Allowed types: `image/jpeg`, `image/png`, `image/webp`
+- Max size: 5 MB
+
+**Response (201):**
+```json
+{
+  "url": "/uploads/images/abc123.jpg",
+  "filename": "abc123.jpg"
+}
+```
+
+### POST `/uploads/generate-image` (Protected)
+
+Generate an image using DALL-E 3. Rate-limited.
+
+**Request Body:**
+```json
+{
+  "prompt": "A futuristic marketing dashboard with colorful charts"
+}
+```
+
+**Response (201):**
+```json
+{
+  "url": "/uploads/images/generated-abc123.png",
+  "filename": "generated-abc123.png"
+}
+```
+
+### DELETE `/uploads/image/:filename` (Protected)
+
+Delete an uploaded image by filename.
 
 ---
 

@@ -473,6 +473,8 @@ model Content {
   updatedAt       DateTime        @updatedAt
   scope           EntityScope     @default(PROJECT)
   organizationId  String?
+  language        String?
+  contentGroupId  String?
 
   project        Project?             @relation(fields: [projectId], references: [id], onDelete: SetNull)
   organization   Organization?        @relation("OrgContent", fields: [organizationId], references: [id], onDelete: Cascade)
@@ -488,6 +490,7 @@ model Content {
   @@index([scope, organizationId])
   @@index([scope, projectId])
   @@index([organizationId])
+  @@index([contentGroupId])
   @@map("content")
 }
 
@@ -828,6 +831,7 @@ model SocialAccount {
   expiresAt       DateTime?
   createdAt       DateTime            @default(now())
   updatedAt       DateTime            @updatedAt
+  language        String?
 
   organization Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   publications ContentPublication[]

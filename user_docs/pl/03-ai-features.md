@@ -240,6 +240,82 @@ AI generuje ustrukturyzowany dokument obejmujacy pozycjonowanie, krajobraz konku
 3. Podaj temat i ton
 4. Kliknij **Generuj**
 
+## Wielojezyczne generowanie tresci
+
+### Przeglad
+
+Mozesz generowac tresc w jezyku angielskim, polskim i rosyjskim jednoczesnie jednym kliknieciem. AI tworzy trzy oddzielne wersje tresci — po jednej na jezyk — kazda dostosowana naturalnie do danego jezyka, a nie przetlumaczona maszynowo.
+
+### Jak to dziala
+
+1. Przejdz do sekcji **Tresci** w projekcie
+2. Kliknij **Generuj z AI**
+3. Skonfiguruj parametry tresci jak zwykle
+4. Wlacz opcje **Generuj we wszystkich jezykach**, aby stworzyc wersje EN/PL/RU jednoczesnie
+5. Kliknij **Generuj**
+
+Wszystkie trzy wersje sa zgrupowane razem i pojawiaja sie jako jedna karta na liscie tresci, z oznaczeniami jezyka (EN, PL, RU) pokazujacymi dostepne wersje.
+
+### Przeglad wersji jezykowych
+
+- Karta tresci pokazuje wszystkie dostepne oznaczenia jezykow
+- Kliknij oznaczenie, aby przelaczac sie miedzy wersjami jezykowymi
+- Kazda wersja moze byc edytowana, zatwierdzona i opublikowana niezaleznie
+
+### Reczne tworzenie w wielu jezykach
+
+Uzywaj przycisku **Utworz tresc** (obok **Generuj z AI**), aby recznie pisac tresc. Mozesz rowniez wybrac tworzenie we wszystkich 3 jezykach jednoczesnie — otwora sie trzy oddzielne zakladki edytora, po jednej na jezyk.
+
+## Edytor Markdown
+
+Cala tresc jest edytowana w edytorze Markdown z podzielonym widokiem:
+
+- **Lewy panel** — pisz i edytuj w Markdown
+- **Prawy panel** — podglad na zywo renderowany w czasie rzeczywistym
+
+### Pasek narzedziowy
+
+| Przycisk | Efekt |
+|----------|-------|
+| **B** Pogrubienie | Otacza zaznaczenie w `**pogrubienie**` |
+| *I* Kursywa | Otacza zaznaczenie w `*kursywa*` |
+| H1 | Wstawia `# Naglowek 1` |
+| H2 | Wstawia `## Naglowek 2` |
+| Lista | Wstawia `- lista punktowana` |
+| Link | Wstawia `[tekst](url)` |
+| Obrazek | Wstawia `![alt](url)` |
+
+### Pelnoekranowy edytor
+
+Dla skupionej edycji otworz dedykowany pelnoekranowy edytor:
+
+1. Otworz element tresci
+2. Kliknij **Otworz pelny edytor**
+3. Edytor otwiera sie pod adresem `/projects/[id]/content/[contentId]/edit`
+4. Uzywaj podzielonego widoku do pisania i podgladu jednoczesnie
+
+## Funkcje obrazkow
+
+### Przesylanie obrazkow
+
+Dolacz obrazki bezposrednio do tresci:
+
+1. W edytorze tresci kliknij przycisk **Przeslij obrazek** lub przeciagnij i upusc plik na obszar edytora
+2. Obslugiwane formaty: JPEG, PNG, WebP
+3. Maksymalny rozmiar pliku: 5 MB
+4. Obrazek zostanie przeslany, a tag Markdown zostanie wstawiony w miejscu kursora
+
+### Generowanie obrazkow AI
+
+Generuj niestandardowe obrazki z opisu tekstowego przy uzyciu DALL-E 3:
+
+1. W edytorze tresci kliknij **Generuj obrazek**
+2. Wprowadz opis obrazka (np. „minimalistyczny baner dla startupu SaaS")
+3. Kliknij **Generuj**
+4. Wygenerowany obrazek zostaje dolaczony do tresci i wstawiony do edytora
+
+Obrazki generowane przez AI sa odliczane od limitu generacji AI.
+
 ## Sledzenie uzycia AI
 
 Kazda generacja AI jest sledzona:

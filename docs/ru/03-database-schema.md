@@ -136,7 +136,41 @@ erDiagram
 | status | ContentStatus | DRAFT / REVIEW / APPROVED / PUBLISHED / REJECTED |
 | seoMetadata | Json? | SEO-поля: metaTitle, metaDescription, suggestedSlug, keywordDensity |
 | publishedAt | DateTime? | Дата публикации |
+| language | String? | Язык контента (`en`, `pl`, `ru`). Устанавливается агентом при мультиязычной генерации. |
+| contentGroupId | String? | Объединяет мультиязычные варианты одного контента (индексировано). Все языковые варианты, сгенерированные вместе, имеют одинаковый ID. |
 | aiGenerated | Boolean | Сгенерировано ИИ |
+
+Индекс: `contentGroupId` (для быстрой группировки)
+
+## Модели социальных публикаций
+
+### SocialAccount (Социальный аккаунт)
+
+| Колонка | Тип | Описание |
+|---------|-----|----------|
+| id | String (CUID) | Первичный ключ |
+| organizationId | String | FK на Organization |
+| platform | SocialPlatform | TWITTER / LINKEDIN / FACEBOOK / INSTAGRAM / GOOGLE / TELEGRAM |
+| accountName | String | Отображаемое имя |
+| accountId | String | Идентификатор на платформе |
+| encryptedTokens | String | Зашифрованные AES-256-CBC OAuth-токены или API-ключи |
+| status | SocialAccountStatus | ACTIVE / INACTIVE / EXPIRED / ERROR |
+| expiresAt | DateTime? | Срок действия токена |
+| language | String? | Предпочтительный язык контента для аккаунта (`en`, `pl`, `ru`) |
+
+### ContentPublication (Публикация контента)
+
+| Колонка | Тип | Описание |
+|---------|-----|----------|
+| id | String (CUID) | Первичный ключ |
+| contentId | String | FK на Content |
+| socialAccountId | String | FK на SocialAccount |
+| platform | SocialPlatform | Платформа публикации |
+| platformPostId | String? | ID поста на платформе |
+| platformPostUrl | String? | URL поста |
+| status | PublicationStatus | PENDING / PUBLISHED / FAILED |
+| publishedAt | DateTime? | Время публикации |
+| error | String? | Сообщение об ошибке |
 
 ## Модели email-маркетинга
 

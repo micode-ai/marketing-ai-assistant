@@ -23,6 +23,7 @@ export class SocialService {
         expiresAt: true,
         createdAt: true,
         updatedAt: true,
+        language: true,
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -59,6 +60,7 @@ export class SocialService {
         encryptedTokens: encrypted,
         scopes: dto.scopes || [],
         expiresAt: dto.expiresAt ? new Date(dto.expiresAt) : null,
+        language: dto.language || null,
       },
       update: {
         accountName: dto.accountName,
@@ -67,6 +69,7 @@ export class SocialService {
         status: 'ACTIVE',
         scopes: dto.scopes || [],
         expiresAt: dto.expiresAt ? new Date(dto.expiresAt) : null,
+        language: dto.language !== undefined ? (dto.language || null) : undefined,
       },
       select: {
         id: true,
@@ -79,6 +82,7 @@ export class SocialService {
         expiresAt: true,
         createdAt: true,
         updatedAt: true,
+        language: true,
       },
     });
   }
@@ -90,16 +94,39 @@ export class SocialService {
     return { success: true };
   }
 
-  async publish(dto: { contentId: string; socialAccountIds: string[] }, organizationId: string) {
-    const content = await this.prisma.content.findUnique({ where: { id: dto.contentId } });
-    if (!content) throw new NotFoundException('Content not found');
+  async publish(
+    dto: {
+      contentId?: string;
+      socialAccountIds?: string[];
+      publications?: Array<{ socialAccountId: string; contentId: string }>;
+    },
+    organizationId: string,
+  ) {
+    // Normalize: support both old shape and new shape
+    const publications = dto.publications
+      || (dto.contentId && dto.socialAccountIds
+        ? dto.socialAccountIds.map(id => ({ socialAccountId: id, contentId: dto.contentId! }))
+        : []);
+
+    if (publications.length === 0) {
+      throw new NotFoundException('No publications specified');
+    }
 
     const results = [];
+    const updatedContentIds = new Set<string>();
 
-    for (const accountId of dto.socialAccountIds) {
-      const account = await this.prisma.socialAccount.findFirst({ where: { id: accountId, organizationId } });
+    for (const pub of publications) {
+      const content = await this.prisma.content.findUnique({ where: { id: pub.contentId } });
+      if (!content) {
+        results.push({ socialAccountId: pub.socialAccountId, status: 'FAILED', error: 'Content not found' });
+        continue;
+      }
+
+      const account = await this.prisma.socialAccount.findFirst({
+        where: { id: pub.socialAccountId, organizationId },
+      });
       if (!account) {
-        results.push({ socialAccountId: accountId, status: 'FAILED', error: 'Account not found' });
+        results.push({ socialAccountId: pub.socialAccountId, status: 'FAILED', error: 'Account not found' });
         continue;
       }
 
@@ -136,8 +163,8 @@ export class SocialService {
 
       await this.prisma.contentPublication.create({
         data: {
-          contentId: dto.contentId,
-          socialAccountId: accountId,
+          contentId: pub.contentId,
+          socialAccountId: pub.socialAccountId,
           platform: account.platform,
           platformPostId,
           platformPostUrl,
@@ -147,8 +174,12 @@ export class SocialService {
         },
       });
 
+      if (status === 'PUBLISHED') {
+        updatedContentIds.add(pub.contentId);
+      }
+
       results.push({
-        socialAccountId: accountId,
+        socialAccountId: pub.socialAccountId,
         platform: account.platform,
         accountName: account.accountName,
         status,
@@ -157,9 +188,10 @@ export class SocialService {
       });
     }
 
-    if (results.some((r) => r.status === 'PUBLISHED')) {
+    // Update status for all successfully published content records
+    for (const contentId of updatedContentIds) {
       await this.prisma.content.update({
-        where: { id: dto.contentId },
+        where: { id: contentId },
         data: { status: 'PUBLISHED', publishedAt: new Date() },
       });
     }

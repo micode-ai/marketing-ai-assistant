@@ -76,12 +76,30 @@ graph LR
 }
 ```
 
+**Входные параметры (с поддержкой мультиязычности):**
+```json
+{
+  "type": "SOCIAL_POST | BLOG_ARTICLE | ...",
+  "platform": "TWITTER | LINKEDIN | ...",
+  "topic": "Анонс запуска продукта",
+  "keywords": ["инновации", "технологии"],
+  "tone": "professional | casual | humorous | formal",
+  "length": "short | medium | long",
+  "languages": ["en", "pl", "ru"],
+  "contentGroupId": "clx..."
+}
+```
+
 **Поведение:**
 - Загружает контекст проекта (название, аудитория, голос бренда, отрасль)
+- **Мультиязычный цикл (LangGraph):** `loadContext → generateContent → reviewQuality → saveContent → switchLanguage → loop`. При наличии нескольких языков в `languages` агент итерирует по каждому языку, создавая отдельную запись Content для каждого. Все записи объединяются общим `contentGroupId`.
+- Использует `baseSystemPrompt` для структуры и отдельную языковую инструкцию для тона и локали.
+- Редуктор `retries` использует замену (не добавление) для предотвращения накопления состояния.
+- Возвращает `contentIds[]` (по одному на язык) и `contentGroupId` в выходных данных агента.
 - Для `SEO_ARTICLE`: SERP-анализ, генерирует `metaTitle`, `metaDescription`, `suggestedSlug`, `keywordDensity`
 - Для `LANDING_PAGE`: структурированный JSON (hero, features, social proof, pricing CTA, FAQ)
 - Модель: GPT-4o, температура: 0.8
-- Создаёт запись Content в БД
+- Создаёт записи Content в БД с полями `language` и `contentGroupId`
 
 ### Checklist Agent (Чек-листы)
 

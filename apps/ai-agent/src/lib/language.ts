@@ -6,11 +6,10 @@ const LANGUAGE_NAMES: Record<string, string> = {
 
 /**
  * Returns a prompt instruction for generating content in the specified language.
- * Returns empty string for English or unknown locales (English is the default).
+ * Always returns an explicit language instruction, including for English.
  */
 export function getLanguageInstruction(locale: string | undefined): string {
   if (!locale) return '';
-  const lang = LANGUAGE_NAMES[locale];
-  if (!lang || locale === 'en') return '';
+  const lang = LANGUAGE_NAMES[locale] || 'English';
   return `\nIMPORTANT: You MUST write ALL content in ${lang}. Every part of your response must be in ${lang}.`;
 }

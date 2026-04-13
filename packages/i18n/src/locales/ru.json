@@ -299,7 +299,22 @@
     "repurposeDesc": "Создайте новый контент на основе оригинала, адаптированный для другого формата или канала.",
     "targetType": "Целевой формат",
     "score": "Оценка",
-    "performance": "Эффективность"
+    "performance": "Эффективность",
+    "createContent": "Создать контент",
+    "createAllLanguages": "Создать на всех языках",
+    "generateAllLanguages": "Сгенерировать на всех языках",
+    "attachedImages": "Прикрепленные изображения",
+    "generateImage": "Сгенерировать изображение",
+    "imagePrompt": "Опишите изображение, которое хотите сгенерировать...",
+    "generating_image": "Генерация изображения...",
+    "uploadImage": "Загрузить изображение",
+    "dragDropImage": "Перетащите изображение сюда",
+    "languageBadge": "Язык",
+    "deleteAllLanguages": "Удалить все языковые версии",
+    "confirmDeleteAll": "Вы уверены, что хотите удалить все языковые версии этого контента?",
+    "imagePromptPlaceholder": "Опишите изображение, которое хотите сгенерировать...",
+    "generateImageBtn": "Сгенерировать изображение",
+    "bodyPlaceholder": "Напишите ваш контент здесь..."
   },
   "campaigns": {
     "title": "Кампании",
@@ -829,7 +844,10 @@
       "PENDING": "Ожидание",
       "PUBLISHED": "Опубликовано",
       "FAILED": "Ошибка"
-    }
+    },
+    "accountLanguage": "Язык аккаунта",
+    "noLanguage": "Нет языка по умолчанию",
+    "selectLanguageVersion": "Выберите языковую версию"
   },
   "tracking": {
     "title": "Отслеживание сайта",

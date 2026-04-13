@@ -240,6 +240,82 @@ AI Chat responses are rendered with full Markdown formatting:
 - The delete button is always visible for the active session; for others it appears on hover
 - Only you (the chat session creator) can delete messages
 
+## Multilingual Content Generation
+
+### Overview
+
+You can generate content in English, Polish, and Russian all at once with a single click. The AI creates three separate versions of the content — one per language — each tailored to that language naturally rather than machine-translated.
+
+### How It Works
+
+1. Go to your project's **Content** section
+2. Click **Generate with AI**
+3. Configure the content parameters as usual
+4. Enable **Generate in all languages** to create EN/PL/RU versions simultaneously
+5. Click **Generate**
+
+All three versions are grouped together and appear as a single card in the content list, with language badges (EN, PL, RU) showing which versions are available.
+
+### Viewing Language Versions
+
+- The content card shows all available language badges
+- Click a badge to switch to that language version
+- Each version can be edited, approved, and published independently
+
+### Manual Creation in Multiple Languages
+
+Use the **Create Content** button (alongside **Generate with AI**) to manually write content. You can also choose to create in all 3 languages at once — three separate editor tabs will open, one for each language.
+
+## Markdown Editor
+
+All content is edited in a split-view Markdown editor:
+
+- **Left panel** — write and edit in Markdown
+- **Right panel** — live preview rendered in real time
+
+### Toolbar
+
+| Button | Shortcut | Effect |
+|--------|----------|--------|
+| **B** Bold | | Wraps selection in `**bold**` |
+| *I* Italic | | Wraps selection in `*italic*` |
+| H1 | | Inserts `# Heading 1` |
+| H2 | | Inserts `## Heading 2` |
+| List | | Inserts a `- bullet list` |
+| Link | | Inserts `[text](url)` |
+| Image | | Inserts `![alt](url)` |
+
+### Full-Page Editor
+
+For focused editing, open the dedicated full-page editor:
+
+1. Open a content item
+2. Click **Open Full Editor** (or navigate to the content edit page directly)
+3. The editor opens at `/projects/[id]/content/[contentId]/edit`
+4. Use the split view to write and preview side by side
+
+## Image Features
+
+### Uploading Images
+
+Attach images directly to your content:
+
+1. In the content editor, click the **Upload Image** button or drag and drop a file onto the editor area
+2. Supported formats: JPEG, PNG, WebP
+3. Maximum file size: 5 MB
+4. The image is uploaded and a Markdown image tag is inserted at the cursor position
+
+### AI Image Generation
+
+Generate custom images from a text description using DALL-E 3:
+
+1. In the content editor, click **Generate Image**
+2. Enter a description of the image you want (e.g., "a minimalist banner for a SaaS product launch")
+3. Click **Generate**
+4. The generated image is attached to the content and inserted into the editor
+
+AI-generated images are billed against your AI generation quota.
+
 ## AI Usage Tracking
 
 Every AI generation is tracked:

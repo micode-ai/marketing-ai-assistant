@@ -303,7 +303,22 @@
     "repurposeDesc": "Create a new piece of content based on the original, adapted for a different format or channel.",
     "targetType": "Target Format",
     "score": "Score",
-    "performance": "Performance"
+    "performance": "Performance",
+    "createContent": "Create Content",
+    "createAllLanguages": "Create in all languages",
+    "generateAllLanguages": "Generate in all languages",
+    "attachedImages": "Attached images",
+    "generateImage": "Generate Image",
+    "imagePrompt": "Describe the image you want to generate...",
+    "generating_image": "Generating image...",
+    "uploadImage": "Upload Image",
+    "dragDropImage": "Drag & drop an image here",
+    "languageBadge": "Language",
+    "deleteAllLanguages": "Delete all language versions",
+    "confirmDeleteAll": "Are you sure you want to delete all language versions of this content?",
+    "imagePromptPlaceholder": "Describe the image you want to generate...",
+    "generateImageBtn": "Generate Image",
+    "bodyPlaceholder": "Write your content here..."
   },
   "campaigns": {
     "title": "Campaigns",
@@ -776,7 +791,10 @@
       "PENDING": "Pending",
       "PUBLISHED": "Published",
       "FAILED": "Failed"
-    }
+    },
+    "accountLanguage": "Account language",
+    "noLanguage": "No default language",
+    "selectLanguageVersion": "Select language version"
   },
   "analytics": {
     "title": "Analytics",

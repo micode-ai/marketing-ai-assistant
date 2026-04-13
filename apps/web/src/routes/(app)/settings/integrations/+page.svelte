@@ -9,22 +9,22 @@
 
   // LinkedIn modal
   let showLinkedInModal = false;
-  let linkedInForm = { accountName: '', accountId: '', accessToken: '' };
+  let linkedInForm = { accountName: '', accountId: '', accessToken: '', language: '' };
   let linkedInSaving = false;
 
   // Twitter modal
   let showTwitterModal = false;
-  let twitterForm = { accountName: '', accountId: '', appKey: '', appSecret: '', accessToken: '', accessSecret: '' };
+  let twitterForm = { accountName: '', accountId: '', appKey: '', appSecret: '', accessToken: '', accessSecret: '', language: '' };
   let twitterSaving = false;
 
   // Facebook modal
   let showFacebookModal = false;
-  let facebookForm = { accountName: '', pageId: '', accessToken: '' };
+  let facebookForm = { accountName: '', pageId: '', accessToken: '', language: '' };
   let facebookSaving = false;
 
   // Telegram modal
   let showTelegramModal = false;
-  let telegramForm = { accountName: '', botToken: '', chatId: '' };
+  let telegramForm = { accountName: '', botToken: '', chatId: '', language: '' };
   let telegramSaving = false;
 
   let disconnectingId: string | null = null;
@@ -53,10 +53,11 @@
         accountName: linkedInForm.accountName,
         accountId: linkedInForm.accountId,
         accessToken: linkedInForm.accessToken,
+        language: linkedInForm.language || null,
         scopes: ['w_member_social'],
       });
       showLinkedInModal = false;
-      linkedInForm = { accountName: '', accountId: '', accessToken: '' };
+      linkedInForm = { accountName: '', accountId: '', accessToken: '', language: '' };
       await loadAccounts();
     } catch (e: any) {
       alert(e.message);
@@ -72,10 +73,11 @@
       await api.post(`/social/accounts?organizationId=${$organizationIdStore}`, {
         ...twitterForm,
         platform: 'TWITTER',
+        language: twitterForm.language || null,
         scopes: ['tweet.write', 'tweet.read', 'users.read'],
       });
       showTwitterModal = false;
-      twitterForm = { accountName: '', accountId: '', appKey: '', appSecret: '', accessToken: '', accessSecret: '' };
+      twitterForm = { accountName: '', accountId: '', appKey: '', appSecret: '', accessToken: '', accessSecret: '', language: '' };
       await loadAccounts();
     } catch (e: any) {
       alert(e.message);
@@ -94,10 +96,11 @@
         accountId: facebookForm.pageId,
         pageId: facebookForm.pageId,
         accessToken: facebookForm.accessToken,
+        language: facebookForm.language || null,
         scopes: ['pages_manage_posts'],
       });
       showFacebookModal = false;
-      facebookForm = { accountName: '', pageId: '', accessToken: '' };
+      facebookForm = { accountName: '', pageId: '', accessToken: '', language: '' };
       await loadAccounts();
     } catch (e: any) {
       alert(e.message);
@@ -116,10 +119,11 @@
         accountId: telegramForm.chatId,
         botToken: telegramForm.botToken,
         chatId: telegramForm.chatId,
+        language: telegramForm.language || null,
         scopes: ['send_message'],
       });
       showTelegramModal = false;
-      telegramForm = { accountName: '', botToken: '', chatId: '' };
+      telegramForm = { accountName: '', botToken: '', chatId: '', language: '' };
       await loadAccounts();
     } catch (e: any) {
       alert(e.message);
@@ -136,6 +140,19 @@
       alert(e.message);
     } finally {
       disconnectingId = null;
+    }
+  }
+
+  async function updateAccountLanguage(account: any) {
+    try {
+      await api.post(`/social/accounts?organizationId=${$organizationIdStore}`, {
+        platform: account.platform,
+        accountName: account.accountName,
+        accountId: account.accountId,
+        language: account.language || null,
+      });
+    } catch (e: any) {
+      alert(e.message);
     }
   }
 
@@ -187,6 +204,16 @@
               {/if}
               <span class="text-sm text-gray-700 font-medium">{account.accountName}</span>
               <span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full">{$_('social.connected')}</span>
+              <select
+                bind:value={account.language}
+                on:change={() => updateAccountLanguage(account)}
+                class="text-sm border border-gray-300 rounded px-2 py-1 bg-white"
+              >
+                <option value="">{$_('social.noLanguage')}</option>
+                <option value="en">English</option>
+                <option value="pl">Polski</option>
+                <option value="ru">Русский</option>
+              </select>
               <button on:click={() => disconnectingId = account.id} class="text-xs px-3 py-1.5 border border-red-200 text-red-500 rounded-lg hover:bg-red-50 transition-colors duration-150 cursor-pointer">
                 {$_('social.disconnect')}
               </button>
@@ -219,6 +246,16 @@
               {/if}
               <span class="text-sm text-gray-700 font-medium">@{account.accountName}</span>
               <span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full">{$_('social.connected')}</span>
+              <select
+                bind:value={account.language}
+                on:change={() => updateAccountLanguage(account)}
+                class="text-sm border border-gray-300 rounded px-2 py-1 bg-white"
+              >
+                <option value="">{$_('social.noLanguage')}</option>
+                <option value="en">English</option>
+                <option value="pl">Polski</option>
+                <option value="ru">Русский</option>
+              </select>
               <button on:click={() => disconnectingId = account.id} class="text-xs px-3 py-1.5 border border-red-200 text-red-500 rounded-lg hover:bg-red-50 transition-colors duration-150 cursor-pointer">
                 {$_('social.disconnect')}
               </button>
@@ -251,6 +288,16 @@
               {/if}
               <span class="text-sm text-gray-700 font-medium">{account.accountName}</span>
               <span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full">{$_('social.connected')}</span>
+              <select
+                bind:value={account.language}
+                on:change={() => updateAccountLanguage(account)}
+                class="text-sm border border-gray-300 rounded px-2 py-1 bg-white"
+              >
+                <option value="">{$_('social.noLanguage')}</option>
+                <option value="en">English</option>
+                <option value="pl">Polski</option>
+                <option value="ru">Русский</option>
+              </select>
               <button on:click={() => disconnectingId = account.id} class="text-xs px-3 py-1.5 border border-red-200 text-red-500 rounded-lg hover:bg-red-50 transition-colors duration-150 cursor-pointer">
                 {$_('social.disconnect')}
               </button>
@@ -280,6 +327,16 @@
             <div class="flex items-center gap-2">
               <span class="text-sm text-gray-700 font-medium">{account.accountName}</span>
               <span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full">{$_('social.connected')}</span>
+              <select
+                bind:value={account.language}
+                on:change={() => updateAccountLanguage(account)}
+                class="text-sm border border-gray-300 rounded px-2 py-1 bg-white"
+              >
+                <option value="">{$_('social.noLanguage')}</option>
+                <option value="en">English</option>
+                <option value="pl">Polski</option>
+                <option value="ru">Русский</option>
+              </select>
               <button on:click={() => disconnectingId = account.id} class="text-xs px-3 py-1.5 border border-red-200 text-red-500 rounded-lg hover:bg-red-50 transition-colors duration-150 cursor-pointer">
                 {$_('social.disconnect')}
               </button>
@@ -328,6 +385,15 @@
             </svg>
             {$_('social.linkedinTokenHint')}
           </p>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{$_('social.accountLanguage')}</label>
+          <select bind:value={linkedInForm.language} class="w-full border border-gray-300 rounded-lg px-3 py-2">
+            <option value="">{$_('social.noLanguage')}</option>
+            <option value="en">English</option>
+            <option value="pl">Polski</option>
+            <option value="ru">Русский</option>
+          </select>
         </div>
       </div>
       <div class="p-6 border-t border-gray-100 flex gap-3">
@@ -388,6 +454,15 @@
           <label class="block text-xs font-medium text-gray-700 mb-1">{$_('social.accessSecret')}</label>
           <input type="password" bind:value={twitterForm.accessSecret} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
         </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{$_('social.accountLanguage')}</label>
+          <select bind:value={twitterForm.language} class="w-full border border-gray-300 rounded-lg px-3 py-2">
+            <option value="">{$_('social.noLanguage')}</option>
+            <option value="en">English</option>
+            <option value="pl">Polski</option>
+            <option value="ru">Русский</option>
+          </select>
+        </div>
       </div>
       <div class="p-6 border-t border-gray-100 flex gap-3">
         <button
@@ -440,6 +515,15 @@
             {$_('social.facebookTokenHint')}
           </p>
         </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{$_('social.accountLanguage')}</label>
+          <select bind:value={facebookForm.language} class="w-full border border-gray-300 rounded-lg px-3 py-2">
+            <option value="">{$_('social.noLanguage')}</option>
+            <option value="en">English</option>
+            <option value="pl">Polski</option>
+            <option value="ru">Русский</option>
+          </select>
+        </div>
       </div>
       <div class="p-6 border-t border-gray-100 flex gap-3">
         <button
@@ -490,6 +574,15 @@
             </svg>
             {$_('social.telegramBotHint')}
           </p>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{$_('social.accountLanguage')}</label>
+          <select bind:value={telegramForm.language} class="w-full border border-gray-300 rounded-lg px-3 py-2">
+            <option value="">{$_('social.noLanguage')}</option>
+            <option value="en">English</option>
+            <option value="pl">Polski</option>
+            <option value="ru">Русский</option>
+          </select>
         </div>
       </div>
       <div class="p-6 border-t border-gray-100 flex gap-3">
