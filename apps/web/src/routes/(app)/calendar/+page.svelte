@@ -94,23 +94,30 @@
     return new Date(year, month).toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
   }
 
-  async function loadData() {
-    if (!ctx.organizationId && !ctx.projectId) return;
+  let fetchToken = 0;
+  async function loadData(c: { type: string; projectId: string | null; organizationId: string | null }) {
+    if (!c.organizationId && !c.projectId) return;
+    const token = ++fetchToken;
     loading = true;
+    contents = [];
     try {
-      const params: Record<string, string> = ctx.type === 'project' && ctx.projectId
-        ? { projectId: ctx.projectId }
-        : { organizationId: ctx.organizationId as string, aggregated: 'true' };
-      contents = await api.get<any[]>('/content', params);
+      const params: Record<string, string> = c.type === 'project' && c.projectId
+        ? { projectId: c.projectId }
+        : { organizationId: c.organizationId as string, aggregated: 'true' };
+      const res = await api.get<any[]>('/content', params);
+      if (token !== fetchToken) return;
+      contents = res;
     } catch (e) {
-      console.error('Failed to load calendar:', e);
-      contents = [];
+      if (token === fetchToken) {
+        console.error('Failed to load calendar:', e);
+        contents = [];
+      }
     } finally {
-      loading = false;
+      if (token === fetchToken) loading = false;
     }
   }
 
-  $: $contextStore, loadData();
+  $: loadData($contextStore);
 
   onMount(() => {
     isMobile = window.innerWidth < 768;
@@ -313,7 +320,7 @@
             </div>
 
             <div class="space-y-0.5">
-              {#each dayContents.slice(0, 3) as content}
+              {#each dayContents.slice(0, 3) as content (content.id)}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <!-- svelte-ignore a11y-no-static-element-interactions -->
                 <div
@@ -361,7 +368,7 @@
             <div class="text-xs text-gray-400 py-2 text-center">—</div>
           {:else}
             <div class="space-y-1.5">
-              {#each dayContents as content}
+              {#each dayContents as content (content.id)}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <!-- svelte-ignore a11y-no-static-element-interactions -->
                 <div class="flex items-center gap-2 p-2 rounded-lg border border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors duration-150"

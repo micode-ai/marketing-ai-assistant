@@ -137,32 +137,37 @@
 
   // ─── Data fetching ─────────────────────────────────────────
 
-  async function fetchCalendarData() {
+  let fetchToken = 0;
+  async function fetchCalendarData(pid: string) {
+    const token = ++fetchToken;
     loading = true;
+    contents = [];
+    campaigns = [];
     try {
       const [contentData, campaignData] = await Promise.all([
-        api.get<any[]>('/content', { projectId }),
-        api.get<any[]>('/campaigns', { projectId }),
+        api.get<any[]>('/content', { projectId: pid }),
+        api.get<any[]>('/campaigns', { projectId: pid }),
       ]);
+      if (token !== fetchToken) return;
       contents = contentData;
       campaigns = campaignData;
     } catch (e: any) {
-      alert(e.message);
+      if (token === fetchToken) alert(e.message);
     } finally {
-      loading = false;
+      if (token === fetchToken) loading = false;
     }
   }
+
+  $: if (projectId) fetchCalendarData(projectId);
 
   onMount(() => {
     isMobile = window.innerWidth < 768;
     if (isMobile) viewMode = 'week';
-
     const handleResize = () => {
       isMobile = window.innerWidth < 768;
       if (isMobile && viewMode === 'month') viewMode = 'week';
     };
     window.addEventListener('resize', handleResize);
-    fetchCalendarData();
     return () => window.removeEventListener('resize', handleResize);
   });
 
@@ -437,7 +442,7 @@
 
             <!-- Content items (max 3) -->
             <div class="space-y-0.5">
-              {#each dayContents.slice(0, 3) as content}
+              {#each dayContents.slice(0, 3) as content (content.id)}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <!-- svelte-ignore a11y-no-static-element-interactions -->
                 <div
@@ -507,7 +512,7 @@
             </div>
           {:else}
             <div class="space-y-1.5">
-              {#each dayContents as content}
+              {#each dayContents as content (content.id)}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <!-- svelte-ignore a11y-no-static-element-interactions -->
                 <div class="flex items-center gap-2 p-2 rounded-lg border border-gray-100
