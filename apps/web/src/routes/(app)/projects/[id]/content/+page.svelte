@@ -1050,8 +1050,8 @@
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => showCreateModal = false}>
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-      <div class="p-6 border-b border-gray-100 flex items-center gap-2.5">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-[90vw] h-[90vh] flex flex-col">
+      <div class="p-6 border-b border-gray-100 flex items-center gap-2.5 flex-shrink-0">
         <div class="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center flex-shrink-0">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -1059,7 +1059,7 @@
         </div>
         <h2 class="text-lg font-semibold text-gray-900">{$_('content.createContent')}</h2>
       </div>
-      <div class="p-6 space-y-4">
+      <div class="p-6 space-y-4 flex-1 overflow-y-auto">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1.5">{$_('content.topic')}</label>
           <input type="text" bind:value={createForm.title} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" placeholder={$_('content.topicPlaceholder')} />
@@ -1124,7 +1124,7 @@
           </div>
         {/if}
       </div>
-      <div class="p-6 border-t border-gray-100 flex gap-3">
+      <div class="p-6 border-t border-gray-100 flex gap-3 flex-shrink-0">
         <button
           on:click={createContent}
           disabled={createSaving || !createForm.title.trim()}
