@@ -17,10 +17,17 @@ export class ContentService {
       ...(filters?.platform && { platform: filters.platform as any }),
     };
 
+    const andClauses: any[] = [];
+
     if (scope.projectId) {
       where.projectId = scope.projectId;
     } else if (scope.organizationId && scope.aggregated) {
-      where.organizationId = scope.organizationId;
+      andClauses.push({
+        OR: [
+          { organizationId: scope.organizationId },
+          { project: { organizationId: scope.organizationId } },
+        ],
+      });
     } else if (scope.organizationId) {
       where.organizationId = scope.organizationId;
       where.scope = 'ORGANIZATION';
@@ -30,10 +37,16 @@ export class ContentService {
       const range: any = {};
       if (filters.from) range.gte = new Date(filters.from);
       if (filters.to) range.lte = new Date(filters.to);
-      where.OR = [
-        { scheduledAt: range },
-        { scheduledAt: null, createdAt: range },
-      ];
+      andClauses.push({
+        OR: [
+          { scheduledAt: range },
+          { scheduledAt: null, createdAt: range },
+        ],
+      });
+    }
+
+    if (andClauses.length > 0) {
+      where.AND = andClauses;
     }
 
     return this.prisma.content.findMany({
