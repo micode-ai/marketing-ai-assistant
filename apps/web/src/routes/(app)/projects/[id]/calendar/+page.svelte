@@ -177,7 +177,7 @@
   $: contentByDate = (() => {
     const map: Record<string, any[]> = {};
     for (const c of filteredContents) {
-      const dateStr = c.scheduledAt || c.createdAt;
+      const dateStr = c.publishedAt || c.scheduledAt || c.createdAt;
       if (!dateStr) continue;
       const key = toDateKey(new Date(dateStr));
       if (!map[key]) map[key] = [];

@@ -878,6 +878,7 @@
     "noUnscheduled": "Brak treści bez daty",
     "scheduledFor": "Zaplanowano na {date}",
     "createdOn": "Utworzono {date}",
+    "publishedOn": "Opublikowano",
     "viewDetails": "Szczegóły",
     "contentDetails": "Szczegóły treści",
     "campaign": "Kampania",

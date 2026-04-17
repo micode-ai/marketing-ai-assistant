@@ -42,6 +42,7 @@ export class ContentService {
       include: {
         _count: { select: { versions: true } },
         campaign: { select: { id: true, name: true, startDate: true, endDate: true } },
+        project: { select: { id: true, name: true } },
       },
     });
   }
