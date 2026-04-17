@@ -54,7 +54,21 @@
   // Create modal state
   let showCreateModal = false;
   let createAllLanguages = false;
-  let createForm = { title: '', type: 'SOCIAL_POST', platform: '', body: '', mediaUrls: [] as string[] };
+  let createForm = { title: '', type: 'SOCIAL_POST', body: '', mediaUrls: [] as string[] };
+  let createPlatforms: string[] = [];
+  const PLATFORM_OPTIONS = [
+    { value: 'TWITTER', label: 'Twitter' },
+    { value: 'LINKEDIN', label: 'LinkedIn' },
+    { value: 'FACEBOOK', label: 'Facebook' },
+    { value: 'INSTAGRAM', label: 'Instagram' },
+    { value: 'GOOGLE', label: 'Google' },
+    { value: 'TELEGRAM', label: 'Telegram' },
+  ];
+  function toggleCreatePlatform(p: string) {
+    createPlatforms = createPlatforms.includes(p)
+      ? createPlatforms.filter(x => x !== p)
+      : [...createPlatforms, p];
+  }
   let createBodies: Record<string, string> = { en: '', pl: '', ru: '' };
   let activeCreateLang = 'en';
   let createSaving = false;
@@ -330,23 +344,27 @@
   async function createContent() {
     createSaving = true;
     try {
-      if (createAllLanguages) {
-        const groupId = crypto.randomUUID();
-        for (const lang of ['en', 'pl', 'ru']) {
+      const platforms: (string | undefined)[] = createPlatforms.length > 0 ? createPlatforms : [undefined];
+      const languages = createAllLanguages ? ['en', 'pl', 'ru'] : [$locale];
+      const needsGroup = languages.length > 1 || platforms.length > 1;
+      const groupId = needsGroup ? crypto.randomUUID() : undefined;
+      for (const lang of languages) {
+        const body = createAllLanguages ? createBodies[lang] : createForm.body;
+        for (const platform of platforms) {
           await api.post('/content', {
             ...createForm,
-            body: createBodies[lang],
+            body,
             language: lang,
-            contentGroupId: groupId,
+            ...(platform ? { platform } : {}),
+            ...(groupId ? { contentGroupId: groupId } : {}),
             projectId,
           });
         }
-      } else {
-        await api.post('/content', { ...createForm, language: $locale, projectId });
       }
       contents = await api.get<any[]>('/content', { projectId });
       showCreateModal = false;
-      createForm = { title: '', type: 'SOCIAL_POST', platform: '', body: '', mediaUrls: [] as string[] };
+      createForm = { title: '', type: 'SOCIAL_POST', body: '', mediaUrls: [] as string[] };
+      createPlatforms = [];
       createBodies = { en: '', pl: '', ru: '' };
     } catch (e: any) { alert(e.message); }
     finally { createSaving = false; }
@@ -1059,37 +1077,37 @@
         </div>
         <h2 class="text-lg font-semibold text-gray-900">{$_('content.createContent')}</h2>
       </div>
-      <div class="p-6 space-y-4 flex-1 overflow-y-auto">
+      <div class="p-6 space-y-4 flex-1 flex flex-col overflow-y-auto">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1.5">{$_('content.topic')}</label>
           <input type="text" bind:value={createForm.title} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" placeholder={$_('content.topicPlaceholder')} />
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1.5">{$_('content.type')}</label>
-            <select bind:value={createForm.type} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
-              <option value="SOCIAL_POST">{$_('content.socialPost')}</option>
-              <option value="BLOG_ARTICLE">{$_('content.blogArticle')}</option>
-              <option value="EMAIL">{$_('content.emailContent')}</option>
-              <option value="NEWSLETTER">{$_('content.newsletter')}</option>
-              <option value="AD_COPY">{$_('content.adCopy')}</option>
-              <option value="LANDING_PAGE">{$_('content.landingPage')}</option>
-              <option value="SEO_ARTICLE">{$_('content.seoArticle')}</option>
-              <option value="REFERRAL_COPY">{$_('content.referralCopy')}</option>
-              <option value="IN_APP_MESSAGE">{$_('content.inAppMessage')}</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1.5">{$_('content.platform')}</label>
-            <select bind:value={createForm.platform} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
-              <option value="">—</option>
-              <option value="TWITTER">Twitter</option>
-              <option value="LINKEDIN">LinkedIn</option>
-              <option value="FACEBOOK">Facebook</option>
-              <option value="INSTAGRAM">Instagram</option>
-              <option value="GOOGLE">Google</option>
-              <option value="TELEGRAM">Telegram</option>
-            </select>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">{$_('content.type')}</label>
+          <select bind:value={createForm.type} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+            <option value="SOCIAL_POST">{$_('content.socialPost')}</option>
+            <option value="BLOG_ARTICLE">{$_('content.blogArticle')}</option>
+            <option value="EMAIL">{$_('content.emailContent')}</option>
+            <option value="NEWSLETTER">{$_('content.newsletter')}</option>
+            <option value="AD_COPY">{$_('content.adCopy')}</option>
+            <option value="LANDING_PAGE">{$_('content.landingPage')}</option>
+            <option value="SEO_ARTICLE">{$_('content.seoArticle')}</option>
+            <option value="REFERRAL_COPY">{$_('content.referralCopy')}</option>
+            <option value="IN_APP_MESSAGE">{$_('content.inAppMessage')}</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">{$_('content.platform')}</label>
+          <div class="flex flex-wrap gap-2">
+            {#each PLATFORM_OPTIONS as opt}
+              <button
+                type="button"
+                on:click={() => toggleCreatePlatform(opt.value)}
+                class="px-3 py-1.5 rounded-lg border text-sm cursor-pointer transition-colors duration-150 {createPlatforms.includes(opt.value) ? 'bg-primary-50 border-primary-500 text-primary-700' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'}"
+              >
+                {opt.label}
+              </button>
+            {/each}
           </div>
         </div>
 
@@ -1100,8 +1118,8 @@
 
         {#if createAllLanguages}
           <!-- Language tabs -->
-          <div>
-            <div class="flex border-b border-gray-200 mb-3">
+          <div class="flex-1 flex flex-col min-h-[400px]">
+            <div class="flex border-b border-gray-200 mb-3 flex-shrink-0">
               {#each ['en', 'pl', 'ru'] as lang}
                 <button
                   on:click={() => activeCreateLang = lang}
@@ -1112,23 +1130,28 @@
               {/each}
             </div>
             {#each ['en', 'pl', 'ru'] as lang}
-              <div class:hidden={activeCreateLang !== lang}>
+              <div class:hidden={activeCreateLang !== lang} class="flex-1 min-h-0">
                 <MarkdownEditor bind:value={createBodies[lang]} placeholder={$_('content.bodyPlaceholder')} />
               </div>
             {/each}
           </div>
         {:else}
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1.5">{$_('content.type')}</label>
-            <MarkdownEditor bind:value={createForm.body} placeholder={$_('content.bodyPlaceholder')} />
+          <div class="flex-1 flex flex-col min-h-[400px]">
+            <label class="block text-sm font-medium text-gray-700 mb-1.5 flex-shrink-0">{$_('content.type')}</label>
+            <div class="flex-1 min-h-0">
+              <MarkdownEditor bind:value={createForm.body} placeholder={$_('content.bodyPlaceholder')} />
+            </div>
           </div>
         {/if}
       </div>
-      <div class="p-6 border-t border-gray-100 flex gap-3 flex-shrink-0">
+      <div class="p-6 border-t border-gray-100 flex gap-3 justify-end flex-shrink-0">
+        <button on:click={() => showCreateModal = false} class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 text-sm cursor-pointer">
+          {$_('common.cancel')}
+        </button>
         <button
           on:click={createContent}
           disabled={createSaving || !createForm.title.trim()}
-          class="flex-1 bg-primary-600 text-white py-2.5 rounded-lg font-medium hover:bg-primary-700 transition-colors duration-150 disabled:opacity-50 text-sm flex items-center justify-center gap-2 cursor-pointer"
+          class="px-6 bg-primary-600 text-white py-2.5 rounded-lg font-medium hover:bg-primary-700 transition-colors duration-150 disabled:opacity-50 text-sm flex items-center justify-center gap-2 cursor-pointer"
         >
           {#if createSaving}
             <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
@@ -1137,9 +1160,6 @@
             </svg>
           {/if}
           {$_('content.createContent')}
-        </button>
-        <button on:click={() => showCreateModal = false} class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 text-sm cursor-pointer">
-          {$_('common.cancel')}
         </button>
       </div>
     </div>
