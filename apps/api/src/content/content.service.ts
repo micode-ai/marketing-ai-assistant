@@ -76,6 +76,7 @@ export class ContentService {
         body: dto.body,
         mediaUrls: dto.mediaUrls || [],
         platform: dto.platform as any,
+        platforms: dto.platforms || [],
         scheduledAt: dto.scheduledAt,
         aiGenerated: dto.aiGenerated || false,
         language: dto.language || undefined,
