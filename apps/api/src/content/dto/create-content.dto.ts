@@ -35,6 +35,11 @@ export class CreateContentDto {
 
   @ApiPropertyOptional()
   @IsOptional()
+  @IsArray()
+  platforms?: string[];
+
+  @ApiPropertyOptional()
+  @IsOptional()
   @IsDateString()
   scheduledAt?: Date;
 

@@ -344,22 +344,20 @@
   async function createContent() {
     createSaving = true;
     try {
-      const platforms: (string | undefined)[] = createPlatforms.length > 0 ? createPlatforms : [undefined];
-      const languages = createAllLanguages ? ['en', 'pl', 'ru'] : [$locale];
-      const needsGroup = languages.length > 1 || platforms.length > 1;
-      const groupId = needsGroup ? crypto.randomUUID() : undefined;
+      const languages = createAllLanguages ? ['en', 'pl', 'ru'] : [$locale || 'en'];
+      const groupId = languages.length > 1 ? crypto.randomUUID() : undefined;
+      const primaryPlatform = createPlatforms[0];
       for (const lang of languages) {
-        const body = createAllLanguages ? createBodies[lang] : createForm.body;
-        for (const platform of platforms) {
-          await api.post('/content', {
-            ...createForm,
-            body,
-            language: lang,
-            ...(platform ? { platform } : {}),
-            ...(groupId ? { contentGroupId: groupId } : {}),
-            projectId,
-          });
-        }
+        const body = createAllLanguages ? createBodies[lang as string] : createForm.body;
+        await api.post('/content', {
+          ...createForm,
+          body,
+          language: lang,
+          platforms: createPlatforms,
+          ...(primaryPlatform ? { platform: primaryPlatform } : {}),
+          ...(groupId ? { contentGroupId: groupId } : {}),
+          projectId,
+        });
       }
       contents = await api.get<any[]>('/content', { projectId });
       showCreateModal = false;
@@ -577,7 +575,11 @@
               <div class="flex-1 min-w-0">
                 <div class="flex flex-wrap items-center gap-1.5 mb-2">
                   <span class="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded font-medium">{content.type.replace('_', ' ')}</span>
-                  {#if content.platform}
+                  {#if content.platforms?.length}
+                    {#each content.platforms as p}
+                      <span class="text-xs px-2 py-0.5 bg-blue-50 text-blue-600 rounded">{p}</span>
+                    {/each}
+                  {:else if content.platform}
                     <span class="text-xs px-2 py-0.5 bg-blue-50 text-blue-600 rounded">{content.platform}</span>
                   {/if}
                   <span class="text-xs px-2 py-0.5 rounded {statusBadge[content.status] || 'bg-gray-100 text-gray-600'}">{$_(statusLabel[content.status] || 'content.draft')}</span>
