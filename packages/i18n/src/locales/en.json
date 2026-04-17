@@ -898,6 +898,7 @@
     "noUnscheduled": "No unscheduled content available",
     "scheduledFor": "Scheduled for {date}",
     "createdOn": "Created on {date}",
+    "publishedOn": "Published",
     "viewDetails": "View Details",
     "contentDetails": "Content Details",
     "campaign": "Campaign",

@@ -876,6 +876,7 @@
     "noUnscheduled": "Нет контента без даты",
     "scheduledFor": "Запланировано на {date}",
     "createdOn": "Создано {date}",
+    "publishedOn": "Опубликовано",
     "viewDetails": "Подробности",
     "contentDetails": "Детали контента",
     "campaign": "Кампания",
