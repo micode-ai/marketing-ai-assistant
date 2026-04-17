@@ -754,8 +754,8 @@
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => editingContent = null}>
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-      <div class="p-6 border-b border-gray-100 flex items-center gap-2.5">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-[90vw] h-[90vh] flex flex-col">
+      <div class="p-6 border-b border-gray-100 flex items-center gap-2.5 flex-shrink-0">
         <div class="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
@@ -766,17 +766,19 @@
           <span class="text-xs px-2 py-0.5 rounded font-medium {langBadgeColor[editingContent.language] || 'bg-gray-100 text-gray-600'}">{editingContent.language.toUpperCase()}</span>
         {/if}
       </div>
-      <div class="p-6 space-y-4">
+      <div class="p-6 space-y-4 flex-1 flex flex-col overflow-y-auto">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1.5">{$_('content.topic')}</label>
           <input type="text" bind:value={editForm.title} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
         </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1.5">{$_('content.type')}</label>
-          <MarkdownEditor
-            bind:value={editForm.body}
-            on:imageUpload={(e) => { editForm.mediaUrls = [...editForm.mediaUrls, e.detail.url]; }}
-          />
+        <div class="flex-1 flex flex-col min-h-[400px]">
+          <label class="block text-sm font-medium text-gray-700 mb-1.5 flex-shrink-0">{$_('content.type')}</label>
+          <div class="flex-1 min-h-0">
+            <MarkdownEditor
+              bind:value={editForm.body}
+              on:imageUpload={(e) => { editForm.mediaUrls = [...editForm.mediaUrls, e.detail.url]; }}
+            />
+          </div>
         </div>
 
         <!-- Attached images -->
@@ -831,11 +833,14 @@
           </div>
         </div>
       </div>
-      <div class="p-6 border-t border-gray-100 flex gap-3">
+      <div class="p-6 border-t border-gray-100 flex gap-3 justify-end flex-shrink-0">
+        <button on:click={() => editingContent = null} class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 text-sm cursor-pointer">
+          {$_('common.cancel')}
+        </button>
         <button
           on:click={saveEdit}
           disabled={editSaving}
-          class="flex-1 bg-primary-600 text-white py-2.5 rounded-lg font-medium hover:bg-primary-700 transition-colors duration-150 disabled:opacity-50 text-sm flex items-center justify-center gap-2 cursor-pointer"
+          class="px-6 bg-primary-600 text-white py-2.5 rounded-lg font-medium hover:bg-primary-700 transition-colors duration-150 disabled:opacity-50 text-sm flex items-center justify-center gap-2 cursor-pointer"
         >
           {#if editSaving}
             <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
@@ -844,9 +849,6 @@
             </svg>
           {/if}
           {$_('common.save')}
-        </button>
-        <button on:click={() => editingContent = null} class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 text-sm cursor-pointer">
-          {$_('common.cancel')}
         </button>
       </div>
     </div>
