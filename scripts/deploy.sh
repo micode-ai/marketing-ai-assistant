@@ -32,7 +32,19 @@ echo "=== Building containers ==="
 $DC -f "$COMPOSE_FILE" --env-file "$ENV_FILE" --profile migrate build api web ai-agent migrator
 
 echo "=== Starting infrastructure ==="
-$DC -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d --force-recreate postgres redis
+# Clear any zombie containers left over from a previously interrupted --force-recreate
+# (docker renames the old one to <hash>_<name> before creating the new one; if create
+# fails the rename sticks and blocks the next deploy).
+for svc in marketing-ai-db-prod marketing-ai-redis-prod; do
+  zombies=$(docker ps -a --filter "name=_${svc}$" --format '{{.ID}}')
+  if [[ -n "$zombies" ]]; then
+    echo "Removing zombie containers for $svc: $zombies"
+    docker rm -f $zombies || true
+  fi
+done
+# Data lives in named volumes (postgres_data_prod, redis_data_prod), so no need to
+# force-recreate these on every deploy — just ensure they're up.
+$DC -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d postgres redis
 
 echo "Waiting for postgres to be healthy..."
 for i in $(seq 1 30); do
