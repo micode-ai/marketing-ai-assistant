@@ -931,8 +931,14 @@
                 </div>
               {/if}
               <div class="flex-1 min-w-0">
-                <div class="text-sm font-medium text-gray-900">{account.accountName}</div>
-                <div class="text-xs text-gray-500">{account.platform}{account.language ? ` - ${account.language.toUpperCase()}` : ''}</div>
+                <div class="text-sm font-medium text-gray-900 truncate" title={account.accountName}>{account.accountName}</div>
+                <div class="text-xs text-gray-500 flex items-center gap-1.5 flex-wrap">
+                  <span>{account.platform}{account.language ? ` - ${account.language.toUpperCase()}` : ''}</span>
+                  {#if account.accountId}
+                    <span class="text-gray-300">·</span>
+                    <span class="font-mono truncate" title={account.accountId}>{account.accountId}</span>
+                  {/if}
+                </div>
               </div>
               <!-- Language version selector for grouped content -->
               {#if groupSiblings.length > 1 && selectedAccountIds.includes(account.id)}
