@@ -350,8 +350,14 @@
               {@html platformIcon[account.platform] || ''}
             </div>
             <div class="flex-1 min-w-0">
-              <div class="text-sm font-medium text-gray-900">{account.accountName}</div>
-              <div class="text-xs text-gray-500">{account.platform}</div>
+              <div class="text-sm font-medium text-gray-900 truncate" title={account.accountName}>{account.accountName}</div>
+              <div class="text-xs text-gray-500 flex items-center gap-1.5">
+                <span>{account.platform}</span>
+                {#if account.accountId}
+                  <span class="text-gray-300">·</span>
+                  <span class="font-mono truncate" title={account.accountId}>{account.accountId}</span>
+                {/if}
+              </div>
             </div>
             {#if enabledIds.has(account.id)}
               <span class="text-xs px-2 py-0.5 bg-primary-100 text-primary-700 rounded-full flex-shrink-0">{$_('social.connected')}</span>

@@ -374,8 +374,13 @@
               {#if account.profileImageUrl}
                 <img src={account.profileImageUrl} alt={account.accountName} class="w-7 h-7 rounded-full flex-shrink-0" />
               {/if}
-              <span class="text-sm text-gray-800 font-medium truncate" title={account.accountName}>{account.accountName}</span>
-              <span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full flex-shrink-0">{$_('social.connected')}</span>
+              <div class="flex flex-col min-w-0">
+                <div class="flex items-center gap-2">
+                  <span class="text-sm text-gray-800 font-medium truncate" title={account.accountName}>{account.accountName}</span>
+                  <span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full flex-shrink-0">{$_('social.connected')}</span>
+                </div>
+                <span class="text-xs text-gray-500 font-mono truncate" title={account.accountId}>{account.accountId}</span>
+              </div>
             </div>
             <div class="flex items-center gap-2 flex-shrink-0">
               <select
