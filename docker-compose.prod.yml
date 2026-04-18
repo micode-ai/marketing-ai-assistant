@@ -76,6 +76,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    volumes:
+      - uploads_data_prod:/uploads
     networks:
       - marketing-network
     deploy:
@@ -131,6 +133,7 @@ services:
 volumes:
   postgres_data_prod:
   redis_data_prod:
+  uploads_data_prod:
 
 networks:
   marketing-network:

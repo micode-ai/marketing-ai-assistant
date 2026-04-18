@@ -80,7 +80,7 @@ import { FinancesModule } from './finances/finances.module';
     UploadsModule,
     ServeStaticModule.forRoot({
       rootPath: join(process.cwd(), '../../uploads'),
-      serveRoot: '/uploads',
+      serveRoot: '/api/uploads',
       serveStaticOptions: { index: false },
     }),
   ],
