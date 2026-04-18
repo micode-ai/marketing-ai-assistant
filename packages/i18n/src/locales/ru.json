@@ -817,6 +817,7 @@
     "chatId": "ID канала или Username",
     "chatIdPlaceholder": "@mycannel или -1001234567890",
     "telegramBotHint": "Бот должен быть администратором канала с правом на публикацию сообщений",
+    "leaveBlankToKeep": "оставьте пустым, чтобы сохранить",
     "twitterManualTitle": "Данные Twitter / X",
     "twitterManualDesc": "Введите данные вашего приложения из Twitter Developer Portal.",
     "appKey": "API Key (Consumer Key)",

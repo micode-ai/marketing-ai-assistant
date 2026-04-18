@@ -764,6 +764,7 @@
     "chatId": "Channel ID or Username",
     "chatIdPlaceholder": "@mychannel or -1001234567890",
     "telegramBotHint": "Your bot must be a channel admin with permission to post messages",
+    "leaveBlankToKeep": "leave blank to keep",
     "twitterManualTitle": "Twitter / X Credentials",
     "twitterManualDesc": "Enter your Twitter Developer App credentials from the Twitter Developer Portal.",
     "appKey": "API Key (Consumer Key)",
