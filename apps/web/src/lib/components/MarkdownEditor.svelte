@@ -3,10 +3,11 @@
   import DOMPurify from 'dompurify';
   import { _ } from 'svelte-i18n';
   import { createEventDispatcher } from 'svelte';
+  import { api } from '$lib/api/client';
 
   export let value = '';
   export let placeholder = '';
-  export let imageUploadUrl = '/api/uploads/image';
+  export let imageUploadEndpoint = '/uploads/image';
   export let onImageUpload: ((url: string) => void) | undefined = undefined;
 
   const dispatch = createEventDispatcher();
@@ -44,8 +45,7 @@
     try {
       const form = new FormData();
       form.append('file', file);
-      const res = await fetch(imageUploadUrl, { method: 'POST', body: form, credentials: 'include' });
-      const data = await res.json();
+      const data = await api.upload<{ url: string; filename: string }>(imageUploadEndpoint, form);
       insertAtCursor(`![${file.name}](${data.url})`);
       onImageUpload?.(data.url);
       dispatch('imageUpload', data);
