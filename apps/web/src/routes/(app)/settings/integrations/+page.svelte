@@ -352,8 +352,8 @@
         </div>
         <div class="flex flex-col gap-2">
           {#each accounts.filter(a => a.platform === 'TELEGRAM') as account}
-            <div class="flex items-center gap-2">
-              <span class="text-sm text-gray-700 font-medium">{account.accountName}</span>
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="text-sm text-gray-700 font-medium truncate max-w-[200px]" title={account.accountName}>{account.accountName}</span>
               <span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full">{$_('social.connected')}</span>
               <select
                 bind:value={account.language}
