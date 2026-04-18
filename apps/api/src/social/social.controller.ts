@@ -30,6 +30,13 @@ export class SocialController {
     return this.socialService.updateAccount(id, organizationId, dto);
   }
 
+  @Post('accounts/:id/refresh-telegram')
+  @ApiOperation({ summary: 'Refresh Telegram channel title and avatar via getChat' })
+  refreshTelegram(@Param('id') id: string, @CurrentUser() user: any) {
+    const organizationId: string = user.memberships?.[0]?.organizationId;
+    return this.socialService.refreshTelegramProfile(id, organizationId);
+  }
+
   @Delete('accounts/:id')
   @ApiOperation({ summary: 'Disconnect a social account' })
   disconnectAccount(@Param('id') id: string, @CurrentUser() user: any) {

@@ -153,6 +153,34 @@ export class SocialService {
     });
   }
 
+  async refreshTelegramProfile(id: string, organizationId: string) {
+    const account = await this.prisma.socialAccount.findFirst({ where: { id, organizationId } });
+    if (!account) throw new NotFoundException('Social account not found');
+    if (account.platform !== 'TELEGRAM') return account;
+    let tokens: any = {};
+    try {
+      tokens = this.decryptTokens(account.encryptedTokens);
+    } catch {
+      /* noop */
+    }
+    const chat = await this.fetchTelegramChat(tokens.botToken, tokens.chatId || account.accountId);
+    if (!chat) return account;
+    const data: any = {};
+    if (chat.title) data.accountName = chat.title;
+    else if (chat.username) data.accountName = `@${chat.username}`;
+    if (chat.photoUrl) data.profileImageUrl = chat.photoUrl;
+    if (Object.keys(data).length === 0) return account;
+    return this.prisma.socialAccount.update({
+      where: { id },
+      data,
+      select: {
+        id: true, platform: true, accountName: true, accountId: true,
+        profileImageUrl: true, status: true, scopes: true, expiresAt: true,
+        createdAt: true, updatedAt: true, language: true,
+      },
+    });
+  }
+
   async disconnectAccount(id: string, organizationId: string) {
     const account = await this.prisma.socialAccount.findFirst({ where: { id, organizationId } });
     if (!account) throw new NotFoundException('Social account not found');

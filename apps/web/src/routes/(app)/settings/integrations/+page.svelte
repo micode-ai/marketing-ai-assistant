@@ -39,9 +39,27 @@
   async function loadAccounts() {
     try {
       accounts = await api.get<any[]>('/social/accounts', { organizationId: $organizationIdStore! });
+      await autoRefreshTelegramNames();
     } catch (e) {
       console.error(e);
     }
+  }
+
+  async function autoRefreshTelegramNames() {
+    const suspicious = accounts.filter(
+      (a) =>
+        a.platform === 'TELEGRAM' &&
+        (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(a.accountName || '') || a.accountName === a.accountId),
+    );
+    if (suspicious.length === 0) return;
+    const updates = await Promise.all(
+      suspicious.map((a) =>
+        api.post<any>(`/social/accounts/${a.id}/refresh-telegram`, {}).catch(() => null),
+      ),
+    );
+    const byId: Record<string, any> = {};
+    for (const u of updates) if (u?.id) byId[u.id] = u;
+    accounts = accounts.map((a) => (byId[a.id] ? { ...a, ...byId[a.id] } : a));
   }
 
   async function connectLinkedIn() {
@@ -199,7 +217,7 @@
   };
 </script>
 
-<div class="p-4 sm:p-6 max-w-2xl">
+<div class="p-4 sm:p-6 max-w-4xl">
   <div class="mb-6">
     <h1 class="text-2xl font-bold text-gray-900">{$_('social.title')}</h1>
     <p class="text-gray-500 text-sm mt-1">{$_('social.subtitle')}</p>
@@ -340,21 +358,26 @@
 
     <!-- Telegram -->
     <div class="bg-white rounded-xl border border-gray-200 p-5 mb-3">
-      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-lg {platformColor['TELEGRAM']} flex items-center justify-center flex-shrink-0">
-            {@html platformIcon['TELEGRAM']}
-          </div>
-          <div>
-            <div class="font-medium text-gray-900">{$_('social.telegram')}</div>
-            <div class="text-xs text-gray-500">{$_('social.telegramDesc')}</div>
-          </div>
+      <div class="flex items-center gap-3 mb-3">
+        <div class="w-10 h-10 rounded-lg {platformColor['TELEGRAM']} flex items-center justify-center flex-shrink-0">
+          {@html platformIcon['TELEGRAM']}
         </div>
-        <div class="flex flex-col gap-2">
-          {#each accounts.filter(a => a.platform === 'TELEGRAM') as account}
-            <div class="flex flex-wrap items-center gap-2">
-              <span class="text-sm text-gray-700 font-medium truncate max-w-[200px]" title={account.accountName}>{account.accountName}</span>
-              <span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full">{$_('social.connected')}</span>
+        <div>
+          <div class="font-medium text-gray-900">{$_('social.telegram')}</div>
+          <div class="text-xs text-gray-500">{$_('social.telegramDesc')}</div>
+        </div>
+      </div>
+      <div class="flex flex-col gap-2">
+        {#each accounts.filter(a => a.platform === 'TELEGRAM') as account}
+          <div class="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-lg border border-gray-100 bg-gray-50/50">
+            <div class="flex items-center gap-2 min-w-0">
+              {#if account.profileImageUrl}
+                <img src={account.profileImageUrl} alt={account.accountName} class="w-7 h-7 rounded-full flex-shrink-0" />
+              {/if}
+              <span class="text-sm text-gray-800 font-medium truncate" title={account.accountName}>{account.accountName}</span>
+              <span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full flex-shrink-0">{$_('social.connected')}</span>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
               <select
                 bind:value={account.language}
                 on:change={() => updateAccountLanguage(account)}
@@ -365,18 +388,18 @@
                 <option value="pl">Polski</option>
                 <option value="ru">Русский</option>
               </select>
-              <button on:click={() => openEditTelegram(account)} class="text-xs px-3 py-1.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-150 cursor-pointer">
+              <button on:click={() => openEditTelegram(account)} class="text-xs px-3 py-1.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-150 cursor-pointer bg-white">
                 {$_('common.edit')}
               </button>
-              <button on:click={() => disconnectingId = account.id} class="text-xs px-3 py-1.5 border border-red-200 text-red-500 rounded-lg hover:bg-red-50 transition-colors duration-150 cursor-pointer">
+              <button on:click={() => disconnectingId = account.id} class="text-xs px-3 py-1.5 border border-red-200 text-red-500 rounded-lg hover:bg-red-50 transition-colors duration-150 cursor-pointer bg-white">
                 {$_('social.disconnect')}
               </button>
             </div>
-          {/each}
-          <button on:click={() => showTelegramModal = true} class="text-sm px-4 py-2 bg-[#26A5E4] text-white rounded-lg hover:bg-[#1e8ec4] transition-colors duration-150 cursor-pointer font-medium self-start">
-            {accounts.some(a => a.platform === 'TELEGRAM') ? $_('social.addAnother') : $_('social.connectTelegram')}
-          </button>
-        </div>
+          </div>
+        {/each}
+        <button on:click={() => showTelegramModal = true} class="text-sm px-4 py-2 bg-[#26A5E4] text-white rounded-lg hover:bg-[#1e8ec4] transition-colors duration-150 cursor-pointer font-medium self-start mt-1">
+          {accounts.some(a => a.platform === 'TELEGRAM') ? $_('social.addAnother') : $_('social.connectTelegram')}
+        </button>
       </div>
     </div>
   {/if}
