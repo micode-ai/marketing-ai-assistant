@@ -4,6 +4,7 @@ import { PrismaService } from '../database/prisma.service';
 import axios from 'axios';
 import { TwitterApi } from 'twitter-api-v2';
 import { encryptData, decryptData } from '../common/crypto.util';
+import { extractImageUrls, stripMarkdown } from './content-parser.util';
 
 @Injectable()
 export class SocialService {
@@ -306,44 +307,105 @@ export class SocialService {
     return { postId: tweetId, postUrl: `https://twitter.com/i/web/status/${tweetId}` };
   }
 
+  private get publicUrl(): string {
+    return (this.config.get<string>('WEB_URL') || 'http://localhost:5173').replace(/\/$/, '');
+  }
+
+  private fbPostUrl(postId: string): string {
+    if (!postId) return '';
+    const [fbPageId, rest] = postId.split('_');
+    return `https://www.facebook.com/${fbPageId}/posts/${rest || postId}`;
+  }
+
   private async publishToFacebook(content: any, tokens: any) {
-    // POST to page feed via Graph API
-    const text =
-      content.body.length > 63206 ? content.body.substring(0, 63203) + '...' : content.body;
+    const body: string = content.body || '';
+    const images = extractImageUrls(body, this.publicUrl);
+    const text = stripMarkdown(body);
+    const message = text.length > 63206 ? text.substring(0, 63203) + '...' : text;
+    const pageId = tokens.pageId || 'me';
+    const params = { access_token: tokens.accessToken };
 
+    if (images.length === 0) {
+      const res = await axios.post(
+        `https://graph.facebook.com/v19.0/${pageId}/feed`,
+        { message },
+        { params },
+      );
+      const postId: string = res.data?.id || '';
+      return { postId, postUrl: this.fbPostUrl(postId) };
+    }
+
+    if (images.length === 1) {
+      const res = await axios.post(
+        `https://graph.facebook.com/v19.0/${pageId}/photos`,
+        { url: images[0], caption: message, published: true },
+        { params },
+      );
+      const postId: string = res.data?.post_id || res.data?.id || '';
+      return { postId, postUrl: this.fbPostUrl(postId) };
+    }
+
+    // Multiple images: upload each as unpublished, then attach to a feed post
+    const mediaIds: string[] = [];
+    for (const url of images) {
+      const r = await axios.post(
+        `https://graph.facebook.com/v19.0/${pageId}/photos`,
+        { url, published: false },
+        { params },
+      );
+      if (r.data?.id) mediaIds.push(r.data.id);
+    }
     const res = await axios.post(
-      `https://graph.facebook.com/v19.0/${tokens.pageId || 'me'}/feed`,
-      { message: text },
-      { params: { access_token: tokens.accessToken } },
+      `https://graph.facebook.com/v19.0/${pageId}/feed`,
+      { message, attached_media: JSON.stringify(mediaIds.map((id) => ({ media_fbid: id }))) },
+      { params },
     );
-
     const postId: string = res.data?.id || '';
-    const [fbPageId] = postId.split('_');
-    return {
-      postId,
-      postUrl: postId ? `https://www.facebook.com/${fbPageId}/posts/${postId.split('_')[1]}` : '',
-    };
+    return { postId, postUrl: this.fbPostUrl(postId) };
   }
 
   private async publishToTelegram(content: any, tokens: any) {
-    const text =
-      content.body.length > 4096 ? content.body.substring(0, 4093) + '...' : content.body;
+    const body: string = content.body || '';
+    const images = extractImageUrls(body, this.publicUrl);
+    const text = stripMarkdown(body);
+    const chatIdStr = String(tokens.chatId).replace('@', '');
+    const baseUrl = `https://api.telegram.org/bot${tokens.botToken}`;
+    const makePostUrl = (id: number) => (id ? `https://t.me/${chatIdStr}/${id}` : '');
 
-    const res = await axios.post(
-      `https://api.telegram.org/bot${tokens.botToken}/sendMessage`,
-      {
+    if (images.length === 0) {
+      const msg = text.length > 4096 ? text.substring(0, 4093) + '...' : text;
+      const res = await axios.post(`${baseUrl}/sendMessage`, {
         chat_id: tokens.chatId,
-        text,
-        parse_mode: 'HTML',
-      },
-    );
+        text: msg,
+      });
+      const id: number = res.data?.result?.message_id;
+      return { postId: String(id || ''), postUrl: makePostUrl(id) };
+    }
 
-    const messageId: number = res.data?.result?.message_id;
-    const chatId: string = String(tokens.chatId).replace('@', '');
-    return {
-      postId: String(messageId),
-      postUrl: messageId ? `https://t.me/${chatId}/${messageId}` : '',
-    };
+    const caption = text.length > 1024 ? text.substring(0, 1021) + '...' : text;
+
+    if (images.length === 1) {
+      const res = await axios.post(`${baseUrl}/sendPhoto`, {
+        chat_id: tokens.chatId,
+        photo: images[0],
+        caption,
+      });
+      const id: number = res.data?.result?.message_id;
+      return { postId: String(id || ''), postUrl: makePostUrl(id) };
+    }
+
+    // Album (max 10)
+    const media = images.slice(0, 10).map((url, i) => ({
+      type: 'photo',
+      media: url,
+      ...(i === 0 ? { caption } : {}),
+    }));
+    const res = await axios.post(`${baseUrl}/sendMediaGroup`, {
+      chat_id: tokens.chatId,
+      media,
+    });
+    const id: number = res.data?.result?.[0]?.message_id;
+    return { postId: String(id || ''), postUrl: makePostUrl(id) };
   }
 
   private encryptTokens(data: object): string {
