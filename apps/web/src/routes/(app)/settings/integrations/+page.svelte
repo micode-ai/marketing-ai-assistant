@@ -109,21 +109,49 @@
     }
   }
 
+  let editingTelegramId: string | null = null;
+
+  function openEditTelegram(account: any) {
+    editingTelegramId = account.id;
+    telegramForm = {
+      accountName: account.accountName || '',
+      botToken: '',
+      chatId: account.accountId || '',
+      language: account.language || '',
+    };
+    showTelegramModal = true;
+  }
+
+  function closeTelegramModal() {
+    showTelegramModal = false;
+    editingTelegramId = null;
+    telegramForm = { accountName: '', botToken: '', chatId: '', language: '' };
+  }
+
   async function connectTelegram() {
     if (!$organizationIdStore) return;
     telegramSaving = true;
     try {
-      await api.post(`/social/accounts?organizationId=${$organizationIdStore}`, {
-        platform: 'TELEGRAM',
-        accountName: telegramForm.accountName || telegramForm.chatId,
-        accountId: telegramForm.chatId,
-        botToken: telegramForm.botToken,
-        chatId: telegramForm.chatId,
-        language: telegramForm.language || null,
-        scopes: ['send_message'],
-      });
-      showTelegramModal = false;
-      telegramForm = { accountName: '', botToken: '', chatId: '', language: '' };
+      if (editingTelegramId) {
+        await api.put(`/social/accounts/${editingTelegramId}`, {
+          accountName: telegramForm.accountName || telegramForm.chatId,
+          accountId: telegramForm.chatId,
+          botToken: telegramForm.botToken,
+          chatId: telegramForm.chatId,
+          language: telegramForm.language || null,
+        });
+      } else {
+        await api.post(`/social/accounts?organizationId=${$organizationIdStore}`, {
+          platform: 'TELEGRAM',
+          accountName: telegramForm.accountName || telegramForm.chatId,
+          accountId: telegramForm.chatId,
+          botToken: telegramForm.botToken,
+          chatId: telegramForm.chatId,
+          language: telegramForm.language || null,
+          scopes: ['send_message'],
+        });
+      }
+      closeTelegramModal();
       await loadAccounts();
     } catch (e: any) {
       alert(e.message);
@@ -337,6 +365,9 @@
                 <option value="pl">Polski</option>
                 <option value="ru">Русский</option>
               </select>
+              <button on:click={() => openEditTelegram(account)} class="text-xs px-3 py-1.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-150 cursor-pointer">
+                {$_('common.edit')}
+              </button>
               <button on:click={() => disconnectingId = account.id} class="text-xs px-3 py-1.5 border border-red-200 text-red-500 rounded-lg hover:bg-red-50 transition-colors duration-150 cursor-pointer">
                 {$_('social.disconnect')}
               </button>
@@ -545,7 +576,7 @@
 {#if showTelegramModal}
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
-  <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => showTelegramModal = false}>
+  <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={closeTelegramModal}>
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
       <div class="p-6 border-b border-gray-100">
         <div class="flex items-center gap-2.5 mb-1">
@@ -562,7 +593,10 @@
           <input type="text" bind:value={telegramForm.accountName} placeholder="My Marketing Channel" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
         </div>
         <div>
-          <label class="block text-xs font-medium text-gray-700 mb-1">{$_('social.botToken')}</label>
+          <label class="block text-xs font-medium text-gray-700 mb-1">
+            {$_('social.botToken')}
+            {#if editingTelegramId}<span class="text-gray-400 font-normal">({$_('social.leaveBlankToKeep')})</span>{/if}
+          </label>
           <input type="password" bind:value={telegramForm.botToken} placeholder="1234567890:ABCdefGHIjklMNOpqrstUVwxyz" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary-500" />
         </div>
         <div>
@@ -588,12 +622,12 @@
       <div class="p-6 border-t border-gray-100 flex gap-3">
         <button
           on:click={connectTelegram}
-          disabled={telegramSaving || !telegramForm.botToken || !telegramForm.chatId}
+          disabled={telegramSaving || !telegramForm.chatId || (!editingTelegramId && !telegramForm.botToken)}
           class="flex-1 bg-[#26A5E4] text-white py-2.5 rounded-lg font-medium hover:bg-[#1e8ec4] transition-colors duration-150 disabled:opacity-50 text-sm cursor-pointer"
         >
-          {telegramSaving ? $_('common.loading') : $_('social.connect')}
+          {telegramSaving ? $_('common.loading') : (editingTelegramId ? $_('common.save') : $_('social.connect'))}
         </button>
-        <button on:click={() => showTelegramModal = false} class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 text-sm cursor-pointer">
+        <button on:click={closeTelegramModal} class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 text-sm cursor-pointer">
           {$_('common.cancel')}
         </button>
       </div>

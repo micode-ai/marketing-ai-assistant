@@ -88,6 +88,53 @@ export class SocialService {
     });
   }
 
+  async updateAccount(id: string, organizationId: string, dto: any) {
+    const account = await this.prisma.socialAccount.findFirst({ where: { id, organizationId } });
+    if (!account) throw new NotFoundException('Social account not found');
+
+    const existingTokens = (() => {
+      try {
+        return this.decryptTokens(account.encryptedTokens);
+      } catch {
+        return {};
+      }
+    })();
+
+    const merged: Record<string, string | undefined> = { ...existingTokens };
+    for (const key of ['accessToken', 'refreshToken', 'accessSecret', 'appKey', 'appSecret', 'pageId', 'botToken', 'chatId'] as const) {
+      const val = dto[key];
+      if (typeof val === 'string' && val.length > 0) {
+        merged[key] = val;
+      }
+    }
+    const encrypted = this.encryptTokens(merged);
+
+    const data: any = { encryptedTokens: encrypted };
+    if (typeof dto.accountName === 'string') data.accountName = dto.accountName;
+    if (typeof dto.accountId === 'string' && dto.accountId.length > 0) data.accountId = dto.accountId;
+    else if (typeof dto.chatId === 'string' && dto.chatId.length > 0 && account.platform === 'TELEGRAM') data.accountId = dto.chatId;
+    if (dto.language !== undefined) data.language = dto.language || null;
+    if (typeof dto.profileImageUrl === 'string') data.profileImageUrl = dto.profileImageUrl;
+
+    return this.prisma.socialAccount.update({
+      where: { id },
+      data,
+      select: {
+        id: true,
+        platform: true,
+        accountName: true,
+        accountId: true,
+        profileImageUrl: true,
+        status: true,
+        scopes: true,
+        expiresAt: true,
+        createdAt: true,
+        updatedAt: true,
+        language: true,
+      },
+    });
+  }
+
   async disconnectAccount(id: string, organizationId: string) {
     const account = await this.prisma.socialAccount.findFirst({ where: { id, organizationId } });
     if (!account) throw new NotFoundException('Social account not found');

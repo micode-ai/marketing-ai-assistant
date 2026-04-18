@@ -744,6 +744,7 @@
     "chatId": "ID kanału lub nazwa użytkownika",
     "chatIdPlaceholder": "@mójkanał lub -1001234567890",
     "telegramBotHint": "Bot musi być administratorem kanału z uprawnieniem do publikowania wiadomości",
+    "leaveBlankToKeep": "zostaw puste, aby zachować",
     "twitterManualTitle": "Dane logowania Twitter / X",
     "twitterManualDesc": "Wprowadź dane aplikacji deweloperskiej Twitter z portalu deweloperskiego.",
     "appKey": "Klucz API (Consumer Key)",

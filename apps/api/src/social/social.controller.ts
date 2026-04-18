@@ -23,6 +23,13 @@ export class SocialController {
     return this.socialService.connectAccount(organizationId, dto);
   }
 
+  @Put('accounts/:id')
+  @ApiOperation({ summary: 'Update credentials of a connected social account' })
+  updateAccount(@Param('id') id: string, @CurrentUser() user: any, @Body() dto: any) {
+    const organizationId: string = user.memberships?.[0]?.organizationId;
+    return this.socialService.updateAccount(id, organizationId, dto);
+  }
+
   @Delete('accounts/:id')
   @ApiOperation({ summary: 'Disconnect a social account' })
   disconnectAccount(@Param('id') id: string, @CurrentUser() user: any) {
