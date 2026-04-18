@@ -31,7 +31,7 @@ export class UploadsService {
     const filePath = path.join(this.uploadDir, filename);
     fs.writeFileSync(filePath, file.buffer);
 
-    return { url: `/uploads/images/${filename}`, filename };
+    return { url: `/api/uploads/images/${filename}`, filename };
   }
 
   async deleteFile(filename: string): Promise<void> {
@@ -60,6 +60,6 @@ export class UploadsService {
     const filePath = path.join(this.uploadDir, filename);
     fs.writeFileSync(filePath, buffer);
 
-    return { url: `/uploads/images/${filename}`, filename };
+    return { url: `/api/uploads/images/${filename}`, filename };
   }
 }
