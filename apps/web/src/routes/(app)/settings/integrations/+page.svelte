@@ -104,21 +104,49 @@
     }
   }
 
+  let editingFacebookId: string | null = null;
+
+  function openEditFacebook(account: any) {
+    editingFacebookId = account.id;
+    facebookForm = {
+      accountName: account.accountName || '',
+      pageId: account.accountId || '',
+      accessToken: '',
+      language: account.language || '',
+    };
+    showFacebookModal = true;
+  }
+
+  function closeFacebookModal() {
+    showFacebookModal = false;
+    editingFacebookId = null;
+    facebookForm = { accountName: '', pageId: '', accessToken: '', language: '' };
+  }
+
   async function connectFacebook() {
     if (!$organizationIdStore) return;
     facebookSaving = true;
     try {
-      await api.post(`/social/accounts?organizationId=${$organizationIdStore}`, {
-        platform: 'FACEBOOK',
-        accountName: facebookForm.accountName,
-        accountId: facebookForm.pageId,
-        pageId: facebookForm.pageId,
-        accessToken: facebookForm.accessToken,
-        language: facebookForm.language || null,
-        scopes: ['pages_manage_posts'],
-      });
-      showFacebookModal = false;
-      facebookForm = { accountName: '', pageId: '', accessToken: '', language: '' };
+      if (editingFacebookId) {
+        await api.put(`/social/accounts/${editingFacebookId}`, {
+          accountName: facebookForm.accountName,
+          accountId: facebookForm.pageId,
+          pageId: facebookForm.pageId,
+          accessToken: facebookForm.accessToken,
+          language: facebookForm.language || null,
+        });
+      } else {
+        await api.post(`/social/accounts?organizationId=${$organizationIdStore}`, {
+          platform: 'FACEBOOK',
+          accountName: facebookForm.accountName,
+          accountId: facebookForm.pageId,
+          pageId: facebookForm.pageId,
+          accessToken: facebookForm.accessToken,
+          language: facebookForm.language || null,
+          scopes: ['pages_manage_posts'],
+        });
+      }
+      closeFacebookModal();
       await loadAccounts();
     } catch (e: any) {
       alert(e.message);
@@ -316,24 +344,31 @@
 
     <!-- Facebook -->
     <div class="bg-white rounded-xl border border-gray-200 p-5 mb-3">
-      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-lg {platformColor['FACEBOOK']} flex items-center justify-center flex-shrink-0">
-            {@html platformIcon['FACEBOOK']}
-          </div>
-          <div>
-            <div class="font-medium text-gray-900">{$_('social.facebook')}</div>
-            <div class="text-xs text-gray-500">{$_('social.facebookDesc')}</div>
-          </div>
+      <div class="flex items-center gap-3 mb-3">
+        <div class="w-10 h-10 rounded-lg {platformColor['FACEBOOK']} flex items-center justify-center flex-shrink-0">
+          {@html platformIcon['FACEBOOK']}
         </div>
-        <div class="flex flex-col gap-2">
-          {#each accounts.filter(a => a.platform === 'FACEBOOK') as account}
-            <div class="flex items-center gap-2">
+        <div>
+          <div class="font-medium text-gray-900">{$_('social.facebook')}</div>
+          <div class="text-xs text-gray-500">{$_('social.facebookDesc')}</div>
+        </div>
+      </div>
+      <div class="flex flex-col gap-2">
+        {#each accounts.filter(a => a.platform === 'FACEBOOK') as account}
+          <div class="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-lg border border-gray-100 bg-gray-50/50">
+            <div class="flex items-center gap-2 min-w-0">
               {#if account.profileImageUrl}
-                <img src={account.profileImageUrl} alt={account.accountName} class="w-7 h-7 rounded-full" />
+                <img src={account.profileImageUrl} alt={account.accountName} class="w-7 h-7 rounded-full flex-shrink-0" />
               {/if}
-              <span class="text-sm text-gray-700 font-medium">{account.accountName}</span>
-              <span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full">{$_('social.connected')}</span>
+              <div class="flex flex-col min-w-0">
+                <div class="flex items-center gap-2">
+                  <span class="text-sm text-gray-800 font-medium truncate" title={account.accountName}>{account.accountName}</span>
+                  <span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full flex-shrink-0">{$_('social.connected')}</span>
+                </div>
+                <span class="text-xs text-gray-500 font-mono truncate" title={account.accountId}>{account.accountId}</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
               <select
                 bind:value={account.language}
                 on:change={() => updateAccountLanguage(account)}
@@ -344,15 +379,18 @@
                 <option value="pl">Polski</option>
                 <option value="ru">Русский</option>
               </select>
-              <button on:click={() => disconnectingId = account.id} class="text-xs px-3 py-1.5 border border-red-200 text-red-500 rounded-lg hover:bg-red-50 transition-colors duration-150 cursor-pointer">
+              <button on:click={() => openEditFacebook(account)} class="text-xs px-3 py-1.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-150 cursor-pointer bg-white">
+                {$_('common.edit')}
+              </button>
+              <button on:click={() => disconnectingId = account.id} class="text-xs px-3 py-1.5 border border-red-200 text-red-500 rounded-lg hover:bg-red-50 transition-colors duration-150 cursor-pointer bg-white">
                 {$_('social.disconnect')}
               </button>
             </div>
-          {/each}
-          <button on:click={() => showFacebookModal = true} class="text-sm px-4 py-2 bg-[#1877F2] text-white rounded-lg hover:bg-[#1565d8] transition-colors duration-150 cursor-pointer font-medium self-start">
-            {accounts.some(a => a.platform === 'FACEBOOK') ? $_('social.addAnother') : $_('social.connectFacebook')}
-          </button>
-        </div>
+          </div>
+        {/each}
+        <button on:click={() => showFacebookModal = true} class="text-sm px-4 py-2 bg-[#1877F2] text-white rounded-lg hover:bg-[#1565d8] transition-colors duration-150 cursor-pointer font-medium self-start mt-1">
+          {accounts.some(a => a.platform === 'FACEBOOK') ? $_('social.addAnother') : $_('social.connectFacebook')}
+        </button>
       </div>
     </div>
 
@@ -543,7 +581,7 @@
 {#if showFacebookModal}
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
-  <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => showFacebookModal = false}>
+  <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={closeFacebookModal}>
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
       <div class="p-6 border-b border-gray-100">
         <div class="flex items-center gap-2.5 mb-1">
@@ -565,7 +603,10 @@
           <p class="text-xs text-gray-400 mt-1">{$_('social.facebookPageIdHint')}</p>
         </div>
         <div>
-          <label class="block text-xs font-medium text-gray-700 mb-1">{$_('social.facebookPageToken')}</label>
+          <label class="block text-xs font-medium text-gray-700 mb-1">
+            {$_('social.facebookPageToken')}
+            {#if editingFacebookId}<span class="text-gray-400 font-normal">({$_('social.leaveBlankToKeep')})</span>{/if}
+          </label>
           <input type="password" bind:value={facebookForm.accessToken} placeholder="EAABsbC..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary-500" />
           <p class="text-xs text-amber-600 mt-1.5 flex items-start gap-1">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -587,12 +628,12 @@
       <div class="p-6 border-t border-gray-100 flex gap-3">
         <button
           on:click={connectFacebook}
-          disabled={facebookSaving || !facebookForm.accountName || !facebookForm.pageId || !facebookForm.accessToken}
+          disabled={facebookSaving || !facebookForm.accountName || !facebookForm.pageId || (!editingFacebookId && !facebookForm.accessToken)}
           class="flex-1 bg-[#1877F2] text-white py-2.5 rounded-lg font-medium hover:bg-[#1565d8] transition-colors duration-150 disabled:opacity-50 text-sm cursor-pointer"
         >
-          {facebookSaving ? $_('common.loading') : $_('social.connect')}
+          {facebookSaving ? $_('common.loading') : (editingFacebookId ? $_('common.save') : $_('social.connect'))}
         </button>
-        <button on:click={() => showFacebookModal = false} class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 text-sm cursor-pointer">
+        <button on:click={closeFacebookModal} class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 text-sm cursor-pointer">
           {$_('common.cancel')}
         </button>
       </div>
