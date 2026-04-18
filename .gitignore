@@ -49,3 +49,6 @@ test-results/
 
 # Docker volumes
 docker/data/
+
+# stray screenshots from Win Snipping Tool
+Без имени*.png
