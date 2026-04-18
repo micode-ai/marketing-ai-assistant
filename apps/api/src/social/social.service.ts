@@ -159,7 +159,17 @@ export class SocialService {
         }
       } catch (err: any) {
         status = 'FAILED';
-        error = err?.response?.data?.message || err?.message || 'Unknown error';
+        const data = err?.response?.data;
+        error =
+          (data && (data.description || data.error?.message || data.message)) ||
+          err?.message ||
+          'Unknown error';
+        console.error('[social.publish] failed', {
+          platform: account.platform,
+          status: err?.response?.status,
+          data,
+          message: err?.message,
+        });
       }
 
       await this.prisma.contentPublication.create({
@@ -371,6 +381,13 @@ export class SocialService {
     const chatIdStr = String(tokens.chatId).replace('@', '');
     const baseUrl = `https://api.telegram.org/bot${tokens.botToken}`;
     const makePostUrl = (id: number) => (id ? `https://t.me/${chatIdStr}/${id}` : '');
+    console.log('[telegram.publish]', {
+      chatId: tokens.chatId,
+      imageCount: images.length,
+      firstImage: images[0],
+      textLen: text.length,
+      textPreview: text.substring(0, 100),
+    });
 
     if (images.length === 0) {
       const msg = text.length > 4096 ? text.substring(0, 4093) + '...' : text;
