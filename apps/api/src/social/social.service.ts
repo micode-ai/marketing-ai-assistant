@@ -38,9 +38,19 @@ export class SocialService {
     if (dto.appSecret) tokens.appSecret = dto.appSecret;
     // Facebook: store pageId alongside token for Graph API calls
     if (dto.pageId) tokens.pageId = dto.pageId;
-    // Telegram: store botToken + chatId
+    // Telegram: store botToken + chatId, resolve channel title when not supplied
     if (dto.botToken) tokens.botToken = dto.botToken;
     if (dto.chatId) tokens.chatId = dto.chatId;
+
+    let accountName: string = dto.accountName;
+    let profileImageUrl: string | undefined = dto.profileImageUrl;
+    if (dto.platform === 'TELEGRAM' && dto.botToken && dto.chatId && !dto.accountName) {
+      const chat = await this.fetchTelegramChat(dto.botToken, dto.chatId);
+      if (chat?.title) accountName = chat.title;
+      else if (chat?.username) accountName = `@${chat.username}`;
+      if (chat?.photoUrl) profileImageUrl = chat.photoUrl;
+    }
+    if (!accountName) accountName = dto.accountName || dto.chatId || '';
 
     const encrypted = this.encryptTokens(tokens);
 
@@ -55,17 +65,17 @@ export class SocialService {
       create: {
         organizationId,
         platform: dto.platform,
-        accountName: dto.accountName,
+        accountName,
         accountId: dto.accountId,
-        profileImageUrl: dto.profileImageUrl,
+        profileImageUrl,
         encryptedTokens: encrypted,
         scopes: dto.scopes || [],
         expiresAt: dto.expiresAt ? new Date(dto.expiresAt) : null,
         language: dto.language || null,
       },
       update: {
-        accountName: dto.accountName,
-        profileImageUrl: dto.profileImageUrl,
+        accountName,
+        profileImageUrl,
         encryptedTokens: encrypted,
         status: 'ACTIVE',
         scopes: dto.scopes || [],
@@ -110,11 +120,19 @@ export class SocialService {
     const encrypted = this.encryptTokens(merged);
 
     const data: any = { encryptedTokens: encrypted };
-    if (typeof dto.accountName === 'string') data.accountName = dto.accountName;
+    if (typeof dto.accountName === 'string' && dto.accountName.length > 0) data.accountName = dto.accountName;
     if (typeof dto.accountId === 'string' && dto.accountId.length > 0) data.accountId = dto.accountId;
     else if (typeof dto.chatId === 'string' && dto.chatId.length > 0 && account.platform === 'TELEGRAM') data.accountId = dto.chatId;
     if (dto.language !== undefined) data.language = dto.language || null;
     if (typeof dto.profileImageUrl === 'string') data.profileImageUrl = dto.profileImageUrl;
+
+    // Telegram: refresh channel title/photo from getChat when user didn't supply a custom name
+    if (account.platform === 'TELEGRAM' && !data.accountName) {
+      const chat = await this.fetchTelegramChat(merged.botToken as string, (merged.chatId as string) || account.accountId);
+      if (chat?.title) data.accountName = chat.title;
+      else if (chat?.username) data.accountName = `@${chat.username}`;
+      if (chat?.photoUrl && !data.profileImageUrl) data.profileImageUrl = chat.photoUrl;
+    }
 
     return this.prisma.socialAccount.update({
       where: { id },
@@ -470,6 +488,27 @@ export class SocialService {
     });
     const id: number = res.data?.result?.[0]?.message_id;
     return { postId: String(id || ''), postUrl: makePostUrl(id) };
+  }
+
+  private async fetchTelegramChat(botToken: string, chatId: string): Promise<{ title?: string; username?: string; photoUrl?: string } | null> {
+    try {
+      const res = await axios.post(`https://api.telegram.org/bot${botToken}/getChat`, { chat_id: chatId });
+      const r = res.data?.result;
+      if (!r) return null;
+      let photoUrl: string | undefined;
+      const fileId = r.photo?.big_file_id || r.photo?.small_file_id;
+      if (fileId) {
+        try {
+          const f = await axios.post(`https://api.telegram.org/bot${botToken}/getFile`, { file_id: fileId });
+          const fp = f.data?.result?.file_path;
+          if (fp) photoUrl = `https://api.telegram.org/file/bot${botToken}/${fp}`;
+        } catch { /* photo optional */ }
+      }
+      return { title: r.title, username: r.username, photoUrl };
+    } catch (err: any) {
+      console.warn('[telegram.getChat] failed', err?.response?.data?.description || err?.message);
+      return null;
+    }
   }
 
   private encryptTokens(data: object): string {
