@@ -203,7 +203,7 @@
   {:else}
     <div class="space-y-3">
       {#each campaigns as campaign}
-        <div class="bg-white rounded-xl border border-gray-200 border-l-4 {statusBorderAccent[campaign.status] || 'border-l-gray-300'} p-5 hover:shadow-sm transition-shadow duration-150">
+        <a href="/projects/{projectId}/campaigns/{campaign.id}" class="block bg-white rounded-xl border border-gray-200 border-l-4 {statusBorderAccent[campaign.status] || 'border-l-gray-300'} p-5 hover:shadow-sm transition-shadow duration-150 cursor-pointer">
           <div class="flex flex-col sm:flex-row items-start justify-between gap-3 sm:gap-4">
             <div class="flex-1 min-w-0">
               <div class="flex flex-wrap items-center gap-1.5 mb-2">
@@ -241,6 +241,7 @@
             <div class="flex items-center gap-2 flex-shrink-0 flex-wrap">
               <select
                 value={campaign.status}
+                on:click|preventDefault|stopPropagation
                 on:change={e => updateStatus(campaign.id, (e.target as HTMLSelectElement).value)}
                 class="text-xs px-2 py-1.5 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 transition-colors duration-150 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-500"
               >
@@ -249,13 +250,13 @@
                 {/each}
               </select>
               <button
-                on:click={() => openEdit(campaign)}
+                on:click|preventDefault|stopPropagation={() => openEdit(campaign)}
                 class="text-xs px-3 py-1.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 cursor-pointer"
               >
                 {$_('common.edit')}
               </button>
               <button
-                on:click={() => deletingId = campaign.id}
+                on:click|preventDefault|stopPropagation={() => deletingId = campaign.id}
                 class="text-xs px-2 py-1.5 border border-red-200 text-red-500 rounded-lg hover:bg-red-50 transition-colors duration-150 cursor-pointer"
                 title={$_('campaigns.deleteCampaign')}
               >
@@ -265,7 +266,7 @@
               </button>
             </div>
           </div>
-        </div>
+        </a>
       {/each}
     </div>
   {/if}
