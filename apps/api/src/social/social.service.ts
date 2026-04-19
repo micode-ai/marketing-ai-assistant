@@ -428,20 +428,34 @@ export class SocialService {
     const pageId = tokens.pageId || 'me';
     const params = { access_token: tokens.accessToken };
 
-    // Diagnostic: inspect what the token actually is.
+    // Diagnostic: who does this token belong to, and what scopes does it have?
     try {
       const me = await axios.get('https://graph.facebook.com/v19.0/me', {
-        params: { fields: 'id,name,category', access_token: tokens.accessToken },
+        params: { fields: 'id,name', access_token: tokens.accessToken },
       });
-      console.log('[facebook.publish] token identity', {
-        pageIdStored: tokens.pageId,
-        tokenOwnerId: me.data?.id,
-        tokenOwnerName: me.data?.name,
-        tokenOwnerCategory: me.data?.category,
+      console.log('[facebook.publish] /me', {
+        id: me.data?.id,
+        name: me.data?.name,
+        storedPageId: tokens.pageId,
         matchesPage: String(me.data?.id) === String(tokens.pageId),
       });
     } catch (e: any) {
       console.warn('[facebook.publish] /me probe failed', e?.response?.data || e?.message);
+    }
+    try {
+      const dbg = await axios.get('https://graph.facebook.com/v19.0/debug_token', {
+        params: { input_token: tokens.accessToken, access_token: tokens.accessToken },
+      });
+      const d = dbg.data?.data || {};
+      console.log('[facebook.publish] debug_token', {
+        type: d.type,
+        profile_id: d.profile_id,
+        app_id: d.app_id,
+        expires_at: d.expires_at,
+        scopes: d.scopes,
+      });
+    } catch (e: any) {
+      console.warn('[facebook.publish] debug_token failed', e?.response?.data || e?.message);
     }
 
     if (images.length === 0) {
