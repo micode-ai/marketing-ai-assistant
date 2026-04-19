@@ -426,37 +426,27 @@ export class SocialService {
     const text = stripMarkdown(body);
     const message = text.length > 63206 ? text.substring(0, 63203) + '...' : text;
     const pageId = tokens.pageId || 'me';
-    const params = { access_token: tokens.accessToken };
 
-    // Diagnostic: who does this token belong to, and what scopes does it have?
-    try {
-      const me = await axios.get('https://graph.facebook.com/v19.0/me', {
-        params: { fields: 'id,name', access_token: tokens.accessToken },
-      });
-      console.log('[facebook.publish] /me', {
-        id: me.data?.id,
-        name: me.data?.name,
-        storedPageId: tokens.pageId,
-        matchesPage: String(me.data?.id) === String(tokens.pageId),
-      });
-    } catch (e: any) {
-      console.warn('[facebook.publish] /me probe failed', e?.response?.data || e?.message);
+    // Graph API requires a Page Access Token to post to a Page's feed.
+    // If the stored token is a User or System User token, exchange it for a Page token:
+    //   GET /{page_id}?fields=access_token&access_token=<stored>
+    // The returned token carries the caller's permissions on the Page.
+    let pageToken: string = tokens.accessToken;
+    if (tokens.pageId) {
+      try {
+        const r = await axios.get(`https://graph.facebook.com/v19.0/${tokens.pageId}`, {
+          params: { fields: 'access_token', access_token: tokens.accessToken },
+        });
+        if (r.data?.access_token) {
+          pageToken = r.data.access_token;
+        } else {
+          console.warn('[facebook.publish] page token exchange returned empty, falling back to stored token');
+        }
+      } catch (e: any) {
+        console.warn('[facebook.publish] page token exchange failed', e?.response?.data || e?.message);
+      }
     }
-    try {
-      const dbg = await axios.get('https://graph.facebook.com/v19.0/debug_token', {
-        params: { input_token: tokens.accessToken, access_token: tokens.accessToken },
-      });
-      const d = dbg.data?.data || {};
-      console.log('[facebook.publish] debug_token', {
-        type: d.type,
-        profile_id: d.profile_id,
-        app_id: d.app_id,
-        expires_at: d.expires_at,
-        scopes: d.scopes,
-      });
-    } catch (e: any) {
-      console.warn('[facebook.publish] debug_token failed', e?.response?.data || e?.message);
-    }
+    const params = { access_token: pageToken };
 
     if (images.length === 0) {
       const res = await axios.post(
