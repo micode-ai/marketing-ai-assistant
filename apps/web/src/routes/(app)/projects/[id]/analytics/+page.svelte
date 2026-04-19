@@ -39,12 +39,10 @@
   let ChartJS: any = null;
   let trafficCanvas: HTMLCanvasElement;
   let emailCanvas: HTMLCanvasElement;
-  let socialCanvas: HTMLCanvasElement;
   let funnelCanvas: HTMLCanvasElement;
 
   let trafficChart: any = null;
   let emailChart: any = null;
-  let socialChart: any = null;
   let funnelChart: any = null;
 
   onMount(async () => {
@@ -81,11 +79,9 @@
   function destroyCharts() {
     trafficChart?.destroy();
     emailChart?.destroy();
-    socialChart?.destroy();
     funnelChart?.destroy();
     trafficChart = null;
     emailChart = null;
-    socialChart = null;
     funnelChart = null;
   }
 
@@ -217,35 +213,6 @@
           responsive: true, maintainAspectRatio: false,
           plugins: { legend: { position: 'top' } },
           scales: { x: { ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 8 } }, y: { beginAtZero: true } },
-        },
-      });
-    }
-
-    if (socialCanvas && socialCanvas.getContext('2d')) {
-      socialChart = new ChartJS(socialCanvas, {
-        type: 'line',
-        data: {
-          labels,
-          datasets: [
-            {
-              label: $_('analytics.socialReach'), data: dailyData.map((d: any) => d.metrics.socialReach),
-              borderColor: '#F59E0B', backgroundColor: 'rgba(245, 158, 11, 0.1)', fill: true, tension: 0.3, pointRadius,
-            },
-            {
-              label: $_('analytics.socialEngagements'), data: dailyData.map((d: any) => d.metrics.socialEngagements),
-              borderColor: '#EF4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', fill: true, tension: 0.3, yAxisID: 'y1', pointRadius,
-            },
-          ],
-        },
-        options: {
-          responsive: true, maintainAspectRatio: false,
-          interaction: { mode: 'index', intersect: false },
-          plugins: { legend: { position: 'top' } },
-          scales: {
-            x: { ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 8 } },
-            y: { type: 'linear', position: 'left', beginAtZero: true },
-            y1: { type: 'linear', position: 'right', beginAtZero: true, grid: { drawOnChartArea: false } },
-          },
         },
       });
     }
@@ -382,15 +349,9 @@
         <div class="relative" style="height: 288px;"><canvas bind:this={trafficCanvas} style="width: 100%; height: 100%;"></canvas></div>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <div class="bg-white rounded-xl border border-gray-200 p-5">
-          <h3 class="text-sm font-semibold text-gray-700 mb-4">{$_('analytics.emailPerformance')}</h3>
-          <div class="relative" style="height: 256px;"><canvas bind:this={emailCanvas} style="width: 100%; height: 100%;"></canvas></div>
-        </div>
-        <div class="bg-white rounded-xl border border-gray-200 p-5">
-          <h3 class="text-sm font-semibold text-gray-700 mb-4">{$_('analytics.socialPerformance')}</h3>
-          <div class="relative" style="height: 256px;"><canvas bind:this={socialCanvas} style="width: 100%; height: 100%;"></canvas></div>
-        </div>
+      <div class="bg-white rounded-xl border border-gray-200 p-5 mb-6">
+        <h3 class="text-sm font-semibold text-gray-700 mb-4">{$_('analytics.emailPerformance')}</h3>
+        <div class="relative" style="height: 256px;"><canvas bind:this={emailCanvas} style="width: 100%; height: 100%;"></canvas></div>
       </div>
 
       <div class="max-w-md mx-auto">
