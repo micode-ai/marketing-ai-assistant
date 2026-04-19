@@ -135,27 +135,13 @@
             {#if expandedGroups.has(group.groupId)}
               <div class="border-t border-gray-200 dark:border-gray-700">
                 {#each group.items as item}
-                  <div class="p-4 border-b border-gray-100 dark:border-gray-700 last:border-b-0 hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                    <div class="flex items-start justify-between gap-3">
-                      <div class="min-w-0 flex-1">
-                        <div class="flex items-center gap-2">
-                          <span class="text-xs px-1.5 py-0.5 rounded font-bold {langBadge[item.language] || 'bg-gray-100 text-gray-600'}">{(item.language || '?').toUpperCase()}</span>
-                          <h3 class="font-medium text-gray-900 dark:text-white truncate">{item.title}</h3>
-                        </div>
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">{item.body?.substring(0, 150)}</p>
-                      </div>
-                      <div class="flex items-center gap-1.5 flex-shrink-0">
-                        <a href="/projects/{item.projectId}/content/{item.id}/edit" class="text-xs px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200">
-                          {$_('common.edit')}
-                        </a>
-                        {#if item.status === 'APPROVED' || item.status === 'PUBLISHED'}
-                          <a href="/projects/{item.projectId}/content?focus={item.id}&action=publish" class="text-xs px-3 py-1.5 border border-blue-300 text-blue-600 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20">
-                            {$_('social.publish')}
-                          </a>
-                        {/if}
-                      </div>
+                  <a href="/projects/{item.projectId}/content/{item.id}/edit" class="block p-4 border-b border-gray-100 dark:border-gray-700 last:border-b-0 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                    <div class="flex items-center gap-2">
+                      <span class="text-xs px-1.5 py-0.5 rounded font-bold {langBadge[item.language] || 'bg-gray-100 text-gray-600'}">{(item.language || '?').toUpperCase()}</span>
+                      <h3 class="font-medium text-gray-900 dark:text-white">{item.title}</h3>
                     </div>
-                  </div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">{item.body?.substring(0, 150)}</p>
+                  </a>
                 {/each}
               </div>
             {/if}
@@ -163,9 +149,9 @@
         {:else}
           <!-- Single content item -->
           {@const item = group.items[0]}
-          <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 hover:border-indigo-300 dark:hover:border-indigo-600 hover:shadow-sm transition-all">
-            <div class="flex items-start justify-between gap-3">
-              <div class="min-w-0 flex-1">
+          <a href="/projects/{item.projectId}/content/{item.id}/edit" class="block bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 hover:border-indigo-300 dark:hover:border-indigo-600 hover:shadow-sm transition-all cursor-pointer">
+            <div class="flex items-center justify-between">
+              <div>
                 <div class="flex items-center gap-1.5 mb-1">
                   {#if item.language}
                     <span class="text-xs px-1.5 py-0.5 rounded font-medium {langBadge[item.language] || 'bg-gray-100 text-gray-600'}">{item.language.toUpperCase()}</span>
@@ -174,23 +160,13 @@
                 <h3 class="font-medium text-gray-900 dark:text-white">{item.title}</h3>
                 <p class="text-sm text-gray-500 dark:text-gray-400">{item.type || ''}{item.status ? ' · ' + item.status : ''}</p>
               </div>
-              <div class="flex items-center gap-2 flex-shrink-0">
-                {#if ctx.type === 'organization'}
-                  <span class="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
-                    {item.projectName || $_('org.scopeProject')}
-                  </span>
-                {/if}
-                <a href="/projects/{item.projectId}/content/{item.id}/edit" class="text-xs px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200">
-                  {$_('common.edit')}
-                </a>
-                {#if item.status === 'APPROVED' || item.status === 'PUBLISHED'}
-                  <a href="/projects/{item.projectId}/content?focus={item.id}&action=publish" class="text-xs px-3 py-1.5 border border-blue-300 text-blue-600 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20">
-                    {$_('social.publish')}
-                  </a>
-                {/if}
-              </div>
+              {#if ctx.type === 'organization'}
+                <span class="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                  {item.projectName || $_('org.scopeProject')}
+                </span>
+              {/if}
             </div>
-          </div>
+          </a>
         {/if}
       {/each}
     </div>

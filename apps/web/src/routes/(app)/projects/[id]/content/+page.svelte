@@ -12,9 +12,6 @@
   let showModal = false;
   let generating = false;
   $: projectId = $page.params['id'];
-  $: focusContentId = $page.url.searchParams.get('focus');
-  $: focusAction = $page.url.searchParams.get('action');
-  let highlightedId: string | null = null;
 
   // Sync picker with this project
   $: if ($projectsStore.length > 0 && projectId) {
@@ -111,26 +108,6 @@
   $: if (projectId && projectId !== prevProjectId) {
     prevProjectId = projectId;
     loadContent(projectId);
-  }
-
-  // Focus a specific content item when arriving with ?focus=<id>
-  let focusHandledFor: string | null = null;
-  $: if (!loading && focusContentId && focusContentId !== focusHandledFor) {
-    const target = contents.find(c => c.id === focusContentId);
-    if (target) {
-      focusHandledFor = focusContentId;
-      if (target.contentGroupId) expandedGroups = new Set(expandedGroups).add(target.contentGroupId);
-      if (focusAction === 'publish' && (target.status === 'APPROVED' || target.status === 'PUBLISHED')) {
-        openPublish(target);
-      } else {
-        setTimeout(() => {
-          const el = document.getElementById(`content-card-${focusContentId}`);
-          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          highlightedId = focusContentId;
-          setTimeout(() => { if (highlightedId === focusContentId) highlightedId = null; }, 2500);
-        }, 50);
-      }
-    }
   }
 
   interface ContentGroup { groupId: string | null; items: any[]; }
@@ -534,7 +511,7 @@
             {#if expandedGroups.has(group.groupId)}
               <div class="border-t border-gray-200">
                 {#each group.items as content}
-                  <div id="content-card-{content.id}" class="p-5 border-b border-gray-100 last:border-b-0 bg-gray-50/50 transition-all duration-300 {highlightedId === content.id ? 'ring-2 ring-primary-500 ring-inset bg-primary-50/50' : ''}">
+                  <div class="p-5 border-b border-gray-100 last:border-b-0 bg-gray-50/50">
                     <div class="flex flex-col sm:flex-row items-start justify-between gap-3 sm:gap-4">
                       <div class="flex-1 min-w-0">
                         <div class="flex flex-wrap items-center gap-1.5 mb-2">
@@ -594,7 +571,7 @@
         {:else}
           <!-- Single content item -->
           {@const content = group.items[0]}
-          <div id="content-card-{content.id}" class="bg-white rounded-xl border border-gray-200 border-l-4 {statusBorderAccent[content.status] || 'border-l-gray-300'} p-5 hover:shadow-sm transition-all duration-300 {highlightedId === content.id ? 'ring-2 ring-primary-500 shadow-md' : ''}">
+          <div class="bg-white rounded-xl border border-gray-200 border-l-4 {statusBorderAccent[content.status] || 'border-l-gray-300'} p-5 hover:shadow-sm transition-shadow duration-150">
             <div class="flex flex-col sm:flex-row items-start justify-between gap-3 sm:gap-4">
               <div class="flex-1 min-w-0">
                 <div class="flex flex-wrap items-center gap-1.5 mb-2">
