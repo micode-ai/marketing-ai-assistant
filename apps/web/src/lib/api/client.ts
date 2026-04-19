@@ -6,6 +6,44 @@ type RequestOptions = RequestInit & {
   params?: Record<string, string | number | undefined>;
 };
 
+let refreshInFlight: Promise<string | null> | null = null;
+
+async function refreshAccessToken(): Promise<string | null> {
+  if (refreshInFlight) return refreshInFlight;
+
+  const { refreshToken } = get(authStore);
+  if (!refreshToken) return null;
+
+  refreshInFlight = (async () => {
+    try {
+      const response = await fetch(`${API_URL}/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken }),
+      });
+      if (!response.ok) return null;
+      const data = await response.json();
+      authStore.setTokens(data.accessToken, data.refreshToken);
+      if (data.user) authStore.setUser(data.user);
+      return data.accessToken as string;
+    } catch {
+      return null;
+    } finally {
+      refreshInFlight = null;
+    }
+  })();
+
+  return refreshInFlight;
+}
+
+function handleAuthFailure(): never {
+  authStore.logout();
+  if (typeof window !== 'undefined') {
+    window.location.href = '/login';
+  }
+  throw new Error('Unauthorized');
+}
+
 async function request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
   const { params, ...init } = options;
 
@@ -19,24 +57,23 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
     if (paramStr) url += '?' + paramStr;
   }
 
-  const auth = get(authStore);
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(init.headers as Record<string, string>),
+  const buildHeaders = (): Record<string, string> => {
+    const auth = get(authStore);
+    const h: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...(init.headers as Record<string, string>),
+    };
+    if (auth.accessToken) h['Authorization'] = `Bearer ${auth.accessToken}`;
+    return h;
   };
 
-  if (auth.accessToken) {
-    headers['Authorization'] = `Bearer ${auth.accessToken}`;
-  }
-
-  const response = await fetch(url, { ...init, headers });
+  let response = await fetch(url, { ...init, headers: buildHeaders() });
 
   if (response.status === 401) {
-    authStore.logout();
-    if (typeof window !== 'undefined') {
-      window.location.href = '/login';
-    }
-    throw new Error('Unauthorized');
+    const newToken = await refreshAccessToken();
+    if (!newToken) handleAuthFailure();
+    response = await fetch(url, { ...init, headers: buildHeaders() });
+    if (response.status === 401) handleAuthFailure();
   }
 
   if (!response.ok) {
@@ -62,16 +99,19 @@ export const api = {
   // eslint-disable-next-line no-undef
   upload: async <T>(endpoint: string, formData: FormData): Promise<T> => {
     const url = `${API_URL}${endpoint}`;
-    const auth = get(authStore);
-    const headers: Record<string, string> = {};
-    if (auth.accessToken) {
-      headers['Authorization'] = `Bearer ${auth.accessToken}`;
-    }
-    const response = await fetch(url, { method: 'POST', headers, body: formData });
+    const buildHeaders = (): Record<string, string> => {
+      const auth = get(authStore);
+      const h: Record<string, string> = {};
+      if (auth.accessToken) h['Authorization'] = `Bearer ${auth.accessToken}`;
+      return h;
+    };
+
+    let response = await fetch(url, { method: 'POST', headers: buildHeaders(), body: formData });
     if (response.status === 401) {
-      authStore.logout();
-      if (typeof window !== 'undefined') window.location.href = '/login';
-      throw new Error('Unauthorized');
+      const newToken = await refreshAccessToken();
+      if (!newToken) handleAuthFailure();
+      response = await fetch(url, { method: 'POST', headers: buildHeaders(), body: formData });
+      if (response.status === 401) handleAuthFailure();
     }
     if (!response.ok) {
       const error = await response.json().catch(() => ({ message: 'Upload failed' }));
