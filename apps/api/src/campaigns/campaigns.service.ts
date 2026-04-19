@@ -1,5 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
+
+const CONTENT_STATUSES = ['DRAFT', 'APPROVED', 'PUBLISHED', 'ARCHIVED'] as const;
+const EMAIL_STATUSES = ['draft', 'scheduled', 'sent'] as const;
 
 @Injectable()
 export class CampaignsService {
@@ -27,10 +30,32 @@ export class CampaignsService {
   async findOne(id: string) {
     const campaign = await this.prisma.campaign.findUnique({
       where: { id },
-      include: { content: true },
+      include: {
+        project: { select: { id: true, name: true } },
+        content: true,
+        emailCampaigns: {
+          include: {
+            list: { select: { id: true, name: true } },
+            emailAccount: { select: { id: true, email: true, displayName: true } },
+          },
+        },
+      },
     });
     if (!campaign) throw new NotFoundException('Campaign not found');
-    return campaign;
+
+    const contentByStatus = Object.fromEntries(CONTENT_STATUSES.map(s => [s, 0])) as Record<string, number>;
+    for (const c of campaign.content) contentByStatus[c.status] = (contentByStatus[c.status] ?? 0) + 1;
+
+    const emailByStatus = Object.fromEntries(EMAIL_STATUSES.map(s => [s, 0])) as Record<string, number>;
+    for (const e of campaign.emailCampaigns) emailByStatus[e.status] = (emailByStatus[e.status] ?? 0) + 1;
+
+    return {
+      ...campaign,
+      progress: {
+        content: { total: campaign.content.length, byStatus: contentByStatus },
+        email:   { total: campaign.emailCampaigns.length, byStatus: emailByStatus },
+      },
+    };
   }
 
   async create(dto: any) {
@@ -59,5 +84,122 @@ export class CampaignsService {
 
   async delete(id: string) {
     return this.prisma.campaign.delete({ where: { id } });
+  }
+
+  private async loadCampaignOrThrow(id: string) {
+    const campaign = await this.prisma.campaign.findUnique({
+      where: { id },
+      select: { id: true, projectId: true, organizationId: true, scope: true },
+    });
+    if (!campaign) throw new NotFoundException('Campaign not found');
+    return campaign;
+  }
+
+  async attachContent(id: string, contentIds: string[]) {
+    const campaign = await this.loadCampaignOrThrow(id);
+    if (!contentIds.length) return this.findOne(id);
+
+    const rows = await this.prisma.content.findMany({
+      where: { id: { in: contentIds } },
+      select: { id: true, projectId: true, organizationId: true, campaignId: true },
+    });
+    const scopeKey = campaign.scope === 'ORGANIZATION' ? 'organizationId' : 'projectId';
+    const scopeVal = campaign.scope === 'ORGANIZATION' ? campaign.organizationId : campaign.projectId;
+
+    const wrongScope = rows.filter(r => (r as any)[scopeKey] !== scopeVal);
+    if (wrongScope.length) {
+      throw new BadRequestException(`Content out of scope: ${wrongScope.map(r => r.id).join(',')}`);
+    }
+
+    const alreadyTaken = rows.filter(r => r.campaignId && r.campaignId !== id);
+    if (alreadyTaken.length) {
+      throw new ConflictException(`Already attached: ${alreadyTaken.map(r => r.id).join(',')}`);
+    }
+
+    await this.prisma.content.updateMany({
+      where: { id: { in: contentIds } },
+      data: { campaignId: id },
+    });
+    return this.findOne(id);
+  }
+
+  async detachContent(id: string, contentIds: string[]) {
+    await this.loadCampaignOrThrow(id);
+    if (!contentIds.length) return this.findOne(id);
+    await this.prisma.content.updateMany({
+      where: { id: { in: contentIds }, campaignId: id },
+      data: { campaignId: null },
+    });
+    return this.findOne(id);
+  }
+
+  async attachEmails(id: string, emailIds: string[]) {
+    const campaign = await this.loadCampaignOrThrow(id);
+    if (!emailIds.length) return this.findOne(id);
+
+    const rows = await this.prisma.emailCampaign.findMany({
+      where: { id: { in: emailIds } },
+      select: {
+        id: true,
+        campaignId: true,
+        list: { select: { projectId: true, organizationId: true } },
+      },
+    });
+    const scopeKey = campaign.scope === 'ORGANIZATION' ? 'organizationId' : 'projectId';
+    const scopeVal = campaign.scope === 'ORGANIZATION' ? campaign.organizationId : campaign.projectId;
+
+    const wrongScope = rows.filter(r => (r.list as any)?.[scopeKey] !== scopeVal);
+    if (wrongScope.length) {
+      throw new BadRequestException(`Emails out of scope: ${wrongScope.map(r => r.id).join(',')}`);
+    }
+
+    const alreadyTaken = rows.filter(r => r.campaignId && r.campaignId !== id);
+    if (alreadyTaken.length) {
+      throw new ConflictException(`Already attached: ${alreadyTaken.map(r => r.id).join(',')}`);
+    }
+
+    await this.prisma.emailCampaign.updateMany({
+      where: { id: { in: emailIds } },
+      data: { campaignId: id },
+    });
+    return this.findOne(id);
+  }
+
+  async detachEmails(id: string, emailIds: string[]) {
+    await this.loadCampaignOrThrow(id);
+    if (!emailIds.length) return this.findOne(id);
+    await this.prisma.emailCampaign.updateMany({
+      where: { id: { in: emailIds }, campaignId: id },
+      data: { campaignId: null },
+    });
+    return this.findOne(id);
+  }
+
+  async availableContent(id: string, search?: string) {
+    const campaign = await this.loadCampaignOrThrow(id);
+    const scope = campaign.scope === 'ORGANIZATION'
+      ? { organizationId: campaign.organizationId! }
+      : { projectId: campaign.projectId! };
+    const where: any = { ...scope, campaignId: null };
+    if (search) where.title = { contains: search, mode: 'insensitive' };
+    return this.prisma.content.findMany({ where, orderBy: { updatedAt: 'desc' }, take: 100 });
+  }
+
+  async availableEmails(id: string, search?: string) {
+    const campaign = await this.loadCampaignOrThrow(id);
+    const listScope = campaign.scope === 'ORGANIZATION'
+      ? { organizationId: campaign.organizationId! }
+      : { projectId: campaign.projectId! };
+    const where: any = { campaignId: null, list: listScope };
+    if (search) where.subject = { contains: search, mode: 'insensitive' };
+    return this.prisma.emailCampaign.findMany({
+      where,
+      include: {
+        list: { select: { id: true, name: true } },
+        emailAccount: { select: { id: true, email: true, displayName: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+    });
   }
 }
