@@ -48,9 +48,9 @@
       {/each}
     </div>
 
-    <!-- User section -->
+    <!-- User section — hidden on mobile; sidebar has its own user block with logout -->
     {#if $currentUser}
-      <div class="flex items-center gap-2.5 pl-3 border-l border-gray-200">
+      <div class="hidden md:flex items-center gap-2.5 pl-3 border-l border-gray-200">
         <!-- Gradient avatar matching project card avatars -->
         <div class="w-7 h-7 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center text-white font-semibold text-xs flex-shrink-0 select-none">
           {$currentUser.name?.charAt(0).toUpperCase() || 'U'}
