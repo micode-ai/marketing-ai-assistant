@@ -277,8 +277,8 @@
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => showCreateModal = false}>
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-      <div class="p-6 border-b border-gray-100 flex items-center gap-2.5">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[calc(100vh-2rem)] flex flex-col">
+      <div class="p-6 border-b border-gray-100 flex items-center gap-2.5 flex-shrink-0">
         <div class="w-8 h-8 bg-primary-50 rounded-lg flex items-center justify-center flex-shrink-0">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -286,7 +286,7 @@
         </div>
         <h2 class="text-lg font-semibold text-gray-900">{$_('campaigns.create')}</h2>
       </div>
-      <div class="p-6 space-y-4">
+      <div class="p-6 space-y-4 overflow-y-auto flex-1">
         <div>
           <label for="c-name" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('campaigns.name')} *</label>
           <input id="c-name" type="text" bind:value={createForm.name} placeholder={$_('campaigns.namePlaceholder')} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
@@ -318,7 +318,7 @@
           <textarea id="c-goals" bind:value={createForm.goals} rows="3" placeholder={$_('campaigns.goalsPlaceholder')} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"></textarea>
         </div>
       </div>
-      <div class="p-6 border-t border-gray-100 flex gap-3">
+      <div class="p-6 border-t border-gray-100 flex gap-3 flex-shrink-0">
         <button
           on:click={createCampaign}
           disabled={creating || !createForm.name.trim()}
@@ -347,8 +347,8 @@
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => editingCampaign = null}>
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
-      <div class="p-6 border-b border-gray-100 flex items-center gap-2.5">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[calc(100vh-2rem)] flex flex-col">
+      <div class="p-6 border-b border-gray-100 flex items-center gap-2.5 flex-shrink-0">
         <div class="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
@@ -356,7 +356,7 @@
         </div>
         <h2 class="text-lg font-semibold text-gray-900">{$_('campaigns.editCampaign')}</h2>
       </div>
-      <div class="p-6 space-y-4">
+      <div class="p-6 space-y-4 overflow-y-auto flex-1">
         <div>
           <label for="e-name" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('campaigns.name')} *</label>
           <input id="e-name" type="text" bind:value={editForm.name} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
@@ -398,7 +398,7 @@
           <textarea id="e-goals" bind:value={editForm.goals} rows="3" placeholder={$_('campaigns.goalsPlaceholder')} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"></textarea>
         </div>
       </div>
-      <div class="p-6 border-t border-gray-100 flex gap-3">
+      <div class="p-6 border-t border-gray-100 flex gap-3 flex-shrink-0">
         <button
           on:click={saveEdit}
           disabled={editSaving}
