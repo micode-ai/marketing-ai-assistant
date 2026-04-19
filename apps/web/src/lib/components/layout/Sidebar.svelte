@@ -1,13 +1,19 @@
 <script lang="ts">
   import { page } from '$app/stores';
   import { _ } from 'svelte-i18n';
+  import { goto } from '$app/navigation';
   import { currentProjectStore, organizationIdStore } from '$lib/stores/projects';
-  import { currentUser } from '$lib/stores/auth';
+  import { authStore, currentUser } from '$lib/stores/auth';
   import { api } from '$lib/api/client';
   import { browser } from '$app/environment';
 
   export let open = true;
   export let isMobile = false;
+
+  function logout() {
+    authStore.logout();
+    goto('/login');
+  }
 
   // Theme toggle
   let isDark = browser ? document.documentElement.classList.contains('dark') : false;
@@ -346,6 +352,33 @@
           {/each}
         </ul>
       </div>
+
+      <!-- User profile + logout -->
+      {#if $currentUser}
+        <div class="px-3 py-2 border-t border-gray-200 dark:border-gray-700">
+          <div class="flex items-center gap-2.5 px-3 py-2">
+            <div class="w-8 h-8 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center text-white font-semibold text-xs flex-shrink-0 select-none">
+              {$currentUser.name?.charAt(0).toUpperCase() || 'U'}
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-medium text-gray-900 truncate">{$currentUser.name}</div>
+              {#if $currentUser.email}
+                <div class="text-xs text-gray-400 truncate">{$currentUser.email}</div>
+              {/if}
+            </div>
+            <button
+              on:click={logout}
+              class="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors duration-150 cursor-pointer flex-shrink-0"
+              title={$_('auth.logout')}
+              aria-label={$_('auth.logout')}
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      {/if}
 
       <!-- Theme Toggle + Help -->
       <div class="px-3 py-2 border-t border-gray-200 dark:border-gray-700">
