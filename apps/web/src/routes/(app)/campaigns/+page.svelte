@@ -67,7 +67,7 @@
   {:else}
     <div class="space-y-3">
       {#each items as item}
-        <a href="/projects/{item.projectId}/campaigns" class="block bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 hover:border-indigo-300 dark:hover:border-indigo-600 hover:shadow-sm transition-all cursor-pointer">
+        <a href="/campaigns/{item.id}" class="block bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 hover:border-indigo-300 dark:hover:border-indigo-600 hover:shadow-sm transition-all cursor-pointer">
           <div class="flex items-center justify-between">
             <div>
               <h3 class="font-medium text-gray-900 dark:text-white">{item.name}</h3>
