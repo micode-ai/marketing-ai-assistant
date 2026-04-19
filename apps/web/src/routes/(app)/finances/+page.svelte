@@ -254,12 +254,12 @@
 </script>
 
 <div class="p-4 sm:p-6">
-  <div class="flex items-center justify-between mb-6">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
     <div>
       <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{$_('finances.title')}</h1>
       <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{$_('finances.subtitle')}</p>
     </div>
-    <div class="flex items-center gap-3">
+    <div class="flex items-center gap-3 flex-wrap">
       <div class="flex bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden text-sm">
         {#each ['month', 'quarter', 'year'] as p}
           <button
@@ -268,7 +268,7 @@
           >{$_(`finances.${p}`)}</button>
         {/each}
       </div>
-      <button on:click={openAddModal} class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 cursor-pointer">
+      <button on:click={openAddModal} class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 cursor-pointer whitespace-nowrap">
         + {$_('finances.addRecord')}
       </button>
     </div>
@@ -279,33 +279,33 @@
   {:else}
     <!-- Summary Cards -->
     {#if summary}
-    <div class="grid grid-cols-3 gap-4 mb-6">
-      <div class="bg-green-500/10 border border-green-500/25 rounded-xl p-4">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+      <div class="bg-green-500/10 border border-green-500/25 rounded-xl p-4 min-w-0">
         <div class="text-xs text-gray-400">{$_('finances.income')}</div>
-        <div class="text-2xl font-bold text-green-400 mt-1">{formatCurrency(summary.totalIncome)}</div>
+        <div class="text-2xl font-bold text-green-400 mt-1 truncate">{formatCurrency(summary.totalIncome)}</div>
       </div>
-      <div class="bg-red-500/10 border border-red-500/25 rounded-xl p-4">
+      <div class="bg-red-500/10 border border-red-500/25 rounded-xl p-4 min-w-0">
         <div class="text-xs text-gray-400">{$_('finances.expenses')}</div>
-        <div class="text-2xl font-bold text-red-400 mt-1">{formatCurrency(summary.totalExpense)}</div>
+        <div class="text-2xl font-bold text-red-400 mt-1 truncate">{formatCurrency(summary.totalExpense)}</div>
       </div>
-      <div class="bg-indigo-500/10 border border-indigo-500/25 rounded-xl p-4">
+      <div class="bg-indigo-500/10 border border-indigo-500/25 rounded-xl p-4 min-w-0">
         <div class="text-xs text-gray-400">{$_('finances.profit')}</div>
-        <div class="text-2xl font-bold text-indigo-400 mt-1">{formatCurrency(summary.profit)}</div>
+        <div class="text-2xl font-bold text-indigo-400 mt-1 truncate">{formatCurrency(summary.profit)}</div>
       </div>
     </div>
     {/if}
 
     <!-- Charts -->
     {#if summary?.monthly?.length > 0 || summary?.byCategory?.length > 0}
-    <div class="grid grid-cols-5 gap-4 mb-6">
-      <div class="col-span-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4" style="min-height: 250px">
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-4 mb-6">
+      <div class="lg:col-span-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 min-w-0" style="min-height: 250px">
         <h3 class="text-sm font-semibold mb-3">{$_('finances.incomeVsExpenses')}</h3>
         <div style="height: 200px"><canvas bind:this={barCanvas}></canvas></div>
       </div>
-      <div class="col-span-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4" style="min-height: 250px">
-        <div class="flex items-center justify-between mb-3">
-          <h3 class="text-sm font-semibold">{$_('finances.byCategory')}</h3>
-          <button on:click={toggleDoughnut} class="text-xs px-2 py-1 rounded cursor-pointer {doughnutMode === 'EXPENSE' ? 'text-red-400 bg-red-500/10' : 'text-green-400 bg-green-500/10'}">
+      <div class="lg:col-span-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 min-w-0" style="min-height: 250px">
+        <div class="flex items-center justify-between mb-3 gap-2">
+          <h3 class="text-sm font-semibold truncate">{$_('finances.byCategory')}</h3>
+          <button on:click={toggleDoughnut} class="text-xs px-2 py-1 rounded cursor-pointer flex-shrink-0 {doughnutMode === 'EXPENSE' ? 'text-red-400 bg-red-500/10' : 'text-green-400 bg-green-500/10'}">
             {doughnutMode === 'EXPENSE' ? $_('finances.expenses') : $_('finances.income')}
           </button>
         </div>
@@ -316,15 +316,15 @@
 
     <!-- Table -->
     <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
-      <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-        <div class="flex gap-2 text-sm">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+        <div class="flex gap-2 text-sm flex-wrap">
           {#each ['ALL', 'INCOME', 'EXPENSE'] as t}
             <button class="px-3 py-1 rounded cursor-pointer {filterType === t ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-white'}" on:click={() => { filterType = t; }}>
               {t === 'ALL' ? $_('finances.all') : t === 'INCOME' ? $_('finances.income') : $_('finances.expenses')}
             </button>
           {/each}
         </div>
-        <button on:click={() => showCategoriesModal = true} class="text-sm text-indigo-400 hover:text-indigo-300 cursor-pointer">{$_('finances.manageCategories')}</button>
+        <button on:click={() => showCategoriesModal = true} class="text-sm text-indigo-400 hover:text-indigo-300 cursor-pointer text-left sm:text-right">{$_('finances.manageCategories')}</button>
       </div>
 
       {#if records.length === 0}
