@@ -428,6 +428,22 @@ export class SocialService {
     const pageId = tokens.pageId || 'me';
     const params = { access_token: tokens.accessToken };
 
+    // Diagnostic: inspect what the token actually is.
+    try {
+      const me = await axios.get('https://graph.facebook.com/v19.0/me', {
+        params: { fields: 'id,name,category', access_token: tokens.accessToken },
+      });
+      console.log('[facebook.publish] token identity', {
+        pageIdStored: tokens.pageId,
+        tokenOwnerId: me.data?.id,
+        tokenOwnerName: me.data?.name,
+        tokenOwnerCategory: me.data?.category,
+        matchesPage: String(me.data?.id) === String(tokens.pageId),
+      });
+    } catch (e: any) {
+      console.warn('[facebook.publish] /me probe failed', e?.response?.data || e?.message);
+    }
+
     if (images.length === 0) {
       const res = await axios.post(
         `https://graph.facebook.com/v19.0/${pageId}/feed`,
