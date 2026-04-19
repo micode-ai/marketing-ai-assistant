@@ -135,7 +135,7 @@
             {#if expandedGroups.has(group.groupId)}
               <div class="border-t border-gray-200 dark:border-gray-700">
                 {#each group.items as item}
-                  <a href="/projects/{item.projectId}/content" class="block p-4 border-b border-gray-100 dark:border-gray-700 last:border-b-0 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                  <a href="/projects/{item.projectId}/content?focus={item.id}" class="block p-4 border-b border-gray-100 dark:border-gray-700 last:border-b-0 hover:bg-gray-50 dark:hover:bg-gray-700/50">
                     <div class="flex items-center gap-2">
                       <span class="text-xs px-1.5 py-0.5 rounded font-bold {langBadge[item.language] || 'bg-gray-100 text-gray-600'}">{(item.language || '?').toUpperCase()}</span>
                       <h3 class="font-medium text-gray-900 dark:text-white">{item.title}</h3>
@@ -149,7 +149,7 @@
         {:else}
           <!-- Single content item -->
           {@const item = group.items[0]}
-          <a href="/projects/{item.projectId}/content" class="block bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 hover:border-indigo-300 dark:hover:border-indigo-600 hover:shadow-sm transition-all cursor-pointer">
+          <a href="/projects/{item.projectId}/content?focus={item.id}" class="block bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 hover:border-indigo-300 dark:hover:border-indigo-600 hover:shadow-sm transition-all cursor-pointer">
             <div class="flex items-center justify-between">
               <div>
                 <div class="flex items-center gap-1.5 mb-1">
