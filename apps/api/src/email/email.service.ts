@@ -171,23 +171,7 @@ export class EmailService {
   }
 
   async sendCampaign(dto: any) {
-    let campaignId = dto.campaignId as string | undefined;
-
-    // Auto-create a Campaign record when sending standalone (not linked to a campaign)
-    if (!campaignId) {
-      const list = await this.prisma.emailList.findUnique({ where: { id: dto.listId } });
-      if (!list) throw new NotFoundException('Email list not found');
-
-      const campaign = await this.prisma.campaign.create({
-        data: {
-          projectId: list.projectId,
-          name: dto.subject,
-          type: 'EMAIL',
-          status: 'ACTIVE',
-        },
-      });
-      campaignId = campaign.id;
-    }
+    const campaignId = (dto.campaignId as string | undefined) ?? null;
 
     const account = await this.prisma.emailAccount.findUnique({ where: { id: dto.emailAccountId } });
     if (!account) throw new NotFoundException('Email account not found');

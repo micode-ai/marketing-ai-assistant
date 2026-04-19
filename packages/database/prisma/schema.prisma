@@ -597,7 +597,7 @@ model EmailTemplate {
 
 model EmailCampaign {
   id             String    @id @default(cuid())
-  campaignId     String
+  campaignId     String?
   emailAccountId String
   listId         String
   subject        String
@@ -610,7 +610,7 @@ model EmailCampaign {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
-  campaign     Campaign       @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaign     Campaign?      @relation(fields: [campaignId], references: [id], onDelete: SetNull)
   emailAccount EmailAccount   @relation(fields: [emailAccountId], references: [id])
   list         EmailList      @relation(fields: [listId], references: [id])
   template     EmailTemplate? @relation(fields: [templateId], references: [id])
