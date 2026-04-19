@@ -474,14 +474,34 @@ export class AnalyticsService {
   }
 
   private async aggregateForProject(projectId: string, dayStart: Date, dayEnd: Date) {
-    const events = await this.prisma.analyticsEvent.findMany({
-      where: {
-        projectId,
-        timestamp: { gte: dayStart, lt: dayEnd },
-      },
-    });
+    const [events, leadsCount, sentCampaigns] = await Promise.all([
+      this.prisma.analyticsEvent.findMany({
+        where: {
+          projectId,
+          timestamp: { gte: dayStart, lt: dayEnd },
+        },
+      }),
+      this.prisma.emailSubscriber.count({
+        where: {
+          list: { projectId },
+          subscribedAt: { gte: dayStart, lt: dayEnd },
+        },
+      }),
+      this.prisma.emailCampaign.findMany({
+        where: {
+          list: { projectId },
+          sentAt: { gte: dayStart, lt: dayEnd },
+        },
+        select: { stats: true },
+      }),
+    ]);
 
-    if (events.length === 0) return;
+    const emailsSent = sentCampaigns.reduce(
+      (sum, c) => sum + (Number((c.stats as any)?.sent) || 0),
+      0,
+    );
+
+    if (events.length === 0 && leadsCount === 0 && emailsSent === 0) return;
 
     const uniqueSessions = new Set<string>();
     let pageViews = 0;
@@ -518,9 +538,9 @@ export class AnalyticsService {
     const metrics = {
       visitors: uniqueSessions.size,
       pageViews,
-      leads: 0,
+      leads: leadsCount,
       conversions,
-      emailsSent: 0,
+      emailsSent,
       emailOpens,
       emailClicks,
       socialReach: 0,
