@@ -409,11 +409,18 @@
     try {
       const pubs = await api.get<any[]>('/social/publications', { contentId: content.id });
       const pendingIds = pubs.filter(p => p.status === 'PENDING').map(p => p.id);
-      await Promise.all(pendingIds.map(id => api.delete(`/social/publications/${id}`)));
-      contents = contents.map(c => c.id === content.id ? { ...c, status: 'DRAFT' } : c);
+      const results = await Promise.allSettled(pendingIds.map(id => api.delete(`/social/publications/${id}`)));
+      const failures = results.filter(r => r.status === 'rejected');
+      // Refresh from server so the UI reflects actual backend state regardless of partial outcomes.
+      contents = await api.get<any[]>('/content', { projectId });
+      if (failures.length > 0) {
+        console.error('Some publications could not be cancelled', failures);
+        alert($_('common.error'));
+      }
     } catch (err) {
       console.error(err);
       alert($_('common.error'));
+      contents = await api.get<any[]>('/content', { projectId });
     }
   }
 
