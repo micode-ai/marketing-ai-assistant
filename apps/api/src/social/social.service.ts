@@ -337,9 +337,12 @@ export class SocialService {
     return { success: true, linked: validIds.length };
   }
 
-  async getPublications(contentId: string) {
+  async getPublications(contentId: string, organizationId: string) {
     return this.prisma.contentPublication.findMany({
-      where: { contentId },
+      where: {
+        contentId,
+        content: { OR: [{ organizationId }, { project: { organizationId } }] },
+      },
       include: {
         socialAccount: {
           select: { id: true, platform: true, accountName: true, profileImageUrl: true },
