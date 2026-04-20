@@ -4,8 +4,54 @@
   import { currentProjectStore, organizationIdStore, projectsStore } from '$lib/stores/projects';
   import type { Project, ProjectExportData, ProjectExportSection, ImportValidationResult } from '@marketing-ai/shared-types';
   import { goto } from '$app/navigation';
+  import DashboardKpiCards from '$lib/components/DashboardKpiCards.svelte';
+  import ProjectCardStats from '$lib/components/ProjectCardStats.svelte';
 
   $: projects = $projectsStore;
+
+  // ── Dashboard stats ──
+  type ProjectStats = { content: number; emailsSent: number; pageViews: number; conversions: number };
+  type OrgSummaryResponse = {
+    byProject: Array<{ projectId: string; projectName: string } & ProjectStats>;
+  };
+
+  let period: 7 | 30 | 90 = 30;
+  let projectStats: Record<string, ProjectStats> = {};
+  let projectStatsLoading = false;
+  let previousPeriod: 7 | 30 | 90 = period;
+  let lastLoadedOrg: string | null = null;
+
+  $: if ($organizationIdStore && ($organizationIdStore !== lastLoadedOrg || period !== previousPeriod)) {
+    lastLoadedOrg = $organizationIdStore;
+    previousPeriod = period;
+    loadByProject();
+  }
+
+  async function loadByProject() {
+    if (!$organizationIdStore) return;
+    projectStatsLoading = true;
+    try {
+      const res = await api.get<OrgSummaryResponse>('/analytics/organization', {
+        organizationId: $organizationIdStore,
+        period: `${period}d`,
+      });
+      const next: Record<string, ProjectStats> = {};
+      for (const row of res.byProject || []) {
+        next[row.projectId] = {
+          content: row.content,
+          emailsSent: row.emailsSent,
+          pageViews: row.pageViews,
+          conversions: row.conversions,
+        };
+      }
+      projectStats = next;
+    } catch {
+      // Keep previous stats to avoid visual glitch; but mark empty on first failure
+      if (Object.keys(projectStats).length === 0) projectStats = {};
+    } finally {
+      projectStatsLoading = false;
+    }
+  }
 
   // ── Import ──
   let showImportModal = false;
@@ -133,6 +179,10 @@
     </div>
   </div>
 
+  {#if $projectsStore.length > 0 && $organizationIdStore}
+    <DashboardKpiCards organizationId={$organizationIdStore} bind:period />
+  {/if}
+
   {#if $projectsStore.length === 0}
     <div class="flex flex-col items-center justify-center py-24 text-center">
       <div class="w-20 h-20 bg-primary-50 rounded-2xl flex items-center justify-center mb-6">
@@ -194,6 +244,8 @@
               {(project as any)._count?.checklists || 0}
             </span>
           </div>
+
+          <ProjectCardStats stats={projectStats[project.id]} {period} loading={projectStatsLoading} />
         </a>
       {/each}
     </div>
