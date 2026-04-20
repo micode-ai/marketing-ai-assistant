@@ -188,6 +188,30 @@ export class SocialService {
     return { success: true };
   }
 
+  async publishToAccount(
+    content: any,
+    account: any,
+  ): Promise<{ status: 'PUBLISHED' | 'FAILED'; platformPostId?: string; platformPostUrl?: string; error?: string }> {
+    try {
+      const supported = ['LINKEDIN', 'TWITTER', 'FACEBOOK', 'TELEGRAM'];
+      if (!supported.includes(account.platform)) {
+        throw new Error(`Publishing to ${account.platform} is not yet supported`);
+      }
+      const tokens = this.decryptTokens(account.encryptedTokens);
+      let result: { postId?: string; postUrl?: string };
+      if (account.platform === 'LINKEDIN')      result = await this.publishToLinkedIn(content, tokens);
+      else if (account.platform === 'TWITTER')  result = await this.publishToTwitter(content, tokens);
+      else if (account.platform === 'FACEBOOK') result = await this.publishToFacebook(content, tokens);
+      else                                      result = await this.publishToTelegram(content, tokens);
+      return { status: 'PUBLISHED', platformPostId: result.postId, platformPostUrl: result.postUrl };
+    } catch (err: any) {
+      const data = err?.response?.data;
+      const error = (data && (data.description || data.error?.message || data.message)) || err?.message || 'Unknown error';
+      console.error('[social.publishToAccount] failed', { platform: account.platform, status: err?.response?.status, data, message: err?.message });
+      return { status: 'FAILED', error };
+    }
+  }
+
   async publish(
     dto: {
       contentId?: string;
@@ -224,46 +248,11 @@ export class SocialService {
         continue;
       }
 
-      let platformPostId: string | undefined;
-      let platformPostUrl: string | undefined;
-      let error: string | undefined;
-      let status: 'PUBLISHED' | 'FAILED' = 'PUBLISHED';
-
-      try {
-        const tokens = this.decryptTokens(account.encryptedTokens);
-        if (account.platform === 'LINKEDIN') {
-          const result = await this.publishToLinkedIn(content, tokens);
-          platformPostId = result.postId;
-          platformPostUrl = result.postUrl;
-        } else if (account.platform === 'TWITTER') {
-          const result = await this.publishToTwitter(content, tokens);
-          platformPostId = result.postId;
-          platformPostUrl = result.postUrl;
-        } else if (account.platform === 'FACEBOOK') {
-          const result = await this.publishToFacebook(content, tokens);
-          platformPostId = result.postId;
-          platformPostUrl = result.postUrl;
-        } else if (account.platform === 'TELEGRAM') {
-          const result = await this.publishToTelegram(content, tokens);
-          platformPostId = result.postId;
-          platformPostUrl = result.postUrl;
-        } else {
-          throw new Error(`Publishing to ${account.platform} is not yet supported`);
-        }
-      } catch (err: any) {
-        status = 'FAILED';
-        const data = err?.response?.data;
-        error =
-          (data && (data.description || data.error?.message || data.message)) ||
-          err?.message ||
-          'Unknown error';
-        console.error('[social.publish] failed', {
-          platform: account.platform,
-          status: err?.response?.status,
-          data,
-          message: err?.message,
-        });
-      }
+      const r = await this.publishToAccount(content, account);
+      const status = r.status;
+      const platformPostId = r.platformPostId;
+      const platformPostUrl = r.platformPostUrl;
+      const error = r.error;
 
       await this.prisma.contentPublication.create({
         data: {
