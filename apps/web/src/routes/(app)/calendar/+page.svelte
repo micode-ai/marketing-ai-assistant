@@ -210,7 +210,7 @@
   }
 </script>
 
-<div class="p-4 sm:p-6">
+<div class="p-4 sm:p-6 h-full flex flex-col min-h-0">
   <div class="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 mb-1">
     <span>{currentOrg?.name || $_('header.orgContext')}</span>
     {#if $currentProjectStore}
@@ -281,16 +281,16 @@
   </div>
 
   {#if loading}
-    <div class="bg-white rounded-xl border border-gray-200 p-4">
-      <div class="grid grid-cols-7 gap-px">
+    <div class="bg-white rounded-xl border border-gray-200 p-4 flex-1 min-h-0">
+      <div class="grid grid-cols-7 gap-px h-full">
         {#each Array(42) as _}
-          <div class="h-24 bg-gray-50 rounded animate-pulse"></div>
+          <div class="bg-gray-50 rounded animate-pulse"></div>
         {/each}
       </div>
     </div>
   {:else if viewMode === 'month'}
-    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-      <div class="grid grid-cols-7 border-b border-gray-200 bg-gray-50/50">
+    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden flex-1 min-h-0 flex flex-col">
+      <div class="grid grid-cols-7 border-b border-gray-200 bg-gray-50/50 flex-shrink-0">
         {#each ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as dayKey}
           <div class="py-2.5 text-center text-xs font-medium text-gray-500 uppercase tracking-wide">
             {$_(`calendar.${dayKey}`)}
@@ -298,16 +298,19 @@
         {/each}
       </div>
 
-      <div class="grid grid-cols-7">
+      <div
+        class="grid grid-cols-7 flex-1 min-h-0"
+        style="grid-template-rows: repeat({Math.ceil(calendarDays.length / 7)}, minmax(0, 1fr));"
+      >
         {#each calendarDays as dayInfo}
           {@const dateKey = toDateKey(new Date(dayInfo.year, dayInfo.month, dayInfo.day))}
           {@const dayContents = contentByDate[dateKey] || []}
           {@const todayHighlight = isToday(dayInfo.year, dayInfo.month, dayInfo.day)}
           <div
-            class="min-h-[100px] p-1.5 border-b border-r border-gray-100
+            class="min-h-[100px] p-1.5 border-b border-r border-gray-100 flex flex-col overflow-hidden
                    {dayInfo.isCurrentMonth ? '' : 'opacity-40'}"
           >
-            <div class="flex items-start justify-between mb-1">
+            <div class="flex items-start justify-between mb-1 flex-shrink-0">
               {#if todayHighlight}
                 <span class="bg-primary-600 text-white text-xs font-semibold w-6 h-6 rounded-full flex items-center justify-center">
                   {dayInfo.day}
@@ -319,8 +322,8 @@
               {/if}
             </div>
 
-            <div class="space-y-0.5">
-              {#each dayContents.slice(0, 3) as content (content.id)}
+            <div class="space-y-0.5 flex-1 min-h-0 overflow-y-auto">
+              {#each dayContents as content (content.id)}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <!-- svelte-ignore a11y-no-static-element-interactions -->
                 <div
@@ -333,18 +336,13 @@
                   <span class="truncate">{content.title}</span>
                 </div>
               {/each}
-              {#if dayContents.length > 3}
-                <div class="text-[10px] text-gray-400 px-1.5">
-                  {$_('calendar.moreItems', { values: { count: dayContents.length - 3 } })}
-                </div>
-              {/if}
             </div>
           </div>
         {/each}
       </div>
     </div>
   {:else}
-    <div class="space-y-2">
+    <div class="space-y-2 flex-1 min-h-0 overflow-y-auto">
       {#each Array(7) as _, i}
         {@const weekDay = new Date(currentWeekStart.getFullYear(), currentWeekStart.getMonth(), currentWeekStart.getDate() + i)}
         {@const dateKey = toDateKey(weekDay)}
