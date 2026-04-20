@@ -73,6 +73,20 @@
   let activeCreateLang = 'en';
   let createSaving = false;
 
+  // Scheduled publishing state
+  let scheduleEnabled = false;
+  let scheduleAt = '';                              // bound to <input type="datetime-local">
+  let scheduleAccountIds: string[] = [];
+  let projectAccounts: any[] = [];
+
+  async function loadProjectAccounts() {
+    if (projectAccounts.length) return;
+    try { projectAccounts = await api.get<any[]>('/social/project-accounts', { projectId }); }
+    catch { projectAccounts = []; }
+  }
+
+  $: if (showCreateModal) loadProjectAccounts();
+
   // Generate all languages
   let generateAllLanguages = true;
 
@@ -342,12 +356,20 @@
   }
 
   async function createContent() {
+    if (scheduleEnabled) {
+      if (!scheduleAt || scheduleAccountIds.length === 0) { alert($_('content.schedule.noAccountsSelected')); return; }
+      if (new Date(scheduleAt).getTime() <= Date.now())   { alert($_('content.schedule.mustBeFuture'));      return; }
+    }
     createSaving = true;
     try {
       const languages = createAllLanguages ? ['en', 'pl', 'ru'] : [$locale || 'en'];
       const groupId = languages.length > 1 ? crypto.randomUUID() : undefined;
       const primaryPlatform = createPlatforms[0];
-      for (const lang of languages) {
+      const scheduleIso = scheduleEnabled ? new Date(scheduleAt).toISOString() : undefined;
+
+      for (let i = 0; i < languages.length; i++) {
+        const lang = languages[i];
+        const isLast = i === languages.length - 1;
         const body = createAllLanguages ? createBodies[lang as string] : createForm.body;
         await api.post('/content', {
           ...createForm,
@@ -357,13 +379,16 @@
           ...(primaryPlatform ? { platform: primaryPlatform } : {}),
           ...(groupId ? { contentGroupId: groupId } : {}),
           projectId,
+          ...(scheduleIso ? { scheduledAt: scheduleIso } : {}),
+          ...(scheduleEnabled && isLast ? { scheduledPublicationAccountIds: scheduleAccountIds } : {}),
         });
       }
       contents = await api.get<any[]>('/content', { projectId });
       showCreateModal = false;
+      // reset form
       createForm = { title: '', type: 'SOCIAL_POST', body: '', mediaUrls: [] as string[] };
-      createPlatforms = [];
-      createBodies = { en: '', pl: '', ru: '' };
+      createPlatforms = []; createBodies = { en: '', pl: '', ru: '' };
+      scheduleEnabled = false; scheduleAt = ''; scheduleAccountIds = [];
     } catch (e: any) { alert(e.message); }
     finally { createSaving = false; }
   }
@@ -1154,6 +1179,46 @@
             </div>
           </div>
         {/if}
+
+        <div class="border-t pt-4 mt-4">
+          <label class="flex items-center gap-2 text-sm font-medium text-gray-700">
+            <input type="checkbox" bind:checked={scheduleEnabled} />
+            {$_('content.schedule.scheduleForLater')}
+          </label>
+
+          {#if scheduleEnabled}
+            <div class="mt-3 space-y-3">
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">{$_('content.schedule.scheduledAt')}</label>
+                <input type="datetime-local" bind:value={scheduleAt}
+                       class="w-full border rounded-lg px-3 py-2 text-sm" />
+              </div>
+
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">{$_('content.schedule.selectAccounts')}</label>
+                {#if projectAccounts.length === 0}
+                  <p class="text-xs text-gray-500">{$_('content.schedule.noProjectAccounts')}</p>
+                {:else}
+                  <div class="space-y-1 max-h-40 overflow-y-auto border rounded-lg p-2">
+                    {#each projectAccounts as acc}
+                      <label class="flex items-center gap-2 text-sm">
+                        <input type="checkbox" value={acc.id}
+                               checked={scheduleAccountIds.includes(acc.id)}
+                               on:change={(e) => {
+                                 if ((e.target as HTMLInputElement).checked) scheduleAccountIds = [...scheduleAccountIds, acc.id];
+                                 else scheduleAccountIds = scheduleAccountIds.filter(id => id !== acc.id);
+                               }} />
+                        <span class="font-medium">{acc.platform}</span>
+                        <span class="text-gray-500 truncate">{acc.accountName}</span>
+                        {#if acc.language}<span class="text-xs px-1.5 py-0.5 bg-gray-100 rounded">{acc.language.toUpperCase()}</span>{/if}
+                      </label>
+                    {/each}
+                  </div>
+                {/if}
+              </div>
+            </div>
+          {/if}
+        </div>
       </div>
       <div class="p-6 border-t border-gray-100 flex gap-3 justify-end flex-shrink-0">
         <button on:click={() => showCreateModal = false} class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 text-sm cursor-pointer">
