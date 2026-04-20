@@ -150,11 +150,14 @@ import { BadRequestException } from '@nestjs/common';
 import { ContentService } from './content.service';
 import { PrismaService } from '../database/prisma.service';
 
-const mockPrisma = {
+const mockPrisma: any = {
   project: { findUnique: jest.fn() },
   content: { create: jest.fn(), findMany: jest.fn() },
   socialAccount: { findMany: jest.fn() },
-  contentPublication: { createMany: jest.fn() },
+  contentPublication: {
+    createMany: jest.fn(),
+    findMany: jest.fn().mockResolvedValue([]),  // dedupe lookup — default to "no duplicates"
+  },
   $transaction: jest.fn(async (cb: any) => cb(mockPrisma)),
 };
 
@@ -259,7 +262,11 @@ async create(dto: CreateContentDto, _userId: string) {
       throw new BadRequestException('scheduledAt must be in the future');
     }
     const attached = await this.prisma.socialAccount.findMany({
-      where: { id: { in: dto.scheduledPublicationAccountIds }, projects: { some: { projectId: dto.projectId! } } },
+      where: {
+        id: { in: dto.scheduledPublicationAccountIds },
+        organizationId,                                  // defense in depth: never cross orgs
+        projects: { some: { projectId: dto.projectId! } },
+      },
       select: { id: true, platform: true, language: true },
     });
     if (attached.length !== dto.scheduledPublicationAccountIds.length) {
@@ -268,7 +275,10 @@ async create(dto: CreateContentDto, _userId: string) {
     (dto as any).__attachedAccounts = attached;
   }
 
-  const created = await this.prisma.content.create({
+  // Wrap Content + ContentPublication inserts in a transaction so a publication-insert
+  // failure does not leave an orphan SCHEDULED Content row with no publications.
+  return this.prisma.$transaction(async (tx) => {
+  const created = await tx.content.create({
     data: {
       projectId: dto.projectId,
       organizationId,
@@ -290,7 +300,7 @@ async create(dto: CreateContentDto, _userId: string) {
 
   if (scheduling) {
     const groupRows = created.contentGroupId
-      ? await this.prisma.content.findMany({
+      ? await tx.content.findMany({
           where: { contentGroupId: created.contentGroupId },
           select: { id: true, language: true },
         })
@@ -311,7 +321,7 @@ async create(dto: CreateContentDto, _userId: string) {
       platform: a.platform as any,
       status: 'PENDING' as const,
     }));
-    const existing = await this.prisma.contentPublication.findMany({
+    const existing = await tx.contentPublication.findMany({
       where: { status: 'PENDING', socialAccountId: { in: candidates.map(c => c.socialAccountId) }, contentId: { in: candidates.map(c => c.contentId) } },
       select: { contentId: true, socialAccountId: true },
     });
@@ -319,11 +329,12 @@ async create(dto: CreateContentDto, _userId: string) {
     const seen = new Set(existing.map(dupKey));
     const toCreate = candidates.filter(c => !seen.has(dupKey(c)));
     if (toCreate.length > 0) {
-      await this.prisma.contentPublication.createMany({ data: toCreate });
+      await tx.contentPublication.createMany({ data: toCreate });
     }
   }
 
-  return created;
+    return created;
+  });
 }
 ```
 
