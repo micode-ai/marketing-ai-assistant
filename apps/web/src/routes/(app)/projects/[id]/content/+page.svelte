@@ -368,6 +368,18 @@
     SCHEDULED: 'content.scheduled',
   };
 
+  const typeLabel: Record<string, string> = {
+    SOCIAL_POST: 'content.socialPost',
+    BLOG_ARTICLE: 'content.blogArticle',
+    EMAIL: 'content.emailContent',
+    NEWSLETTER: 'content.newsletter',
+    AD_COPY: 'content.adCopy',
+    LANDING_PAGE: 'content.landingPage',
+    SEO_ARTICLE: 'content.seoArticle',
+    REFERRAL_COPY: 'content.referralCopy',
+    IN_APP_MESSAGE: 'content.inAppMessage',
+  };
+
   function toggleGroup(groupId: string) {
     if (expandedGroups.has(groupId)) expandedGroups.delete(groupId);
     else expandedGroups.add(groupId);
@@ -555,7 +567,7 @@
               <div class="flex flex-col sm:flex-row items-start justify-between gap-3 sm:gap-4">
                 <div class="flex-1 min-w-0">
                   <div class="flex flex-wrap items-center gap-1.5 mb-2">
-                    <span class="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded font-medium">{group.items[0].type.replace('_', ' ')}</span>
+                    <span class="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded font-medium">{typeLabel[group.items[0].type] ? $_(typeLabel[group.items[0].type]) : group.items[0].type.replace(/_/g, ' ')}</span>
                     <span class="text-xs px-2 py-0.5 rounded {statusBadge[group.items[0].status] || 'bg-gray-100 text-gray-600'}">{$_(statusLabel[group.items[0].status] || 'content.draft')}</span>
                     {#each group.items as item}
                       <span class="text-xs px-2 py-0.5 rounded font-medium {langBadgeColor[item.language] || 'bg-gray-100 text-gray-600'}">{(item.language || 'en').toUpperCase()}</span>
@@ -670,7 +682,7 @@
             <div class="flex flex-col sm:flex-row items-start justify-between gap-3 sm:gap-4">
               <div class="flex-1 min-w-0">
                 <div class="flex flex-wrap items-center gap-1.5 mb-2">
-                  <span class="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded font-medium">{content.type.replace('_', ' ')}</span>
+                  <span class="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded font-medium">{typeLabel[content.type] ? $_(typeLabel[content.type]) : content.type.replace(/_/g, ' ')}</span>
                   {#if content.platforms?.length}
                     {#each content.platforms as p}
                       <span class="text-xs px-2 py-0.5 bg-blue-50 text-blue-600 rounded">{p}</span>
