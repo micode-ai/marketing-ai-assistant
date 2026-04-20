@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
+import { BadRequestException } from '@nestjs/common';
 import { SocialService } from './social.service';
 import { PrismaService } from '../database/prisma.service';
 
@@ -70,6 +71,6 @@ describe('SocialService.cancelPublication', () => {
 
   it('rejects when publication is not PENDING', async () => {
     prisma.contentPublication.findFirst.mockResolvedValue({ id: 'pub1', status: 'PUBLISHED', contentId: 'c1', content: { id: 'c1', organizationId: 'org1' } });
-    await expect(service.cancelPublication('pub1', 'org1')).rejects.toThrow();
+    await expect(service.cancelPublication('pub1', 'org1')).rejects.toBeInstanceOf(BadRequestException);
   });
 });
