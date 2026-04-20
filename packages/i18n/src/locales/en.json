@@ -318,7 +318,20 @@
     "confirmDeleteAll": "Are you sure you want to delete all language versions of this content?",
     "imagePromptPlaceholder": "Describe the image you want to generate...",
     "generateImageBtn": "Generate Image",
-    "bodyPlaceholder": "Write your content here..."
+    "bodyPlaceholder": "Write your content here...",
+    "scheduled": "Scheduled",
+    "schedule": {
+      "scheduleForLater": "Schedule for later",
+      "scheduledAt": "Scheduled date and time",
+      "selectAccounts": "Publish to accounts",
+      "noProjectAccounts": "No social accounts attached to this project. Attach one in project settings.",
+      "noAccountsSelected": "Pick at least one account and a date/time.",
+      "mustBeFuture": "Scheduled time must be in the future.",
+      "scheduledFor": "Scheduled for {date}",
+      "cancelScheduled": "Cancel scheduling",
+      "cancelConfirm": "Cancel this scheduled publication?",
+      "willPublishAt": "Will publish to {n} account(s) at {date}"
+    }
   },
   "campaigns": {
     "title": "Campaigns",

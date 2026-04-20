@@ -15,9 +15,37 @@
   let imagePrompt = '';
   let generatingImage = false;
 
+  let scheduleEnabled = false;
+  let scheduleAt = '';
+  let scheduleAccountIds: string[] = [];
+  let projectAccounts: any[] = [];
+  let pendingPublications: any[] = [];
+
+  async function loadProjectAccounts() {
+    if (projectAccounts.length) return;
+    try { projectAccounts = await api.get<any[]>('/social/project-accounts', { projectId }); }
+    catch { projectAccounts = []; }
+  }
+
+  function isoToLocalInput(iso: string | null): string {
+    if (!iso) return '';
+    const d = new Date(iso);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+
   onMount(async () => {
     try {
       content = await api.get<any>(`/content/${contentId}`);
+      await loadProjectAccounts();
+      if (content?.status === 'SCHEDULED' && content.scheduledAt) {
+        scheduleEnabled = true;
+        scheduleAt = isoToLocalInput(content.scheduledAt);
+        try {
+          pendingPublications = await api.get<any[]>('/social/publications', { contentId });
+          scheduleAccountIds = pendingPublications.filter(p => p.status === 'PENDING').map(p => p.socialAccountId);
+        } catch { /* leave empty */ }
+      }
     } catch (e: any) {
       alert(e.message);
     } finally {
@@ -27,13 +55,27 @@
 
   async function save() {
     if (!content) return;
+    const isPublished = content.status === 'PUBLISHED';
+    if (scheduleEnabled && !isPublished) {
+      if (!scheduleAt || scheduleAccountIds.length === 0) { alert($_('content.schedule.noAccountsSelected')); return; }
+      if (new Date(scheduleAt).getTime() <= Date.now())   { alert($_('content.schedule.mustBeFuture'));      return; }
+    }
     saving = true;
     try {
-      await api.put(`/content/${contentId}`, {
+      const payload: any = {
         title: content.title,
         body: content.body,
         mediaUrls: content.mediaUrls,
-      });
+      };
+      if (!isPublished) {
+        payload.scheduleEnabled = scheduleEnabled;
+        if (scheduleEnabled) {
+          payload.scheduledAt = new Date(scheduleAt).toISOString();
+          payload.scheduledPublicationAccountIds = scheduleAccountIds;
+        }
+      }
+      await api.put(`/content/${contentId}`, payload);
+      goto(`/projects/${projectId}/content`);
     } catch (e: any) {
       alert(e.message);
     } finally {
@@ -140,6 +182,49 @@
             </div>
           {/each}
         </div>
+      </div>
+    {/if}
+
+    <!-- Schedule -->
+    {#if content.status !== 'PUBLISHED'}
+      <div class="mt-6 border-t pt-4">
+        <label class="flex items-center gap-2 text-sm font-medium text-gray-700">
+          <input type="checkbox" bind:checked={scheduleEnabled} />
+          {$_('content.schedule.scheduleForLater')}
+        </label>
+
+        {#if scheduleEnabled}
+          <div class="mt-3 space-y-3 max-w-2xl">
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">{$_('content.schedule.scheduledAt')}</label>
+              <input type="datetime-local" bind:value={scheduleAt}
+                     class="w-full border rounded-lg px-3 py-2 text-sm" />
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">{$_('content.schedule.selectAccounts')}</label>
+              {#if projectAccounts.length === 0}
+                <p class="text-xs text-gray-500">{$_('content.schedule.noProjectAccounts')}</p>
+              {:else}
+                <div class="space-y-1 max-h-40 overflow-y-auto border rounded-lg p-2">
+                  {#each projectAccounts as acc}
+                    <label class="flex items-center gap-2 text-sm">
+                      <input type="checkbox" value={acc.id}
+                             checked={scheduleAccountIds.includes(acc.id)}
+                             on:change={(e) => {
+                               if ((e.target as HTMLInputElement).checked) scheduleAccountIds = [...scheduleAccountIds, acc.id];
+                               else scheduleAccountIds = scheduleAccountIds.filter(id => id !== acc.id);
+                             }} />
+                      <span class="font-medium">{acc.platform}</span>
+                      <span class="text-gray-500 truncate">{acc.accountName}</span>
+                      {#if acc.language}<span class="text-xs px-1.5 py-0.5 bg-gray-100 rounded">{acc.language.toUpperCase()}</span>{/if}
+                    </label>
+                  {/each}
+                </div>
+              {/if}
+            </div>
+          </div>
+        {/if}
       </div>
     {/if}
   </div>
