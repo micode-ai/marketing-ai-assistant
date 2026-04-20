@@ -688,7 +688,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
               </svg>
               {$_('documents.selectFile')}
-              <input type="file" class="hidden" on:change={handleFileSelect} accept=".pdf,.doc,.docx,.xlsx,.pptx,.txt,.csv,.md,.png,.jpg,.jpeg,.gif,.webp,.svg" />
+              <input type="file" class="hidden" on:change={handleFileSelect} accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.md,.markdown,.png,.jpg,.jpeg,.gif,.webp,.svg" />
             </label>
           {/if}
         </div>
