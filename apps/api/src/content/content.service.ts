@@ -214,7 +214,7 @@ export class ContentService {
 
     return this.prisma.$transaction(async (tx) => {
       // Strip schedule control fields from the generic data update
-      const { scheduleEnabled, scheduledPublicationAccountIds, scheduledAt, status: _statusFromDto, ...rest } = dto as any;
+      const { scheduleEnabled: _scheduleEnabled, scheduledPublicationAccountIds: _scheduledPublicationAccountIds, scheduledAt, status: _statusFromDto, ...rest } = dto as any;
 
       const data: any = { ...rest };
 
