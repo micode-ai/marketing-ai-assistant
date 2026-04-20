@@ -129,6 +129,9 @@ export class DocumentsController {
     if (!projectId) {
       throw new BadRequestException('projectId is required');
     }
+    // Multer decodes multipart filenames as Latin-1 while browsers send UTF-8,
+    // which mangles Cyrillic/Unicode names. Re-decode before persisting.
+    file.originalname = Buffer.from(file.originalname, 'latin1').toString('utf8');
     return this.documentsService.createFromUpload(
       file,
       projectId,
