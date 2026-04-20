@@ -1306,6 +1306,15 @@
       "otherIncome": "Other"
     }
   },
+  "dashboard": {
+    "kpiTotalContent": "Content",
+    "kpiCampaigns": "Active campaigns",
+    "kpiSubscribers": "Subscribers",
+    "kpiSocialAccounts": "Social accounts",
+    "activityTitle": "Activity",
+    "lastNDays": "Last {n} days",
+    "noActivity": "No activity"
+  },
   "googlePlay": {
     "title": "Google Play Analytics",
     "tabs": {

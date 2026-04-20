@@ -1286,6 +1286,15 @@
       "otherIncome": "Inne"
     }
   },
+  "dashboard": {
+    "kpiTotalContent": "Treści",
+    "kpiCampaigns": "Aktywne kampanie",
+    "kpiSubscribers": "Subskrybenci",
+    "kpiSocialAccounts": "Konta społecznościowe",
+    "activityTitle": "Aktywność",
+    "lastNDays": "Ostatnie {n} dni",
+    "noActivity": "Brak aktywności"
+  },
   "googlePlay": {
     "title": "Analityka Google Play",
     "tabs": {

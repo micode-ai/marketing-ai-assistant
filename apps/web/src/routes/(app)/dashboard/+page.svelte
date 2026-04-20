@@ -4,8 +4,54 @@
   import { currentProjectStore, organizationIdStore, projectsStore } from '$lib/stores/projects';
   import type { Project, ProjectExportData, ProjectExportSection, ImportValidationResult } from '@marketing-ai/shared-types';
   import { goto } from '$app/navigation';
+  import DashboardKpiCards from '$lib/components/DashboardKpiCards.svelte';
+  import ProjectCardStats from '$lib/components/ProjectCardStats.svelte';
 
   $: projects = $projectsStore;
+
+  // ── Dashboard stats ──
+  type ProjectStats = { content: number; emailsSent: number; pageViews: number; conversions: number };
+  type OrgSummaryResponse = {
+    byProject: Array<{ projectId: string; projectName: string } & ProjectStats>;
+  };
+
+  let period: 7 | 30 | 90 = 30;
+  let projectStats: Record<string, ProjectStats> = {};
+  let projectStatsLoading = false;
+  let previousPeriod: 7 | 30 | 90 = period;
+  let lastLoadedOrg: string | null = null;
+
+  $: if ($organizationIdStore && ($organizationIdStore !== lastLoadedOrg || period !== previousPeriod)) {
+    lastLoadedOrg = $organizationIdStore;
+    previousPeriod = period;
+    loadByProject();
+  }
+
+  async function loadByProject() {
+    if (!$organizationIdStore) return;
+    projectStatsLoading = true;
+    try {
+      const res = await api.get<OrgSummaryResponse>('/analytics/organization', {
+        organizationId: $organizationIdStore,
+        period: `${period}d`,
+      });
+      const next: Record<string, ProjectStats> = {};
+      for (const row of res.byProject || []) {
+        next[row.projectId] = {
+          content: row.content,
+          emailsSent: row.emailsSent,
+          pageViews: row.pageViews,
+          conversions: row.conversions,
+        };
+      }
+      projectStats = next;
+    } catch {
+      // Keep previous stats to avoid visual glitch; but mark empty on first failure
+      if (Object.keys(projectStats).length === 0) projectStats = {};
+    } finally {
+      projectStatsLoading = false;
+    }
+  }
 
   // ── Import ──
   let showImportModal = false;
@@ -133,6 +179,10 @@
     </div>
   </div>
 
+  {#if $projectsStore.length > 0 && $organizationIdStore}
+    <DashboardKpiCards organizationId={$organizationIdStore} bind:period />
+  {/if}
+
   {#if $projectsStore.length === 0}
     <div class="flex flex-col items-center justify-center py-24 text-center">
       <div class="w-20 h-20 bg-primary-50 rounded-2xl flex items-center justify-center mb-6">
@@ -152,7 +202,7 @@
         <a
           href="/projects/{project.id}/overview"
           on:click={() => currentProjectStore.set(project)}
-          class="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md hover:border-primary-200 transition-all duration-150 group block cursor-pointer border-t-4
+          class="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md hover:border-primary-200 transition-all duration-150 group cursor-pointer border-t-4 flex flex-col h-full
             {project.status === 'ACTIVE' ? 'border-t-green-400' : project.status === 'PAUSED' ? 'border-t-amber-400' : 'border-t-gray-200'}"
         >
           <div class="flex items-start justify-between mb-4">
@@ -180,7 +230,7 @@
             <p class="text-sm text-gray-500 mb-4 line-clamp-2">{project.description}</p>
           {/if}
 
-          <div class="flex gap-4 text-xs text-gray-400 border-t border-gray-100 pt-4">
+          <div class="flex gap-4 text-xs text-gray-400 border-t border-gray-100 pt-4 mt-auto">
             <span class="flex items-center gap-1">
               <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" /></svg>
               {(project as any)._count?.content || 0}
@@ -194,6 +244,8 @@
               {(project as any)._count?.checklists || 0}
             </span>
           </div>
+
+          <ProjectCardStats stats={projectStats[project.id]} {period} loading={projectStatsLoading} />
         </a>
       {/each}
     </div>

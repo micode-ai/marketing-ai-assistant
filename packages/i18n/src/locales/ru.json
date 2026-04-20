@@ -1284,6 +1284,15 @@
       "otherIncome": "Прочее"
     }
   },
+  "dashboard": {
+    "kpiTotalContent": "Контент",
+    "kpiCampaigns": "Активные кампании",
+    "kpiSubscribers": "Подписчики",
+    "kpiSocialAccounts": "Соц. аккаунты",
+    "activityTitle": "Активность",
+    "lastNDays": "За {n} дней",
+    "noActivity": "Нет активности"
+  },
   "googlePlay": {
     "title": "Аналитика Google Play",
     "tabs": {
