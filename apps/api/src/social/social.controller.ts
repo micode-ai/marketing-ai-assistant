@@ -60,6 +60,13 @@ export class SocialController {
     return this.socialService.getPublications(contentId);
   }
 
+  @Delete('publications/:id')
+  @ApiOperation({ summary: 'Cancel a pending (scheduled) publication' })
+  async cancelPublication(@Param('id') id: string, @CurrentUser() user: any) {
+    const organizationId: string = user.memberships?.[0]?.organizationId;
+    return this.socialService.cancelPublication(id, organizationId);
+  }
+
   @Get('project-accounts')
   @ApiOperation({ summary: 'Get social accounts enabled for a specific project' })
   getProjectAccounts(@Query('projectId') projectId: string, @CurrentUser() user: any) {

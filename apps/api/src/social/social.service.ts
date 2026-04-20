@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../database/prisma.service';
 import axios from 'axios';
@@ -347,6 +347,33 @@ export class SocialService {
       },
       orderBy: { createdAt: 'desc' },
     });
+  }
+
+  async cancelPublication(id: string, organizationId: string) {
+    // Content can be org-scoped (organizationId set directly) OR project-scoped
+    // (organizationId null, derived via project.organizationId). Match both.
+    const pub = await this.prisma.contentPublication.findFirst({
+      where: {
+        id,
+        content: { OR: [{ organizationId }, { project: { organizationId } }] },
+      },
+      include: { content: { select: { id: true, organizationId: true } } },
+    });
+    if (!pub) throw new NotFoundException('Publication not found');
+    if (pub.status !== 'PENDING') throw new BadRequestException('Only pending publications can be cancelled');
+
+    await this.prisma.contentPublication.delete({ where: { id } });
+
+    const remainingPending = await this.prisma.contentPublication.count({
+      where: { contentId: pub.contentId, status: 'PENDING' },
+    });
+    const anyPublished = await this.prisma.contentPublication.count({
+      where: { contentId: pub.contentId, status: 'PUBLISHED' },
+    });
+    if (remainingPending === 0 && anyPublished === 0) {
+      await this.prisma.content.update({ where: { id: pub.contentId }, data: { status: 'DRAFT' } });
+    }
+    return { success: true };
   }
 
   private async publishToLinkedIn(content: any, tokens: any) {
