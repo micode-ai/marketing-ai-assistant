@@ -83,20 +83,23 @@ async processScheduled() {
       content: { scheduledAt: { lte: new Date() } },
     },
     include: { content: true, socialAccount: true },
-    take: 50,                     // bound per-tick work
+    orderBy: { content: { scheduledAt: 'asc' } },  // drain oldest overdue first
+    take: 50,                                       // bound per-tick work
   });
 
   // Group by contentId → publish in batches per content
   for (const pub of due) {
     try {
       const result = await this.platformStrategies[pub.platform].publish(pub.content, pub.socialAccount);
-      await prisma.contentPublication.update({
-        where: { id: pub.id },
+      // updateMany with status filter — race-safe: a parallel tick that already
+      // moved this row out of PENDING will see 0 affected rows.
+      await prisma.contentPublication.updateMany({
+        where: { id: pub.id, status: 'PENDING' },
         data: { status: 'PUBLISHED', platformPostId: result.id, platformPostUrl: result.url, publishedAt: new Date() },
       });
     } catch (err) {
-      await prisma.contentPublication.update({
-        where: { id: pub.id },
+      await prisma.contentPublication.updateMany({
+        where: { id: pub.id, status: 'PENDING' },
         data: { status: 'FAILED', error: String(err?.message ?? err) },
       });
     }
@@ -113,10 +116,12 @@ Notes:
 
 ### `DELETE /social/publications/:id`
 
+- Lives in `social.controller.ts` alongside the existing publish endpoints.
 - Auth: organization-scoped (verify the publication's content belongs to the caller's org).
 - Only allowed when `status = 'PENDING'`.
 - Deletes the row.
 - After deletion, if no `PENDING` rows remain for the content AND no `PUBLISHED` rows exist either, set `Content.status = 'DRAFT'`. (If at least one PUBLISHED exists, leave it alone.)
+- Scope: cancellation acts on a **single Content row's** publications. For multilingual groups, cancelling all language versions requires cancelling each Content's publications separately. (Out of scope for v1: a "cancel whole group" affordance.)
 
 ## Frontend
 
@@ -200,8 +205,9 @@ POST /content { scheduledAt, scheduledPublicationAccountIds }
 
 ## Testing
 
-- Unit: `social-scheduler.service.spec.ts` — pending-row pickup, status transitions, error path.
+- Unit: `social-scheduler.service.spec.ts` — pending-row pickup, status transitions, error path, race-safety (updateMany filtered on `status='PENDING'`).
 - Unit: `content.service.spec.ts` — DTO validation, language-matched ContentPublication creation.
+- Unit: `social.service.spec.ts` — `DELETE /social/publications/:id` resets `Content.status = 'DRAFT'` when last PENDING is removed and no PUBLISHED exists.
 - E2E: schedule a content for 1 minute in the future against MailHog/dev social mocks, assert PUBLISHED after one tick.
 
 ## Open Questions (resolved)
