@@ -73,6 +73,27 @@
   let activeCreateLang = 'en';
   let createSaving = false;
 
+  // Scheduled publishing state
+  let scheduleEnabled = false;
+  let scheduleAt = '';                              // bound to <input type="datetime-local">
+  let scheduleAccountIds: string[] = [];
+  let projectAccounts: any[] = [];
+
+  async function loadProjectAccounts() {
+    if (projectAccounts.length) return;
+    try { projectAccounts = await api.get<any[]>('/social/project-accounts', { projectId }); }
+    catch { projectAccounts = []; }
+  }
+
+  function isoToLocalInput(iso: string | null): string {
+    if (!iso) return '';
+    const d = new Date(iso);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+
+  $: if (showCreateModal) loadProjectAccounts();
+
   // Generate all languages
   let generateAllLanguages = true;
 
@@ -164,20 +185,46 @@
     }
   }
 
-  function openEdit(content: any) {
+  async function openEdit(content: any) {
     editingContent = content;
     editForm = { title: content.title, body: content.body, mediaUrls: content.mediaUrls || [] };
+    // Reset schedule state for this edit session
+    scheduleEnabled = false;
+    scheduleAt = '';
+    scheduleAccountIds = [];
+    await loadProjectAccounts();
+    if (content.status === 'SCHEDULED' && content.scheduledAt) {
+      scheduleEnabled = true;
+      scheduleAt = isoToLocalInput(content.scheduledAt);
+      try {
+        const pubs = await api.get<any[]>('/social/publications', { contentId: content.id });
+        scheduleAccountIds = pubs.filter(p => p.status === 'PENDING').map(p => p.socialAccountId);
+      } catch { /* leave empty */ }
+    }
   }
 
   async function saveEdit() {
     if (!editingContent) return;
+    const isPublished = editingContent.status === 'PUBLISHED';
+    if (scheduleEnabled && !isPublished) {
+      if (!scheduleAt || scheduleAccountIds.length === 0) { alert($_('content.schedule.noAccountsSelected')); return; }
+      if (new Date(scheduleAt).getTime() <= Date.now())   { alert($_('content.schedule.mustBeFuture'));      return; }
+    }
     editSaving = true;
     try {
-      const updated = await api.put<any>(`/content/${editingContent.id}`, {
+      const payload: any = {
         title: editForm.title,
         body: editForm.body,
         mediaUrls: editForm.mediaUrls,
-      });
+      };
+      if (!isPublished) {
+        payload.scheduleEnabled = scheduleEnabled;
+        if (scheduleEnabled) {
+          payload.scheduledAt = new Date(scheduleAt).toISOString();
+          payload.scheduledPublicationAccountIds = scheduleAccountIds;
+        }
+      }
+      const updated = await api.put<any>(`/content/${editingContent.id}`, payload);
       contents = contents.map(c => c.id === updated.id ? { ...c, ...updated } : c);
       editingContent = null;
     } catch(e: any) {
@@ -300,6 +347,7 @@
     APPROVED: 'bg-green-100 text-green-700',
     PUBLISHED: 'bg-blue-100 text-blue-700',
     REJECTED: 'bg-red-100 text-red-600',
+    SCHEDULED: 'bg-amber-50 text-amber-700',
   };
 
   const statusBorderAccent: Record<string, string> = {
@@ -308,6 +356,7 @@
     APPROVED: 'border-l-green-500',
     PUBLISHED: 'border-l-blue-500',
     REJECTED: 'border-l-red-400',
+    SCHEDULED: 'border-l-amber-400',
   };
 
   const statusLabel: Record<string, string> = {
@@ -316,6 +365,7 @@
     APPROVED: 'content.approved',
     PUBLISHED: 'content.published',
     REJECTED: 'content.rejected',
+    SCHEDULED: 'content.scheduled',
   };
 
   function toggleGroup(groupId: string) {
@@ -342,12 +392,20 @@
   }
 
   async function createContent() {
+    if (scheduleEnabled) {
+      if (!scheduleAt || scheduleAccountIds.length === 0) { alert($_('content.schedule.noAccountsSelected')); return; }
+      if (new Date(scheduleAt).getTime() <= Date.now())   { alert($_('content.schedule.mustBeFuture'));      return; }
+    }
     createSaving = true;
     try {
       const languages = createAllLanguages ? ['en', 'pl', 'ru'] : [$locale || 'en'];
       const groupId = languages.length > 1 ? crypto.randomUUID() : undefined;
       const primaryPlatform = createPlatforms[0];
-      for (const lang of languages) {
+      const scheduleIso = scheduleEnabled ? new Date(scheduleAt).toISOString() : undefined;
+
+      for (let i = 0; i < languages.length; i++) {
+        const lang = languages[i];
+        const isLast = i === languages.length - 1;
         const body = createAllLanguages ? createBodies[lang as string] : createForm.body;
         await api.post('/content', {
           ...createForm,
@@ -357,13 +415,16 @@
           ...(primaryPlatform ? { platform: primaryPlatform } : {}),
           ...(groupId ? { contentGroupId: groupId } : {}),
           projectId,
+          ...(scheduleIso ? { scheduledAt: scheduleIso } : {}),
+          ...(scheduleEnabled && isLast ? { scheduledPublicationAccountIds: scheduleAccountIds } : {}),
         });
       }
       contents = await api.get<any[]>('/content', { projectId });
       showCreateModal = false;
+      // reset form
       createForm = { title: '', type: 'SOCIAL_POST', body: '', mediaUrls: [] as string[] };
-      createPlatforms = [];
-      createBodies = { en: '', pl: '', ru: '' };
+      createPlatforms = []; createBodies = { en: '', pl: '', ru: '' };
+      scheduleEnabled = false; scheduleAt = ''; scheduleAccountIds = [];
     } catch (e: any) { alert(e.message); }
     finally { createSaving = false; }
   }
@@ -374,6 +435,26 @@
       await api.delete(`/content/${item.id}`);
     }
     contents = contents.filter(c => c.contentGroupId !== groupId);
+  }
+
+  async function cancelScheduled(content: any) {
+    if (!confirm($_('content.schedule.cancelConfirm'))) return;
+    try {
+      const pubs = await api.get<any[]>('/social/publications', { contentId: content.id });
+      const pendingIds = pubs.filter(p => p.status === 'PENDING').map(p => p.id);
+      const results = await Promise.allSettled(pendingIds.map(id => api.delete(`/social/publications/${id}`)));
+      const failures = results.filter(r => r.status === 'rejected');
+      // Refresh from server so the UI reflects actual backend state regardless of partial outcomes.
+      contents = await api.get<any[]>('/content', { projectId });
+      if (failures.length > 0) {
+        console.error('Some publications could not be cancelled', failures);
+        alert($_('common.error'));
+      }
+    } catch (err) {
+      console.error(err);
+      alert($_('common.error'));
+      contents = await api.get<any[]>('/content', { projectId });
+    }
   }
 
   const langBadgeColor: Record<string, string> = {
@@ -517,6 +598,12 @@
                         <div class="flex flex-wrap items-center gap-1.5 mb-2">
                           <span class="text-xs px-2 py-0.5 rounded font-bold {langBadgeColor[content.language] || 'bg-gray-100 text-gray-600'}">{(content.language || 'en').toUpperCase()}</span>
                           <span class="text-xs px-2 py-0.5 rounded {statusBadge[content.status] || 'bg-gray-100 text-gray-600'}">{$_(statusLabel[content.status] || 'content.draft')}</span>
+                          {#if content.status === 'SCHEDULED' && content.scheduledAt}
+                            <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">
+                              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                              {$_('content.schedule.scheduledFor', { values: { date: new Date(content.scheduledAt).toLocaleString() } })}
+                            </span>
+                          {/if}
                           {#if getScore(content.id) !== null}
                             <span class="text-xs px-2 py-0.5 rounded font-medium {scoreColor(getScore(content.id))}">{$_('content.score')}: {getScore(content.id)}</span>
                           {/if}
@@ -543,6 +630,14 @@
                               <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
                             </svg>
                             {$_('social.publish')}
+                          </button>
+                        {/if}
+                        {#if content.status === 'SCHEDULED'}
+                          <button
+                            on:click|stopPropagation={() => cancelScheduled(content)}
+                            class="text-xs px-3 py-1.5 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors duration-150 cursor-pointer"
+                          >
+                            {$_('content.schedule.cancelScheduled')}
                           </button>
                         {/if}
                         <a
@@ -584,6 +679,12 @@
                     <span class="text-xs px-2 py-0.5 bg-blue-50 text-blue-600 rounded">{content.platform}</span>
                   {/if}
                   <span class="text-xs px-2 py-0.5 rounded {statusBadge[content.status] || 'bg-gray-100 text-gray-600'}">{$_(statusLabel[content.status] || 'content.draft')}</span>
+                  {#if content.status === 'SCHEDULED' && content.scheduledAt}
+                    <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                      {$_('content.schedule.scheduledFor', { values: { date: new Date(content.scheduledAt).toLocaleString() } })}
+                    </span>
+                  {/if}
                   {#if content.language}
                     <span class="text-xs px-2 py-0.5 rounded font-medium {langBadgeColor[content.language] || 'bg-gray-100 text-gray-600'}">{content.language.toUpperCase()}</span>
                   {/if}
@@ -626,6 +727,15 @@
                       <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
                     </svg>
                     {$_('social.publish')}
+                  </button>
+                {/if}
+                <!-- Cancel scheduled button -->
+                {#if content.status === 'SCHEDULED'}
+                  <button
+                    on:click={() => cancelScheduled(content)}
+                    class="text-xs px-3 py-1.5 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors duration-150 cursor-pointer"
+                  >
+                    {$_('content.schedule.cancelScheduled')}
                   </button>
                 {/if}
                 <!-- Repurpose button -->
@@ -833,6 +943,49 @@
             </button>
           </div>
         </div>
+
+        <!-- Schedule block (hidden when content is PUBLISHED) -->
+        {#if editingContent.status !== 'PUBLISHED'}
+          <div class="border-t pt-4 mt-4">
+            <label class="flex items-center gap-2 text-sm font-medium text-gray-700">
+              <input type="checkbox" bind:checked={scheduleEnabled} />
+              {$_('content.schedule.scheduleForLater')}
+            </label>
+
+            {#if scheduleEnabled}
+              <div class="mt-3 space-y-3">
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">{$_('content.schedule.scheduledAt')}</label>
+                  <input type="datetime-local" bind:value={scheduleAt}
+                         class="w-full border rounded-lg px-3 py-2 text-sm" />
+                </div>
+
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">{$_('content.schedule.selectAccounts')}</label>
+                  {#if projectAccounts.length === 0}
+                    <p class="text-xs text-gray-500">{$_('content.schedule.noProjectAccounts')}</p>
+                  {:else}
+                    <div class="space-y-1 max-h-40 overflow-y-auto border rounded-lg p-2">
+                      {#each projectAccounts as acc}
+                        <label class="flex items-center gap-2 text-sm">
+                          <input type="checkbox" value={acc.id}
+                                 checked={scheduleAccountIds.includes(acc.id)}
+                                 on:change={(e) => {
+                                   if ((e.target as HTMLInputElement).checked) scheduleAccountIds = [...scheduleAccountIds, acc.id];
+                                   else scheduleAccountIds = scheduleAccountIds.filter(id => id !== acc.id);
+                                 }} />
+                          <span class="font-medium">{acc.platform}</span>
+                          <span class="text-gray-500 truncate">{acc.accountName}</span>
+                          {#if acc.language}<span class="text-xs px-1.5 py-0.5 bg-gray-100 rounded">{acc.language.toUpperCase()}</span>{/if}
+                        </label>
+                      {/each}
+                    </div>
+                  {/if}
+                </div>
+              </div>
+            {/if}
+          </div>
+        {/if}
       </div>
       <div class="p-6 border-t border-gray-100 flex gap-3 justify-end flex-shrink-0">
         <button on:click={() => editingContent = null} class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 text-sm cursor-pointer">
@@ -1154,6 +1307,46 @@
             </div>
           </div>
         {/if}
+
+        <div class="border-t pt-4 mt-4">
+          <label class="flex items-center gap-2 text-sm font-medium text-gray-700">
+            <input type="checkbox" bind:checked={scheduleEnabled} />
+            {$_('content.schedule.scheduleForLater')}
+          </label>
+
+          {#if scheduleEnabled}
+            <div class="mt-3 space-y-3">
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">{$_('content.schedule.scheduledAt')}</label>
+                <input type="datetime-local" bind:value={scheduleAt}
+                       class="w-full border rounded-lg px-3 py-2 text-sm" />
+              </div>
+
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">{$_('content.schedule.selectAccounts')}</label>
+                {#if projectAccounts.length === 0}
+                  <p class="text-xs text-gray-500">{$_('content.schedule.noProjectAccounts')}</p>
+                {:else}
+                  <div class="space-y-1 max-h-40 overflow-y-auto border rounded-lg p-2">
+                    {#each projectAccounts as acc}
+                      <label class="flex items-center gap-2 text-sm">
+                        <input type="checkbox" value={acc.id}
+                               checked={scheduleAccountIds.includes(acc.id)}
+                               on:change={(e) => {
+                                 if ((e.target as HTMLInputElement).checked) scheduleAccountIds = [...scheduleAccountIds, acc.id];
+                                 else scheduleAccountIds = scheduleAccountIds.filter(id => id !== acc.id);
+                               }} />
+                        <span class="font-medium">{acc.platform}</span>
+                        <span class="text-gray-500 truncate">{acc.accountName}</span>
+                        {#if acc.language}<span class="text-xs px-1.5 py-0.5 bg-gray-100 rounded">{acc.language.toUpperCase()}</span>{/if}
+                      </label>
+                    {/each}
+                  </div>
+                {/if}
+              </div>
+            </div>
+          {/if}
+        </div>
       </div>
       <div class="p-6 border-t border-gray-100 flex gap-3 justify-end flex-shrink-0">
         <button on:click={() => showCreateModal = false} class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 text-sm cursor-pointer">

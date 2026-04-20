@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { CreateContentDto } from './dto/create-content.dto';
 import { UpdateContentDto } from './dto/update-content.dto';
@@ -79,23 +79,87 @@ export class ContentService {
       organizationId = project?.organizationId;
     }
 
-    return this.prisma.content.create({
-      data: {
-        projectId: dto.projectId,
-        organizationId,
-        scope: (dto as any).scope || 'PROJECT',
-        campaignId: dto.campaignId,
-        type: dto.type as any,
-        title: dto.title,
-        body: dto.body,
-        mediaUrls: dto.mediaUrls || [],
-        platform: dto.platform as any,
-        platforms: dto.platforms || [],
-        scheduledAt: dto.scheduledAt,
-        aiGenerated: dto.aiGenerated || false,
-        language: dto.language || undefined,
-        contentGroupId: dto.contentGroupId || undefined,
-      },
+    const scheduling = !!dto.scheduledAt || !!dto.scheduledPublicationAccountIds?.length;
+    if (scheduling) {
+      if (!dto.scheduledAt || !dto.scheduledPublicationAccountIds?.length) {
+        throw new BadRequestException('scheduledAt and scheduledPublicationAccountIds must be provided together');
+      }
+      if (new Date(dto.scheduledAt).getTime() <= Date.now()) {
+        throw new BadRequestException('scheduledAt must be in the future');
+      }
+      const attached = await this.prisma.socialAccount.findMany({
+        where: {
+          id: { in: dto.scheduledPublicationAccountIds },
+          organizationId,                                  // defense in depth: never cross orgs
+          projects: { some: { projectId: dto.projectId! } },
+        },
+        select: { id: true, platform: true, language: true },
+      });
+      if (attached.length !== dto.scheduledPublicationAccountIds.length) {
+        throw new BadRequestException('One or more selected social accounts are not attached to this project');
+      }
+      (dto as any).__attachedAccounts = attached;
+    }
+
+    // Wrap Content + ContentPublication inserts in a transaction so a publication-insert
+    // failure does not leave an orphan SCHEDULED Content row with no publications.
+    return this.prisma.$transaction(async (tx) => {
+      const created = await tx.content.create({
+        data: {
+          projectId: dto.projectId,
+          organizationId,
+          scope: (dto as any).scope || 'PROJECT',
+          campaignId: dto.campaignId,
+          type: dto.type as any,
+          title: dto.title,
+          body: dto.body,
+          mediaUrls: dto.mediaUrls || [],
+          platform: dto.platform as any,
+          platforms: dto.platforms || [],
+          scheduledAt: dto.scheduledAt,
+          status: scheduling ? 'SCHEDULED' : undefined,
+          aiGenerated: dto.aiGenerated || false,
+          language: dto.language || undefined,
+          contentGroupId: dto.contentGroupId || undefined,
+        },
+      });
+
+      if (scheduling) {
+        const groupRows = created.contentGroupId
+          ? await tx.content.findMany({
+              where: { contentGroupId: created.contentGroupId },
+              select: { id: true, language: true },
+            })
+          : [{ id: created.id, language: created.language }];
+
+        const pickContentId = (accLang: string | null) => {
+          const lang = accLang || 'en';
+          const match = groupRows.find(r => r.language === lang);
+          return (match?.id) || created.id;
+        };
+
+        const accs = (dto as any).__attachedAccounts as Array<{ id: string; platform: string; language: string | null }>;
+        // Defensive: if a duplicate PENDING row for the same (contentId, socialAccountId)
+        // already exists (e.g., a retried multi-call), skip rather than throw.
+        const candidates = accs.map(a => ({
+          contentId: pickContentId(a.language),
+          socialAccountId: a.id,
+          platform: a.platform as any,
+          status: 'PENDING' as const,
+        }));
+        const existing = await tx.contentPublication.findMany({
+          where: { status: 'PENDING', socialAccountId: { in: candidates.map(c => c.socialAccountId) }, contentId: { in: candidates.map(c => c.contentId) } },
+          select: { contentId: true, socialAccountId: true },
+        });
+        const dupKey = (c: { contentId: string; socialAccountId: string }) => `${c.contentId}:${c.socialAccountId}`;
+        const seen = new Set(existing.map(dupKey));
+        const toCreate = candidates.filter(c => !seen.has(dupKey(c)));
+        if (toCreate.length > 0) {
+          await tx.contentPublication.createMany({ data: toCreate });
+        }
+      }
+
+      return created;
     });
   }
 
@@ -103,7 +167,39 @@ export class ContentService {
     const content = await this.prisma.content.findUnique({ where: { id } });
     if (!content) throw new NotFoundException('Content not found');
 
-    // Save version before update
+    const scheduleAction = (dto as any).scheduleEnabled;  // undefined | true | false
+
+    // Validate scheduling intent up front (outside the transaction)
+    let attachedAccounts: Array<{ id: string; platform: string; language: string | null }> = [];
+    if (scheduleAction === true) {
+      if (content.status === 'PUBLISHED') {
+        throw new BadRequestException('Cannot schedule content that has already been published');
+      }
+      if (!dto.scheduledAt || !dto.scheduledPublicationAccountIds?.length) {
+        throw new BadRequestException('scheduleEnabled=true requires scheduledAt and scheduledPublicationAccountIds');
+      }
+      if (new Date(dto.scheduledAt as any).getTime() <= Date.now()) {
+        throw new BadRequestException('scheduledAt must be in the future');
+      }
+      if (!content.projectId) {
+        throw new BadRequestException('Cannot schedule organization-scoped content without a project');
+      }
+      const orgId = content.organizationId;  // may be null for project-scoped — fall back below
+      const orgFilter: any = orgId ? { organizationId: orgId } : {};
+      attachedAccounts = await this.prisma.socialAccount.findMany({
+        where: {
+          id: { in: dto.scheduledPublicationAccountIds },
+          ...orgFilter,
+          projects: { some: { projectId: content.projectId } },
+        },
+        select: { id: true, platform: true, language: true },
+      });
+      if (attachedAccounts.length !== dto.scheduledPublicationAccountIds.length) {
+        throw new BadRequestException('One or more selected social accounts are not attached to this project');
+      }
+    }
+
+    // Save version before update (existing behavior)
     if (dto.body && dto.body !== content.body) {
       const lastVersion = await this.prisma.contentVersion.count({ where: { contentId: id } });
       await this.prisma.contentVersion.create({
@@ -116,7 +212,52 @@ export class ContentService {
       });
     }
 
-    return this.prisma.content.update({ where: { id }, data: dto as any });
+    return this.prisma.$transaction(async (tx) => {
+      // Strip schedule control fields from the generic data update
+      const { scheduleEnabled, scheduledPublicationAccountIds, scheduledAt, status: _statusFromDto, ...rest } = dto as any;
+
+      const data: any = { ...rest };
+
+      if (scheduleAction === true) {
+        // Off → On (or On → On with new schedule): wipe + recreate
+        await tx.contentPublication.deleteMany({ where: { contentId: id, status: 'PENDING' } });
+
+        const groupRows = content.contentGroupId
+          ? await tx.content.findMany({
+              where: { contentGroupId: content.contentGroupId },
+              select: { id: true, language: true },
+            })
+          : [{ id: content.id, language: content.language }];
+
+        const pickContentId = (accLang: string | null) => {
+          const lang = accLang || 'en';
+          const match = groupRows.find(r => r.language === lang);
+          return match?.id || content.id;
+        };
+
+        const candidates = attachedAccounts.map(a => ({
+          contentId: pickContentId(a.language),
+          socialAccountId: a.id,
+          platform: a.platform as any,
+          status: 'PENDING' as const,
+        }));
+        if (candidates.length > 0) {
+          await tx.contentPublication.createMany({ data: candidates });
+        }
+        data.status = 'SCHEDULED';
+        data.scheduledAt = scheduledAt;
+      } else if (scheduleAction === false) {
+        // On → Off: wipe + clear
+        await tx.contentPublication.deleteMany({ where: { contentId: id, status: 'PENDING' } });
+        data.scheduledAt = null;
+        if (content.status === 'SCHEDULED') {
+          data.status = 'DRAFT';
+        }
+      }
+      // else: scheduleAction undefined → leave schedule fields alone (don't touch status/scheduledAt)
+
+      return tx.content.update({ where: { id }, data });
+    });
   }
 
   async delete(id: string) {

@@ -57,4 +57,10 @@ export class CreateContentDto {
   @IsOptional()
   @IsString()
   contentGroupId?: string;
+
+  @ApiPropertyOptional({ description: 'Social account IDs to auto-publish to at scheduledAt' })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  scheduledPublicationAccountIds?: string[];
 }

@@ -56,8 +56,16 @@ export class SocialController {
 
   @Get('publications')
   @ApiOperation({ summary: 'Get publication history for a content item' })
-  getPublications(@Query('contentId') contentId: string) {
-    return this.socialService.getPublications(contentId);
+  getPublications(@Query('contentId') contentId: string, @CurrentUser() user: any) {
+    const organizationId: string = user.memberships?.[0]?.organizationId;
+    return this.socialService.getPublications(contentId, organizationId);
+  }
+
+  @Delete('publications/:id')
+  @ApiOperation({ summary: 'Cancel a pending (scheduled) publication' })
+  async cancelPublication(@Param('id') id: string, @CurrentUser() user: any) {
+    const organizationId: string = user.memberships?.[0]?.organizationId;
+    return this.socialService.cancelPublication(id, organizationId);
   }
 
   @Get('project-accounts')
