@@ -193,7 +193,7 @@
     scheduleAt = '';
     scheduleAccountIds = [];
     await loadProjectAccounts();
-    if (content.status === 'SCHEDULED' && content.scheduledAt) {
+    if (content.scheduledAt && content.status !== 'PUBLISHED') {
       scheduleEnabled = true;
       scheduleAt = isoToLocalInput(content.scheduledAt);
       try {
@@ -598,7 +598,7 @@
                         <div class="flex flex-wrap items-center gap-1.5 mb-2">
                           <span class="text-xs px-2 py-0.5 rounded font-bold {langBadgeColor[content.language] || 'bg-gray-100 text-gray-600'}">{(content.language || 'en').toUpperCase()}</span>
                           <span class="text-xs px-2 py-0.5 rounded {statusBadge[content.status] || 'bg-gray-100 text-gray-600'}">{$_(statusLabel[content.status] || 'content.draft')}</span>
-                          {#if content.status === 'SCHEDULED' && content.scheduledAt}
+                          {#if content.scheduledAt && content.status !== 'PUBLISHED'}
                             <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">
                               <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                               {$_('content.schedule.scheduledFor', { values: { date: new Date(content.scheduledAt).toLocaleString() } })}
@@ -632,7 +632,7 @@
                             {$_('social.publish')}
                           </button>
                         {/if}
-                        {#if content.status === 'SCHEDULED'}
+                        {#if content.scheduledAt && content.status !== 'PUBLISHED'}
                           <button
                             on:click|stopPropagation={() => cancelScheduled(content)}
                             class="text-xs px-3 py-1.5 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors duration-150 cursor-pointer"
@@ -679,7 +679,7 @@
                     <span class="text-xs px-2 py-0.5 bg-blue-50 text-blue-600 rounded">{content.platform}</span>
                   {/if}
                   <span class="text-xs px-2 py-0.5 rounded {statusBadge[content.status] || 'bg-gray-100 text-gray-600'}">{$_(statusLabel[content.status] || 'content.draft')}</span>
-                  {#if content.status === 'SCHEDULED' && content.scheduledAt}
+                  {#if content.scheduledAt && content.status !== 'PUBLISHED'}
                     <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">
                       <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                       {$_('content.schedule.scheduledFor', { values: { date: new Date(content.scheduledAt).toLocaleString() } })}
@@ -730,7 +730,7 @@
                   </button>
                 {/if}
                 <!-- Cancel scheduled button -->
-                {#if content.status === 'SCHEDULED'}
+                {#if content.scheduledAt && content.status !== 'PUBLISHED'}
                   <button
                     on:click={() => cancelScheduled(content)}
                     class="text-xs px-3 py-1.5 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors duration-150 cursor-pointer"
