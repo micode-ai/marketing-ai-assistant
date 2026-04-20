@@ -123,6 +123,18 @@ git commit -m "feat(api): add scheduledPublicationAccountIds to CreateContentDto
 
 ---
 
+## Multilingual flow contract (read before Tasks 3 and 7)
+
+The existing Create modal (`createContent()` in `+page.svelte:344`) loops `POST /content` **once per language**, sharing a client-generated `contentGroupId`. For scheduling, sending `scheduledPublicationAccountIds` on every iteration would create N duplicate `ContentPublication` rows per account (one per language). The contract this plan adopts:
+
+- The frontend sends `scheduledAt` on **every** language iteration so all sibling Content rows share the same scheduled time and `status='SCHEDULED'`.
+- The frontend sends `scheduledPublicationAccountIds` on the **last** iteration only — by then all sibling Content rows already exist with the shared `contentGroupId`, so the API can resolve `account.language → matching sibling content` for each account when it creates the PENDING publications.
+- For the single-language (non-grouped) case the only iteration is also "the last" — same code path.
+
+The backend defensively uses `createMany({ skipDuplicates: true })` and a `(contentId, socialAccountId, status='PENDING')` uniqueness check at insert time so any accidental double-call cannot create duplicate PENDING rows.
+
+---
+
 ## Task 3: Backend — `content.service.create()` schedules + creates PENDING publications
 
 **Files:**
@@ -291,14 +303,24 @@ async create(dto: CreateContentDto, _userId: string) {
     };
 
     const accs = (dto as any).__attachedAccounts as Array<{ id: string; platform: string; language: string | null }>;
-    await this.prisma.contentPublication.createMany({
-      data: accs.map(a => ({
-        contentId: pickContentId(a.language),
-        socialAccountId: a.id,
-        platform: a.platform as any,
-        status: 'PENDING' as const,
-      })),
+    // Defensive: if a duplicate PENDING row for the same (contentId, socialAccountId)
+    // already exists (e.g., a retried multi-call), skip rather than throw.
+    const candidates = accs.map(a => ({
+      contentId: pickContentId(a.language),
+      socialAccountId: a.id,
+      platform: a.platform as any,
+      status: 'PENDING' as const,
+    }));
+    const existing = await this.prisma.contentPublication.findMany({
+      where: { status: 'PENDING', socialAccountId: { in: candidates.map(c => c.socialAccountId) }, contentId: { in: candidates.map(c => c.contentId) } },
+      select: { contentId: true, socialAccountId: true },
     });
+    const dupKey = (c: { contentId: string; socialAccountId: string }) => `${c.contentId}:${c.socialAccountId}`;
+    const seen = new Set(existing.map(dupKey));
+    const toCreate = candidates.filter(c => !seen.has(dupKey(c)));
+    if (toCreate.length > 0) {
+      await this.prisma.contentPublication.createMany({ data: toCreate });
+    }
   }
 
   return created;
@@ -307,7 +329,7 @@ async create(dto: CreateContentDto, _userId: string) {
 
 Add `BadRequestException` to the `@nestjs/common` import line at the top.
 
-> **Note on `socialAccount.projects` relation:** verify this is the join table accessor. If the relation in `schema.prisma` is named `projectAccounts` instead, swap accordingly. Run `grep -n "model SocialAccount" -A 30 packages/database/prisma/schema.prisma` to confirm before implementing.
+> The relation accessor on `SocialAccount` for project attachment is `projects` (via the `ProjectSocialAccount` join). The query above is correct as written.
 
 - [ ] **Step 4: Run test**
 
@@ -649,7 +671,7 @@ describe('SocialService.cancelPublication', () => {
   });
 
   it('deletes a PENDING publication and resets Content.status to DRAFT when no PUBLISHED siblings exist', async () => {
-    prisma.contentPublication.findFirst.mockResolvedValue({ id: 'pub1', status: 'PENDING', contentId: 'c1', content: { organizationId: 'org1' } });
+    prisma.contentPublication.findFirst.mockResolvedValue({ id: 'pub1', status: 'PENDING', contentId: 'c1', content: { id: 'c1', organizationId: 'org1' } });
     prisma.contentPublication.count
       .mockResolvedValueOnce(0)   // remaining PENDING
       .mockResolvedValueOnce(0);  // existing PUBLISHED
@@ -686,8 +708,13 @@ Expected: FAIL with "cancelPublication is not a function".
 Add to `SocialService`:
 ```ts
 async cancelPublication(id: string, organizationId: string) {
+  // Content can be org-scoped (organizationId set directly) OR project-scoped
+  // (organizationId null, derived via project.organizationId). Match both.
   const pub = await this.prisma.contentPublication.findFirst({
-    where: { id, content: { organizationId } },
+    where: {
+      id,
+      content: { OR: [{ organizationId }, { project: { organizationId } }] },
+    },
     include: { content: { select: { id: true, organizationId: true } } },
   });
   if (!pub) throw new NotFoundException('Publication not found');
@@ -710,16 +737,16 @@ async cancelPublication(id: string, organizationId: string) {
 
 Add `BadRequestException` to imports if not present.
 
-In `apps/api/src/social/social.controller.ts`, add:
+In `apps/api/src/social/social.controller.ts`, add (matching the existing `@CurrentUser()` pattern used by every other endpoint in this controller — `req.user` is **not** the convention here):
 ```ts
 @Delete('publications/:id')
-async cancelPublication(@Param('id') id: string, @Req() req: any) {
-  const organizationId = req.user.organizationId;
+async cancelPublication(@Param('id') id: string, @CurrentUser() user: any) {
+  const organizationId: string = user.memberships?.[0]?.organizationId;
   return this.socialService.cancelPublication(id, organizationId);
 }
 ```
 
-Add `Delete`, `Param` to the `@nestjs/common` import line if missing.
+Add `Delete`, `Param` to the `@nestjs/common` import line if missing. `@CurrentUser` is already imported.
 
 - [ ] **Step 4: Run tests**
 
@@ -805,28 +832,56 @@ Below the body / language tabs in the Create modal markup, add:
 </div>
 ```
 
-- [ ] **Step 3: Wire submit payload**
+- [ ] **Step 3: Wire submit payload — multilingual-aware**
 
-Locate the existing `createContent()` (or equivalent submit handler). Augment its payload:
+Locate `createContent()` at `apps/web/src/routes/(app)/projects/[id]/content/+page.svelte:344`. The existing handler loops `for (const lang of languages)` and calls `POST /content` once per language, sharing a `contentGroupId`. Per the **multilingual flow contract** above:
+
+- `scheduledAt` is sent on **every** language iteration so all sibling rows share the schedule.
+- `scheduledPublicationAccountIds` is sent on the **last** iteration only (after siblings exist), so the API can resolve `account.language → matching content` against the full group.
+
+Pre-validate once before the loop, then in the loop:
+
 ```ts
-const payload: any = { /* existing fields */ };
-if (scheduleEnabled) {
-  if (!scheduleAt || scheduleAccountIds.length === 0) {
-    alert($_('content.schedule.noAccountsSelected'));
-    return;
+async function createContent() {
+  if (scheduleEnabled) {
+    if (!scheduleAt || scheduleAccountIds.length === 0) { alert($_('content.schedule.noAccountsSelected')); return; }
+    if (new Date(scheduleAt).getTime() <= Date.now())   { alert($_('content.schedule.mustBeFuture'));      return; }
   }
-  const iso = new Date(scheduleAt).toISOString();
-  if (new Date(iso).getTime() <= Date.now()) {
-    alert($_('content.schedule.mustBeFuture'));
-    return;
-  }
-  payload.scheduledAt = iso;
-  payload.scheduledPublicationAccountIds = scheduleAccountIds;
+  createSaving = true;
+  try {
+    const languages = createAllLanguages ? ['en', 'pl', 'ru'] : [$locale || 'en'];
+    const groupId = languages.length > 1 ? crypto.randomUUID() : undefined;
+    const primaryPlatform = createPlatforms[0];
+    const scheduleIso = scheduleEnabled ? new Date(scheduleAt).toISOString() : undefined;
+
+    for (let i = 0; i < languages.length; i++) {
+      const lang = languages[i];
+      const isLast = i === languages.length - 1;
+      const body = createAllLanguages ? createBodies[lang as string] : createForm.body;
+      await api.post('/content', {
+        ...createForm,
+        body,
+        language: lang,
+        platforms: createPlatforms,
+        ...(primaryPlatform ? { platform: primaryPlatform } : {}),
+        ...(groupId ? { contentGroupId: groupId } : {}),
+        projectId,
+        ...(scheduleIso ? { scheduledAt: scheduleIso } : {}),
+        ...(scheduleEnabled && isLast ? { scheduledPublicationAccountIds: scheduleAccountIds } : {}),
+      });
+    }
+    contents = await api.get<any[]>('/content', { projectId });
+    showCreateModal = false;
+    // reset
+    createForm = { title: '', type: 'SOCIAL_POST', body: '', mediaUrls: [] as string[] };
+    createPlatforms = []; createBodies = { en: '', pl: '', ru: '' };
+    scheduleEnabled = false; scheduleAt = ''; scheduleAccountIds = [];
+  } catch (e: any) { alert(e.message); }
+  finally { createSaving = false; }
 }
-await api.post('/content', payload);
 ```
 
-Reset on close: when `showCreateModal` flips to false, reset `scheduleEnabled = false; scheduleAt = ''; scheduleAccountIds = [];`.
+> The backend's defensive dedupe in Task 3 is the safety net — but the "last call only" contract is the correctness mechanism. Keep both.
 
 - [ ] **Step 4: Smoke test in browser**
 
@@ -891,7 +946,7 @@ async function cancelScheduled(content: any) {
 }
 ```
 
-> The existing `GET /social/publications?contentId=X` endpoint already returns all rows for a content. Verify with `grep -n "getPublications\|publications" apps/api/src/social/social.controller.ts`. If absent, add a thin endpoint in this task.
+> `GET /social/publications?contentId=X` already exists in `social.controller.ts` — no new endpoint needed.
 
 - [ ] **Step 3: Smoke test**
 
@@ -991,7 +1046,8 @@ After PR merges, update `MEMORY.md` "Status" section to mention "Scheduled Conte
 ## Notes for the implementer
 
 - **Race-safe writes:** the scheduler uses `updateMany({ where: { id, status: 'PENDING' } })` — a parallel tick that already moved the row sees zero rows affected, no error.
+- **Single API process assumption:** the `this.processing` re-entrancy guard is per-instance. Today the API runs as one process, so this is fine. In a horizontally scaled deployment the guard wouldn't prevent two pods from picking up the same row, but the `updateMany`-with-status-filter still keeps writes correct (one pod's update succeeds, the other's no-ops). The platform-side double-publish risk is real for multi-pod and would need a SELECT FOR UPDATE / advisory lock or a Bull queue — out of scope for v1.
 - **No retries (v1):** a row that errors lands in `FAILED` and stays there. Future work could add a "retry failed" UI button that resets status to PENDING.
 - **Multilingual:** language matching uses the same fallback as `POST /social/publish` — account language → matching content in group → fallback to source content.
-- **Project-account relation name:** confirm the actual relation accessor on `SocialAccount` (it might be `projects` or `projectAccounts`) by reading `schema.prisma` before writing the `socialAccount.findMany` query in Task 3.
 - **DTO validation cap:** the API validates `scheduledAt > now` at submit time. There is still a (small) window where the cron picks up a row whose scheduledAt was edited to a far past — that's fine, it just publishes immediately.
+- **Multilingual contract:** `scheduledPublicationAccountIds` flows on the **last** `POST /content` of the language loop (see "Multilingual flow contract" section). The backend has a defensive dedupe so an accidental double-call doesn't create duplicate PENDING rows.
