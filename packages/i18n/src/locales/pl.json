@@ -322,6 +322,7 @@
       "scheduleForLater": "Zaplanuj na później",
       "scheduledAt": "Data i godzina publikacji",
       "selectAccounts": "Publikuj na kontach",
+      "languageRoutingHint": "Każde konto otrzyma post w języku skonfigurowanym w tym koncie. Ustaw język każdego konta w Ustawienia → Integracje.",
       "noProjectAccounts": "Do tego projektu nie podpięto żadnych kont społecznościowych. Podłącz konto w ustawieniach projektu.",
       "noAccountsSelected": "Wybierz przynajmniej jedno konto oraz datę i godzinę.",
       "mustBeFuture": "Zaplanowany czas musi być w przyszłości.",
