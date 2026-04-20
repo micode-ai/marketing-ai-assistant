@@ -167,7 +167,39 @@ export class ContentService {
     const content = await this.prisma.content.findUnique({ where: { id } });
     if (!content) throw new NotFoundException('Content not found');
 
-    // Save version before update
+    const scheduleAction = (dto as any).scheduleEnabled;  // undefined | true | false
+
+    // Validate scheduling intent up front (outside the transaction)
+    let attachedAccounts: Array<{ id: string; platform: string; language: string | null }> = [];
+    if (scheduleAction === true) {
+      if (content.status === 'PUBLISHED') {
+        throw new BadRequestException('Cannot schedule content that has already been published');
+      }
+      if (!dto.scheduledAt || !dto.scheduledPublicationAccountIds?.length) {
+        throw new BadRequestException('scheduleEnabled=true requires scheduledAt and scheduledPublicationAccountIds');
+      }
+      if (new Date(dto.scheduledAt as any).getTime() <= Date.now()) {
+        throw new BadRequestException('scheduledAt must be in the future');
+      }
+      if (!content.projectId) {
+        throw new BadRequestException('Cannot schedule organization-scoped content without a project');
+      }
+      const orgId = content.organizationId;  // may be null for project-scoped — fall back below
+      const orgFilter: any = orgId ? { organizationId: orgId } : {};
+      attachedAccounts = await this.prisma.socialAccount.findMany({
+        where: {
+          id: { in: dto.scheduledPublicationAccountIds },
+          ...orgFilter,
+          projects: { some: { projectId: content.projectId } },
+        },
+        select: { id: true, platform: true, language: true },
+      });
+      if (attachedAccounts.length !== dto.scheduledPublicationAccountIds.length) {
+        throw new BadRequestException('One or more selected social accounts are not attached to this project');
+      }
+    }
+
+    // Save version before update (existing behavior)
     if (dto.body && dto.body !== content.body) {
       const lastVersion = await this.prisma.contentVersion.count({ where: { contentId: id } });
       await this.prisma.contentVersion.create({
@@ -180,7 +212,52 @@ export class ContentService {
       });
     }
 
-    return this.prisma.content.update({ where: { id }, data: dto as any });
+    return this.prisma.$transaction(async (tx) => {
+      // Strip schedule control fields from the generic data update
+      const { scheduleEnabled, scheduledPublicationAccountIds, scheduledAt, status: _statusFromDto, ...rest } = dto as any;
+
+      const data: any = { ...rest };
+
+      if (scheduleAction === true) {
+        // Off → On (or On → On with new schedule): wipe + recreate
+        await tx.contentPublication.deleteMany({ where: { contentId: id, status: 'PENDING' } });
+
+        const groupRows = content.contentGroupId
+          ? await tx.content.findMany({
+              where: { contentGroupId: content.contentGroupId },
+              select: { id: true, language: true },
+            })
+          : [{ id: content.id, language: content.language }];
+
+        const pickContentId = (accLang: string | null) => {
+          const lang = accLang || 'en';
+          const match = groupRows.find(r => r.language === lang);
+          return match?.id || content.id;
+        };
+
+        const candidates = attachedAccounts.map(a => ({
+          contentId: pickContentId(a.language),
+          socialAccountId: a.id,
+          platform: a.platform as any,
+          status: 'PENDING' as const,
+        }));
+        if (candidates.length > 0) {
+          await tx.contentPublication.createMany({ data: candidates });
+        }
+        data.status = 'SCHEDULED';
+        data.scheduledAt = scheduledAt;
+      } else if (scheduleAction === false) {
+        // On → Off: wipe + clear
+        await tx.contentPublication.deleteMany({ where: { contentId: id, status: 'PENDING' } });
+        data.scheduledAt = null;
+        if (content.status === 'SCHEDULED') {
+          data.status = 'DRAFT';
+        }
+      }
+      // else: scheduleAction undefined → leave schedule fields alone (don't touch status/scheduledAt)
+
+      return tx.content.update({ where: { id }, data });
+    });
   }
 
   async delete(id: string) {

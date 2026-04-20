@@ -99,3 +99,82 @@ describe('ContentService.create — scheduled', () => {
     expect(mockPrisma.socialAccount.findMany).not.toHaveBeenCalled();
   });
 });
+
+describe('ContentService.update — scheduling reconciliation', () => {
+  let service: ContentService;
+  const mp: any = {
+    project: { findUnique: jest.fn() },
+    content: { findUnique: jest.fn(), update: jest.fn(), findMany: jest.fn() },
+    contentVersion: { count: jest.fn().mockResolvedValue(0), create: jest.fn() },
+    socialAccount: { findMany: jest.fn() },
+    contentPublication: { deleteMany: jest.fn(), createMany: jest.fn(), findMany: jest.fn().mockResolvedValue([]) },
+    $transaction: jest.fn(async (cb: any) => cb(mp)),
+  };
+
+  beforeEach(async () => {
+    jest.clearAllMocks();
+    mp.contentPublication.findMany.mockResolvedValue([]);
+    const mod: TestingModule = await Test.createTestingModule({
+      providers: [ContentService, { provide: PrismaService, useValue: mp }],
+    }).compile();
+    service = mod.get(ContentService);
+  });
+
+  it('enables schedule (off → on): creates PENDING rows and sets SCHEDULED', async () => {
+    const future = new Date(Date.now() + 60_000).toISOString();
+    mp.content.findUnique.mockResolvedValue({ id: 'c1', status: 'DRAFT', body: 'b', projectId: 'p1', organizationId: 'org1', contentGroupId: null, language: 'en' });
+    mp.socialAccount.findMany.mockResolvedValue([{ id: 'acc1', platform: 'LINKEDIN', language: 'en' }]);
+    mp.content.findMany.mockResolvedValue([{ id: 'c1', language: 'en' }]);
+    mp.content.update.mockResolvedValue({ id: 'c1' });
+
+    await service.update('c1', { scheduleEnabled: true, scheduledAt: future as any, scheduledPublicationAccountIds: ['acc1'] } as any, 'u1');
+
+    expect(mp.contentPublication.deleteMany).toHaveBeenCalledWith({ where: { contentId: 'c1', status: 'PENDING' } });
+    expect(mp.contentPublication.createMany).toHaveBeenCalledWith({
+      data: expect.arrayContaining([
+        expect.objectContaining({ contentId: 'c1', socialAccountId: 'acc1', status: 'PENDING' }),
+      ]),
+    });
+    expect(mp.content.update).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: 'c1' },
+      data: expect.objectContaining({ status: 'SCHEDULED', scheduledAt: future }),
+    }));
+  });
+
+  it('disables schedule (on → off): deletes PENDING rows, clears scheduledAt, resets DRAFT', async () => {
+    mp.content.findUnique.mockResolvedValue({ id: 'c1', status: 'SCHEDULED', body: 'b', projectId: 'p1', organizationId: 'org1' });
+    mp.content.update.mockResolvedValue({ id: 'c1' });
+
+    await service.update('c1', { scheduleEnabled: false } as any, 'u1');
+
+    expect(mp.contentPublication.deleteMany).toHaveBeenCalledWith({ where: { contentId: 'c1', status: 'PENDING' } });
+    expect(mp.content.update).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: 'c1' },
+      data: expect.objectContaining({ scheduledAt: null, status: 'DRAFT' }),
+    }));
+  });
+
+  it('rejects enabling schedule when content is already PUBLISHED', async () => {
+    const future = new Date(Date.now() + 60_000).toISOString();
+    mp.content.findUnique.mockResolvedValue({ id: 'c1', status: 'PUBLISHED', body: 'b', projectId: 'p1', organizationId: 'org1' });
+    await expect(service.update('c1', { scheduleEnabled: true, scheduledAt: future as any, scheduledPublicationAccountIds: ['acc1'] } as any, 'u1'))
+      .rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('rejects scheduleEnabled=true without scheduledAt', async () => {
+    mp.content.findUnique.mockResolvedValue({ id: 'c1', status: 'DRAFT', body: 'b', projectId: 'p1', organizationId: 'org1' });
+    await expect(service.update('c1', { scheduleEnabled: true, scheduledPublicationAccountIds: ['acc1'] } as any, 'u1'))
+      .rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('does not touch schedule when scheduleEnabled is absent', async () => {
+    mp.content.findUnique.mockResolvedValue({ id: 'c1', status: 'DRAFT', body: 'old', projectId: 'p1', organizationId: 'org1' });
+    mp.content.update.mockResolvedValue({ id: 'c1' });
+    await service.update('c1', { title: 'new title' } as any, 'u1');
+    expect(mp.contentPublication.deleteMany).not.toHaveBeenCalled();
+    expect(mp.contentPublication.createMany).not.toHaveBeenCalled();
+    expect(mp.content.update).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.not.objectContaining({ status: expect.anything(), scheduledAt: expect.anything() }),
+    }));
+  });
+});
