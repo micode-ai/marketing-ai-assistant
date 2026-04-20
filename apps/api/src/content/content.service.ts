@@ -79,14 +79,22 @@ export class ContentService {
       organizationId = project?.organizationId;
     }
 
-    const scheduling = !!dto.scheduledAt || !!dto.scheduledPublicationAccountIds?.length;
-    if (scheduling) {
-      if (!dto.scheduledAt || !dto.scheduledPublicationAccountIds?.length) {
-        throw new BadRequestException('scheduledAt and scheduledPublicationAccountIds must be provided together');
-      }
-      if (new Date(dto.scheduledAt).getTime() <= Date.now()) {
+    // Multilingual scheduling contract: the frontend creates N sibling Content rows
+    // (one per language) sharing a contentGroupId, sends `scheduledAt` on every call,
+    // but `scheduledPublicationAccountIds` only on the LAST call (once all siblings
+    // exist and the API can resolve account.language → matching sibling content).
+    // So "scheduledAt alone" is a valid sibling-row state; "accountIds alone" is not.
+    const hasPublications = !!dto.scheduledPublicationAccountIds?.length;
+    const hasScheduledAt = !!dto.scheduledAt;
+    if (hasPublications && !hasScheduledAt) {
+      throw new BadRequestException('scheduledAt is required when scheduledPublicationAccountIds is set');
+    }
+    if (hasScheduledAt) {
+      if (new Date(dto.scheduledAt!).getTime() <= Date.now()) {
         throw new BadRequestException('scheduledAt must be in the future');
       }
+    }
+    if (hasPublications) {
       const attached = await this.prisma.socialAccount.findMany({
         where: {
           id: { in: dto.scheduledPublicationAccountIds },
@@ -95,7 +103,7 @@ export class ContentService {
         },
         select: { id: true, platform: true, language: true },
       });
-      if (attached.length !== dto.scheduledPublicationAccountIds.length) {
+      if (attached.length !== dto.scheduledPublicationAccountIds!.length) {
         throw new BadRequestException('One or more selected social accounts are not attached to this project');
       }
       (dto as any).__attachedAccounts = attached;
@@ -117,14 +125,16 @@ export class ContentService {
           platform: dto.platform as any,
           platforms: dto.platforms || [],
           scheduledAt: dto.scheduledAt,
-          status: scheduling ? 'SCHEDULED' : undefined,
+          // A sibling row (scheduledAt without publications) is still SCHEDULED
+          // from the user's point of view — they see the badge in the list.
+          status: hasScheduledAt ? 'SCHEDULED' : undefined,
           aiGenerated: dto.aiGenerated || false,
           language: dto.language || undefined,
           contentGroupId: dto.contentGroupId || undefined,
         },
       });
 
-      if (scheduling) {
+      if (hasPublications) {
         const groupRows = created.contentGroupId
           ? await tx.content.findMany({
               where: { contentGroupId: created.contentGroupId },

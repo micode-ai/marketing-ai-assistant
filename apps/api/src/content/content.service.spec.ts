@@ -37,12 +37,26 @@ describe('ContentService.create — scheduled', () => {
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 
-  it('rejects when scheduledAt is set without accountIds', async () => {
+  it('allows scheduledAt without accountIds (multilingual sibling row): SCHEDULED, no publications', async () => {
     const future = new Date(Date.now() + 60_000).toISOString();
+    mockPrisma.content.create.mockResolvedValue({ id: 'ct1', language: 'en', contentGroupId: 'grp1' });
+    await service.create({
+      projectId: 'p1', type: 'SOCIAL_POST', title: 't', body: 'b',
+      scheduledAt: future as any,
+      contentGroupId: 'grp1',
+    } as any, 'u1');
+    expect(mockPrisma.content.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ status: 'SCHEDULED', scheduledAt: future }),
+    }));
+    expect(mockPrisma.contentPublication.createMany).not.toHaveBeenCalled();
+  });
+
+  it('rejects accountIds without scheduledAt', async () => {
+    mockPrisma.socialAccount.findMany.mockResolvedValue([{ id: 'acc1', platform: 'LINKEDIN', language: 'en' }]);
     await expect(
       service.create({
         projectId: 'p1', type: 'SOCIAL_POST', title: 't', body: 'b',
-        scheduledAt: future as any,
+        scheduledPublicationAccountIds: ['acc1'],
       } as any, 'u1'),
     ).rejects.toBeInstanceOf(BadRequestException);
   });
