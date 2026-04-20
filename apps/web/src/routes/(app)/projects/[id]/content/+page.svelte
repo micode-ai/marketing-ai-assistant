@@ -965,6 +965,7 @@
                   {#if projectAccounts.length === 0}
                     <p class="text-xs text-gray-500">{$_('content.schedule.noProjectAccounts')}</p>
                   {:else}
+                    <p class="text-xs text-gray-500 mb-1">{$_('content.schedule.languageRoutingHint')}</p>
                     <div class="space-y-1 max-h-40 overflow-y-auto border rounded-lg p-2">
                       {#each projectAccounts as acc}
                         <label class="flex items-center gap-2 text-sm">
@@ -1327,6 +1328,7 @@
                 {#if projectAccounts.length === 0}
                   <p class="text-xs text-gray-500">{$_('content.schedule.noProjectAccounts')}</p>
                 {:else}
+                  <p class="text-xs text-gray-500 mb-1">{$_('content.schedule.languageRoutingHint')}</p>
                   <div class="space-y-1 max-h-40 overflow-y-auto border rounded-lg p-2">
                     {#each projectAccounts as acc}
                       <label class="flex items-center gap-2 text-sm">

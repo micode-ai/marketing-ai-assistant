@@ -324,6 +324,7 @@
       "scheduleForLater": "Schedule for later",
       "scheduledAt": "Scheduled date and time",
       "selectAccounts": "Publish to accounts",
+      "languageRoutingHint": "Each account receives the post in its configured language. Set the language on each account under Settings → Integrations.",
       "noProjectAccounts": "No social accounts attached to this project. Attach one in project settings.",
       "noAccountsSelected": "Pick at least one account and a date/time.",
       "mustBeFuture": "Scheduled time must be in the future.",
