@@ -90,6 +90,7 @@ enum ContentStatus {
   DRAFT
   REVIEW
   APPROVED
+  SCHEDULED
   PUBLISHED
   REJECTED
 }

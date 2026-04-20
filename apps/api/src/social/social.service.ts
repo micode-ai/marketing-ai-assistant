@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../database/prisma.service';
 import axios from 'axios';
@@ -188,6 +188,30 @@ export class SocialService {
     return { success: true };
   }
 
+  async publishToAccount(
+    content: any,
+    account: any,
+  ): Promise<{ status: 'PUBLISHED' | 'FAILED'; platformPostId?: string; platformPostUrl?: string; error?: string }> {
+    try {
+      const supported = ['LINKEDIN', 'TWITTER', 'FACEBOOK', 'TELEGRAM'];
+      if (!supported.includes(account.platform)) {
+        throw new Error(`Publishing to ${account.platform} is not yet supported`);
+      }
+      const tokens = this.decryptTokens(account.encryptedTokens);
+      let result: { postId?: string; postUrl?: string };
+      if (account.platform === 'LINKEDIN')      result = await this.publishToLinkedIn(content, tokens);
+      else if (account.platform === 'TWITTER')  result = await this.publishToTwitter(content, tokens);
+      else if (account.platform === 'FACEBOOK') result = await this.publishToFacebook(content, tokens);
+      else                                      result = await this.publishToTelegram(content, tokens);
+      return { status: 'PUBLISHED', platformPostId: result.postId, platformPostUrl: result.postUrl };
+    } catch (err: any) {
+      const data = err?.response?.data;
+      const error = (data && (data.description || data.error?.message || data.message)) || err?.message || 'Unknown error';
+      console.error('[social.publishToAccount] failed', { platform: account.platform, status: err?.response?.status, data, message: err?.message });
+      return { status: 'FAILED', error };
+    }
+  }
+
   async publish(
     dto: {
       contentId?: string;
@@ -224,46 +248,11 @@ export class SocialService {
         continue;
       }
 
-      let platformPostId: string | undefined;
-      let platformPostUrl: string | undefined;
-      let error: string | undefined;
-      let status: 'PUBLISHED' | 'FAILED' = 'PUBLISHED';
-
-      try {
-        const tokens = this.decryptTokens(account.encryptedTokens);
-        if (account.platform === 'LINKEDIN') {
-          const result = await this.publishToLinkedIn(content, tokens);
-          platformPostId = result.postId;
-          platformPostUrl = result.postUrl;
-        } else if (account.platform === 'TWITTER') {
-          const result = await this.publishToTwitter(content, tokens);
-          platformPostId = result.postId;
-          platformPostUrl = result.postUrl;
-        } else if (account.platform === 'FACEBOOK') {
-          const result = await this.publishToFacebook(content, tokens);
-          platformPostId = result.postId;
-          platformPostUrl = result.postUrl;
-        } else if (account.platform === 'TELEGRAM') {
-          const result = await this.publishToTelegram(content, tokens);
-          platformPostId = result.postId;
-          platformPostUrl = result.postUrl;
-        } else {
-          throw new Error(`Publishing to ${account.platform} is not yet supported`);
-        }
-      } catch (err: any) {
-        status = 'FAILED';
-        const data = err?.response?.data;
-        error =
-          (data && (data.description || data.error?.message || data.message)) ||
-          err?.message ||
-          'Unknown error';
-        console.error('[social.publish] failed', {
-          platform: account.platform,
-          status: err?.response?.status,
-          data,
-          message: err?.message,
-        });
-      }
+      const r = await this.publishToAccount(content, account);
+      const status = r.status;
+      const platformPostId = r.platformPostId;
+      const platformPostUrl = r.platformPostUrl;
+      const error = r.error;
 
       await this.prisma.contentPublication.create({
         data: {
@@ -348,9 +337,12 @@ export class SocialService {
     return { success: true, linked: validIds.length };
   }
 
-  async getPublications(contentId: string) {
+  async getPublications(contentId: string, organizationId: string) {
     return this.prisma.contentPublication.findMany({
-      where: { contentId },
+      where: {
+        contentId,
+        content: { OR: [{ organizationId }, { project: { organizationId } }] },
+      },
       include: {
         socialAccount: {
           select: { id: true, platform: true, accountName: true, profileImageUrl: true },
@@ -358,6 +350,33 @@ export class SocialService {
       },
       orderBy: { createdAt: 'desc' },
     });
+  }
+
+  async cancelPublication(id: string, organizationId: string) {
+    // Content can be org-scoped (organizationId set directly) OR project-scoped
+    // (organizationId null, derived via project.organizationId). Match both.
+    const pub = await this.prisma.contentPublication.findFirst({
+      where: {
+        id,
+        content: { OR: [{ organizationId }, { project: { organizationId } }] },
+      },
+      include: { content: { select: { id: true, organizationId: true } } },
+    });
+    if (!pub) throw new NotFoundException('Publication not found');
+    if (pub.status !== 'PENDING') throw new BadRequestException('Only pending publications can be cancelled');
+
+    await this.prisma.contentPublication.delete({ where: { id } });
+
+    const remainingPending = await this.prisma.contentPublication.count({
+      where: { contentId: pub.contentId, status: 'PENDING' },
+    });
+    const anyPublished = await this.prisma.contentPublication.count({
+      where: { contentId: pub.contentId, status: 'PUBLISHED' },
+    });
+    if (remainingPending === 0 && anyPublished === 0) {
+      await this.prisma.content.update({ where: { id: pub.contentId }, data: { status: 'DRAFT' } });
+    }
+    return { success: true };
   }
 
   private async publishToLinkedIn(content: any, tokens: any) {

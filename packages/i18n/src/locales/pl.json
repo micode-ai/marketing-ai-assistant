@@ -316,7 +316,20 @@
     "confirmDeleteAll": "Czy na pewno chcesz usunąć wszystkie wersje językowe tej treści?",
     "imagePromptPlaceholder": "Opisz obraz, który chcesz wygenerować...",
     "generateImageBtn": "Generuj obraz",
-    "bodyPlaceholder": "Napisz swoją treść tutaj..."
+    "bodyPlaceholder": "Napisz swoją treść tutaj...",
+    "scheduled": "Zaplanowane",
+    "schedule": {
+      "scheduleForLater": "Zaplanuj na później",
+      "scheduledAt": "Data i godzina publikacji",
+      "selectAccounts": "Publikuj na kontach",
+      "noProjectAccounts": "Do tego projektu nie podpięto żadnych kont społecznościowych. Podłącz konto w ustawieniach projektu.",
+      "noAccountsSelected": "Wybierz przynajmniej jedno konto oraz datę i godzinę.",
+      "mustBeFuture": "Zaplanowany czas musi być w przyszłości.",
+      "scheduledFor": "Zaplanowane na {date}",
+      "cancelScheduled": "Anuluj harmonogram",
+      "cancelConfirm": "Anulować zaplanowaną publikację?",
+      "willPublishAt": "Opublikuje do {n} konta(-ach) o {date}"
+    }
   },
   "campaigns": {
     "title": "Kampanie",
