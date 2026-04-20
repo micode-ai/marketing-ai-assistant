@@ -447,6 +447,7 @@ model Campaign {
   content         Content[]
   emailCampaigns  EmailCampaign[]
   analyticsEvents AnalyticsEvent[]
+  documents       CampaignDocument[]
 
   @@index([projectId])
   @@index([scope, organizationId])
@@ -721,12 +722,26 @@ model Document {
   project      Project?      @relation(fields: [projectId], references: [id], onDelete: SetNull)
   organization Organization? @relation("OrgDocument", fields: [organizationId], references: [id], onDelete: Cascade)
   creator      User          @relation(fields: [createdBy], references: [id])
+  campaigns    CampaignDocument[]
 
   @@index([projectId])
   @@index([scope, organizationId])
   @@index([scope, projectId])
   @@index([organizationId])
   @@map("documents")
+}
+
+model CampaignDocument {
+  campaignId String
+  documentId String
+  createdAt  DateTime @default(now())
+
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@id([campaignId, documentId])
+  @@index([documentId])
+  @@map("campaign_documents")
 }
 
 // =============================================================================

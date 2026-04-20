@@ -39,6 +39,10 @@ export class CampaignsService {
             emailAccount: { select: { id: true, email: true, displayName: true } },
           },
         },
+        documents: {
+          include: { document: true },
+          orderBy: { createdAt: 'desc' },
+        },
       },
     });
     if (!campaign) throw new NotFoundException('Campaign not found');
@@ -49,8 +53,11 @@ export class CampaignsService {
     const emailByStatus = Object.fromEntries(EMAIL_STATUSES.map(s => [s, 0])) as Record<string, number>;
     for (const e of campaign.emailCampaigns) emailByStatus[e.status] = (emailByStatus[e.status] ?? 0) + 1;
 
+    const documents = campaign.documents.map(cd => cd.document);
+
     return {
       ...campaign,
+      documents,
       progress: {
         content: { total: campaign.content.length, byStatus: contentByStatus },
         email:   { total: campaign.emailCampaigns.length, byStatus: emailByStatus },
@@ -183,6 +190,60 @@ export class CampaignsService {
     const where: any = { ...scope, campaignId: null };
     if (search) where.title = { contains: search, mode: 'insensitive' };
     return this.prisma.content.findMany({ where, orderBy: { updatedAt: 'desc' }, take: 100 });
+  }
+
+  async attachDocuments(id: string, documentIds: string[]) {
+    const campaign = await this.loadCampaignOrThrow(id);
+    if (!documentIds.length) return this.findOne(id);
+
+    const rows = await this.prisma.document.findMany({
+      where: { id: { in: documentIds } },
+      select: { id: true, projectId: true, organizationId: true },
+    });
+    if (rows.length !== documentIds.length) {
+      throw new BadRequestException('One or more documents not found');
+    }
+
+    const scopeKey = campaign.scope === 'ORGANIZATION' ? 'organizationId' : 'projectId';
+    const scopeVal = campaign.scope === 'ORGANIZATION' ? campaign.organizationId : campaign.projectId;
+
+    const wrongScope = rows.filter(r => (r as any)[scopeKey] !== scopeVal);
+    if (wrongScope.length) {
+      throw new BadRequestException(`Documents out of scope: ${wrongScope.map(r => r.id).join(',')}`);
+    }
+
+    await this.prisma.campaignDocument.createMany({
+      data: documentIds.map(documentId => ({ campaignId: id, documentId })),
+      skipDuplicates: true,
+    });
+    return this.findOne(id);
+  }
+
+  async detachDocuments(id: string, documentIds: string[]) {
+    await this.loadCampaignOrThrow(id);
+    if (!documentIds.length) return this.findOne(id);
+    await this.prisma.campaignDocument.deleteMany({
+      where: { campaignId: id, documentId: { in: documentIds } },
+    });
+    return this.findOne(id);
+  }
+
+  async availableDocuments(id: string, search?: string) {
+    const campaign = await this.loadCampaignOrThrow(id);
+    const scope = campaign.scope === 'ORGANIZATION'
+      ? { organizationId: campaign.organizationId! }
+      : { projectId: campaign.projectId! };
+
+    const attached = await this.prisma.campaignDocument.findMany({
+      where: { campaignId: id },
+      select: { documentId: true },
+    });
+    const excludeIds = attached.map(a => a.documentId);
+
+    const where: any = { ...scope };
+    if (excludeIds.length) where.id = { notIn: excludeIds };
+    if (search) where.title = { contains: search, mode: 'insensitive' };
+    return this.prisma.document.findMany({ where, orderBy: { updatedAt: 'desc' }, take: 100 });
   }
 
   async availableEmails(id: string, search?: string) {
