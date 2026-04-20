@@ -38,7 +38,7 @@
     try {
       content = await api.get<any>(`/content/${contentId}`);
       await loadProjectAccounts();
-      if (content?.status === 'SCHEDULED' && content.scheduledAt) {
+      if (content?.scheduledAt && content.status !== 'PUBLISHED') {
         scheduleEnabled = true;
         scheduleAt = isoToLocalInput(content.scheduledAt);
         try {
@@ -111,7 +111,7 @@
     <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
   </div>
 {:else if content}
-  <div class="max-w-6xl mx-auto p-4 sm:p-6">
+  <div class="max-w-screen-2xl mx-auto p-4 sm:p-6">
     <!-- Header -->
     <div class="flex items-center justify-between mb-4 gap-4">
       <input
