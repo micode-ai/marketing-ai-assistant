@@ -237,6 +237,24 @@
     }
   }
 
+  // --- Download ---
+  function sanitizeFilename(name: string): string {
+    return name.replace(/[\\/:*?"<>|]/g, '_').trim() || 'document';
+  }
+
+  function downloadMarkdown(doc: any) {
+    const filename = `${sanitizeFilename(doc.title)}.md`;
+    const blob = new Blob([doc.contentMd || ''], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
   // --- Delete ---
   async function deleteDocument(id: string) {
     try {
@@ -462,6 +480,30 @@
                   class="text-xs px-3 py-1.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 cursor-pointer"
                 >
                   {$_('common.edit')}
+                </button>
+              {/if}
+              <!-- Download button -->
+              {#if doc.fileUrl}
+                <a
+                  href="{API_URL.replace('/api', '')}{doc.fileUrl}"
+                  download={doc.fileName || doc.title}
+                  on:click|stopPropagation
+                  class="text-xs px-2 py-1.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 cursor-pointer inline-flex items-center"
+                  title={$_('documents.download')}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                  </svg>
+                </a>
+              {:else if doc.contentMd}
+                <button
+                  on:click|stopPropagation={() => downloadMarkdown(doc)}
+                  class="text-xs px-2 py-1.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 cursor-pointer"
+                  title={$_('documents.download')}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                  </svg>
                 </button>
               {/if}
               <!-- Delete button -->
@@ -772,6 +814,16 @@
             </svg>
             {$_('documents.download')}
           </a>
+        {:else if viewingDocument.contentMd}
+          <button
+            on:click={() => downloadMarkdown(viewingDocument)}
+            class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors duration-150 cursor-pointer flex items-center gap-2"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+            </svg>
+            {$_('documents.download')}
+          </button>
         {/if}
         {#if !viewingDocument.fileUrl}
           <button
