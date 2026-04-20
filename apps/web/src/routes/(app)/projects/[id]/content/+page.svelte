@@ -85,6 +85,13 @@
     catch { projectAccounts = []; }
   }
 
+  function isoToLocalInput(iso: string | null): string {
+    if (!iso) return '';
+    const d = new Date(iso);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+
   $: if (showCreateModal) loadProjectAccounts();
 
   // Generate all languages
@@ -178,20 +185,46 @@
     }
   }
 
-  function openEdit(content: any) {
+  async function openEdit(content: any) {
     editingContent = content;
     editForm = { title: content.title, body: content.body, mediaUrls: content.mediaUrls || [] };
+    // Reset schedule state for this edit session
+    scheduleEnabled = false;
+    scheduleAt = '';
+    scheduleAccountIds = [];
+    await loadProjectAccounts();
+    if (content.status === 'SCHEDULED' && content.scheduledAt) {
+      scheduleEnabled = true;
+      scheduleAt = isoToLocalInput(content.scheduledAt);
+      try {
+        const pubs = await api.get<any[]>('/social/publications', { contentId: content.id });
+        scheduleAccountIds = pubs.filter(p => p.status === 'PENDING').map(p => p.socialAccountId);
+      } catch { /* leave empty */ }
+    }
   }
 
   async function saveEdit() {
     if (!editingContent) return;
+    const isPublished = editingContent.status === 'PUBLISHED';
+    if (scheduleEnabled && !isPublished) {
+      if (!scheduleAt || scheduleAccountIds.length === 0) { alert($_('content.schedule.noAccountsSelected')); return; }
+      if (new Date(scheduleAt).getTime() <= Date.now())   { alert($_('content.schedule.mustBeFuture'));      return; }
+    }
     editSaving = true;
     try {
-      const updated = await api.put<any>(`/content/${editingContent.id}`, {
+      const payload: any = {
         title: editForm.title,
         body: editForm.body,
         mediaUrls: editForm.mediaUrls,
-      });
+      };
+      if (!isPublished) {
+        payload.scheduleEnabled = scheduleEnabled;
+        if (scheduleEnabled) {
+          payload.scheduledAt = new Date(scheduleAt).toISOString();
+          payload.scheduledPublicationAccountIds = scheduleAccountIds;
+        }
+      }
+      const updated = await api.put<any>(`/content/${editingContent.id}`, payload);
       contents = contents.map(c => c.id === updated.id ? { ...c, ...updated } : c);
       editingContent = null;
     } catch(e: any) {
@@ -910,6 +943,49 @@
             </button>
           </div>
         </div>
+
+        <!-- Schedule block (hidden when content is PUBLISHED) -->
+        {#if editingContent.status !== 'PUBLISHED'}
+          <div class="border-t pt-4 mt-4">
+            <label class="flex items-center gap-2 text-sm font-medium text-gray-700">
+              <input type="checkbox" bind:checked={scheduleEnabled} />
+              {$_('content.schedule.scheduleForLater')}
+            </label>
+
+            {#if scheduleEnabled}
+              <div class="mt-3 space-y-3">
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">{$_('content.schedule.scheduledAt')}</label>
+                  <input type="datetime-local" bind:value={scheduleAt}
+                         class="w-full border rounded-lg px-3 py-2 text-sm" />
+                </div>
+
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">{$_('content.schedule.selectAccounts')}</label>
+                  {#if projectAccounts.length === 0}
+                    <p class="text-xs text-gray-500">{$_('content.schedule.noProjectAccounts')}</p>
+                  {:else}
+                    <div class="space-y-1 max-h-40 overflow-y-auto border rounded-lg p-2">
+                      {#each projectAccounts as acc}
+                        <label class="flex items-center gap-2 text-sm">
+                          <input type="checkbox" value={acc.id}
+                                 checked={scheduleAccountIds.includes(acc.id)}
+                                 on:change={(e) => {
+                                   if ((e.target as HTMLInputElement).checked) scheduleAccountIds = [...scheduleAccountIds, acc.id];
+                                   else scheduleAccountIds = scheduleAccountIds.filter(id => id !== acc.id);
+                                 }} />
+                          <span class="font-medium">{acc.platform}</span>
+                          <span class="text-gray-500 truncate">{acc.accountName}</span>
+                          {#if acc.language}<span class="text-xs px-1.5 py-0.5 bg-gray-100 rounded">{acc.language.toUpperCase()}</span>{/if}
+                        </label>
+                      {/each}
+                    </div>
+                  {/if}
+                </div>
+              </div>
+            {/if}
+          </div>
+        {/if}
       </div>
       <div class="p-6 border-t border-gray-100 flex gap-3 justify-end flex-shrink-0">
         <button on:click={() => editingContent = null} class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 text-sm cursor-pointer">
