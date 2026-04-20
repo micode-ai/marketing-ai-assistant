@@ -67,6 +67,27 @@
     pl: 'bg-red-100 text-red-700',
     ru: 'bg-green-100 text-green-700',
   };
+
+  const statusLabel: Record<string, string> = {
+    DRAFT: 'content.draft',
+    REVIEW: 'content.review',
+    APPROVED: 'content.approved',
+    PUBLISHED: 'content.published',
+    REJECTED: 'content.rejected',
+    SCHEDULED: 'content.scheduled',
+  };
+
+  const typeLabel: Record<string, string> = {
+    SOCIAL_POST: 'content.socialPost',
+    BLOG_ARTICLE: 'content.blogArticle',
+    EMAIL: 'content.emailContent',
+    NEWSLETTER: 'content.newsletter',
+    AD_COPY: 'content.adCopy',
+    LANDING_PAGE: 'content.landingPage',
+    SEO_ARTICLE: 'content.seoArticle',
+    REFERRAL_COPY: 'content.referralCopy',
+    IN_APP_MESSAGE: 'content.inAppMessage',
+  };
 </script>
 
 <div class="p-4 sm:p-6">
@@ -116,7 +137,10 @@
                     {#each group.items as gi}
                       <span class="text-xs px-1.5 py-0.5 rounded font-medium {langBadge[gi.language] || 'bg-gray-100 text-gray-600'}">{(gi.language || '?').toUpperCase()}</span>
                     {/each}
-                    <span class="text-xs text-gray-400">{group.items[0].type || ''} · {group.items[0].status || ''}</span>
+                    <span class="text-xs text-gray-400">
+                      {group.items[0].type ? (typeLabel[group.items[0].type] ? $_(typeLabel[group.items[0].type]) : group.items[0].type.replace(/_/g, ' ')) : ''}
+                      {#if group.items[0].status}· {statusLabel[group.items[0].status] ? $_(statusLabel[group.items[0].status]) : group.items[0].status}{/if}
+                    </span>
                   </div>
                   <h3 class="font-medium text-gray-900 dark:text-white">{group.items[0].title}</h3>
                 </div>
@@ -158,7 +182,10 @@
                   {/if}
                 </div>
                 <h3 class="font-medium text-gray-900 dark:text-white">{item.title}</h3>
-                <p class="text-sm text-gray-500 dark:text-gray-400">{item.type || ''}{item.status ? ' · ' + item.status : ''}</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                  {item.type ? (typeLabel[item.type] ? $_(typeLabel[item.type]) : item.type.replace(/_/g, ' ')) : ''}
+                  {#if item.status}· {statusLabel[item.status] ? $_(statusLabel[item.status]) : item.status}{/if}
+                </p>
               </div>
               {#if ctx.type === 'organization'}
                 <span class="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
