@@ -82,4 +82,20 @@ describe('ContentService.create — scheduled', () => {
       ]),
     });
   });
+
+  it('creates non-scheduled content without touching publication tables', async () => {
+    mockPrisma.content.create.mockResolvedValue({ id: 'ct1', language: 'en', contentGroupId: null });
+    await service.create({
+      projectId: 'p1', type: 'SOCIAL_POST', title: 't', body: 'b', language: 'en',
+      // no scheduledAt, no scheduledPublicationAccountIds
+    } as any, 'u1');
+
+    // status is left undefined (Prisma default DRAFT applies)
+    expect(mockPrisma.content.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ status: undefined }),
+    }));
+    expect(mockPrisma.contentPublication.findMany).not.toHaveBeenCalled();
+    expect(mockPrisma.contentPublication.createMany).not.toHaveBeenCalled();
+    expect(mockPrisma.socialAccount.findMany).not.toHaveBeenCalled();
+  });
 });
