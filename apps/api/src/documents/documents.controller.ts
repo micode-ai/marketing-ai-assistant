@@ -18,7 +18,9 @@ const ALLOWED_MIMES = [
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   'application/msword',
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/vnd.ms-excel',
   'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  'application/vnd.ms-powerpoint',
   'text/plain',
   'text/csv',
   'text/markdown',
@@ -28,6 +30,20 @@ const ALLOWED_MIMES = [
   'image/webp',
   'image/svg+xml',
 ];
+
+// Some browsers/OSes send application/octet-stream or an empty MIME for uncommon
+// extensions (e.g. .md, .xlsx on Windows). Fall back to extension whitelist.
+const ALLOWED_EXTENSIONS = [
+  '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx',
+  '.txt', '.csv', '.md', '.markdown',
+  '.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg',
+];
+
+function isAllowedFile(mimetype: string, originalname: string): boolean {
+  if (ALLOWED_MIMES.includes(mimetype)) return true;
+  const ext = extname(originalname).toLowerCase();
+  return ALLOWED_EXTENSIONS.includes(ext);
+}
 
 @ApiTags('documents')
 @ApiBearerAuth()
@@ -91,10 +107,10 @@ export class DocumentsController {
       }),
       limits: { fileSize: MAX_FILE_SIZE },
       fileFilter: (_req: any, file: any, cb: any) => {
-        if (ALLOWED_MIMES.includes(file.mimetype)) {
+        if (isAllowedFile(file.mimetype, file.originalname)) {
           cb(null, true);
         } else {
-          cb(new BadRequestException(`File type ${file.mimetype} is not allowed`), false);
+          cb(new BadRequestException(`File type ${file.mimetype || extname(file.originalname)} is not allowed`), false);
         }
       },
     }),
