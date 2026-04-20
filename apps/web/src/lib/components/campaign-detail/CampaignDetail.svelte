@@ -8,6 +8,7 @@
   import ProgressSummary from './ProgressSummary.svelte';
   import ContentSection from './ContentSection.svelte';
   import EmailsSection from './EmailsSection.svelte';
+  import DocumentsSection from './DocumentsSection.svelte';
 
   export let campaignId: string;
   export let backHref: string;
@@ -129,6 +130,7 @@
       <ProgressSummary progress={campaign.progress} />
       <ContentSection {campaign} on:reload={onReload} />
       <EmailsSection {campaign} on:reload={onReload} />
+      <DocumentsSection {campaign} on:reload={onReload} />
     </div>
   {/if}
 </div>

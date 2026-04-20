@@ -70,4 +70,19 @@ export class CampaignsController {
   availableEmails(@Param('id') id: string, @Query('search') search?: string) {
     return this.campaignsService.availableEmails(id, search);
   }
+
+  @Patch(':id/attach-documents')
+  attachDocuments(@Param('id') id: string, @Body() body: { documentIds: string[] }) {
+    return this.campaignsService.attachDocuments(id, body.documentIds ?? []);
+  }
+
+  @Patch(':id/detach-documents')
+  detachDocuments(@Param('id') id: string, @Body() body: { documentIds: string[] }) {
+    return this.campaignsService.detachDocuments(id, body.documentIds ?? []);
+  }
+
+  @Get(':id/available-documents')
+  availableDocuments(@Param('id') id: string, @Query('search') search?: string) {
+    return this.campaignsService.availableDocuments(id, search);
+  }
 }
