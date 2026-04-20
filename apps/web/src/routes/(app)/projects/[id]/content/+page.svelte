@@ -314,6 +314,7 @@
     APPROVED: 'bg-green-100 text-green-700',
     PUBLISHED: 'bg-blue-100 text-blue-700',
     REJECTED: 'bg-red-100 text-red-600',
+    SCHEDULED: 'bg-amber-50 text-amber-700',
   };
 
   const statusBorderAccent: Record<string, string> = {
@@ -322,6 +323,7 @@
     APPROVED: 'border-l-green-500',
     PUBLISHED: 'border-l-blue-500',
     REJECTED: 'border-l-red-400',
+    SCHEDULED: 'border-l-amber-400',
   };
 
   const statusLabel: Record<string, string> = {
@@ -330,6 +332,7 @@
     APPROVED: 'content.approved',
     PUBLISHED: 'content.published',
     REJECTED: 'content.rejected',
+    SCHEDULED: 'content.scheduled',
   };
 
   function toggleGroup(groupId: string) {
@@ -399,6 +402,19 @@
       await api.delete(`/content/${item.id}`);
     }
     contents = contents.filter(c => c.contentGroupId !== groupId);
+  }
+
+  async function cancelScheduled(content: any) {
+    if (!confirm($_('content.schedule.cancelConfirm'))) return;
+    try {
+      const pubs = await api.get<any[]>('/social/publications', { contentId: content.id });
+      const pendingIds = pubs.filter(p => p.status === 'PENDING').map(p => p.id);
+      await Promise.all(pendingIds.map(id => api.delete(`/social/publications/${id}`)));
+      contents = contents.map(c => c.id === content.id ? { ...c, status: 'DRAFT' } : c);
+    } catch (err) {
+      console.error(err);
+      alert($_('common.error'));
+    }
   }
 
   const langBadgeColor: Record<string, string> = {
@@ -542,6 +558,12 @@
                         <div class="flex flex-wrap items-center gap-1.5 mb-2">
                           <span class="text-xs px-2 py-0.5 rounded font-bold {langBadgeColor[content.language] || 'bg-gray-100 text-gray-600'}">{(content.language || 'en').toUpperCase()}</span>
                           <span class="text-xs px-2 py-0.5 rounded {statusBadge[content.status] || 'bg-gray-100 text-gray-600'}">{$_(statusLabel[content.status] || 'content.draft')}</span>
+                          {#if content.status === 'SCHEDULED' && content.scheduledAt}
+                            <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">
+                              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                              {$_('content.schedule.scheduledFor', { values: { date: new Date(content.scheduledAt).toLocaleString() } })}
+                            </span>
+                          {/if}
                           {#if getScore(content.id) !== null}
                             <span class="text-xs px-2 py-0.5 rounded font-medium {scoreColor(getScore(content.id))}">{$_('content.score')}: {getScore(content.id)}</span>
                           {/if}
@@ -568,6 +590,14 @@
                               <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
                             </svg>
                             {$_('social.publish')}
+                          </button>
+                        {/if}
+                        {#if content.status === 'SCHEDULED'}
+                          <button
+                            on:click|stopPropagation={() => cancelScheduled(content)}
+                            class="text-xs px-3 py-1.5 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors duration-150 cursor-pointer"
+                          >
+                            {$_('content.schedule.cancelScheduled')}
                           </button>
                         {/if}
                         <a
@@ -609,6 +639,12 @@
                     <span class="text-xs px-2 py-0.5 bg-blue-50 text-blue-600 rounded">{content.platform}</span>
                   {/if}
                   <span class="text-xs px-2 py-0.5 rounded {statusBadge[content.status] || 'bg-gray-100 text-gray-600'}">{$_(statusLabel[content.status] || 'content.draft')}</span>
+                  {#if content.status === 'SCHEDULED' && content.scheduledAt}
+                    <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                      {$_('content.schedule.scheduledFor', { values: { date: new Date(content.scheduledAt).toLocaleString() } })}
+                    </span>
+                  {/if}
                   {#if content.language}
                     <span class="text-xs px-2 py-0.5 rounded font-medium {langBadgeColor[content.language] || 'bg-gray-100 text-gray-600'}">{content.language.toUpperCase()}</span>
                   {/if}
@@ -651,6 +687,15 @@
                       <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
                     </svg>
                     {$_('social.publish')}
+                  </button>
+                {/if}
+                <!-- Cancel scheduled button -->
+                {#if content.status === 'SCHEDULED'}
+                  <button
+                    on:click={() => cancelScheduled(content)}
+                    class="text-xs px-3 py-1.5 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors duration-150 cursor-pointer"
+                  >
+                    {$_('content.schedule.cancelScheduled')}
                   </button>
                 {/if}
                 <!-- Repurpose button -->
