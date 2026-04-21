@@ -1,29 +1,53 @@
 # Advanced Features
 
-## SEO Keyword Tracking
+## SEO and Keywords
 
-Track your search engine rankings over time.
+Track search rankings and discover competitors for your project.
 
-### Adding Keywords
+### Adding keywords
 
-1. Go to your project's **SEO** section
-2. Click **Add Keyword**
-3. Enter:
-   - **Keyword** — the search phrase to track
-   - **Intent** — Informational, Navigational, Commercial, or Transactional
-   - **Target URL** — the page you want to rank for
-4. Click **Save**
+1. Open **SEO** from the project sidebar.
+2. Click **Add keyword**.
+3. Fill in:
+   - **Keyword** — the phrase you want to rank for.
+   - **Target URL** — the page on your site that should rank for this keyword.
+   - **Search locale** — which Google market to check (pl-PL, en-US, ru-RU).
+   - **Intent** — Informational / Navigational / Commercial / Transactional. Helps AI-generated content match user intent.
+   - **Target rank** (optional) — your goal rank, used as a reference line on the history chart.
 
-### Recording Rankings
+### Connecting Google Custom Search
 
-1. Open a keyword
-2. Click **Record Rank**
-3. Enter the current search position, URL, and search volume
-4. Rankings are saved with a timestamp
+Rank tracking uses Google's Custom Search JSON API — free tier, 100 searches per day per Google Cloud project.
 
-### Viewing History
+1. Create a project in the Google Cloud Console and enable **Custom Search API**.
+2. Create an API key in Credentials.
+3. Create a Programmable Search Engine at programmablesearchengine.google.com, enabled to search the entire web, and copy the **CSE ID**.
+4. Open **Project settings → Google Custom Search**, paste the API key and CSE ID, click **Connect**.
 
-Each keyword has a rank history chart showing position changes over time.
+Once connected, the app will check your tracked keywords on a schedule:
+- **Free plan:** up to 5 keywords, weekly on Mondays.
+- **Pro plan:** up to 30 keywords, daily.
+- **Enterprise plan:** up to 90 keywords, daily.
+
+You can also click **Check now** on any keyword row to run a check immediately (limited to 3 manual checks per hour per keyword).
+
+### Viewing rank history
+
+Click **View history** on any keyword to open its detail page. You'll see:
+- A line chart of rank over time (rank 1 at the top — lower position = higher up)
+- A dashed line at your target rank
+- Date range tabs: 7 days / 30 days / 90 days / custom
+- A recent history table with the URL Google matched on each check
+
+### Competitors
+
+#### Adding competitors manually
+
+Click **Add competitor**, enter the name and website URL.
+
+#### AI competitor suggestions
+
+Click **Suggest competitors with AI**. The app sends your project context and tracked keywords to the AI agent, which proposes up to 5 real competitors with a short rationale. Review each card and click **Approve** to add it to your list, or **Dismiss** to reject (dismissed suggestions won't be proposed again).
 
 ## A/B Testing
 
