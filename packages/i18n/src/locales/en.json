@@ -1179,7 +1179,22 @@
     "intentTransactional": "Transactional",
     "difficultyEasy": "Easy",
     "difficultyMedium": "Medium",
-    "difficultyHard": "Hard"
+    "difficultyHard": "Hard",
+    "targetUrl": "Target URL",
+    "targetUrlHelper": "The page you want to rank for this keyword",
+    "locale": "Search locale",
+    "localeHelper": "Which Google market to check — affects results order",
+    "intentHelper": "Search intent: informational (learning), navigational (finding a site), commercial (comparing options), or transactional (buying).",
+    "checkNow": "Check now",
+    "checkNowRateLimited": "Rate limit: 3 checks per hour per keyword",
+    "checkingRank": "Checking…",
+    "errors": {
+      "cseNotConfigured": "Configure Google CSE in project settings to enable rank tracking",
+      "cseQuotaExceeded": "Google CSE daily quota exceeded",
+      "cseInvalidKey": "Google CSE key is invalid. Update it in project settings.",
+      "noTargetUrl": "Add a target URL to check this keyword's rank",
+      "cseBanner": "Google CSE has an error: {error}. Fix it in project settings."
+    }
   },
   "projectExport": {
     "title": "Export Project",

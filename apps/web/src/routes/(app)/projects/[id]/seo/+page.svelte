@@ -1,8 +1,11 @@
 <script lang="ts">
-  import { _ } from 'svelte-i18n';
+  import { _, locale } from 'svelte-i18n';
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
   import { api } from '$lib/api/client';
+  import { API_URL } from '$lib/config';
+  import { authStore } from '$stores/auth';
+  import { get } from 'svelte/store';
   import SectionHint from '$lib/components/SectionHint.svelte';
   import { currentProjectStore, projectsStore } from '$lib/stores/projects';
 
@@ -22,14 +25,74 @@
     }
   }
 
-  let form = { keyword: '', targetRank: 10, intent: 'INFORMATIONAL' };
+  // Derive default locale from svelte-i18n locale
+  function deriveSearchLocale(lang: string | null | undefined): string {
+    if (!lang) return 'en-US';
+    if (lang.startsWith('pl')) return 'pl-PL';
+    if (lang.startsWith('ru')) return 'ru-RU';
+    return 'en-US';
+  }
+
+  $: defaultSearchLocale = deriveSearchLocale($locale);
+
+  let form = {
+    keyword: '',
+    targetRank: 10,
+    intent: 'INFORMATIONAL',
+    url: '',
+    searchLocale: 'en-US',
+  };
+
+  // Keep form.searchLocale in sync with locale when modal opens
+  $: if (showModal) {
+    form = { ...form, searchLocale: defaultSearchLocale };
+  }
 
   // Rank history cache: keywordId -> number[]
   let historyMap: Record<string, number[]> = {};
 
+  // Per-row check-now in-flight state
+  let checkingId: string | null = null;
+
+  // Toast notification
+  let toast: { message: string; type: 'success' | 'error' | 'warning' } | null = null;
+  let toastTimer: ReturnType<typeof setTimeout> | null = null;
+
+  function showToast(message: string, type: 'success' | 'error' | 'warning' = 'error') {
+    if (toastTimer) clearTimeout(toastTimer);
+    toast = { message, type };
+    toastTimer = setTimeout(() => { toast = null; }, 5000);
+  }
+
+  // CSE config status
+  let cseStatus: { configured: boolean; lastValidationError?: string | null } | null = null;
+
+  // Amber banner: shown if any keyword has CSE error or CSE config has lastValidationError
+  $: cseBannerError = (() => {
+    if (cseStatus?.lastValidationError) return cseStatus.lastValidationError;
+    const errorKw = keywords.find(
+      (k) => k.lastCheckError === 'CSE_QUOTA_EXCEEDED' || k.lastCheckError === 'CSE_INVALID_KEY',
+    );
+    if (errorKw) {
+      return errorKw.lastCheckError === 'CSE_QUOTA_EXCEEDED'
+        ? $_('seo.errors.cseQuotaExceeded')
+        : $_('seo.errors.cseInvalidKey');
+    }
+    return null;
+  })();
+
   onMount(async () => {
     await fetchKeywords();
+    fetchCseStatus();
   });
+
+  async function fetchCseStatus() {
+    try {
+      cseStatus = await api.get<any>(`/seo/cse/config/${projectId}`);
+    } catch {
+      // not critical — just don't show banner
+    }
+  }
 
   async function fetchKeywords() {
     loading = true;
@@ -53,8 +116,17 @@
     }
   }
 
+  // URL validation: empty allowed, but if filled must start with http(s)://
+  function isValidUrl(val: string): boolean {
+    if (!val) return true;
+    return /^https?:\/\/.+/.test(val);
+  }
+
+  $: urlError = form.url && !isValidUrl(form.url) ? true : false;
+
   async function addKeyword() {
     if (!form.keyword.trim()) return;
+    if (urlError) return;
     adding = true;
     try {
       const created = await api.post<any>('/seo/keywords', {
@@ -62,11 +134,13 @@
         keyword: form.keyword.trim(),
         targetRank: form.targetRank || undefined,
         intent: form.intent,
+        url: form.url.trim() || undefined,
+        locale: form.searchLocale,
       });
       keywords = [...keywords, created];
       historyMap[created.id] = [];
       historyMap = historyMap;
-      form = { keyword: '', targetRank: 10, intent: 'INFORMATIONAL' };
+      form = { keyword: '', targetRank: 10, intent: 'INFORMATIONAL', url: '', searchLocale: defaultSearchLocale };
       showModal = false;
     } catch (e: any) {
       alert(e.message);
@@ -112,6 +186,61 @@
       alert(e.message);
     } finally {
       auditing = false;
+    }
+  }
+
+  async function checkNow(kwId: string) {
+    if (checkingId) return;
+    checkingId = kwId;
+    try {
+      const auth = get(authStore);
+      const response = await fetch(`${API_URL}/seo/keywords/${kwId}/check-now`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(auth.accessToken ? { Authorization: `Bearer ${auth.accessToken}` } : {}),
+        },
+      });
+
+      if (response.status === 429) {
+        showToast($_('seo.checkNowRateLimited'), 'warning');
+        return;
+      }
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({ message: 'Request failed' }));
+        showToast(err.message || $_('common.error'), 'error');
+        return;
+      }
+
+      const result = await response.json();
+
+      if (result.skipped) {
+        if (result.reason === 'CSE_NOT_CONFIGURED') {
+          showToast($_('seo.errors.cseNotConfigured'), 'warning');
+        } else if (result.reason === 'NO_TARGET_URL') {
+          showToast($_('seo.errors.noTargetUrl'), 'warning');
+        } else {
+          showToast($_('common.error'), 'error');
+        }
+        return;
+      }
+
+      // Success — refetch keywords to get updated rank
+      await fetchKeywords();
+    } catch (e: any) {
+      showToast(e.message || $_('common.error'), 'error');
+    } finally {
+      checkingId = null;
+    }
+  }
+
+  function getTargetUrlHost(url: string | null | undefined): string {
+    if (!url) return '';
+    try {
+      return new URL(url).host;
+    } catch {
+      return url;
     }
   }
 
@@ -175,6 +304,20 @@
 
 <div class="p-4 sm:p-6">
   <SectionHint sectionKey="seo" titleKey="hints.seo.title" descKey="hints.seo.desc" />
+
+  <!-- Amber CSE error banner -->
+  {#if cseBannerError}
+    <div class="mb-4 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+      <svg xmlns="http://www.w3.org/2000/svg" class="mt-0.5 w-4 h-4 flex-shrink-0 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+      </svg>
+      <span>
+        {$_('seo.errors.cseBanner', { values: { error: cseBannerError } })}
+        <a href="/projects/{projectId}/settings" class="ml-1 font-medium underline hover:no-underline">{$_('common.settings')}</a>
+      </span>
+    </div>
+  {/if}
+
   <!-- Header -->
   <div class="flex items-center justify-between mb-6">
     <div>
@@ -201,7 +344,7 @@
         {/if}
       </button>
       <button
-        on:click={() => showModal = true}
+        on:click={() => { form = { ...form, searchLocale: defaultSearchLocale }; showModal = true; }}
         class="bg-primary-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors duration-150 flex items-center gap-2 cursor-pointer"
       >
         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -235,7 +378,7 @@
       <h2 class="text-xl font-semibold text-gray-900 mb-2">{$_('seo.empty')}</h2>
       <p class="text-gray-500 mb-6 max-w-sm">{$_('seo.emptyDesc')}</p>
       <button
-        on:click={() => showModal = true}
+        on:click={() => { form = { ...form, searchLocale: defaultSearchLocale }; showModal = true; }}
         class="bg-primary-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-primary-700 transition-colors duration-150 flex items-center gap-2 cursor-pointer"
       >
         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -252,6 +395,7 @@
           <thead>
             <tr class="border-b border-gray-100 bg-gray-50/50">
               <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-5 py-3">{$_('seo.keyword')}</th>
+              <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-5 py-3">{$_('seo.targetUrl')}</th>
               <th class="text-right text-xs font-medium text-gray-500 uppercase tracking-wider px-5 py-3">{$_('seo.searchVolume')}</th>
               <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-5 py-3">{$_('seo.difficulty')}</th>
               <th class="text-right text-xs font-medium text-gray-500 uppercase tracking-wider px-5 py-3">{$_('seo.currentRank')}</th>
@@ -266,10 +410,20 @@
             {#each keywords as kw}
               {@const history = historyMap[kw.id] || []}
               {@const trend = trendIndicator(history)}
+              {@const urlHost = getTargetUrlHost(kw.url)}
               <tr class="hover:bg-gray-50/50 transition-colors duration-100">
                 <!-- Keyword -->
                 <td class="px-5 py-3.5">
                   <span class="text-sm font-medium text-gray-900">{kw.keyword}</span>
+                </td>
+
+                <!-- Target URL -->
+                <td class="px-5 py-3.5 max-w-[140px]">
+                  {#if urlHost}
+                    <span class="text-sm text-gray-600 truncate block" title={kw.url}>{urlHost}</span>
+                  {:else}
+                    <span class="text-sm text-gray-400">—</span>
+                  {/if}
                 </td>
 
                 <!-- Search Volume -->
@@ -359,15 +513,37 @@
 
                 <!-- Actions -->
                 <td class="px-5 py-3.5 text-right">
-                  <button
-                    on:click={() => deletingId = kw.id}
-                    class="text-gray-400 hover:text-red-500 transition-colors duration-150 cursor-pointer p-1"
-                    title={$_('seo.deleteKeyword')}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-                    </svg>
-                  </button>
+                  <div class="flex items-center justify-end gap-1">
+                    <!-- Check now button -->
+                    <button
+                      on:click={() => checkNow(kw.id)}
+                      disabled={checkingId !== null}
+                      class="text-gray-400 hover:text-primary-600 transition-colors duration-150 cursor-pointer p-1 disabled:opacity-50"
+                      title={$_('seo.checkNow')}
+                    >
+                      {#if checkingId === kw.id}
+                        <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                        </svg>
+                      {:else}
+                        <!-- Refresh / play icon -->
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+                        </svg>
+                      {/if}
+                    </button>
+                    <!-- Delete button -->
+                    <button
+                      on:click={() => deletingId = kw.id}
+                      class="text-gray-400 hover:text-red-500 transition-colors duration-150 cursor-pointer p-1"
+                      title={$_('seo.deleteKeyword')}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                      </svg>
+                    </button>
+                  </div>
                 </td>
               </tr>
             {/each}
@@ -388,6 +564,40 @@
   {/if}
 </div>
 
+<!-- Toast notification -->
+{#if toast}
+  <div class="fixed bottom-6 right-6 z-[60] max-w-sm">
+    <div class="flex items-start gap-3 rounded-xl shadow-lg border px-4 py-3 text-sm
+      {toast.type === 'warning' ? 'bg-amber-50 border-amber-200 text-amber-800' :
+       toast.type === 'success' ? 'bg-green-50 border-green-200 text-green-800' :
+       'bg-red-50 border-red-200 text-red-800'}">
+      {#if toast.type === 'warning'}
+        <svg xmlns="http://www.w3.org/2000/svg" class="mt-0.5 w-4 h-4 flex-shrink-0 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+        </svg>
+      {:else if toast.type === 'success'}
+        <svg xmlns="http://www.w3.org/2000/svg" class="mt-0.5 w-4 h-4 flex-shrink-0 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+        </svg>
+      {:else}
+        <svg xmlns="http://www.w3.org/2000/svg" class="mt-0.5 w-4 h-4 flex-shrink-0 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+        </svg>
+      {/if}
+      <span>{toast.message}</span>
+      <button
+        on:click={() => toast = null}
+        aria-label={$_('common.close')}
+        class="ml-auto flex-shrink-0 opacity-60 hover:opacity-100 transition-opacity"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+  </div>
+{/if}
+
 <!-- Add Keyword Modal -->
 {#if showModal}
   <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -403,6 +613,7 @@
         <h2 class="text-lg font-semibold text-gray-900">{$_('seo.addKeyword')}</h2>
       </div>
       <div class="p-6 space-y-4">
+        <!-- Keyword -->
         <div>
           <label for="seo-keyword" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('seo.keyword')}</label>
           <input
@@ -413,7 +624,27 @@
             placeholder={$_('seo.keywordPlaceholder')}
           />
         </div>
+
+        <!-- Target URL -->
+        <div>
+          <label for="seo-url" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('seo.targetUrl')}</label>
+          <input
+            id="seo-url"
+            type="text"
+            bind:value={form.url}
+            class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
+              {urlError ? 'border-red-400 focus:ring-red-400' : 'border-gray-300'}"
+            placeholder="https://your-page.com/path"
+          />
+          {#if urlError}
+            <p class="mt-1 text-xs text-red-500">Must start with https:// or http://</p>
+          {:else}
+            <p class="mt-1 text-xs text-gray-400">{$_('seo.targetUrlHelper')}</p>
+          {/if}
+        </div>
+
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <!-- Target Rank -->
           <div>
             <label for="seo-target" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('seo.targetRank')}</label>
             <input
@@ -425,6 +656,8 @@
               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
           </div>
+
+          <!-- Intent -->
           <div>
             <label for="seo-intent" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('seo.intent')}</label>
             <select
@@ -437,13 +670,29 @@
               <option value="COMMERCIAL">{$_('seo.intentCommercial')}</option>
               <option value="TRANSACTIONAL">{$_('seo.intentTransactional')}</option>
             </select>
+            <p class="mt-1 text-xs text-gray-400">{$_('seo.intentHelper')}</p>
           </div>
+        </div>
+
+        <!-- Search Locale -->
+        <div>
+          <label for="seo-locale" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('seo.locale')}</label>
+          <select
+            id="seo-locale"
+            bind:value={form.searchLocale}
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+          >
+            <option value="pl-PL">Polski (pl-PL)</option>
+            <option value="en-US">English (en-US)</option>
+            <option value="ru-RU">Русский (ru-RU)</option>
+          </select>
+          <p class="mt-1 text-xs text-gray-400">{$_('seo.localeHelper')}</p>
         </div>
       </div>
       <div class="p-6 border-t border-gray-100 flex gap-3">
         <button
           on:click={addKeyword}
-          disabled={adding || !form.keyword.trim()}
+          disabled={adding || !form.keyword.trim() || urlError}
           class="flex-1 bg-primary-600 text-white py-2.5 rounded-lg font-medium hover:bg-primary-700 transition-colors duration-150 disabled:opacity-50 text-sm flex items-center justify-center gap-2 cursor-pointer"
         >
           {#if adding}
@@ -483,7 +732,7 @@
         <p class="text-sm text-gray-500 mb-6">{$_('seo.confirmDelete')}</p>
         <div class="flex gap-3">
           <button
-            on:click={() => deleteKeyword(deletingId)}
+            on:click={() => deletingId && deleteKeyword(deletingId)}
             class="flex-1 bg-red-600 text-white py-2.5 rounded-lg font-medium hover:bg-red-700 transition-colors duration-150 text-sm cursor-pointer"
           >
             {$_('common.delete')}

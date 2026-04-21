@@ -1159,7 +1159,22 @@
     "intentTransactional": "Transakcyjna",
     "difficultyEasy": "Łatwe",
     "difficultyMedium": "Średnie",
-    "difficultyHard": "Trudne"
+    "difficultyHard": "Trudne",
+    "targetUrl": "Docelowy URL",
+    "targetUrlHelper": "Strona, którą chcesz pozycjonować na to słowo kluczowe",
+    "locale": "Lokalizacja wyszukiwania",
+    "localeHelper": "Rynek Google do sprawdzenia — wpływa na kolejność wyników",
+    "intentHelper": "Intencja wyszukiwania: informacyjna (nauka), nawigacyjna (szukanie strony), komercyjna (porównywanie opcji) lub transakcyjna (zakup).",
+    "checkNow": "Sprawdź teraz",
+    "checkNowRateLimited": "Limit żądań: 3 sprawdzenia na godzinę dla słowa kluczowego",
+    "checkingRank": "Sprawdzanie…",
+    "errors": {
+      "cseNotConfigured": "Skonfiguruj Google CSE w ustawieniach projektu, aby włączyć śledzenie pozycji",
+      "cseQuotaExceeded": "Przekroczono dzienny limit Google CSE",
+      "cseInvalidKey": "Klucz Google CSE jest nieprawidłowy. Zaktualizuj go w ustawieniach projektu.",
+      "noTargetUrl": "Dodaj docelowy URL, aby sprawdzić pozycję tego słowa kluczowego",
+      "cseBanner": "Błąd Google CSE: {error}. Napraw go w ustawieniach projektu."
+    }
   },
   "projectExport": {
     "title": "Eksportuj projekt",
