@@ -105,7 +105,7 @@ export class SeoService {
     return this.prisma.keyword.delete({ where: { id } });
   }
 
-  async addRankHistory(keywordId: string, rank: number, url?: string) {
+  async addRankHistory(keywordId: string, rank: number | null, url?: string) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -117,7 +117,7 @@ export class SeoService {
 
     await this.prisma.keyword.update({
       where: { id: keywordId },
-      data: { currentRank: rank },
+      data: { currentRank: rank ?? undefined },
     });
 
     return entry;
