@@ -1,7 +1,13 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
-import { unlink } from 'fs/promises';
-import { resolve } from 'path';
+import { readFile, unlink } from 'fs/promises';
+import { extname, resolve } from 'path';
+
+function isMarkdownFile(mimetype: string | undefined, originalname: string): boolean {
+  if (mimetype === 'text/markdown' || mimetype === 'text/x-markdown') return true;
+  const ext = extname(originalname || '').toLowerCase();
+  return ext === '.md' || ext === '.markdown';
+}
 
 @Injectable()
 export class DocumentsService {
@@ -131,6 +137,15 @@ export class DocumentsService {
       organizationId = project?.organizationId;
     }
 
+    let contentMd: string | undefined;
+    if (isMarkdownFile(file.mimetype, file.originalname)) {
+      try {
+        contentMd = await readFile(file.path, 'utf8');
+      } catch {
+        // If reading fails we still persist the upload with file metadata only.
+      }
+    }
+
     return this.prisma.document.create({
       data: {
         projectId,
@@ -139,6 +154,7 @@ export class DocumentsService {
         type: type as any,
         title,
         content: {},
+        contentMd,
         fileUrl: `/api/uploads/${file.filename}`,
         fileName: file.originalname,
         fileSize: file.size,
