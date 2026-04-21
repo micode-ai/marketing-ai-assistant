@@ -1202,6 +1202,18 @@
       "validationError": "Google отклонил учётные данные: {error}. Введите их заново ниже.",
       "connectSuccess": "Google CSE настроен — отслеживание позиций теперь активно.",
       "reconnect": "Переподключить"
+    },
+    "competitors": {
+      "suggestWithAi": "Предложить конкурентов с помощью AI",
+      "suggesting": "AI анализирует ваш проект…",
+      "suggestedSection": "Предложения AI (ожидают подтверждения)",
+      "aiRationale": "Почему мы это предлагаем",
+      "approve": "Одобрить",
+      "dismiss": "Отклонить",
+      "noSuggestions": "Нет ожидающих предложений",
+      "suggestFailed": "Не удалось получить предложения — попробуйте снова.",
+      "approveSuccess": "Конкурент добавлен",
+      "dismissSuccess": "Предложение отклонено"
     }
   },
   "projectExport": {

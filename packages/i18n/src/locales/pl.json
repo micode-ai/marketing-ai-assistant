@@ -1204,6 +1204,18 @@
       "validationError": "Google odrzucił dane uwierzytelniające: {error}. Wprowadź je ponownie poniżej.",
       "connectSuccess": "Google CSE skonfigurowany — śledzenie pozycji jest teraz aktywne.",
       "reconnect": "Połącz ponownie"
+    },
+    "competitors": {
+      "suggestWithAi": "Zaproponuj konkurentów z AI",
+      "suggesting": "AI analizuje Twój projekt…",
+      "suggestedSection": "Propozycje AI (oczekują na zatwierdzenie)",
+      "aiRationale": "Dlaczego to sugerujemy",
+      "approve": "Zatwierdź",
+      "dismiss": "Odrzuć",
+      "noSuggestions": "Brak oczekujących propozycji",
+      "suggestFailed": "Propozycja nie powiodła się — spróbuj ponownie.",
+      "approveSuccess": "Konkurent zatwierdzony",
+      "dismissSuccess": "Propozycja odrzucona"
     }
   },
   "projectExport": {

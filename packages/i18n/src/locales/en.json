@@ -1224,6 +1224,18 @@
       "validationError": "Google rejected the credentials: {error}. Re-enter them below.",
       "connectSuccess": "Google CSE configured — rank tracking is now active.",
       "reconnect": "Reconnect"
+    },
+    "competitors": {
+      "suggestWithAi": "Suggest competitors with AI",
+      "suggesting": "AI is analyzing your project…",
+      "suggestedSection": "AI suggestions (pending approval)",
+      "aiRationale": "Why we suggested this",
+      "approve": "Approve",
+      "dismiss": "Dismiss",
+      "noSuggestions": "No pending suggestions",
+      "suggestFailed": "Suggestion failed — please try again.",
+      "approveSuccess": "Competitor approved",
+      "dismissSuccess": "Suggestion dismissed"
     }
   },
   "projectExport": {
