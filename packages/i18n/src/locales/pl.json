@@ -758,6 +758,11 @@
     "connect": "Połącz",
     "disconnect": "Odłącz",
     "connected": "Połączono",
+    "reauthRequired": {
+      "badge": "Wymaga ponownego połączenia",
+      "description": "Token tego konta wygasł. Publikacja jest wstrzymana do czasu ponownego połączenia.",
+      "cta": "Połącz ponownie"
+    },
     "addAnother": "+ Dodaj kolejne",
     "noAccounts": "Brak połączonych kont",
     "noAccountsDesc": "Połącz konto w mediach społecznościowych, aby zacząć publikować treści",
