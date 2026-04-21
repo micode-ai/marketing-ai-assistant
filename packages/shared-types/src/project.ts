@@ -152,7 +152,7 @@ export interface ExportedChecklistItem {
 
 export interface ExportedDocument {
   title: string;
-  type: string;
+  type: string | null;
   content?: Record<string, unknown> | string;
   contentMd?: string;
   generatedByAi: boolean;

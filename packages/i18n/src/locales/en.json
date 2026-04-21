@@ -586,7 +586,8 @@
     "typeLabelPlaceholder": "e.g. Case Study",
     "deleteType": "Delete Type",
     "typeInUse": "This type is used by existing documents and cannot be deleted.",
-    "confirmDeleteType": "Are you sure you want to delete this document type?"
+    "confirmDeleteType": "Are you sure you want to delete this document type?",
+    "noType": "No type"
   },
   "aiChat": {
     "title": "AI Chat",

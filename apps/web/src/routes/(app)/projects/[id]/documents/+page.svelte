@@ -44,13 +44,13 @@
   // Manual creation
   let showCreateModal = false;
   let creating = false;
-  let createForm = { type: 'MARKETING_PLAN', title: '', contentMd: '' };
+  let createForm = { type: '', title: '', contentMd: '' };
 
   // Upload
   let showUploadModal = false;
   let uploading = false;
   let uploadFile: File | null = null;
-  let uploadForm = { type: 'REPORT', title: '' };
+  let uploadForm = { type: '', title: '' };
   let dragOver = false;
 
   // View
@@ -58,7 +58,7 @@
 
   // Edit
   let editingDocument: any = null;
-  let editForm = { title: '', contentMd: '' };
+  let editForm = { title: '', contentMd: '', type: '' };
   let editSaving = false;
 
   // Delete
@@ -73,7 +73,8 @@
   let addingType = false;
   let deletingTypeId: string | null = null;
 
-  function getTypeLabel(slug: string): string {
+  function getTypeLabel(slug: string | null | undefined): string {
+    if (!slug) return $_('documents.noType');
     const found = docTypes.find(t => t.slug === slug);
     return found ? found.label : slug;
   }
@@ -141,14 +142,14 @@
     try {
       const doc = await api.post<any>('/documents', {
         projectId,
-        type: createForm.type,
+        type: createForm.type || undefined,
         title: createForm.title,
         contentMd: createForm.contentMd || undefined,
         generatedByAi: false,
       });
       documents = [doc, ...documents];
       showCreateModal = false;
-      createForm = { type: 'MARKETING_PLAN', title: '', contentMd: '' };
+      createForm = { type: '', title: '', contentMd: '' };
     } catch (e: any) {
       alert(e.message);
     } finally {
@@ -192,7 +193,9 @@
       const formData = new FormData();
       formData.append('file', uploadFile);
       formData.append('projectId', projectId);
-      formData.append('type', uploadForm.type);
+      if (uploadForm.type) {
+        formData.append('type', uploadForm.type);
+      }
       if (uploadForm.title.trim()) {
         formData.append('title', uploadForm.title);
       }
@@ -200,7 +203,7 @@
       documents = [doc, ...documents];
       showUploadModal = false;
       uploadFile = null;
-      uploadForm = { type: 'REPORT', title: '' };
+      uploadForm = { type: '', title: '' };
     } catch (e: any) {
       alert(e.message);
     } finally {
@@ -216,7 +219,7 @@
   // --- Edit ---
   function openEdit(doc: any) {
     editingDocument = doc;
-    editForm = { title: doc.title, contentMd: doc.contentMd || '' };
+    editForm = { title: doc.title, contentMd: doc.contentMd || '', type: doc.type || '' };
     viewingDocument = null;
   }
 
@@ -227,6 +230,7 @@
       const updated = await api.put<any>(`/documents/${editingDocument.id}`, {
         title: editForm.title,
         contentMd: editForm.contentMd,
+        type: editForm.type || null,
       });
       documents = documents.map(d => d.id === updated.id ? { ...d, ...updated } : d);
       editingDocument = null;
@@ -325,7 +329,7 @@
         <span class="hidden sm:inline">{$_('documents.create')}</span>
       </button>
       <button
-        on:click={() => { showUploadModal = true; uploadFile = null; uploadForm = { type: 'REPORT', title: '' }; }}
+        on:click={() => { showUploadModal = true; uploadFile = null; uploadForm = { type: '', title: '' }; }}
         class="border border-gray-300 text-gray-700 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors duration-150 flex items-center gap-1.5 cursor-pointer"
       >
         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -401,7 +405,7 @@
           {$_('documents.create')}
         </button>
         <button
-          on:click={() => { showUploadModal = true; uploadFile = null; uploadForm = { type: 'REPORT', title: '' }; }}
+          on:click={() => { showUploadModal = true; uploadFile = null; uploadForm = { type: '', title: '' }; }}
           class="border border-gray-300 text-gray-700 px-5 py-3 rounded-xl font-medium hover:bg-gray-50 transition-colors duration-150 flex items-center gap-2 cursor-pointer"
         >
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -473,15 +477,12 @@
               </div>
             </div>
             <div class="flex items-center gap-2 flex-shrink-0">
-              {#if !doc.fileUrl}
-                <!-- Edit button (only for non-file documents) -->
-                <button
-                  on:click|stopPropagation={() => openEdit(doc)}
-                  class="text-xs px-3 py-1.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 cursor-pointer"
-                >
-                  {$_('common.edit')}
-                </button>
-              {/if}
+              <button
+                on:click|stopPropagation={() => openEdit(doc)}
+                class="text-xs px-3 py-1.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 cursor-pointer"
+              >
+                {$_('common.edit')}
+              </button>
               <!-- Download button -->
               {#if doc.fileUrl}
                 <a
@@ -599,8 +600,9 @@
           <input id="create-title" type="text" bind:value={createForm.title} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" placeholder={$_('documents.titlePlaceholder')} />
         </div>
         <div>
-          <label for="create-type" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('documents.type')}</label>
+          <label for="create-type" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('documents.type')} <span class="text-gray-400 font-normal">({$_('common.optional')})</span></label>
           <select id="create-type" bind:value={createForm.type} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+            <option value="">{$_('documents.noType')}</option>
             {#each docTypes as t}
               <option value={t.slug}>{t.label}</option>
             {/each}
@@ -694,8 +696,9 @@
         </div>
 
         <div>
-          <label for="upload-type" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('documents.type')}</label>
+          <label for="upload-type" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('documents.type')} <span class="text-gray-400 font-normal">({$_('common.optional')})</span></label>
           <select id="upload-type" bind:value={uploadForm.type} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+            <option value="">{$_('documents.noType')}</option>
             {#each docTypes as t}
               <option value={t.slug}>{t.label}</option>
             {/each}
@@ -825,17 +828,15 @@
             {$_('documents.download')}
           </button>
         {/if}
-        {#if !viewingDocument.fileUrl}
-          <button
-            on:click={() => openEdit(viewingDocument)}
-            class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors duration-150 cursor-pointer flex items-center gap-2"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
-            </svg>
-            {$_('common.edit')}
-          </button>
-        {/if}
+        <button
+          on:click={() => openEdit(viewingDocument)}
+          class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors duration-150 cursor-pointer flex items-center gap-2"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
+          </svg>
+          {$_('common.edit')}
+        </button>
         <button
           on:click={() => { deletingId = viewingDocument.id; }}
           class="px-4 py-2 border border-red-200 text-red-500 rounded-lg text-sm font-medium hover:bg-red-50 transition-colors duration-150 cursor-pointer flex items-center gap-2"
@@ -870,15 +871,26 @@
           <input id="edit-title" type="text" bind:value={editForm.title} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
         </div>
         <div>
-          <label for="edit-content" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('content.title')}</label>
-          <textarea
-            id="edit-content"
-            bind:value={editForm.contentMd}
-            rows="16"
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
-            placeholder={$_('documents.contentPlaceholder')}
-          ></textarea>
+          <label for="edit-type" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('documents.type')}</label>
+          <select id="edit-type" bind:value={editForm.type} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+            <option value="">{$_('documents.noType')}</option>
+            {#each docTypes as t}
+              <option value={t.slug}>{t.label}</option>
+            {/each}
+          </select>
         </div>
+        {#if !editingDocument?.fileUrl}
+          <div>
+            <label for="edit-content" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('content.title')}</label>
+            <textarea
+              id="edit-content"
+              bind:value={editForm.contentMd}
+              rows="16"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+              placeholder={$_('documents.contentPlaceholder')}
+            ></textarea>
+          </div>
+        {/if}
       </div>
       <div class="p-6 border-t border-gray-100 flex gap-3">
         <button

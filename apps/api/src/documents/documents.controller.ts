@@ -135,7 +135,7 @@ export class DocumentsController {
     return this.documentsService.createFromUpload(
       file,
       projectId,
-      type || 'REPORT',
+      type || undefined,
       title || file.originalname,
       user.id,
     );
