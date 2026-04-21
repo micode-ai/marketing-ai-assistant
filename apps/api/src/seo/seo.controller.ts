@@ -1,12 +1,18 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, BadRequestException, UseGuards, HttpCode } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { SeoService } from './seo.service';
+import { CseConfigService } from './cse-config.service';
+import { ConfigureCseDto } from './dto/configure-cse.dto';
+import { ProjectAccessGuard } from '../common/guards/project-access.guard';
 
 @ApiTags('seo')
 @ApiBearerAuth()
 @Controller('seo')
 export class SeoController {
-  constructor(private seoService: SeoService) {}
+  constructor(
+    private seoService: SeoService,
+    private cseConfig: CseConfigService,
+  ) {}
 
   // ── Keywords ───────────────────────────────────────────────────
 
@@ -86,5 +92,30 @@ export class SeoController {
   @Post('competitors/:id/snapshot')
   addCompetitorSnapshot(@Param('id') id: string, @Body() dto: { data: Record<string, unknown> }) {
     return this.seoService.addCompetitorSnapshot(id, dto.data);
+  }
+
+  // ── CSE Config ─────────────────────────────────────────────────
+
+  @Post('cse/config')
+  @UseGuards(ProjectAccessGuard)
+  @ApiOperation({ summary: 'Save Google CSE credentials for a project' })
+  async configureCse(@Body() dto: ConfigureCseDto) {
+    await this.cseConfig.saveCredentials(dto.projectId, { apiKey: dto.apiKey, cseId: dto.cseId });
+    return { status: 'ok' };
+  }
+
+  @Get('cse/config/:projectId')
+  @UseGuards(ProjectAccessGuard)
+  @ApiOperation({ summary: 'Get CSE configuration status for a project' })
+  async getCseStatus(@Param('projectId') projectId: string) {
+    return this.cseConfig.getStatus(projectId);
+  }
+
+  @Delete('cse/config/:projectId')
+  @UseGuards(ProjectAccessGuard)
+  @HttpCode(204)
+  @ApiOperation({ summary: 'Clear CSE credentials for a project' })
+  async clearCse(@Param('projectId') projectId: string) {
+    await this.cseConfig.clearCredentials(projectId);
   }
 }
