@@ -1,7 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../database/prisma.service';
 import { AgentService } from './agent.service';
+import { CronFailureNotifier } from '../common/cron-failure-notifier.service';
 
 @Injectable()
 export class AgentScheduleProcessor {
@@ -11,6 +13,8 @@ export class AgentScheduleProcessor {
   constructor(
     private prisma: PrismaService,
     private agentService: AgentService,
+    private notifier: CronFailureNotifier,
+    private config: ConfigService,
   ) {}
 
   @Cron(CronExpression.EVERY_MINUTE)
@@ -54,6 +58,20 @@ export class AgentScheduleProcessor {
           this.logger.error(
             `Schedule ${schedule.id} failed: ${msg}`,
           );
+          const webUrl = (this.config.get<string>('WEB_URL') || 'http://localhost:5173').replace(/\/$/, '');
+          const project = schedule.project;
+          if (project) {
+            await this.notifier.report({
+              organizationId: project.organizationId,
+              cronName: 'agent-schedule',
+              resourceType: 'AgentSchedule',
+              resourceId: schedule.id,
+              resourceLabel: `${schedule.agentType} @ ${project.name}`,
+              errorCode: 'AGENT_SCHEDULE_FAILED',
+              error: msg,
+              actionUrl: `${webUrl}/projects/${project.id}`,
+            });
+          }
         }
       }
     } finally {
