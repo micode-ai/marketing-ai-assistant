@@ -40,7 +40,7 @@ export class UsersService {
     return this.prisma.user.update({
       where: { id },
       data: dto,
-      select: { id: true, email: true, name: true, avatarUrl: true, createdAt: true },
+      select: { id: true, email: true, name: true, avatarUrl: true, language: true, createdAt: true },
     });
   }
 
