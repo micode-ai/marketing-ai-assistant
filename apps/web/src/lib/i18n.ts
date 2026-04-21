@@ -16,9 +16,16 @@ export function setupI18n() {
   });
 }
 
-export function setLocale(newLocale: string) {
+export async function setLocale(newLocale: string) {
   locale.set(newLocale);
   if (browser) {
     localStorage.setItem('locale', newLocale);
+    // Persist to backend (best-effort). Lazy-import to avoid circular init with $lib/api/client.
+    try {
+      const { api } = await import('$lib/api/client');
+      await api.put('/users/me', { language: newLocale });
+    } catch {
+      // locale still works locally if the request fails or user is unauthenticated
+    }
   }
 }

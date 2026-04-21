@@ -156,3 +156,30 @@ Export your project data for backup or migration.
 2. Click **Export Project**
 3. Select which sections to include (content, campaigns, documents, checklists, etc.)
 4. Download the exported data
+
+## Background Job Failure Notifications
+
+The platform runs several scheduled background jobs:
+
+| Job | What it does |
+|---|---|
+| Social media publishing | Posts queued content to connected social accounts |
+| Scheduled AI agent | Runs AI agents on a cron schedule |
+| Daily analytics aggregation | Rolls up daily metrics for each project |
+| Email sequence sender | Advances subscribers through email sequences |
+| Google Play sync | Refreshes reviews, ratings, installs for mobile-app projects |
+
+When any of these jobs fails for a specific resource (a social account, a project, a sequence, etc.), the platform automatically notifies every **OWNER** and **ADMIN** of the organization by email. The email is sent in each recipient's preferred language and includes:
+
+- Which background job failed
+- Which resource was affected (e.g. "Facebook: MiCode Page")
+- The error message
+- A direct link to the relevant settings page
+
+### Anti-spam
+
+If the same error keeps recurring (for example, an invalid Facebook token causes publishing to fail every minute), the system sends **at most one email per 24 hours** per unique error signature per organization. The occurrence counter in the email tells you how many times the error has been seen since it was first detected. Once you fix the root cause and the job succeeds, the counter resets.
+
+### Changing your notification language
+
+Change your preferred language in the top-right menu. The setting is persisted to your profile, so you'll receive all future notifications in that language.

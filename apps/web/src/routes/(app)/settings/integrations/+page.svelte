@@ -355,37 +355,46 @@
       </div>
       <div class="flex flex-col gap-2">
         {#each accounts.filter(a => a.platform === 'FACEBOOK') as account}
-          <div class="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-lg border border-gray-100 bg-gray-50/50">
-            <div class="flex items-center gap-2 min-w-0">
-              {#if account.profileImageUrl}
-                <img src={account.profileImageUrl} alt={account.accountName} class="w-7 h-7 rounded-full flex-shrink-0" />
-              {/if}
-              <div class="flex flex-col min-w-0">
-                <div class="flex items-center gap-2">
-                  <span class="text-sm text-gray-800 font-medium truncate" title={account.accountName}>{account.accountName}</span>
-                  <span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full flex-shrink-0">{$_('social.connected')}</span>
+          <div class="flex flex-col gap-2 p-2.5 rounded-lg border {account.status === 'REAUTH_REQUIRED' ? 'border-orange-300 bg-orange-50' : 'border-gray-100 bg-gray-50/50'}">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="flex items-center gap-2 min-w-0">
+                {#if account.profileImageUrl}
+                  <img src={account.profileImageUrl} alt={account.accountName} class="w-7 h-7 rounded-full flex-shrink-0" />
+                {/if}
+                <div class="flex flex-col min-w-0">
+                  <div class="flex items-center gap-2">
+                    <span class="text-sm text-gray-800 font-medium truncate" title={account.accountName}>{account.accountName}</span>
+                    {#if account.status === 'REAUTH_REQUIRED'}
+                      <span class="text-xs px-2 py-0.5 bg-orange-100 text-orange-700 rounded-full flex-shrink-0">{$_('social.reauthRequired.badge')}</span>
+                    {:else}
+                      <span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full flex-shrink-0">{$_('social.connected')}</span>
+                    {/if}
+                  </div>
+                  <span class="text-xs text-gray-500 font-mono truncate" title={account.accountId}>{account.accountId}</span>
                 </div>
-                <span class="text-xs text-gray-500 font-mono truncate" title={account.accountId}>{account.accountId}</span>
+              </div>
+              <div class="flex items-center gap-2 flex-shrink-0">
+                <select
+                  bind:value={account.language}
+                  on:change={() => updateAccountLanguage(account)}
+                  class="text-sm border border-gray-300 rounded px-2 py-1 bg-white"
+                >
+                  <option value="">{$_('social.noLanguage')}</option>
+                  <option value="en">English</option>
+                  <option value="pl">Polski</option>
+                  <option value="ru">Русский</option>
+                </select>
+                <button on:click={() => openEditFacebook(account)} class="text-xs px-3 py-1.5 border {account.status === 'REAUTH_REQUIRED' ? 'border-orange-400 text-orange-700 bg-orange-100 hover:bg-orange-200 font-medium' : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50'} rounded-lg transition-colors duration-150 cursor-pointer">
+                  {account.status === 'REAUTH_REQUIRED' ? $_('social.reauthRequired.cta') : $_('common.edit')}
+                </button>
+                <button on:click={() => disconnectingId = account.id} class="text-xs px-3 py-1.5 border border-red-200 text-red-500 rounded-lg hover:bg-red-50 transition-colors duration-150 cursor-pointer bg-white">
+                  {$_('social.disconnect')}
+                </button>
               </div>
             </div>
-            <div class="flex items-center gap-2 flex-shrink-0">
-              <select
-                bind:value={account.language}
-                on:change={() => updateAccountLanguage(account)}
-                class="text-sm border border-gray-300 rounded px-2 py-1 bg-white"
-              >
-                <option value="">{$_('social.noLanguage')}</option>
-                <option value="en">English</option>
-                <option value="pl">Polski</option>
-                <option value="ru">Русский</option>
-              </select>
-              <button on:click={() => openEditFacebook(account)} class="text-xs px-3 py-1.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-150 cursor-pointer bg-white">
-                {$_('common.edit')}
-              </button>
-              <button on:click={() => disconnectingId = account.id} class="text-xs px-3 py-1.5 border border-red-200 text-red-500 rounded-lg hover:bg-red-50 transition-colors duration-150 cursor-pointer bg-white">
-                {$_('social.disconnect')}
-              </button>
-            </div>
+            {#if account.status === 'REAUTH_REQUIRED'}
+              <p class="text-xs text-orange-800">{$_('social.reauthRequired.description')}</p>
+            {/if}
           </div>
         {/each}
         <button on:click={() => showFacebookModal = true} class="text-sm px-4 py-2 bg-[#1877F2] text-white rounded-lg hover:bg-[#1565d8] transition-colors duration-150 cursor-pointer font-medium self-start mt-1">
