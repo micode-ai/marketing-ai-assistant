@@ -706,7 +706,7 @@ model DocumentTypeConfig {
 model Document {
   id             String      @id @default(cuid())
   projectId      String?
-  type           String
+  type           String?
   title          String
   content        Json?
   contentMd      String?     @db.Text

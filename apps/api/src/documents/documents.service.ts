@@ -110,7 +110,7 @@ export class DocumentsService {
         projectId: dto.projectId,
         organizationId,
         scope: dto.scope || 'PROJECT',
-        type: dto.type as any,
+        type: dto.type ? (dto.type as any) : null,
         title: dto.title,
         content: dto.content || {},
         contentMd: dto.contentMd,
@@ -124,7 +124,7 @@ export class DocumentsService {
     // eslint-disable-next-line no-undef
     file: Express.Multer.File,
     projectId: string,
-    type: string,
+    type: string | undefined,
     title: string,
     userId: string,
   ) {
@@ -151,7 +151,7 @@ export class DocumentsService {
         projectId,
         organizationId,
         scope: 'PROJECT',
-        type: type as any,
+        type: type ? (type as any) : null,
         title,
         content: {},
         contentMd,
@@ -166,9 +166,14 @@ export class DocumentsService {
   }
 
   async update(id: string, dto: any) {
+    const data: any = { version: { increment: 1 } };
+    if (dto.title !== undefined) data.title = dto.title;
+    if (dto.contentMd !== undefined) data.contentMd = dto.contentMd;
+    if (dto.content !== undefined) data.content = dto.content;
+    if (dto.type !== undefined) data.type = dto.type === '' || dto.type === null ? null : dto.type;
     return this.prisma.document.update({
       where: { id },
-      data: { ...dto, version: { increment: 1 } },
+      data,
     });
   }
 
