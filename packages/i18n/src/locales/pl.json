@@ -577,7 +577,8 @@
     "typeLabelPlaceholder": "np. Studium przypadku",
     "deleteType": "Usuń typ",
     "typeInUse": "Ten typ jest używany przez istniejące dokumenty i nie może zostać usunięty.",
-    "confirmDeleteType": "Czy na pewno chcesz usunąć ten typ dokumentu?"
+    "confirmDeleteType": "Czy na pewno chcesz usunąć ten typ dokumentu?",
+    "noType": "Bez typu"
   },
   "aiChat": {
     "title": "Chat AI",
