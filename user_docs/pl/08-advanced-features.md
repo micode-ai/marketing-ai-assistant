@@ -1,29 +1,53 @@
 # Zaawansowane funkcje
 
-## Sledzenie slow kluczowych SEO
+## SEO i słowa kluczowe
 
-Sledzenie pozycji w wyszukiwarkach w czasie.
+Śledź pozycje w wyszukiwarkach i odkrywaj konkurentów dla swojego projektu.
 
-### Dodawanie slow kluczowych
+### Dodawanie słów kluczowych
 
-1. Przejdz do sekcji **SEO** w projekcie
-2. Kliknij **Dodaj slowo kluczowe**
-3. Wprowadz:
-   - **Slowo kluczowe** — fraze wyszukiwania do sledzenia
-   - **Intencja** — Informacyjna, Nawigacyjna, Komercyjna lub Transakcyjna
-   - **Docelowy URL** — strone, dla ktorej chcesz uzyskac pozycje
-4. Kliknij **Zapisz**
+1. Otwórz **SEO** w bocznym menu projektu.
+2. Kliknij **Dodaj słowo kluczowe**.
+3. Uzupełnij pola:
+   - **Słowo kluczowe** — fraza, na którą chcesz się pozycjonować.
+   - **Docelowy URL** — strona na Twoim serwisie, która powinna rankować na to słowo kluczowe.
+   - **Ustawienia regionalne wyszukiwania** — który rynek Google sprawdzać (pl-PL, en-US, ru-RU).
+   - **Intencja** — Informacyjna / Nawigacyjna / Komercyjna / Transakcyjna. Pomaga dopasować generowane przez AI treści do intencji użytkownika.
+   - **Docelowa pozycja** (opcjonalnie) — Twój cel pozycyjny, wyświetlany jako linia referencyjna na wykresie historii.
 
-### Rejestrowanie pozycji
+### Podłączenie Google Custom Search
 
-1. Otworz slowo kluczowe
-2. Kliknij **Zapisz pozycje**
-3. Wprowadz aktualna pozycje w wyszukiwarce, URL i wolumen wyszukiwan
-4. Pozycje sa zapisywane ze znacznikiem czasu
+Śledzenie pozycji korzysta z Google Custom Search JSON API — plan bezpłatny, 100 zapytań dziennie na projekt Google Cloud.
 
-### Przegladanie historii
+1. Utwórz projekt w Google Cloud Console i włącz **Custom Search API**.
+2. Utwórz klucz API w sekcji Credentials.
+3. Utwórz Programowalną Wyszukiwarkę na programmablesearchengine.google.com, skonfigurowaną do przeszukiwania całego internetu, i skopiuj **CSE ID**.
+4. Otwórz **Ustawienia projektu → Google Custom Search**, wklej klucz API i CSE ID, kliknij **Połącz**.
 
-Kazde slowo kluczowe ma wykres historii pozycji pokazujacy zmiany w czasie.
+Po podłączeniu aplikacja będzie sprawdzać śledzone słowa kluczowe według harmonogramu:
+- **Plan Free:** do 5 słów kluczowych, raz w tygodniu w poniedziałki.
+- **Plan Pro:** do 30 słów kluczowych, codziennie.
+- **Plan Enterprise:** do 90 słów kluczowych, codziennie.
+
+Możesz też kliknąć **Sprawdź teraz** przy dowolnym słowie kluczowym, aby uruchomić sprawdzenie natychmiast (limit: 3 ręczne sprawdzenia na godzinę na słowo kluczowe).
+
+### Przeglądanie historii pozycji
+
+Kliknij **Pokaż historię** przy dowolnym słowie kluczowym, aby otworzyć jego stronę szczegółową. Zobaczysz:
+- Wykres liniowy pozycji w czasie (pozycja 1 na górze — niższa liczba = wyższa pozycja)
+- Linię przerywaną oznaczającą Twoją docelową pozycję
+- Zakładki z zakresem dat: 7 dni / 30 dni / 90 dni / niestandardowy
+- Tabelę ostatnich sprawdzeń z URL-em dopasowanym przez Google
+
+### Konkurenci
+
+#### Ręczne dodawanie konkurentów
+
+Kliknij **Dodaj konkurenta**, podaj nazwę i adres URL strony.
+
+#### Sugestie konkurentów przez AI
+
+Kliknij **Zaproponuj konkurentów z AI**. Aplikacja wysyła kontekst projektu i śledzone słowa kluczowe do agenta AI, który proponuje do 5 realnych konkurentów z krótkim uzasadnieniem. Przejrzyj karty i kliknij **Zatwierdź**, aby dodać konkurenta do listy, lub **Odrzuć**, aby go odrzucić (odrzucone sugestie nie będą ponownie proponowane).
 
 ## Testy A/B
 
