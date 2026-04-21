@@ -1,12 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ValidationPipe, HttpException, HttpStatus } from '@nestjs/common';
+import { CompetitorStatus } from '@prisma/client';
 import { SeoController } from './seo.controller';
 import { SeoService } from './seo.service';
 import { CseConfigService } from './cse-config.service';
 import { RankTrackingService } from './rank-tracking.service';
+import { CompetitorSuggestionService } from './competitor-suggestion.service';
 import { PrismaService } from '../database/prisma.service';
 import { ProjectAccessGuard } from '../common/guards/project-access.guard';
 import { KeywordAccessGuard } from '../common/guards/keyword-access.guard';
+import { CompetitorAccessGuard } from '../common/guards/competitor-access.guard';
 import { ConfigureCseDto } from './dto/configure-cse.dto';
 
 const mockSeoService = {
@@ -36,6 +39,10 @@ const mockRankTrackingService = {
   checkKeyword: jest.fn(),
 };
 
+const mockCompetitorSuggestionService = {
+  suggest: jest.fn(),
+};
+
 describe('SeoController — CSE config endpoints', () => {
   let controller: SeoController;
 
@@ -48,12 +55,15 @@ describe('SeoController — CSE config endpoints', () => {
         { provide: SeoService, useValue: mockSeoService },
         { provide: CseConfigService, useValue: mockCseConfigService },
         { provide: RankTrackingService, useValue: mockRankTrackingService },
+        { provide: CompetitorSuggestionService, useValue: mockCompetitorSuggestionService },
         { provide: PrismaService, useValue: mockPrismaService },
       ],
     })
       .overrideGuard(ProjectAccessGuard)
       .useValue({ canActivate: () => true })
       .overrideGuard(KeywordAccessGuard)
+      .useValue({ canActivate: () => true })
+      .overrideGuard(CompetitorAccessGuard)
       .useValue({ canActivate: () => true })
       .compile();
 
@@ -255,6 +265,106 @@ describe('SeoController — CSE config endpoints', () => {
       await expect(
         pipe.transform(dto, { type: 'body', metatype: ConfigureCseDto }),
       ).rejects.toThrow();
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // POST /seo/competitors/suggest
+  // ---------------------------------------------------------------------------
+
+  describe('suggestCompetitors()', () => {
+    it('calls CompetitorSuggestionService.suggest with projectId and returns the result', async () => {
+      const suggestions = [
+        { id: 'c1', name: 'CompA', websiteUrl: 'https://compa.com', status: 'SUGGESTED' },
+        { id: 'c2', name: 'CompB', websiteUrl: 'https://compb.com', status: 'SUGGESTED' },
+      ];
+      mockCompetitorSuggestionService.suggest.mockResolvedValue(suggestions);
+
+      const result = await controller.suggestCompetitors({ projectId: 'proj-xyz' });
+
+      expect(mockCompetitorSuggestionService.suggest).toHaveBeenCalledWith('proj-xyz');
+      expect(result).toEqual(suggestions);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // POST /seo/competitors/:id/approve
+  // ---------------------------------------------------------------------------
+
+  describe('approveCompetitor()', () => {
+    it('calls updateCompetitor with status ACTIVE and an approvedAt Date', async () => {
+      const updated = { id: 'comp-1', status: 'ACTIVE', approvedAt: new Date() };
+      mockSeoService.updateCompetitor.mockResolvedValue(updated);
+
+      const result = await controller.approveCompetitor('comp-1');
+
+      expect(mockSeoService.updateCompetitor).toHaveBeenCalledWith('comp-1', {
+        status: CompetitorStatus.ACTIVE,
+        approvedAt: expect.any(Date),
+      });
+      expect(result).toEqual(updated);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // POST /seo/competitors/:id/dismiss
+  // ---------------------------------------------------------------------------
+
+  describe('dismissCompetitor()', () => {
+    it('calls updateCompetitor with status DISMISSED', async () => {
+      const updated = { id: 'comp-1', status: 'DISMISSED' };
+      mockSeoService.updateCompetitor.mockResolvedValue(updated);
+
+      const result = await controller.dismissCompetitor('comp-1');
+
+      expect(mockSeoService.updateCompetitor).toHaveBeenCalledWith('comp-1', {
+        status: CompetitorStatus.DISMISSED,
+      });
+      expect(result).toEqual(updated);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // GET /seo/competitors?status=SUGGESTED
+  // ---------------------------------------------------------------------------
+
+  describe('findCompetitors() — status filter', () => {
+    it('passes status=SUGGESTED through to the service', async () => {
+      const competitors = [{ id: 'c1', status: 'SUGGESTED' }];
+      mockSeoService.findCompetitors.mockResolvedValue(competitors);
+
+      const result = await controller.findCompetitors('proj-abc', undefined, undefined, 'SUGGESTED');
+
+      expect(mockSeoService.findCompetitors).toHaveBeenCalledWith({
+        projectId: 'proj-abc',
+        organizationId: undefined,
+        aggregated: false,
+        status: CompetitorStatus.SUGGESTED,
+      });
+      expect(result).toEqual(competitors);
+    });
+
+    it('omits status from the service call when query param is absent', async () => {
+      mockSeoService.findCompetitors.mockResolvedValue([]);
+
+      await controller.findCompetitors('proj-abc', undefined, undefined, undefined);
+
+      expect(mockSeoService.findCompetitors).toHaveBeenCalledWith({
+        projectId: 'proj-abc',
+        organizationId: undefined,
+        aggregated: false,
+        status: undefined,
+      });
+    });
+
+    it('omits status when an invalid value is passed', async () => {
+      mockSeoService.findCompetitors.mockResolvedValue([]);
+
+      await controller.findCompetitors('proj-abc', undefined, undefined, 'INVALID_STATUS');
+
+      expect(mockSeoService.findCompetitors).toHaveBeenCalledWith(
+        expect.objectContaining({ status: undefined }),
+      );
     });
   });
 });

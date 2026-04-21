@@ -1,11 +1,14 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, Query, BadRequestException, UseGuards, HttpCode, HttpException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { CompetitorStatus } from '@prisma/client';
 import { SeoService } from './seo.service';
 import { CseConfigService } from './cse-config.service';
 import { RankTrackingService } from './rank-tracking.service';
+import { CompetitorSuggestionService } from './competitor-suggestion.service';
 import { ConfigureCseDto } from './dto/configure-cse.dto';
 import { ProjectAccessGuard } from '../common/guards/project-access.guard';
 import { KeywordAccessGuard } from '../common/guards/keyword-access.guard';
+import { CompetitorAccessGuard } from '../common/guards/competitor-access.guard';
 
 @ApiTags('seo')
 @ApiBearerAuth()
@@ -15,6 +18,7 @@ export class SeoController {
     private seoService: SeoService,
     private cseConfig: CseConfigService,
     private rankTracking: RankTrackingService,
+    private competitorSuggestion: CompetitorSuggestionService,
   ) {}
 
   // ── Keywords ───────────────────────────────────────────────────
@@ -83,11 +87,22 @@ export class SeoController {
     @Query('projectId') projectId?: string,
     @Query('organizationId') organizationId?: string,
     @Query('aggregated') aggregated?: string,
+    @Query('status') status?: string,
   ) {
     if (!projectId && !organizationId) {
       throw new BadRequestException('Either projectId or organizationId is required');
     }
-    return this.seoService.findCompetitors({ projectId, organizationId, aggregated: aggregated === 'true' });
+    const parsedStatus = status && Object.values(CompetitorStatus).includes(status as CompetitorStatus)
+      ? (status as CompetitorStatus)
+      : undefined;
+    return this.seoService.findCompetitors({ projectId, organizationId, aggregated: aggregated === 'true', status: parsedStatus });
+  }
+
+  @Post('competitors/suggest')
+  @UseGuards(ProjectAccessGuard)
+  @ApiOperation({ summary: 'Use AI to suggest competitors for a project' })
+  suggestCompetitors(@Body() dto: { projectId: string }) {
+    return this.competitorSuggestion.suggest(dto.projectId);
   }
 
   @Post('competitors')
@@ -98,6 +113,20 @@ export class SeoController {
   @Put('competitors/:id')
   updateCompetitor(@Param('id') id: string, @Body() dto: any) {
     return this.seoService.updateCompetitor(id, dto);
+  }
+
+  @Post('competitors/:id/approve')
+  @UseGuards(CompetitorAccessGuard)
+  @ApiOperation({ summary: 'Approve a suggested competitor (sets status to ACTIVE)' })
+  approveCompetitor(@Param('id') id: string) {
+    return this.seoService.updateCompetitor(id, { status: CompetitorStatus.ACTIVE, approvedAt: new Date() });
+  }
+
+  @Post('competitors/:id/dismiss')
+  @UseGuards(CompetitorAccessGuard)
+  @ApiOperation({ summary: 'Dismiss a suggested competitor' })
+  dismissCompetitor(@Param('id') id: string) {
+    return this.seoService.updateCompetitor(id, { status: CompetitorStatus.DISMISSED });
   }
 
   @Delete('competitors/:id')
