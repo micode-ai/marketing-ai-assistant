@@ -57,6 +57,7 @@ enum SocialPlatform {
   GOOGLE
   TELEGRAM
   GOOGLE_PLAY
+  GOOGLE_CSE
 }
 
 enum CampaignType {
@@ -203,6 +204,12 @@ enum KeywordIntent {
   NAVIGATIONAL
   COMMERCIAL
   TRANSACTIONAL
+}
+
+enum CompetitorStatus {
+  SUGGESTED
+  ACTIVE
+  DISMISSED
 }
 
 enum SocialAccountStatus {
@@ -415,10 +422,11 @@ model ProjectApiKey {
   id           String         @id @default(cuid())
   projectId    String
   platform     SocialPlatform
-  encryptedKey String
-  scopes       String[]
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  encryptedKey          String
+  scopes                String[]
+  lastValidationError   String?
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
@@ -907,6 +915,9 @@ model Keyword {
   intent         KeywordIntent @default(INFORMATIONAL)
   url            String?
   isTracking     Boolean       @default(true)
+  locale         String        @default("en-US")
+  lastCheckedAt  DateTime?
+  lastCheckError String?
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
   scope          EntityScope   @default(PROJECT)
@@ -1104,7 +1115,11 @@ model Competitor {
   websiteUrl     String
   description    String?
   lastCheckedAt  DateTime?
-  isActive       Boolean     @default(true)
+  isActive       Boolean          @default(true)
+  status         CompetitorStatus @default(ACTIVE)
+  aiRationale    String?
+  suggestedAt    DateTime?
+  approvedAt     DateTime?
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
   scope          EntityScope @default(PROJECT)

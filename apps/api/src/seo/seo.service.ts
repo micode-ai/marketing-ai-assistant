@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { CompetitorStatus } from '@prisma/client';
 import { PrismaService } from '../database/prisma.service';
 
 @Injectable()
@@ -105,7 +106,7 @@ export class SeoService {
     return this.prisma.keyword.delete({ where: { id } });
   }
 
-  async addRankHistory(keywordId: string, rank: number, url?: string) {
+  async addRankHistory(keywordId: string, rank: number | null, url?: string) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -117,7 +118,7 @@ export class SeoService {
 
     await this.prisma.keyword.update({
       where: { id: keywordId },
-      data: { currentRank: rank },
+      data: { currentRank: rank ?? undefined },
     });
 
     return entry;
@@ -131,7 +132,7 @@ export class SeoService {
     });
   }
 
-  async findCompetitors(scope: { projectId?: string; organizationId?: string; aggregated?: boolean }) {
+  async findCompetitors(scope: { projectId?: string; organizationId?: string; aggregated?: boolean; status?: CompetitorStatus }) {
     const where: any = {};
 
     if (scope.projectId) {
@@ -141,6 +142,10 @@ export class SeoService {
     } else if (scope.organizationId) {
       where.organizationId = scope.organizationId;
       where.scope = 'ORGANIZATION';
+    }
+
+    if (scope.status !== undefined) {
+      where.status = scope.status;
     }
 
     return this.prisma.competitor.findMany({
@@ -183,9 +188,30 @@ export class SeoService {
 
   async updateCompetitor(
     id: string,
-    dto: { name?: string; websiteUrl?: string; description?: string; isActive?: boolean },
+    dto: {
+      name?: string;
+      websiteUrl?: string;
+      description?: string;
+      isActive?: boolean;
+      status?: CompetitorStatus;
+      aiRationale?: string | null;
+      approvedAt?: Date | null;
+      suggestedAt?: Date | null;
+    },
   ) {
-    return this.prisma.competitor.update({ where: { id }, data: dto });
+    return this.prisma.competitor.update({
+      where: { id },
+      data: {
+        ...(dto.name !== undefined && { name: dto.name }),
+        ...(dto.websiteUrl !== undefined && { websiteUrl: dto.websiteUrl }),
+        ...(dto.description !== undefined && { description: dto.description }),
+        ...(dto.isActive !== undefined && { isActive: dto.isActive }),
+        ...(dto.status !== undefined && { status: dto.status }),
+        ...(dto.aiRationale !== undefined && { aiRationale: dto.aiRationale }),
+        ...(dto.approvedAt !== undefined && { approvedAt: dto.approvedAt }),
+        ...(dto.suggestedAt !== undefined && { suggestedAt: dto.suggestedAt }),
+      },
+    });
   }
 
   async deleteCompetitor(id: string) {

@@ -1,12 +1,25 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, BadRequestException, UseGuards, HttpCode, HttpException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { CompetitorStatus } from '@prisma/client';
 import { SeoService } from './seo.service';
+import { CseConfigService } from './cse-config.service';
+import { RankTrackingService } from './rank-tracking.service';
+import { CompetitorSuggestionService } from './competitor-suggestion.service';
+import { ConfigureCseDto } from './dto/configure-cse.dto';
+import { ProjectAccessGuard } from '../common/guards/project-access.guard';
+import { KeywordAccessGuard } from '../common/guards/keyword-access.guard';
+import { CompetitorAccessGuard } from '../common/guards/competitor-access.guard';
 
 @ApiTags('seo')
 @ApiBearerAuth()
 @Controller('seo')
 export class SeoController {
-  constructor(private seoService: SeoService) {}
+  constructor(
+    private seoService: SeoService,
+    private cseConfig: CseConfigService,
+    private rankTracking: RankTrackingService,
+    private competitorSuggestion: CompetitorSuggestionService,
+  ) {}
 
   // ── Keywords ───────────────────────────────────────────────────
 
@@ -53,6 +66,19 @@ export class SeoController {
     return this.seoService.addRankHistory(id, dto.rank, dto.url);
   }
 
+  @Post('keywords/:id/check-now')
+  @UseGuards(KeywordAccessGuard)
+  @ApiOperation({ summary: 'Manually trigger a rank check for a keyword (max 3/hour)' })
+  async checkNow(@Param('id') id: string) {
+    try {
+      return await this.rankTracking.checkKeyword(id, 'manual');
+    } catch (err) {
+      if (err instanceof HttpException) throw err; // pass through 429 + rank-tracking errors
+      // Map CSE_NOT_CONFIGURED surfaced as a skipped result gets returned normally (not thrown).
+      throw err;
+    }
+  }
+
   // ── Competitors ────────────────────────────────────────────────
 
   @Get('competitors')
@@ -61,11 +87,22 @@ export class SeoController {
     @Query('projectId') projectId?: string,
     @Query('organizationId') organizationId?: string,
     @Query('aggregated') aggregated?: string,
+    @Query('status') status?: string,
   ) {
     if (!projectId && !organizationId) {
       throw new BadRequestException('Either projectId or organizationId is required');
     }
-    return this.seoService.findCompetitors({ projectId, organizationId, aggregated: aggregated === 'true' });
+    const parsedStatus = status && Object.values(CompetitorStatus).includes(status as CompetitorStatus)
+      ? (status as CompetitorStatus)
+      : undefined;
+    return this.seoService.findCompetitors({ projectId, organizationId, aggregated: aggregated === 'true', status: parsedStatus });
+  }
+
+  @Post('competitors/suggest')
+  @UseGuards(ProjectAccessGuard)
+  @ApiOperation({ summary: 'Use AI to suggest competitors for a project' })
+  suggestCompetitors(@Body() dto: { projectId: string }) {
+    return this.competitorSuggestion.suggest(dto.projectId);
   }
 
   @Post('competitors')
@@ -78,6 +115,20 @@ export class SeoController {
     return this.seoService.updateCompetitor(id, dto);
   }
 
+  @Post('competitors/:id/approve')
+  @UseGuards(CompetitorAccessGuard)
+  @ApiOperation({ summary: 'Approve a suggested competitor (sets status to ACTIVE)' })
+  approveCompetitor(@Param('id') id: string) {
+    return this.seoService.updateCompetitor(id, { status: CompetitorStatus.ACTIVE, approvedAt: new Date() });
+  }
+
+  @Post('competitors/:id/dismiss')
+  @UseGuards(CompetitorAccessGuard)
+  @ApiOperation({ summary: 'Dismiss a suggested competitor' })
+  dismissCompetitor(@Param('id') id: string) {
+    return this.seoService.updateCompetitor(id, { status: CompetitorStatus.DISMISSED });
+  }
+
   @Delete('competitors/:id')
   deleteCompetitor(@Param('id') id: string) {
     return this.seoService.deleteCompetitor(id);
@@ -86,5 +137,30 @@ export class SeoController {
   @Post('competitors/:id/snapshot')
   addCompetitorSnapshot(@Param('id') id: string, @Body() dto: { data: Record<string, unknown> }) {
     return this.seoService.addCompetitorSnapshot(id, dto.data);
+  }
+
+  // ── CSE Config ─────────────────────────────────────────────────
+
+  @Post('cse/config')
+  @UseGuards(ProjectAccessGuard)
+  @ApiOperation({ summary: 'Save Google CSE credentials for a project' })
+  async configureCse(@Body() dto: ConfigureCseDto) {
+    await this.cseConfig.saveCredentials(dto.projectId, { apiKey: dto.apiKey, cseId: dto.cseId });
+    return { status: 'ok' };
+  }
+
+  @Get('cse/config/:projectId')
+  @UseGuards(ProjectAccessGuard)
+  @ApiOperation({ summary: 'Get CSE configuration status for a project' })
+  async getCseStatus(@Param('projectId') projectId: string) {
+    return this.cseConfig.getStatus(projectId);
+  }
+
+  @Delete('cse/config/:projectId')
+  @UseGuards(ProjectAccessGuard)
+  @HttpCode(204)
+  @ApiOperation({ summary: 'Clear CSE credentials for a project' })
+  async clearCse(@Param('projectId') projectId: string) {
+    await this.cseConfig.clearCredentials(projectId);
   }
 }

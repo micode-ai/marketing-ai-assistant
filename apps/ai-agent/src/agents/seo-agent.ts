@@ -389,6 +389,160 @@ const graph = new StateGraph(S)
   .addEdge('saveReport',     END)
   .compile();
 
+// ── suggestCompetitors ─────────────────────────────────────────
+
+export interface CompetitorSuggestion {
+  name: string;
+  websiteUrl: string;
+  rationale: string;
+}
+
+export interface SuggestCompetitorsInput {
+  action: 'suggest-competitors';
+  projectName: string;
+  industry?: string;
+  websiteUrl?: string;
+  targetKeywords: string[];
+  existingCompetitorUrls: string[];
+  locale: string;
+  count?: number;
+}
+
+export interface SuggestCompetitorsOutput {
+  competitors: CompetitorSuggestion[];
+}
+
+/**
+ * Normalizes a URL to its origin form:
+ * - lowercase host
+ * - strip leading "www."
+ * - remove port (unless non-standard)
+ * - no path, search, or fragment
+ * - add "https://" if protocol is missing
+ */
+export function normalizeToOrigin(raw: string): string {
+  let url = raw.trim();
+
+  // Add protocol if missing
+  if (!/^https?:\/\//i.test(url)) {
+    url = 'https://' + url;
+  }
+
+  try {
+    const parsed = new URL(url);
+    let host = parsed.hostname.toLowerCase();
+    // Strip leading www.
+    if (host.startsWith('www.')) {
+      host = host.slice(4);
+    }
+    return `${parsed.protocol}//${host}`;
+  } catch {
+    // If URL is truly unparseable, return as-is without trailing slash
+    return url.replace(/\/+$/, '');
+  }
+}
+
+/**
+ * Returns the normalized hostname (no www, lowercase) for comparison.
+ */
+function normalizedHost(url: string): string {
+  try {
+    return new URL(normalizeToOrigin(url)).hostname;
+  } catch {
+    return url.toLowerCase().replace(/^www\./, '');
+  }
+}
+
+export async function suggestCompetitors(
+  input: SuggestCompetitorsInput,
+): Promise<SuggestCompetitorsOutput> {
+  const count = Math.min(input.count ?? 5, 10);
+  const keywords = (input.targetKeywords ?? []).slice(0, 20);
+
+  // Normalize existing competitor URLs for exclusion matching
+  const existingHosts = new Set(
+    (input.existingCompetitorUrls ?? []).map(u => normalizedHost(u)),
+  );
+
+  // Map locale (e.g. 'pl-PL') to language name for the rationale instruction
+  const localeTag = input.locale?.split('-')[0]?.toLowerCase() ?? 'en';
+  const LOCALE_NAMES: Record<string, string> = {
+    en: 'English', pl: 'Polish', ru: 'Russian',
+  };
+  const languageName = LOCALE_NAMES[localeTag] ?? 'English';
+
+  const excludeList =
+    existingHosts.size > 0
+      ? `Do NOT include any competitor whose domain matches one of these: ${[...existingHosts].join(', ')}.`
+      : '';
+
+  const systemPrompt =
+    `You are an expert market-research assistant specializing in competitive analysis for digital businesses.\n` +
+    `Respond with ONLY valid JSON — no markdown fences, no explanations.\n` +
+    `Return exactly this TypeScript shape:\n` +
+    `{ "competitors": [ { "name": string, "websiteUrl": string, "rationale": string } ] }\n` +
+    `Rules:\n` +
+    `- websiteUrl must be the origin only (e.g. "https://example.com") — no path, no trailing slash.\n` +
+    `- rationale must be 1–2 sentences written in ${languageName}.\n` +
+    `- Return up to ${count} real companies.\n` +
+    (excludeList ? `- ${excludeList}\n` : '');
+
+  const userPrompt =
+    `Find up to ${count} real companies that compete with the following project for the listed keywords.\n\n` +
+    `Project name: ${input.projectName}\n` +
+    (input.industry ? `Industry: ${input.industry}\n` : '') +
+    (input.websiteUrl ? `Project website: ${input.websiteUrl}\n` : '') +
+    `Target keywords: ${keywords.length > 0 ? keywords.join(', ') : 'not specified'}\n\n` +
+    `For each competitor provide: name, websiteUrl (origin only, no trailing slash), and a 1–2 sentence rationale in ${languageName} explaining why they are a competitor.`;
+
+  const response = await getModel(0.4, 2000).invoke([
+    new SystemMessage(systemPrompt),
+    new HumanMessage(userPrompt),
+  ]);
+
+  const raw = (response.content as string).trim();
+
+  // Parse JSON — be forgiving of markdown fences
+  let parsed: unknown;
+  try {
+    const match = raw.match(/\{[\s\S]*\}/);
+    parsed = JSON.parse(match ? match[0] : raw);
+  } catch {
+    throw new Error('AI returned non-JSON output');
+  }
+
+  // Validate shape
+  if (
+    typeof parsed !== 'object' ||
+    parsed === null ||
+    !Array.isArray((parsed as Record<string, unknown>)['competitors'])
+  ) {
+    throw new Error('AI returned non-JSON output');
+  }
+
+  const rawCompetitors = (parsed as { competitors: unknown[] }).competitors;
+
+  const competitors: CompetitorSuggestion[] = rawCompetitors
+    .filter(
+      (c): c is { name: string; websiteUrl: string; rationale: string } =>
+        typeof c === 'object' &&
+        c !== null &&
+        typeof (c as Record<string, unknown>)['name'] === 'string' &&
+        typeof (c as Record<string, unknown>)['websiteUrl'] === 'string' &&
+        typeof (c as Record<string, unknown>)['rationale'] === 'string',
+    )
+    .map(c => ({
+      name: c.name,
+      websiteUrl: normalizeToOrigin(c.websiteUrl),
+      rationale: c.rationale,
+    }))
+    // Filter out any whose normalized host matches existingCompetitorUrls
+    .filter(c => !existingHosts.has(normalizedHost(c.websiteUrl)))
+    .slice(0, count);
+
+  return { competitors };
+}
+
 // ── Public API ─────────────────────────────────────────────────
 
 export async function runSeoAgent({
@@ -398,6 +552,13 @@ export async function runSeoAgent({
   projectId: string;
   input: Record<string, unknown>;
 }) {
+  // Route on action if provided
+  if (input['action'] === 'suggest-competitors') {
+    const out = await suggestCompetitors(input as unknown as SuggestCompetitorsInput);
+    return out as unknown as Record<string, unknown>;
+  }
+
+  // Default: existing LangGraph SEO audit/analysis flow
   const langsmithRunId = randomUUID();
   const result = await graph.invoke(
     { projectId, input },

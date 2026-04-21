@@ -7,6 +7,7 @@
   import { currentProjectStore, projectsStore } from '$lib/stores/projects';
 
   let competitors: any[] = [];
+  let suggestedCompetitors: any[] = [];
   let loading = true;
   let showModal = false;
   let creating = false;
@@ -28,15 +29,40 @@
   // Analyze state
   let analyzingId: string | null = null;
 
+  // Suggest with AI state
+  let suggesting = false;
+
+  // Approve/dismiss in-flight
+  let approvingId: string | null = null;
+  let dismissingId: string | null = null;
+
+  // Toast notification
+  let toast: { message: string; type: 'success' | 'error' | 'warning' } | null = null;
+  let toastTimer: ReturnType<typeof setTimeout> | null = null;
+
+  function showToast(message: string, type: 'success' | 'error' | 'warning' = 'error') {
+    if (toastTimer) clearTimeout(toastTimer);
+    toast = { message, type };
+    toastTimer = setTimeout(() => { toast = null; }, 5000);
+  }
+
   // Snapshot expand state
   let expandedSnapshotId: string | null = null;
 
   // Snapshot data cache
   let snapshotCache: Record<string, any[]> = {};
 
+  async function loadActiveCompetitors() {
+    competitors = await api.get<any[]>('/seo/competitors', { projectId, status: 'ACTIVE' });
+  }
+
+  async function loadSuggestedCompetitors() {
+    suggestedCompetitors = await api.get<any[]>('/seo/competitors', { projectId, status: 'SUGGESTED' });
+  }
+
   onMount(async () => {
     try {
-      competitors = await api.get<any[]>('/seo/competitors', { projectId });
+      await Promise.all([loadActiveCompetitors(), loadSuggestedCompetitors()]);
     } catch (e: any) {
       console.error('Failed to load competitors:', e);
     } finally {
@@ -86,6 +112,45 @@
     }
   }
 
+  async function suggestWithAi() {
+    suggesting = true;
+    try {
+      await api.post('/seo/competitors/suggest', { projectId });
+      await loadSuggestedCompetitors();
+    } catch (e: any) {
+      showToast($_('seo.competitors.suggestFailed'), 'error');
+    } finally {
+      suggesting = false;
+    }
+  }
+
+  async function approveCompetitor(id: string) {
+    approvingId = id;
+    try {
+      await api.post(`/seo/competitors/${id}/approve`, {});
+      suggestedCompetitors = suggestedCompetitors.filter(c => c.id !== id);
+      await loadActiveCompetitors();
+      showToast($_('seo.competitors.approveSuccess'), 'success');
+    } catch (e: any) {
+      showToast(e.message || $_('common.error'), 'error');
+    } finally {
+      approvingId = null;
+    }
+  }
+
+  async function dismissCompetitor(id: string) {
+    dismissingId = id;
+    try {
+      await api.post(`/seo/competitors/${id}/dismiss`, {});
+      suggestedCompetitors = suggestedCompetitors.filter(c => c.id !== id);
+      showToast($_('seo.competitors.dismissSuccess'), 'success');
+    } catch (e: any) {
+      showToast(e.message || $_('common.error'), 'error');
+    } finally {
+      dismissingId = null;
+    }
+  }
+
   async function analyzeCompetitor(competitor: any) {
     analyzingId = competitor.id;
     try {
@@ -112,7 +177,7 @@
       if (attempts >= 45) throw new Error('Timeout waiting for analysis');
 
       // Reload competitors to get updated lastCheckedAt
-      competitors = await api.get<any[]>('/seo/competitors', { projectId });
+      await loadActiveCompetitors();
 
       // Clear cached snapshots for this competitor so they reload
       delete snapshotCache[competitor.id];
@@ -184,16 +249,111 @@
       <h1 class="text-2xl font-bold text-gray-900">{$_('competitors.title')}</h1>
       <p class="text-sm text-gray-500 mt-1">{$_('competitors.subtitle')}</p>
     </div>
-    <button
-      on:click={() => showModal = true}
-      class="bg-primary-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors duration-150 flex items-center gap-2 cursor-pointer"
-    >
-      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-      </svg>
-      {$_('competitors.addCompetitor')}
-    </button>
+    <div class="flex items-center gap-2">
+      <!-- Suggest with AI -->
+      <button
+        on:click={suggestWithAi}
+        disabled={suggesting}
+        class="border border-purple-300 text-purple-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-purple-50 transition-colors duration-150 flex items-center gap-2 cursor-pointer disabled:opacity-50"
+      >
+        {#if suggesting}
+          <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+          </svg>
+          {$_('seo.competitors.suggesting')}
+        {:else}
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
+          </svg>
+          {$_('seo.competitors.suggestWithAi')}
+        {/if}
+      </button>
+      <!-- Add manually -->
+      <button
+        on:click={() => showModal = true}
+        class="bg-primary-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors duration-150 flex items-center gap-2 cursor-pointer"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+        </svg>
+        {$_('competitors.addCompetitor')}
+      </button>
+    </div>
   </div>
+
+  <!-- AI Suggested Competitors Section -->
+  {#if suggestedCompetitors.length > 0}
+    <div class="mb-8">
+      <div class="flex items-center gap-2 mb-3">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
+        </svg>
+        <h2 class="text-sm font-semibold text-gray-700">{$_('seo.competitors.suggestedSection')}</h2>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {#each suggestedCompetitors as suggestion}
+          <div class="bg-purple-50 border border-purple-200 rounded-xl p-5">
+            <div class="flex items-start justify-between mb-2">
+              <div class="flex-1 min-w-0">
+                <h3 class="font-semibold text-gray-900">{suggestion.name}</h3>
+                <a
+                  href={suggestion.websiteUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="text-sm text-primary-600 hover:text-primary-700 hover:underline flex items-center gap-1 truncate"
+                >
+                  {suggestion.websiteUrl}
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                  </svg>
+                </a>
+              </div>
+            </div>
+            {#if suggestion.aiRationale}
+              <p class="text-sm text-gray-500 italic mb-4">{suggestion.aiRationale}</p>
+            {/if}
+            <div class="flex items-center gap-2">
+              <button
+                on:click={() => approveCompetitor(suggestion.id)}
+                disabled={approvingId === suggestion.id || dismissingId === suggestion.id}
+                class="flex-1 bg-green-600 text-white py-1.5 rounded-lg text-xs font-medium hover:bg-green-700 transition-colors duration-150 disabled:opacity-50 flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                {#if approvingId === suggestion.id}
+                  <svg class="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                  </svg>
+                {:else}
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                  </svg>
+                {/if}
+                {$_('seo.competitors.approve')}
+              </button>
+              <button
+                on:click={() => dismissCompetitor(suggestion.id)}
+                disabled={approvingId === suggestion.id || dismissingId === suggestion.id}
+                class="flex-1 border border-gray-300 text-gray-600 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-100 transition-colors duration-150 disabled:opacity-50 flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                {#if dismissingId === suggestion.id}
+                  <svg class="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                  </svg>
+                {:else}
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                  </svg>
+                {/if}
+                {$_('seo.competitors.dismiss')}
+              </button>
+            </div>
+          </div>
+        {/each}
+      </div>
+    </div>
+  {/if}
 
   {#if loading}
     <!-- Loading skeleton -->
@@ -473,6 +633,36 @@
           </button>
         </div>
       </div>
+    </div>
+  </div>
+{/if}
+
+<!-- Toast notification -->
+{#if toast}
+  <div class="fixed bottom-6 right-6 z-[60] max-w-sm">
+    <div class="flex items-start gap-3 rounded-xl shadow-lg border px-4 py-3 text-sm
+      {toast.type === 'warning' ? 'bg-amber-50 border-amber-200 text-amber-800' :
+       toast.type === 'success' ? 'bg-green-50 border-green-200 text-green-800' :
+       'bg-red-50 border-red-200 text-red-800'}">
+      {#if toast.type === 'success'}
+        <svg xmlns="http://www.w3.org/2000/svg" class="mt-0.5 w-4 h-4 flex-shrink-0 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+        </svg>
+      {:else}
+        <svg xmlns="http://www.w3.org/2000/svg" class="mt-0.5 w-4 h-4 flex-shrink-0 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+        </svg>
+      {/if}
+      <span>{toast.message}</span>
+      <button
+        on:click={() => toast = null}
+        aria-label={$_('common.close')}
+        class="ml-auto flex-shrink-0 opacity-60 hover:opacity-100 transition-opacity cursor-pointer"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+        </svg>
+      </button>
     </div>
   </div>
 {/if}
