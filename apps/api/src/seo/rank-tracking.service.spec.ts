@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundException, HttpException, HttpStatus } from '@nestjs/common';
 import { RankTrackingService, localeToGlHl, hostMatches } from './rank-tracking.service';
 import { PrismaService } from '../database/prisma.service';
 import { SeoService } from './seo.service';
@@ -356,6 +356,102 @@ describe('RankTrackingService', () => {
     const updateCall = mockPrisma.keyword.update.mock.calls[0][0];
     expect(updateCall.data.lastCheckError).toBe('CSE_UNKNOWN_ERROR');
     expect(mockCseConfig.markValidationError).not.toHaveBeenCalled();
+  });
+
+  // -------------------------------------------------------------------------
+  // Throttle: manual source
+  // -------------------------------------------------------------------------
+
+  describe('throttle — manual source', () => {
+    it('4th call within 1 hour throws HttpException 429 with { code: "RATE_LIMITED" }', async () => {
+      // Calls 1-3 are allowed; call 4 is blocked before Prisma lookup.
+      // Calls 1-3: set up Prisma to return a keyword that is skipped so we
+      // don't need to deal with full CSE flow.
+      mockPrisma.keyword.findUnique.mockResolvedValue(makeKeyword({ isTracking: false }));
+
+      await service.checkKeyword('kw-throttle', 'manual');
+      await service.checkKeyword('kw-throttle', 'manual');
+      await service.checkKeyword('kw-throttle', 'manual');
+
+      // 4th call: throttle fires BEFORE Prisma lookup — Prisma should not be called again
+      mockPrisma.keyword.findUnique.mockClear();
+
+      await expect(service.checkKeyword('kw-throttle', 'manual')).rejects.toThrow(HttpException);
+
+      let caughtError: HttpException | undefined;
+      try {
+        await service.checkKeyword('kw-throttle', 'manual');
+      } catch (err) {
+        caughtError = err as HttpException;
+      }
+
+      expect(caughtError).toBeInstanceOf(HttpException);
+      expect(caughtError!.getStatus()).toBe(HttpStatus.TOO_MANY_REQUESTS);
+      expect(caughtError!.getResponse()).toEqual({ code: 'RATE_LIMITED' });
+      // Prisma was not called during the throttled invocations
+      expect(mockPrisma.keyword.findUnique).not.toHaveBeenCalled();
+    });
+
+    it('timestamps older than 1 hour are evicted — sliding window allows new calls', async () => {
+      jest.useFakeTimers();
+
+      // Call 3 times at t=0
+      mockPrisma.keyword.findUnique.mockResolvedValue(makeKeyword({ isTracking: false }));
+      await service.checkKeyword('kw-window', 'manual');
+      await service.checkKeyword('kw-window', 'manual');
+      await service.checkKeyword('kw-window', 'manual');
+
+      // Advance time by just over 1 hour — those 3 timestamps fall outside the window
+      jest.setSystemTime(Date.now() + 3_600_001);
+
+      // Call again — should succeed (old timestamps evicted)
+      await expect(service.checkKeyword('kw-window', 'manual')).resolves.toEqual({
+        skipped: true,
+        reason: 'NOT_TRACKING',
+      });
+
+      jest.useRealTimers();
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Throttle: cron source is unthrottled
+  // -------------------------------------------------------------------------
+
+  it('cron source: 10 rapid calls all proceed without throttle', async () => {
+    mockPrisma.keyword.findUnique.mockResolvedValue(makeKeyword({ isTracking: false }));
+
+    const results = await Promise.all(
+      Array.from({ length: 10 }, () => service.checkKeyword('kw-cron', 'cron')),
+    );
+
+    // All 10 calls should resolve normally (no 429)
+    expect(results).toHaveLength(10);
+    results.forEach((r) => expect(r).toEqual({ skipped: true, reason: 'NOT_TRACKING' }));
+  });
+
+  // -------------------------------------------------------------------------
+  // Throttle: LRU eviction above MAX_TRACKED
+  // -------------------------------------------------------------------------
+
+  it('evicts oldest half of entries when map exceeds MAX_TRACKED', async () => {
+    // Override MAX_TRACKED to a small value for the test
+    (service as any).MAX_TRACKED = 4;
+
+    mockPrisma.keyword.findUnique.mockResolvedValue(makeKeyword({ isTracking: false }));
+
+    // Fill the map with 4 distinct keyword IDs (each gets 1 timestamp)
+    await service.checkKeyword('kw-evict-a', 'manual');
+    await service.checkKeyword('kw-evict-b', 'manual');
+    await service.checkKeyword('kw-evict-c', 'manual');
+    await service.checkKeyword('kw-evict-d', 'manual');
+
+    // Map now has 4 entries = MAX_TRACKED. One more push triggers eviction.
+    await service.checkKeyword('kw-evict-e', 'manual');
+
+    // After eviction, map size should be trimmed (≤ MAX_TRACKED)
+    const mapSize = (service as any).recentChecks.size;
+    expect(mapSize).toBeLessThanOrEqual(4);
   });
 });
 

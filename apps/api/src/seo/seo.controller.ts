@@ -1,9 +1,11 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, BadRequestException, UseGuards, HttpCode } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, BadRequestException, UseGuards, HttpCode, HttpException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { SeoService } from './seo.service';
 import { CseConfigService } from './cse-config.service';
+import { RankTrackingService } from './rank-tracking.service';
 import { ConfigureCseDto } from './dto/configure-cse.dto';
 import { ProjectAccessGuard } from '../common/guards/project-access.guard';
+import { KeywordAccessGuard } from '../common/guards/keyword-access.guard';
 
 @ApiTags('seo')
 @ApiBearerAuth()
@@ -12,6 +14,7 @@ export class SeoController {
   constructor(
     private seoService: SeoService,
     private cseConfig: CseConfigService,
+    private rankTracking: RankTrackingService,
   ) {}
 
   // ── Keywords ───────────────────────────────────────────────────
@@ -57,6 +60,19 @@ export class SeoController {
   @Post('keywords/:id/rank')
   addRankHistory(@Param('id') id: string, @Body() dto: { rank: number; url?: string }) {
     return this.seoService.addRankHistory(id, dto.rank, dto.url);
+  }
+
+  @Post('keywords/:id/check-now')
+  @UseGuards(KeywordAccessGuard)
+  @ApiOperation({ summary: 'Manually trigger a rank check for a keyword (max 3/hour)' })
+  async checkNow(@Param('id') id: string) {
+    try {
+      return await this.rankTracking.checkKeyword(id, 'manual');
+    } catch (err) {
+      if (err instanceof HttpException) throw err; // pass through 429 + rank-tracking errors
+      // Map CSE_NOT_CONFIGURED surfaced as a skipped result gets returned normally (not thrown).
+      throw err;
+    }
   }
 
   // ── Competitors ────────────────────────────────────────────────

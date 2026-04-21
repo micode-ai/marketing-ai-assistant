@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, HttpException, HttpStatus } from '@nestjs/common';
 import { google } from 'googleapis';
 import { PrismaService } from '../database/prisma.service';
 import { SeoService } from './seo.service';
@@ -87,13 +87,42 @@ function mapGoogleError(err: unknown): GoogleErrorCode {
 export class RankTrackingService {
   private readonly logger = new Logger(RankTrackingService.name);
 
+  private readonly recentChecks = new Map<string, number[]>(); // keywordId → timestamps
+  private MAX_TRACKED = 10_000;
+
   constructor(
     private prisma: PrismaService,
     private seo: SeoService,
     private cseConfig: CseConfigService,
   ) {}
 
+  private throttleOrAllow(keywordId: string): void {
+    const now = Date.now();
+    const windowStart = now - 3_600_000; // 1 hour
+    const list = (this.recentChecks.get(keywordId) ?? []).filter((t) => t > windowStart);
+    if (list.length >= 3) {
+      throw new HttpException({ code: 'RATE_LIMITED' }, HttpStatus.TOO_MANY_REQUESTS);
+    }
+    list.push(now);
+    this.recentChecks.set(keywordId, list);
+
+    // Crude eviction when the map grows past MAX_TRACKED — drop oldest half by insertion order.
+    // Acceptable for single-instance API (documented in spec Open Risks).
+    if (this.recentChecks.size > this.MAX_TRACKED) {
+      const entries = Array.from(this.recentChecks.entries());
+      this.recentChecks.clear();
+      for (const [k, v] of entries.slice(Math.floor(entries.length / 2))) {
+        this.recentChecks.set(k, v);
+      }
+    }
+  }
+
   async checkKeyword(keywordId: string, source: 'cron' | 'manual' = 'manual'): Promise<CheckResult> {
+    // 0. Throttle manual checks (cron path is unthrottled)
+    if (source === 'manual') {
+      this.throttleOrAllow(keywordId);
+    }
+
     // 1. Load keyword
     const keyword = await this.prisma.keyword.findUnique({ where: { id: keywordId } });
     if (!keyword) throw new NotFoundException(`Keyword ${keywordId} not found`);

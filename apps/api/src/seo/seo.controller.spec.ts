@@ -1,10 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, HttpException, HttpStatus } from '@nestjs/common';
 import { SeoController } from './seo.controller';
 import { SeoService } from './seo.service';
 import { CseConfigService } from './cse-config.service';
+import { RankTrackingService } from './rank-tracking.service';
 import { PrismaService } from '../database/prisma.service';
 import { ProjectAccessGuard } from '../common/guards/project-access.guard';
+import { KeywordAccessGuard } from '../common/guards/keyword-access.guard';
 import { ConfigureCseDto } from './dto/configure-cse.dto';
 
 const mockSeoService = {
@@ -30,6 +32,10 @@ const mockCseConfigService = {
 
 const mockPrismaService = {};
 
+const mockRankTrackingService = {
+  checkKeyword: jest.fn(),
+};
+
 describe('SeoController — CSE config endpoints', () => {
   let controller: SeoController;
 
@@ -41,10 +47,13 @@ describe('SeoController — CSE config endpoints', () => {
       providers: [
         { provide: SeoService, useValue: mockSeoService },
         { provide: CseConfigService, useValue: mockCseConfigService },
+        { provide: RankTrackingService, useValue: mockRankTrackingService },
         { provide: PrismaService, useValue: mockPrismaService },
       ],
     })
       .overrideGuard(ProjectAccessGuard)
+      .useValue({ canActivate: () => true })
+      .overrideGuard(KeywordAccessGuard)
       .useValue({ canActivate: () => true })
       .compile();
 
@@ -132,6 +141,63 @@ describe('SeoController — CSE config endpoints', () => {
       expect(mockCseConfigService.clearCredentials).toHaveBeenCalledTimes(1);
       expect(mockCseConfigService.clearCredentials).toHaveBeenCalledWith('proj-abc');
       expect(result).toBeUndefined();
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // POST /seo/keywords/:id/check-now
+  // ---------------------------------------------------------------------------
+
+  describe('checkNow()', () => {
+    it('returns { skipped: false, rank: number } on a successful check', async () => {
+      const checkResult = { skipped: false, rank: 5 };
+      mockRankTrackingService.checkKeyword.mockResolvedValue(checkResult);
+
+      const result = await controller.checkNow('kw-abc');
+
+      expect(mockRankTrackingService.checkKeyword).toHaveBeenCalledWith('kw-abc', 'manual');
+      expect(result).toEqual({ skipped: false, rank: 5 });
+    });
+
+    it('returns { skipped: false, rank: null } when not in top 100', async () => {
+      mockRankTrackingService.checkKeyword.mockResolvedValue({ skipped: false, rank: null });
+
+      const result = await controller.checkNow('kw-abc');
+
+      expect(result).toEqual({ skipped: false, rank: null });
+    });
+
+    it('surfaces 429 HttpException when service throws RATE_LIMITED', async () => {
+      const rateLimitError = new HttpException({ code: 'RATE_LIMITED' }, HttpStatus.TOO_MANY_REQUESTS);
+      mockRankTrackingService.checkKeyword.mockRejectedValue(rateLimitError);
+
+      await expect(controller.checkNow('kw-abc')).rejects.toThrow(HttpException);
+
+      let caughtErr: HttpException | undefined;
+      try {
+        await controller.checkNow('kw-abc');
+      } catch (err) {
+        caughtErr = err as HttpException;
+      }
+      expect(caughtErr!.getStatus()).toBe(HttpStatus.TOO_MANY_REQUESTS);
+      expect(caughtErr!.getResponse()).toEqual({ code: 'RATE_LIMITED' });
+    });
+
+    it('returns { skipped: true, reason: "CSE_NOT_CONFIGURED" } with HTTP 200 when CSE not configured', async () => {
+      const skippedResult = { skipped: true, reason: 'CSE_NOT_CONFIGURED' };
+      mockRankTrackingService.checkKeyword.mockResolvedValue(skippedResult);
+
+      const result = await controller.checkNow('kw-abc');
+
+      // CSE_NOT_CONFIGURED is returned as a skipped result (HTTP 200), not thrown
+      expect(result).toEqual({ skipped: true, reason: 'CSE_NOT_CONFIGURED' });
+    });
+
+    it('re-throws non-HttpException errors from the service', async () => {
+      const unexpectedError = new Error('Unexpected DB failure');
+      mockRankTrackingService.checkKeyword.mockRejectedValue(unexpectedError);
+
+      await expect(controller.checkNow('kw-abc')).rejects.toThrow('Unexpected DB failure');
     });
   });
 
