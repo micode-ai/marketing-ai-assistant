@@ -8,19 +8,31 @@ import {
 import { PrismaService } from '../../database/prisma.service';
 
 @Injectable()
-export class ProjectAccessGuard implements CanActivate {
+export class KeywordAccessGuard implements CanActivate {
   constructor(private prisma: PrismaService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const user = request.user;
-    const projectId = request.query.projectId || request.body?.projectId;
+    const keywordId = request.params?.id;
 
-    if (!projectId) throw new BadRequestException('projectId is required');
+    if (!keywordId) throw new BadRequestException('Keyword id is required');
     if (!user) throw new ForbiddenException('Not authenticated');
 
+    const keyword = await this.prisma.keyword.findUnique({
+      where: { id: keywordId },
+      select: { projectId: true },
+    });
+    if (!keyword) throw new BadRequestException('Keyword not found');
+
+    if (keyword.projectId === null) {
+      throw new ForbiddenException(
+        'Org-scoped keywords are not supported for this operation',
+      );
+    }
+
     const project = await this.prisma.project.findUnique({
-      where: { id: projectId },
+      where: { id: keyword.projectId },
       select: { organizationId: true },
     });
     if (!project) throw new BadRequestException('Project not found');

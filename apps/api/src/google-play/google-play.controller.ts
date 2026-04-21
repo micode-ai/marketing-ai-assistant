@@ -18,7 +18,7 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
 import { Public } from '../common/decorators/public.decorator';
-import { ProjectAccessGuard } from './guards/project-access.guard';
+import { ProjectAccessGuard } from '../common/guards/project-access.guard';
 import { GooglePlayAuthService } from './google-play-auth.service';
 import { GooglePlayMetricsService } from './google-play-metrics.service';
 import { GooglePlayReviewsService } from './google-play-reviews.service';

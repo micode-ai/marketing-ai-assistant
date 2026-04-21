@@ -5,7 +5,7 @@ import { GooglePlayAuthService } from './google-play-auth.service';
 import { GooglePlayMetricsService } from './google-play-metrics.service';
 import { GooglePlayReviewsService } from './google-play-reviews.service';
 import { GooglePlaySyncService } from './google-play-sync.service';
-import { ProjectAccessGuard } from './guards/project-access.guard';
+import { ProjectAccessGuard } from '../common/guards/project-access.guard';
 
 @Module({
   imports: [DatabaseModule],
