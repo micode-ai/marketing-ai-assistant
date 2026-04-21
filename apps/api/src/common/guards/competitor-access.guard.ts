@@ -4,6 +4,7 @@ import {
   ExecutionContext,
   ForbiddenException,
   BadRequestException,
+  NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 
@@ -16,30 +17,31 @@ export class CompetitorAccessGuard implements CanActivate {
     const user = request.user;
     const competitorId = request.params?.id;
 
-    if (!competitorId) throw new BadRequestException('Competitor id is required');
+    if (!competitorId) throw new BadRequestException('competitorId is required');
     if (!user) throw new ForbiddenException('Not authenticated');
 
     const competitor = await this.prisma.competitor.findUnique({
       where: { id: competitorId },
-      select: { projectId: true, organizationId: true },
+      select: {
+        projectId: true,
+        organizationId: true,
+        project: { select: { organizationId: true } },
+      },
     });
-    if (!competitor) throw new BadRequestException('Competitor not found');
+    if (!competitor) throw new NotFoundException('Competitor not found');
 
     let organizationId: string;
 
     if (competitor.projectId !== null) {
-      const project = await this.prisma.project.findUnique({
-        where: { id: competitor.projectId },
-        select: { organizationId: true },
-      });
-      if (!project) throw new BadRequestException('Project not found');
-      organizationId = project.organizationId;
+      if (!competitor.project) throw new NotFoundException('Project not found');
+      organizationId = competitor.project.organizationId;
     } else if (competitor.organizationId !== null) {
       organizationId = competitor.organizationId;
     } else {
       throw new BadRequestException('Competitor has no scope');
     }
 
+    // TODO: type RequestUser with membership shape
     const membership = user.memberships?.find(
       (m: any) => m.organizationId === organizationId,
     );

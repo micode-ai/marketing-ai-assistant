@@ -4,6 +4,7 @@ import {
   ExecutionContext,
   ForbiddenException,
   BadRequestException,
+  NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 
@@ -16,29 +17,27 @@ export class KeywordAccessGuard implements CanActivate {
     const user = request.user;
     const keywordId = request.params?.id;
 
-    if (!keywordId) throw new BadRequestException('Keyword id is required');
+    if (!keywordId) throw new BadRequestException('keywordId is required');
     if (!user) throw new ForbiddenException('Not authenticated');
 
     const keyword = await this.prisma.keyword.findUnique({
       where: { id: keywordId },
-      select: { projectId: true },
+      select: {
+        projectId: true,
+        project: { select: { organizationId: true } },
+      },
     });
-    if (!keyword) throw new BadRequestException('Keyword not found');
+    if (!keyword) throw new NotFoundException('Keyword not found');
 
-    if (keyword.projectId === null) {
+    if (keyword.projectId === null || keyword.project === null) {
       throw new ForbiddenException(
         'Org-scoped keywords are not supported for this operation',
       );
     }
 
-    const project = await this.prisma.project.findUnique({
-      where: { id: keyword.projectId },
-      select: { organizationId: true },
-    });
-    if (!project) throw new BadRequestException('Project not found');
-
+    // TODO: type RequestUser with membership shape
     const membership = user.memberships?.find(
-      (m: any) => m.organizationId === project.organizationId,
+      (m: any) => m.organizationId === keyword.project!.organizationId,
     );
     if (!membership) throw new ForbiddenException('No access to this project');
 

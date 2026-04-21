@@ -4,6 +4,7 @@ import {
   ExecutionContext,
   ForbiddenException,
   BadRequestException,
+  NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 
@@ -26,8 +27,9 @@ export class ProjectAccessGuard implements CanActivate {
       where: { id: projectId },
       select: { organizationId: true },
     });
-    if (!project) throw new BadRequestException('Project not found');
+    if (!project) throw new NotFoundException('Project not found');
 
+    // TODO: type RequestUser with membership shape
     const membership = user.memberships?.find(
       (m: any) => m.organizationId === project.organizationId,
     );
