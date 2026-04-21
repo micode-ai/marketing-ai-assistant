@@ -1166,6 +1166,23 @@
     "checkNow": "Проверить сейчас",
     "checkNowRateLimited": "Превышен лимит: 3 проверки в час на ключевое слово",
     "checkingRank": "Проверка…",
+    "history": {
+      "title": "История позиций",
+      "range7d": "Последние 7 дней",
+      "range30d": "Последние 30 дней",
+      "range90d": "Последние 90 дней",
+      "rangeCustom": "Свой период",
+      "customFrom": "С",
+      "customTo": "По",
+      "targetRankLine": "Целевая позиция",
+      "tableHeaderDate": "Дата",
+      "tableHeaderRank": "Позиция",
+      "tableHeaderUrl": "Найденный URL",
+      "notRanked": "Не в рейтинге",
+      "empty": "История позиций пуста. Нажмите «Проверить сейчас», чтобы получить текущую позицию.",
+      "lastCheckedAt": "Последняя проверка: {when}",
+      "viewHistory": "История"
+    },
     "errors": {
       "cseNotConfigured": "Настройте Google CSE в параметрах проекта для отслеживания позиций",
       "cseQuotaExceeded": "Превышена дневная квота Google CSE",

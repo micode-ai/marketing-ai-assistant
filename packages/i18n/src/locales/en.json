@@ -1188,6 +1188,23 @@
     "checkNow": "Check now",
     "checkNowRateLimited": "Rate limit: 3 checks per hour per keyword",
     "checkingRank": "Checking…",
+    "history": {
+      "title": "Rank history",
+      "range7d": "Last 7 days",
+      "range30d": "Last 30 days",
+      "range90d": "Last 90 days",
+      "rangeCustom": "Custom",
+      "customFrom": "From",
+      "customTo": "To",
+      "targetRankLine": "Target rank",
+      "tableHeaderDate": "Date",
+      "tableHeaderRank": "Rank",
+      "tableHeaderUrl": "URL found",
+      "notRanked": "Not ranked",
+      "empty": "No rank history yet. Click Check now to fetch the current rank.",
+      "lastCheckedAt": "Last checked {when}",
+      "viewHistory": "View history"
+    },
     "errors": {
       "cseNotConfigured": "Configure Google CSE in project settings to enable rank tracking",
       "cseQuotaExceeded": "Google CSE daily quota exceeded",

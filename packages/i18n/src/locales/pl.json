@@ -1168,6 +1168,23 @@
     "checkNow": "Sprawdź teraz",
     "checkNowRateLimited": "Limit żądań: 3 sprawdzenia na godzinę dla słowa kluczowego",
     "checkingRank": "Sprawdzanie…",
+    "history": {
+      "title": "Historia pozycji",
+      "range7d": "Ostatnie 7 dni",
+      "range30d": "Ostatnie 30 dni",
+      "range90d": "Ostatnie 90 dni",
+      "rangeCustom": "Własny zakres",
+      "customFrom": "Od",
+      "customTo": "Do",
+      "targetRankLine": "Docelowa pozycja",
+      "tableHeaderDate": "Data",
+      "tableHeaderRank": "Pozycja",
+      "tableHeaderUrl": "Znaleziony URL",
+      "notRanked": "Poza rankingiem",
+      "empty": "Brak historii pozycji. Kliknij Sprawdź teraz, aby pobrać aktualną pozycję.",
+      "lastCheckedAt": "Ostatnio sprawdzono: {when}",
+      "viewHistory": "Historia"
+    },
     "errors": {
       "cseNotConfigured": "Skonfiguruj Google CSE w ustawieniach projektu, aby włączyć śledzenie pozycji",
       "cseQuotaExceeded": "Przekroczono dzienny limit Google CSE",
