@@ -4,11 +4,16 @@ import { PrismaService } from '../database/prisma.service';
 import axios from 'axios';
 import { TwitterApi } from 'twitter-api-v2';
 import { encryptData, decryptData } from '../common/crypto.util';
+import { CronFailureNotifier } from '../common/cron-failure-notifier.service';
 import { extractImageUrls, stripMarkdown } from './content-parser.util';
 
 @Injectable()
 export class SocialService {
-  constructor(private prisma: PrismaService, private config: ConfigService) {}
+  constructor(
+    private prisma: PrismaService,
+    private config: ConfigService,
+    private notifier: CronFailureNotifier,
+  ) {}
 
   async findAccounts(organizationId: string) {
     return this.prisma.socialAccount.findMany({
@@ -192,6 +197,9 @@ export class SocialService {
     content: any,
     account: any,
   ): Promise<{ status: 'PUBLISHED' | 'FAILED'; platformPostId?: string; platformPostUrl?: string; error?: string }> {
+    if (account.status !== 'ACTIVE') {
+      return { status: 'FAILED', error: 'Account requires reauthentication' };
+    }
     try {
       const supported = ['LINKEDIN', 'TWITTER', 'FACEBOOK', 'TELEGRAM'];
       if (!supported.includes(account.platform)) {
@@ -207,6 +215,34 @@ export class SocialService {
     } catch (err: any) {
       const data = err?.response?.data;
       const error = (data && (data.description || data.error?.message || data.message)) || err?.message || 'Unknown error';
+
+      const fbCode = data?.error?.code;
+      const isFbTokenExpired =
+        account.platform === 'FACEBOOK' &&
+        (fbCode === 190 || data?.error?.type === 'OAuthException');
+
+      if (isFbTokenExpired) {
+        try {
+          await this.prisma.socialAccount.update({
+            where: { id: account.id },
+            data: { status: 'REAUTH_REQUIRED' },
+          });
+        } catch (e) {
+          console.error('[social.publishToAccount] failed to update status', e);
+        }
+        const webUrl = (this.config.get<string>('WEB_URL') || 'http://localhost:5173').replace(/\/$/, '');
+        await this.notifier.report({
+          organizationId: account.organizationId,
+          cronName: 'social-scheduler',
+          resourceType: 'SocialAccount',
+          resourceId: account.id,
+          resourceLabel: `${account.platform}: ${account.accountName || account.accountId}`,
+          errorCode: 'FB_TOKEN_EXPIRED',
+          error,
+          actionUrl: `${webUrl}/settings/integrations`,
+        });
+      }
+
       console.error('[social.publishToAccount] failed', { platform: account.platform, status: err?.response?.status, data, message: err?.message });
       return { status: 'FAILED', error };
     }

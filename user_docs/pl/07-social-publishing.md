@@ -130,6 +130,16 @@ Jesli konto nie ma ustawionego domyslnego jezyka, zostaniesz poproszony o wybran
 
 Tokeny OAuth (LinkedIn, Facebook) moga wygasnac. Jesli publikacja nie powiedzie sie z bledem autoryzacji, ponownie polacz konto, aby odswiezyc tokeny.
 
+### Wymagane ponowne polaczenie (Facebook)
+
+Gdy token dostepu do Facebooka staje sie nieprawidlowy, system automatycznie:
+
+1. Oznacza konto pomaranczowa plakietka **Wymaga ponownego polaczenia** w **Ustawienia > Integracje**.
+2. Wstrzymuje wszystkie zaplanowane publikacje na tym koncie, zeby aplikacja nie probowala wielokrotnie z martwym tokenem.
+3. Wysyla email do wszystkich wlascicieli i administratorow organizacji z opisem bledu — w jezyku kazdego odbiorcy.
+
+Aby to naprawic, kliknij pomaranczowy przycisk **Polacz ponownie** na karcie konta i wklej nowy dlugoterminowy Page Access Token. Dlugoterminowy token strony — raz wygenerowany — nie wygasa, dopoki administrator strony nie cofnie uprawnien.
+
 ## Bezpieczenstwo
 
 Wszystkie dane uwierzytelniajace kont spolecznosciowych i tokeny OAuth sa szyfrowane w bazie danych za pomoca szyfrowania AES-256-CBC — ten sam standard bezpieczenstwa, ktory jest stosowany dla danych uwierzytelniajacych kont e-mail.

@@ -1,12 +1,18 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../database/prisma.service';
+import { CronFailureNotifier } from '../common/cron-failure-notifier.service';
 
 @Injectable()
 export class AnalyticsService {
   private readonly logger = new Logger(AnalyticsService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notifier: CronFailureNotifier,
+    private config: ConfigService,
+  ) {}
 
   async getMetrics(
     scope: { projectId?: string; organizationId?: string; aggregated?: boolean },
@@ -175,7 +181,7 @@ export class AnalyticsService {
 
     const projects = await this.prisma.project.findMany({
       where: { status: 'ACTIVE' },
-      select: { id: true },
+      select: { id: true, name: true, organizationId: true },
     });
 
     for (const project of projects) {
@@ -183,6 +189,17 @@ export class AnalyticsService {
         await this.aggregateForProject(project.id, yesterday, today);
       } catch (err) {
         this.logger.error(`Failed to aggregate metrics for project ${project.id}:`, err);
+        const webUrl = (this.config.get<string>('WEB_URL') || 'http://localhost:5173').replace(/\/$/, '');
+        await this.notifier.report({
+          organizationId: project.organizationId,
+          cronName: 'analytics',
+          resourceType: 'Project',
+          resourceId: project.id,
+          resourceLabel: project.name,
+          errorCode: 'ANALYTICS_AGGREGATION_FAILED',
+          error: err instanceof Error ? err.message : String(err),
+          actionUrl: `${webUrl}/projects/${project.id}/analytics`,
+        });
       }
     }
 

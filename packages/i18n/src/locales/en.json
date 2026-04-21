@@ -778,6 +778,11 @@
     "connect": "Connect",
     "disconnect": "Disconnect",
     "connected": "Connected",
+    "reauthRequired": {
+      "badge": "Reconnect required",
+      "description": "The token for this account has expired. Publishing is paused until you reconnect.",
+      "cta": "Reconnect"
+    },
     "addAnother": "+ Add another",
     "noAccounts": "No accounts connected",
     "noAccountsDesc": "Connect a social media account to start publishing content",

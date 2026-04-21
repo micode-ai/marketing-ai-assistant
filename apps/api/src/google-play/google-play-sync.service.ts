@@ -1,11 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
+import { ConfigService } from '@nestjs/config';
 import { parse } from 'csv-parse/sync';
 import { PrismaService } from '../database/prisma.service';
 import {
   GooglePlayAuthService,
   GooglePlayConfig,
 } from './google-play-auth.service';
+import { CronFailureNotifier } from '../common/cron-failure-notifier.service';
 
 @Injectable()
 export class GooglePlaySyncService {
@@ -14,6 +16,8 @@ export class GooglePlaySyncService {
   constructor(
     private prisma: PrismaService,
     private authService: GooglePlayAuthService,
+    private notifier: CronFailureNotifier,
+    private config: ConfigService,
   ) {}
 
   /**
@@ -57,6 +61,17 @@ export class GooglePlaySyncService {
         this.logger.error(
           `Scheduled sync failed for project ${integration.projectId}: ${error}`,
         );
+        const webUrl = (this.config.get<string>('WEB_URL') || 'http://localhost:5173').replace(/\/$/, '');
+        await this.notifier.report({
+          organizationId: integration.project.organizationId,
+          cronName: 'google-play-sync',
+          resourceType: 'Project',
+          resourceId: integration.projectId,
+          resourceLabel: integration.project.name,
+          errorCode: 'GOOGLE_PLAY_SYNC_FAILED',
+          error: error instanceof Error ? error.message : String(error),
+          actionUrl: `${webUrl}/projects/${integration.projectId}/analytics`,
+        });
       }
     }
   }

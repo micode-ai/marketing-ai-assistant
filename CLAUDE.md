@@ -167,6 +167,21 @@ Content agent supports **multilingual generation**: pass `languages: ['en', 'pl'
 - Env: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` required. Production uses `.env.production`.
 - Dependencies: `googleapis`, `@google-cloud/storage`, `csv-parse` (in apps/api).
 
+### Cron Failure Notifications
+- Shared service: `apps/api/src/common/cron-failure-notifier.service.ts`. Provided by (global) `CommonModule` — any cron can inject it.
+- Persistence: `CronFailureNotification` table with `@@unique([organizationId, signature])`. Signature is `<cronName>:<resourceType>:<resourceId>:<errorCode>`.
+- Dedup: max one email per 24h per signature per organization. Occurrences are incremented on every report; the counter is included in the email.
+- Recipients: `OrganizationMember` rows with `role IN (OWNER, ADMIN)` and `joinedAt != null`. Each recipient gets the mail in their own `User.language` (new column, default `en`).
+- Wired into all 5 crons: `social-scheduler`, `agent-schedule`, `analytics` (daily aggregation), `email-sequences`, `google-play-sync`.
+- Email template: `apps/api/src/mail/cron-failure-email.ts` renders EN/PL/RU strings inline (no new external template package). Exposed via `MailService.sendCronFailure`.
+- `setLocale()` in `apps/web/src/lib/i18n.ts` writes the new value to `PUT /users/me { language }` (best-effort — failures are swallowed so unauthenticated pages still switch locales locally).
+
+### Facebook Token Reauth
+- `SocialAccountStatus` has a new `REAUTH_REQUIRED` value.
+- `SocialService.publishToAccount` early-skips accounts with `status !== 'ACTIVE'` (returns `{ status: 'FAILED', error: 'Account requires reauthentication' }` without calling Graph API).
+- When Facebook Graph returns an `OAuthException` (code 190 or `type === 'OAuthException'`), the service flips the account to `REAUTH_REQUIRED` and emits a `CronFailureNotifier.report` with `errorCode: 'FB_TOKEN_EXPIRED'`. `SocialSchedulerService` then does NOT re-notify for that specific failure to avoid double emails.
+- UI: `/settings/integrations` shows an orange "Reconnect required" banner + swaps the "Edit" button text for "Reconnect" when a Facebook account is in `REAUTH_REQUIRED`. i18n keys: `social.reauthRequired.{badge,description,cta}` in all three locales.
+
 ### Help System
 - `GET /api/help?lang=ru` — list all docs (slug + title). `@Public()`, no auth required.
 - `GET /api/help/:slug?lang=ru` — single doc content (slug, title, content, lang). Falls back to English if locale file missing.

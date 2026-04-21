@@ -130,6 +130,16 @@ If an account has no default language set, you will be prompted to select which 
 
 OAuth tokens (LinkedIn, Facebook) may expire. If publishing fails with an auth error, reconnect the account to refresh tokens.
 
+### Reconnect Required (Facebook)
+
+When a Facebook access token becomes invalid, the system automatically:
+
+1. Marks the account with a **Reconnect required** orange badge in **Settings > Integrations**.
+2. Pauses all scheduled publications to that account, so the app does not keep retrying with a dead token.
+3. Sends an email to every OWNER and ADMIN of the organization describing the error, in each recipient's preferred language.
+
+To fix it, click the orange **Reconnect** button on the account card and paste a fresh long-lived Page Access Token. A long-lived Page token, once generated, does not expire as long as the page admin does not revoke permission.
+
 ## Security
 
 All social account credentials and OAuth tokens are encrypted at rest using AES-256-CBC encryption, the same security standard used for email account credentials.

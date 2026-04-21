@@ -1,13 +1,19 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { Cron } from '@nestjs/schedule';
+import { ConfigService } from '@nestjs/config';
 import { Logger } from '@nestjs/common';
+import { CronFailureNotifier } from '../common/cron-failure-notifier.service';
 
 @Injectable()
 export class EmailSequencesService {
   private readonly logger = new Logger(EmailSequencesService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notifier: CronFailureNotifier,
+    private config: ConfigService,
+  ) {}
 
   async findAll(scope: { projectId?: string; organizationId?: string; aggregated?: boolean }) {
     const where: any = {};
@@ -183,6 +189,27 @@ export class EmailSequencesService {
         await this.processEnrollment(enrollment);
       } catch (err) {
         this.logger.error(`Failed to process enrollment ${enrollment.id}:`, err);
+        try {
+          const seq = await this.prisma.emailSequence.findUnique({
+            where: { id: enrollment.sequenceId },
+            select: { organizationId: true, projectId: true, name: true },
+          });
+          if (seq?.organizationId) {
+            const webUrl = (this.config.get<string>('WEB_URL') || 'http://localhost:5173').replace(/\/$/, '');
+            await this.notifier.report({
+              organizationId: seq.organizationId,
+              cronName: 'email-sequences',
+              resourceType: 'EmailSequenceEnrollment',
+              resourceId: enrollment.id,
+              resourceLabel: seq.name,
+              errorCode: 'SEQUENCE_STEP_FAILED',
+              error: err instanceof Error ? err.message : String(err),
+              actionUrl: `${webUrl}/projects/${seq.projectId}/email-sequences/${enrollment.sequenceId}`,
+            });
+          }
+        } catch {
+          /* notifier must not throw into cron */
+        }
       }
     }
   }

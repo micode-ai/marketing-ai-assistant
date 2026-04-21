@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 import { Resend } from 'resend';
+import { CronFailureEmailInput, renderCronFailureEmail } from './cron-failure-email';
 
 @Injectable()
 export class MailService {
@@ -74,5 +75,11 @@ export class MailService {
         </div>
       `,
     });
+  }
+
+  async sendCronFailure(params: { to: string } & CronFailureEmailInput) {
+    const { to, ...input } = params;
+    const { subject, html } = renderCronFailureEmail(input);
+    await this.send({ to, subject, html });
   }
 }

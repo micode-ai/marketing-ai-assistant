@@ -156,3 +156,30 @@ Eksport danych projektu w celu tworzenia kopii zapasowych lub migracji.
 2. Kliknij **Eksportuj projekt**
 3. Wybierz, ktore sekcje uwzglednic (tresci, kampanie, dokumenty, listy kontrolne itp.)
 4. Pobierz wyeksportowane dane
+
+## Powiadomienia o bledach zadan w tle
+
+Platforma uruchamia kilka zaplanowanych zadan w tle:
+
+| Zadanie | Co robi |
+|---|---|
+| Publikacja w social media | Publikuje zakolejkowane tresci na polaczonych kontach |
+| Zaplanowany agent AI | Uruchamia agentow AI wedlug harmonogramu cron |
+| Dzienne agregowanie analityki | Podsumowuje dzienne metryki dla kazdego projektu |
+| Sekwencje emailowe | Przenosi subskrybentow przez sekwencje emailowe |
+| Synchronizacja Google Play | Odswieza recenzje, oceny i instalacje dla projektow mobilnych |
+
+Gdy ktoryss z tych zadan zakonczy sie niepowodzeniem dla okreslonego zasobu (konto social, projekt, sekwencja itp.), platforma automatycznie powiadamia kazdego **OWNER** i **ADMIN** organizacji emailem. Email jest wysylany w preferowanym jezyku kazdego odbiorcy i zawiera:
+
+- Jakie zadanie w tle nie powiodlo sie
+- Ktory zasob byl dotkniety (np. "Facebook: MiCode Page")
+- Komunikat bledu
+- Bezposredni link do odpowiedniej strony ustawien
+
+### Ochrona przed spamem
+
+Jesli ten sam blad powtarza sie (np. nieprawidlowy token Facebooka powoduje, ze publikacja zawodzi co minute), system wysyla **maksymalnie jeden email na 24 godziny** na unikalna sygnature bledu w organizacji. Licznik wystapien w emailu mowi, ile razy blad byl widziany od pierwszego wykrycia. Po naprawieniu przyczyny i pomyslnym wykonaniu zadania licznik resetuje sie.
+
+### Zmiana jezyka powiadomien
+
+Zmien preferowany jezyk w menu w prawym gornym rogu. Ustawienie jest zapisywane w twoim profilu, wiec wszystkie przyszle powiadomienia otrzymasz w tym jezyku.

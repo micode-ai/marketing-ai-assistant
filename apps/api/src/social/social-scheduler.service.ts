@@ -1,7 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../database/prisma.service';
 import { SocialService } from './social.service';
+import { CronFailureNotifier } from '../common/cron-failure-notifier.service';
 
 @Injectable()
 export class SocialSchedulerService {
@@ -11,6 +13,8 @@ export class SocialSchedulerService {
   constructor(
     private prisma: PrismaService,
     private social: SocialService,
+    private notifier: CronFailureNotifier,
+    private config: ConfigService,
   ) {}
 
   @Cron(CronExpression.EVERY_MINUTE)
@@ -50,6 +54,22 @@ export class SocialSchedulerService {
             where: { id: pub.id, status: 'PENDING' },
             data: { status: 'FAILED', error: r.error },
           });
+
+          // FB token errors are already reported inside SocialService — avoid double emails.
+          const isFbReauthMsg = r.error === 'Account requires reauthentication';
+          if (!isFbReauthMsg) {
+            const webUrl = (this.config.get<string>('WEB_URL') || 'http://localhost:5173').replace(/\/$/, '');
+            await this.notifier.report({
+              organizationId: pub.socialAccount.organizationId,
+              cronName: 'social-scheduler',
+              resourceType: 'ContentPublication',
+              resourceId: pub.id,
+              resourceLabel: `${pub.socialAccount.platform}: ${pub.socialAccount.accountName}`,
+              errorCode: 'PUBLISH_FAILED',
+              error: r.error || 'Unknown',
+              actionUrl: `${webUrl}/projects/${pub.content.projectId}/content/${pub.content.id}`,
+            });
+          }
         }
       }
 
