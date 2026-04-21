@@ -1191,6 +1191,19 @@
       "cseInvalidKey": "Klucz Google CSE jest nieprawidłowy. Zaktualizuj go w ustawieniach projektu.",
       "noTargetUrl": "Dodaj docelowy URL, aby sprawdzić pozycję tego słowa kluczowego",
       "cseBanner": "Błąd Google CSE: {error}. Napraw go w ustawieniach projektu."
+    },
+    "cseConfig": {
+      "title": "Google Custom Search (śledzenie pozycji SEO)",
+      "description": "Wklej klucz API Google i identyfikator CSE, aby włączyć automatyczne sprawdzanie pozycji. Darmowy plan: 100 wyszukiwań dziennie na projekt Google Cloud.",
+      "setupLink": "Przewodnik konfiguracji",
+      "apiKey": "Klucz API",
+      "cseId": "Identyfikator CSE",
+      "connect": "Połącz",
+      "disconnect": "Rozłącz",
+      "connected": "Połączono",
+      "validationError": "Google odrzucił dane uwierzytelniające: {error}. Wprowadź je ponownie poniżej.",
+      "connectSuccess": "Google CSE skonfigurowany — śledzenie pozycji jest teraz aktywne.",
+      "reconnect": "Połącz ponownie"
     }
   },
   "projectExport": {

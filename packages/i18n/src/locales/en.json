@@ -1211,6 +1211,19 @@
       "cseInvalidKey": "Google CSE key is invalid. Update it in project settings.",
       "noTargetUrl": "Add a target URL to check this keyword's rank",
       "cseBanner": "Google CSE has an error: {error}. Fix it in project settings."
+    },
+    "cseConfig": {
+      "title": "Google Custom Search (SEO rank tracking)",
+      "description": "Paste your Google API key and CSE ID to enable automatic rank checks. Free tier: 100 searches/day per Google Cloud project.",
+      "setupLink": "Setup guide",
+      "apiKey": "API key",
+      "cseId": "CSE ID",
+      "connect": "Connect",
+      "disconnect": "Disconnect",
+      "connected": "Connected",
+      "validationError": "Google rejected the credentials: {error}. Re-enter them below.",
+      "connectSuccess": "Google CSE configured — rank tracking is now active.",
+      "reconnect": "Reconnect"
     }
   },
   "projectExport": {
