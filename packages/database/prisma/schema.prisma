@@ -58,6 +58,7 @@ enum SocialPlatform {
   TELEGRAM
   GOOGLE_PLAY
   GOOGLE_CSE
+  BRAVE_SEARCH
 }
 
 enum CampaignType {
