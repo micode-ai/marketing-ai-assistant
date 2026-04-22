@@ -3,8 +3,7 @@ export type CronName =
   | 'agent-schedule'
   | 'analytics'
   | 'email-sequences'
-  | 'google-play-sync'
-  | 'rank-tracking';
+  | 'google-play-sync';
 
 export interface CronFailureEmailInput {
   language: string;
@@ -39,7 +38,6 @@ const STRINGS: Record<'en' | 'pl' | 'ru', Strings> = {
       'analytics': 'Daily analytics aggregation',
       'email-sequences': 'Email sequence sender',
       'google-play-sync': 'Google Play sync',
-      'rank-tracking': 'Rank tracking',
     },
     resourceLabel: 'Resource',
     errorLabel: 'Error',
@@ -57,7 +55,6 @@ const STRINGS: Record<'en' | 'pl' | 'ru', Strings> = {
       'analytics': 'Dzienne agregowanie analityki',
       'email-sequences': 'Sekwencje emailowe',
       'google-play-sync': 'Synchronizacja Google Play',
-      'rank-tracking': 'Śledzenie pozycji',
     },
     resourceLabel: 'Zasób',
     errorLabel: 'Błąd',
@@ -75,7 +72,6 @@ const STRINGS: Record<'en' | 'pl' | 'ru', Strings> = {
       'analytics': 'Ежедневная агрегация аналитики',
       'email-sequences': 'Отправка email-последовательностей',
       'google-play-sync': 'Синхронизация Google Play',
-      'rank-tracking': 'Отслеживание позиций',
     },
     resourceLabel: 'Ресурс',
     errorLabel: 'Ошибка',
