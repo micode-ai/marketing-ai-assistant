@@ -4,9 +4,6 @@
   import { goto } from '$app/navigation';
   import { onMount, onDestroy, tick } from 'svelte';
   import { api } from '$lib/api/client';
-  import { API_URL } from '$lib/config';
-  import { authStore } from '$stores/auth';
-  import { get } from 'svelte/store';
   import { currentProjectStore, projectsStore } from '$lib/stores/projects';
 
   $: projectId = $page.params['id'];
@@ -23,7 +20,13 @@
   let keyword: any = null;
   let history: any[] = [];
   let loading = true;
-  let checkingNow = false;
+
+  // Record position modal
+  let showRecordModal = false;
+  let recordRank: number | string = '';
+  let recordUrl = '';
+  let recordNotInTop100 = false;
+  let recordSaving = false;
 
   // Date range state
   type Range = '7d' | '30d' | '90d' | 'custom';
@@ -218,47 +221,35 @@
     tick().then(() => requestAnimationFrame(() => renderChart()));
   }
 
-  // ---- Check now ------------------------------------------------------------
+  // ---- Record position -------------------------------------------------------
 
-  async function checkNow() {
-    if (checkingNow) return;
-    checkingNow = true;
+  function openRecordModal() {
+    recordRank = '';
+    recordUrl = keyword?.url || '';
+    recordNotInTop100 = false;
+    showRecordModal = true;
+  }
+
+  function closeRecordModal() {
+    showRecordModal = false;
+    recordSaving = false;
+  }
+
+  async function saveRecordPosition() {
+    recordSaving = true;
     try {
-      const auth = get(authStore);
-      const response = await fetch(`${API_URL}/seo/keywords/${keywordId}/check-now`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(auth.accessToken ? { Authorization: `Bearer ${auth.accessToken}` } : {}),
-        },
+      const rank = recordNotInTop100 ? null : Number(recordRank);
+      await api.post(`/seo/keywords/${keywordId}/rank`, {
+        rank,
+        url: recordUrl.trim() || undefined,
       });
-
-      if (response.status === 429) {
-        showToast($_('seo.checkNowRateLimited'), 'warning');
-        return;
-      }
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({ message: 'Request failed' }));
-        showToast(err.message || $_('common.error'), 'error');
-        return;
-      }
-      const result = await response.json();
-      if (result.skipped) {
-        if (result.reason === 'CSE_NOT_CONFIGURED') {
-          showToast($_('seo.errors.cseNotConfigured'), 'warning');
-        } else if (result.reason === 'NO_TARGET_URL') {
-          showToast($_('seo.errors.noTargetUrl'), 'warning');
-        } else {
-          showToast($_('common.error'), 'error');
-        }
-        return;
-      }
-      showToast($_('seo.checkingRank'), 'success');
+      showToast($_('seo.recordPosition.recordSuccess'), 'success');
+      closeRecordModal();
       await loadData();
     } catch (e: any) {
-      showToast(e.message || $_('common.error'), 'error');
+      showToast(e.message || $_('seo.recordPosition.recordFailed'), 'error');
     } finally {
-      checkingNow = false;
+      recordSaving = false;
     }
   }
 
@@ -415,23 +406,15 @@
 
       <!-- Action buttons -->
       <div class="flex items-center gap-2 flex-shrink-0">
-        <!-- Check now -->
+        <!-- Record position -->
         <button
-          on:click={checkNow}
-          disabled={checkingNow}
-          class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors cursor-pointer"
+          on:click={openRecordModal}
+          class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors cursor-pointer"
         >
-          {#if checkingNow}
-            <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-            </svg>
-          {:else}
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
-            </svg>
-          {/if}
-          {$_('seo.checkNow')}
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+          </svg>
+          {$_('seo.recordPosition.title')}
         </button>
 
         <!-- Edit -->
@@ -515,11 +498,10 @@
           </div>
           <p class="text-sm text-gray-500 max-w-xs">{$_('seo.history.empty')}</p>
           <button
-            on:click={checkNow}
-            disabled={checkingNow}
-            class="mt-4 flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors cursor-pointer"
+            on:click={openRecordModal}
+            class="mt-4 flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors cursor-pointer"
           >
-            {$_('seo.checkNow')}
+            {$_('seo.recordPosition.title')}
           </button>
         </div>
       {:else}
@@ -712,6 +694,92 @@
             {$_('common.cancel')}
           </button>
         </div>
+      </div>
+    </div>
+  </div>
+{/if}
+
+<!-- Record Position Modal -->
+{#if showRecordModal}
+  <!-- svelte-ignore a11y-click-events-have-key-events -->
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
+  <div
+    class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+    on:click|self={closeRecordModal}
+    on:keydown={(e) => e.key === 'Escape' && closeRecordModal()}
+  >
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+      <div class="p-6 border-b border-gray-100 flex items-center gap-2.5">
+        <div class="w-8 h-8 bg-primary-50 rounded-lg flex items-center justify-center flex-shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+          </svg>
+        </div>
+        <div class="min-w-0 flex-1">
+          <h2 class="text-lg font-semibold text-gray-900">{$_('seo.recordPosition.title')}</h2>
+          {#if keyword}
+            <p class="text-xs text-gray-500 truncate">{keyword.keyword}</p>
+          {/if}
+        </div>
+      </div>
+      <div class="p-6 space-y-4">
+        <p class="text-sm text-gray-500">{$_('seo.recordPosition.description')}</p>
+
+        <!-- Current rank -->
+        <div>
+          <label for="detail-record-rank" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('seo.recordPosition.rank')}</label>
+          <input
+            id="detail-record-rank"
+            type="number"
+            min="1"
+            max="100"
+            bind:value={recordRank}
+            disabled={recordNotInTop100}
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-400"
+            placeholder={$_('seo.recordPosition.rankPlaceholder')}
+          />
+          <label class="flex items-center gap-2 mt-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              bind:checked={recordNotInTop100}
+              class="w-4 h-4 text-primary-600 rounded border-gray-300 cursor-pointer"
+            />
+            <span class="text-sm text-gray-600">{$_('seo.recordPosition.notInTop100')}</span>
+          </label>
+        </div>
+
+        <!-- Matched URL -->
+        <div>
+          <label for="detail-record-url" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('seo.recordPosition.url')}</label>
+          <input
+            id="detail-record-url"
+            type="text"
+            bind:value={recordUrl}
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            placeholder="https://example.com/page"
+          />
+          <p class="mt-1 text-xs text-gray-400">{$_('seo.recordPosition.urlHelper')}</p>
+        </div>
+      </div>
+      <div class="p-6 border-t border-gray-100 flex gap-3">
+        <button
+          on:click={saveRecordPosition}
+          disabled={recordSaving || (!recordNotInTop100 && (!recordRank || Number(recordRank) < 1 || Number(recordRank) > 100))}
+          class="flex-1 bg-primary-600 text-white py-2.5 rounded-lg font-medium hover:bg-primary-700 transition-colors duration-150 disabled:opacity-50 text-sm flex items-center justify-center gap-2 cursor-pointer"
+        >
+          {#if recordSaving}
+            <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+            </svg>
+            {$_('common.loading')}
+          {:else}
+            {$_('seo.recordPosition.save')}
+          {/if}
+        </button>
+        <button on:click={closeRecordModal} class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 text-sm cursor-pointer">
+          {$_('common.cancel')}
+        </button>
       </div>
     </div>
   </div>
