@@ -15,21 +15,21 @@ Track search rankings and discover competitors for your project.
    - **Intent** — Informational / Navigational / Commercial / Transactional. Helps AI-generated content match user intent.
    - **Target rank** (optional) — your goal rank, used as a reference line on the history chart.
 
-### Connecting Google Custom Search
+### Recording positions
 
-Rank tracking uses Google's Custom Search JSON API — free tier, 100 searches per day per Google Cloud project.
+Rank tracking is manual in this version — you check Google yourself (or use a third-party SEO tool) and record the current position.
 
-1. Create a project in the Google Cloud Console and enable **Custom Search API**.
-2. Create an API key in Credentials.
-3. Create a Programmable Search Engine at programmablesearchengine.google.com, enabled to search the entire web, and copy the **CSE ID**.
-4. Open **Project settings → Google Custom Search**, paste the API key and CSE ID, click **Connect**.
+1. From the keyword list, click **Record position** on the keyword row.
+2. In the modal, enter:
+   - **Current rank** — the position (1–100) where your Target URL currently shows for the keyword in Google. Check the box **"Not in top 100"** if your site isn't showing in the first 100 results.
+   - **Matched URL** — the URL Google showed for this keyword; defaults to your target URL. Edit only if Google is ranking a different page of yours.
+3. Click **Save position**.
 
-Once connected, the app will check your tracked keywords on a schedule:
-- **Free plan:** up to 5 keywords, weekly on Mondays.
-- **Pro plan:** up to 30 keywords, daily.
-- **Enterprise plan:** up to 90 keywords, daily.
+Each recorded check is saved to the keyword's history with today's date. Open the keyword's detail page to see the full history chart.
 
-You can also click **Check now** on any keyword row to run a check immediately (limited to 3 manual checks per hour per keyword).
+### Why manual?
+
+Automatic rank tracking requires a third-party SERP API (SerpAPI, DataForSEO, Brave Search, etc.) which either costs money or requires a credit card. The app keeps rank tracking provider-agnostic and free. If you want automation, you can script it against `POST /seo/keywords/:id/rank` using your own SERP provider of choice.
 
 ### Viewing rank history
 

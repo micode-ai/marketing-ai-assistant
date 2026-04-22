@@ -15,21 +15,21 @@
    - **Intencja** — Informacyjna / Nawigacyjna / Komercyjna / Transakcyjna. Pomaga dopasować generowane przez AI treści do intencji użytkownika.
    - **Docelowa pozycja** (opcjonalnie) — Twój cel pozycyjny, wyświetlany jako linia referencyjna na wykresie historii.
 
-### Podłączenie Google Custom Search
+### Zapisywanie pozycji
 
-Śledzenie pozycji korzysta z Google Custom Search JSON API — plan bezpłatny, 100 zapytań dziennie na projekt Google Cloud.
+Śledzenie pozycji jest w tej wersji ręczne — samodzielnie sprawdzasz wyniki w Google (lub korzystasz z narzędzia SEO) i zapisujesz aktualną pozycję.
 
-1. Utwórz projekt w Google Cloud Console i włącz **Custom Search API**.
-2. Utwórz klucz API w sekcji Credentials.
-3. Utwórz Programowalną Wyszukiwarkę na programmablesearchengine.google.com, skonfigurowaną do przeszukiwania całego internetu, i skopiuj **CSE ID**.
-4. Otwórz **Ustawienia projektu → Google Custom Search**, wklej klucz API i CSE ID, kliknij **Połącz**.
+1. Na liście słów kluczowych kliknij **Zapisz pozycję** przy wybranym słowie kluczowym.
+2. W oknie dialogowym wprowadź:
+   - **Aktualna pozycja** — miejsce (1–100), na którym Twój docelowy URL wyświetla się w Google dla tego słowa kluczowego. Zaznacz pole **„Poza top 100"**, jeśli Twoja strona nie pojawia się w pierwszych 100 wynikach.
+   - **Dopasowany URL** — URL, który Google pokazał dla tego słowa kluczowego; domyślnie Twój docelowy URL. Edytuj tylko wtedy, gdy Google pozycjonuje inną podstronę.
+3. Kliknij **Zapisz pozycję**.
 
-Po podłączeniu aplikacja będzie sprawdzać śledzone słowa kluczowe według harmonogramu:
-- **Plan Free:** do 5 słów kluczowych, raz w tygodniu w poniedziałki.
-- **Plan Pro:** do 30 słów kluczowych, codziennie.
-- **Plan Enterprise:** do 90 słów kluczowych, codziennie.
+Każde zapisane sprawdzenie trafia do historii słowa kluczowego z dzisiejszą datą. Otwórz stronę szczegółową słowa kluczowego, aby zobaczyć pełny wykres historii.
 
-Możesz też kliknąć **Sprawdź teraz** przy dowolnym słowie kluczowym, aby uruchomić sprawdzenie natychmiast (limit: 3 ręczne sprawdzenia na godzinę na słowo kluczowe).
+### Dlaczego ręcznie?
+
+Automatyczne śledzenie pozycji wymaga zewnętrznego API SERP (SerpAPI, DataForSEO, Brave Search itp.), które albo kosztuje, albo wymaga podania karty kredytowej. Aplikacja pozostaje niezależna od dostawcy i bezpłatna. Jeśli chcesz automatyzacji, możesz pisać skrypty korzystające z `POST /seo/keywords/:id/rank` z dowolnym wybranym dostawcą SERP.
 
 ### Przeglądanie historii pozycji
 
