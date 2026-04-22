@@ -45,18 +45,6 @@
   let gpBucketSaving = false;
   let showDisconnectConfirm = false;
 
-  // Google CSE state
-  interface CseConfig { configured: boolean; cseId?: string; lastValidationError: string | null }
-  let cseConfig: CseConfig | null = null;
-  let cseLoading = false;
-  let cseApiKey = '';
-  let cseCseId = '';
-  let cseConnecting = false;
-  let cseDisconnecting = false;
-  let cseError = '';
-  let cseSuccess = '';
-  let cseShowReconnectForm = false;
-
   const platformIcon: Record<string, string> = {
     LINKEDIN: `<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>`,
     TWITTER: `<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>`,
@@ -111,9 +99,6 @@
     if (isMobileApp) {
       await fetchGpStatus();
     }
-
-    // Fetch CSE config
-    await fetchCseConfig();
   });
 
   async function saveBaseCurrency() {
@@ -294,60 +279,6 @@
     return d.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
   }
 
-  // Google CSE functions
-  async function fetchCseConfig() {
-    cseLoading = true;
-    try {
-      cseConfig = await api.get<CseConfig>(`/seo/cse/config/${projectId}`);
-    } catch {
-      cseConfig = { configured: false, lastValidationError: null };
-    } finally {
-      cseLoading = false;
-    }
-  }
-
-  function cseValidationErrorMessage(code: string | null): string {
-    if (!code) return '';
-    if (code === 'CSE_QUOTA_EXCEEDED') return $_('seo.errors.cseQuotaExceeded');
-    if (code === 'CSE_INVALID_KEY') return $_('seo.errors.cseInvalidKey');
-    return code;
-  }
-
-  async function connectCse() {
-    if (!cseApiKey.trim() || !cseCseId.trim()) return;
-    cseConnecting = true;
-    cseError = '';
-    try {
-      await api.post('/seo/cse/config', { projectId, apiKey: cseApiKey.trim(), cseId: cseCseId.trim() });
-      cseSuccess = $_('seo.cseConfig.connectSuccess');
-      setTimeout(() => { cseSuccess = ''; }, 5000);
-      cseApiKey = '';
-      cseCseId = '';
-      cseShowReconnectForm = false;
-      await fetchCseConfig();
-    } catch (e: any) {
-      cseError = e.message || 'Failed to connect';
-      setTimeout(() => { cseError = ''; }, 5000);
-    } finally {
-      cseConnecting = false;
-    }
-  }
-
-  async function disconnectCse() {
-    cseDisconnecting = true;
-    cseError = '';
-    try {
-      await api.delete(`/seo/cse/config/${projectId}`);
-      cseConfig = { configured: false, lastValidationError: null };
-      cseSuccess = $_('seo.cseConfig.disconnect') + ' ✓';
-      setTimeout(() => { cseSuccess = ''; }, 3000);
-    } catch (e: any) {
-      cseError = e.message || 'Failed to disconnect';
-      setTimeout(() => { cseError = ''; }, 5000);
-    } finally {
-      cseDisconnecting = false;
-    }
-  }
 </script>
 
 <div class="p-6 max-w-2xl">
@@ -500,141 +431,6 @@
       </div>
     {:else if !loading}
       <div class="text-sm text-gray-500">{$_('common.loading')}</div>
-    {/if}
-  </div>
-
-  <!-- Google CSE section -->
-  <div class="bg-white rounded-xl border border-gray-200 p-5 mt-6">
-    <div class="mb-4">
-      <h2 class="text-base font-semibold text-gray-900">{$_('seo.cseConfig.title')}</h2>
-      <p class="text-sm text-gray-500 mt-0.5">{$_('seo.cseConfig.description')}</p>
-      <a
-        href="https://programmablesearchengine.google.com/"
-        target="_blank"
-        rel="noopener"
-        class="text-sm text-primary-600 hover:underline mt-1 inline-block"
-      >{$_('seo.cseConfig.setupLink')} →</a>
-    </div>
-
-    <!-- Success / Error banners -->
-    {#if cseSuccess}
-      <div class="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700 flex items-center gap-2">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-        </svg>
-        {cseSuccess}
-      </div>
-    {/if}
-    {#if cseError}
-      <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 flex items-center gap-2">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
-        </svg>
-        {cseError}
-      </div>
-    {/if}
-
-    {#if cseLoading}
-      <div class="space-y-2">
-        {#each Array(2) as _}
-          <div class="h-10 bg-gray-100 rounded-lg animate-pulse"></div>
-        {/each}
-      </div>
-    {:else if cseConfig?.configured && !cseShowReconnectForm}
-      <!-- Connected state -->
-      <div class="space-y-4">
-        <div class="flex items-center gap-3">
-          <div class="w-3 h-3 rounded-full {cseConfig.lastValidationError ? 'bg-red-500' : 'bg-green-500'}"></div>
-          <span class="text-sm font-medium text-gray-900">{$_('seo.cseConfig.connected')}</span>
-        </div>
-
-        <div class="space-y-1">
-          <div class="flex items-center gap-2">
-            <span class="text-xs font-medium text-gray-500">{$_('seo.cseConfig.apiKey')}:</span>
-            <code class="text-sm bg-gray-50 px-2 py-0.5 rounded border border-gray-200 font-mono">••••••••</code>
-          </div>
-          <div class="flex items-center gap-2">
-            <span class="text-xs font-medium text-gray-500">{$_('seo.cseConfig.cseId')}:</span>
-            <code class="text-sm bg-gray-50 px-2 py-0.5 rounded border border-gray-200 font-mono">{cseConfig.cseId}</code>
-          </div>
-        </div>
-
-        {#if cseConfig.lastValidationError}
-          <div class="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-            <p class="mb-2">
-              {$_('seo.cseConfig.validationError', { values: { error: cseValidationErrorMessage(cseConfig.lastValidationError) } })}
-            </p>
-            <button
-              on:click={() => { cseShowReconnectForm = true; }}
-              class="text-sm font-medium text-red-700 underline hover:no-underline cursor-pointer"
-            >
-              {$_('seo.cseConfig.reconnect')}
-            </button>
-          </div>
-        {/if}
-
-        <div class="flex items-center gap-3">
-          <button
-            on:click={disconnectCse}
-            disabled={cseDisconnecting}
-            class="px-4 py-2 text-red-600 border border-red-200 rounded-lg text-sm font-medium hover:bg-red-50 transition-colors duration-150 disabled:opacity-50 cursor-pointer"
-          >
-            {cseDisconnecting ? $_('common.loading') : $_('seo.cseConfig.disconnect')}
-          </button>
-        </div>
-      </div>
-    {:else}
-      <!-- Not configured state (or reconnect form) -->
-      <div class="space-y-4">
-        {#if !cseConfig?.configured}
-          <div class="flex items-center gap-2">
-            <div class="w-3 h-3 rounded-full bg-gray-300"></div>
-            <span class="text-sm text-gray-500">{$_('googlePlay.connection.disconnected')}</span>
-          </div>
-        {/if}
-
-        <div class="border border-gray-200 rounded-lg p-4 space-y-3">
-          <div>
-            <label class="block text-xs font-medium text-gray-600 mb-1" for="cse-api-key">{$_('seo.cseConfig.apiKey')}</label>
-            <input
-              id="cse-api-key"
-              type="password"
-              bind:value={cseApiKey}
-              autocomplete="off"
-              placeholder="AIza..."
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 font-mono"
-            />
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-gray-600 mb-1" for="cse-cse-id">{$_('seo.cseConfig.cseId')}</label>
-            <input
-              id="cse-cse-id"
-              type="text"
-              bind:value={cseCseId}
-              autocomplete="off"
-              placeholder="012345678901234567890:abcdefghijk"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 font-mono"
-            />
-          </div>
-          <div class="flex items-center gap-3">
-            <button
-              on:click={connectCse}
-              disabled={cseConnecting || !cseApiKey.trim() || !cseCseId.trim()}
-              class="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors duration-150 disabled:opacity-50 cursor-pointer"
-            >
-              {cseConnecting ? $_('common.loading') : $_(cseShowReconnectForm ? 'seo.cseConfig.reconnect' : 'seo.cseConfig.connect')}
-            </button>
-            {#if cseShowReconnectForm}
-              <button
-                on:click={() => { cseShowReconnectForm = false; cseApiKey = ''; cseCseId = ''; }}
-                class="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
-              >
-                {$_('common.cancel')}
-              </button>
-            {/if}
-          </div>
-        </div>
-      </div>
     {/if}
   </div>
 
