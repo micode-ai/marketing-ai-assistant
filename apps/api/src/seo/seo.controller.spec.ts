@@ -3,14 +3,14 @@ import { ValidationPipe, HttpException, HttpStatus } from '@nestjs/common';
 import { CompetitorStatus } from '@prisma/client';
 import { SeoController } from './seo.controller';
 import { SeoService } from './seo.service';
-import { CseConfigService } from './cse-config.service';
+import { BraveSearchConfigService } from './brave-search-config.service';
 import { RankTrackingService } from './rank-tracking.service';
 import { CompetitorSuggestionService } from './competitor-suggestion.service';
 import { PrismaService } from '../database/prisma.service';
 import { ProjectAccessGuard } from '../common/guards/project-access.guard';
 import { KeywordAccessGuard } from '../common/guards/keyword-access.guard';
 import { CompetitorAccessGuard } from '../common/guards/competitor-access.guard';
-import { ConfigureCseDto } from './dto/configure-cse.dto';
+import { ConfigureBraveDto } from './dto/configure-brave.dto';
 
 const mockSeoService = {
   findKeywords: jest.fn(),
@@ -27,7 +27,7 @@ const mockSeoService = {
   addCompetitorSnapshot: jest.fn(),
 };
 
-const mockCseConfigService = {
+const mockBraveConfigService = {
   saveCredentials: jest.fn(),
   getStatus: jest.fn(),
   clearCredentials: jest.fn(),
@@ -43,7 +43,7 @@ const mockCompetitorSuggestionService = {
   suggest: jest.fn(),
 };
 
-describe('SeoController — CSE config endpoints', () => {
+describe('SeoController — Brave Search config endpoints', () => {
   let controller: SeoController;
 
   beforeEach(async () => {
@@ -53,7 +53,7 @@ describe('SeoController — CSE config endpoints', () => {
       controllers: [SeoController],
       providers: [
         { provide: SeoService, useValue: mockSeoService },
-        { provide: CseConfigService, useValue: mockCseConfigService },
+        { provide: BraveSearchConfigService, useValue: mockBraveConfigService },
         { provide: RankTrackingService, useValue: mockRankTrackingService },
         { provide: CompetitorSuggestionService, useValue: mockCompetitorSuggestionService },
         { provide: PrismaService, useValue: mockPrismaService },
@@ -71,85 +71,92 @@ describe('SeoController — CSE config endpoints', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // POST /seo/cse/config
+  // POST /seo/brave/config
   // ---------------------------------------------------------------------------
 
-  describe('configureCse()', () => {
-    it('calls saveCredentials with projectId, apiKey, cseId and returns { status: "ok" }', async () => {
-      mockCseConfigService.saveCredentials.mockResolvedValue(undefined);
+  describe('configureBrave()', () => {
+    it('calls saveCredentials with projectId, apiKey and returns { status: "ok" }', async () => {
+      mockBraveConfigService.saveCredentials.mockResolvedValue(undefined);
 
       const dto = {
         projectId: 'proj-abc',
-        apiKey: 'AIzaSy_valid_key_1234567890',
-        cseId: 'cx-testid',
+        apiKey: 'BSAxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
       };
 
-      const result = await controller.configureCse(dto as any);
+      const result = await controller.configureBrave(dto as any);
 
-      expect(mockCseConfigService.saveCredentials).toHaveBeenCalledTimes(1);
-      expect(mockCseConfigService.saveCredentials).toHaveBeenCalledWith('proj-abc', {
-        apiKey: 'AIzaSy_valid_key_1234567890',
-        cseId: 'cx-testid',
+      expect(mockBraveConfigService.saveCredentials).toHaveBeenCalledTimes(1);
+      expect(mockBraveConfigService.saveCredentials).toHaveBeenCalledWith('proj-abc', {
+        apiKey: 'BSAxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
       });
       expect(result).toEqual({ status: 'ok' });
     });
   });
 
   // ---------------------------------------------------------------------------
-  // GET /seo/cse/config/:projectId
+  // GET /seo/brave/config/:projectId
   // ---------------------------------------------------------------------------
 
-  describe('getCseStatus()', () => {
+  describe('getBraveStatus()', () => {
     it('returns the service getStatus result when credentials are configured', async () => {
       const statusPayload = {
         configured: true,
-        cseId: 'cx-12345',
         lastValidationError: null,
       };
-      mockCseConfigService.getStatus.mockResolvedValue(statusPayload);
+      mockBraveConfigService.getStatus.mockResolvedValue(statusPayload);
 
-      const result = await controller.getCseStatus('proj-abc');
+      const result = await controller.getBraveStatus('proj-abc');
 
-      expect(mockCseConfigService.getStatus).toHaveBeenCalledWith('proj-abc');
+      expect(mockBraveConfigService.getStatus).toHaveBeenCalledWith('proj-abc');
       expect(result).toEqual(statusPayload);
     });
 
     it('does NOT include apiKey in the response', async () => {
-      mockCseConfigService.getStatus.mockResolvedValue({
+      mockBraveConfigService.getStatus.mockResolvedValue({
         configured: true,
-        cseId: 'cx-12345',
         lastValidationError: null,
       });
 
-      const result = await controller.getCseStatus('proj-abc');
+      const result = await controller.getBraveStatus('proj-abc');
 
       expect((result as any).apiKey).toBeUndefined();
     });
 
+    it('does NOT include cseId in the response', async () => {
+      mockBraveConfigService.getStatus.mockResolvedValue({
+        configured: true,
+        lastValidationError: null,
+      });
+
+      const result = await controller.getBraveStatus('proj-abc');
+
+      expect((result as any).cseId).toBeUndefined();
+    });
+
     it('returns { configured: false, lastValidationError: null } when not configured', async () => {
-      mockCseConfigService.getStatus.mockResolvedValue({
+      mockBraveConfigService.getStatus.mockResolvedValue({
         configured: false,
         lastValidationError: null,
       });
 
-      const result = await controller.getCseStatus('proj-abc');
+      const result = await controller.getBraveStatus('proj-abc');
 
       expect(result).toEqual({ configured: false, lastValidationError: null });
     });
   });
 
   // ---------------------------------------------------------------------------
-  // DELETE /seo/cse/config/:projectId
+  // DELETE /seo/brave/config/:projectId
   // ---------------------------------------------------------------------------
 
-  describe('clearCse()', () => {
+  describe('clearBrave()', () => {
     it('calls clearCredentials with the projectId and returns undefined (204 body)', async () => {
-      mockCseConfigService.clearCredentials.mockResolvedValue(undefined);
+      mockBraveConfigService.clearCredentials.mockResolvedValue(undefined);
 
-      const result = await controller.clearCse('proj-abc');
+      const result = await controller.clearBrave('proj-abc');
 
-      expect(mockCseConfigService.clearCredentials).toHaveBeenCalledTimes(1);
-      expect(mockCseConfigService.clearCredentials).toHaveBeenCalledWith('proj-abc');
+      expect(mockBraveConfigService.clearCredentials).toHaveBeenCalledTimes(1);
+      expect(mockBraveConfigService.clearCredentials).toHaveBeenCalledWith('proj-abc');
       expect(result).toBeUndefined();
     });
   });
@@ -169,7 +176,7 @@ describe('SeoController — CSE config endpoints', () => {
       expect(result).toEqual({ skipped: false, rank: 5 });
     });
 
-    it('returns { skipped: false, rank: null } when not in top 100', async () => {
+    it('returns { skipped: false, rank: null } when not in top 20', async () => {
       mockRankTrackingService.checkKeyword.mockResolvedValue({ skipped: false, rank: null });
 
       const result = await controller.checkNow('kw-abc');
@@ -193,14 +200,14 @@ describe('SeoController — CSE config endpoints', () => {
       expect(caughtErr!.getResponse()).toEqual({ code: 'RATE_LIMITED' });
     });
 
-    it('returns { skipped: true, reason: "CSE_NOT_CONFIGURED" } with HTTP 200 when CSE not configured', async () => {
-      const skippedResult = { skipped: true, reason: 'CSE_NOT_CONFIGURED' };
+    it('returns { skipped: true, reason: "BRAVE_NOT_CONFIGURED" } with HTTP 200 when Brave not configured', async () => {
+      const skippedResult = { skipped: true, reason: 'BRAVE_NOT_CONFIGURED' };
       mockRankTrackingService.checkKeyword.mockResolvedValue(skippedResult);
 
       const result = await controller.checkNow('kw-abc');
 
-      // CSE_NOT_CONFIGURED is returned as a skipped result (HTTP 200), not thrown
-      expect(result).toEqual({ skipped: true, reason: 'CSE_NOT_CONFIGURED' });
+      // BRAVE_NOT_CONFIGURED is returned as a skipped result (HTTP 200), not thrown
+      expect(result).toEqual({ skipped: true, reason: 'BRAVE_NOT_CONFIGURED' });
     });
 
     it('re-throws non-HttpException errors from the service', async () => {
@@ -212,10 +219,10 @@ describe('SeoController — CSE config endpoints', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // Validation — ConfigureCseDto
+  // Validation — ConfigureBraveDto
   // ---------------------------------------------------------------------------
 
-  describe('ConfigureCseDto validation (via ValidationPipe)', () => {
+  describe('ConfigureBraveDto validation (via ValidationPipe)', () => {
     let pipe: ValidationPipe;
 
     beforeEach(() => {
@@ -225,45 +232,36 @@ describe('SeoController — CSE config endpoints', () => {
     it('passes when all required fields are present and valid', async () => {
       const dto = {
         projectId: 'proj-abc',
-        apiKey: 'AIzaSy_valid_key_1234567890',
-        cseId: 'cx-testid',
+        apiKey: 'BSAxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
       };
 
       // Should not throw
       await expect(
-        pipe.transform(dto, { type: 'body', metatype: ConfigureCseDto }),
+        pipe.transform(dto, { type: 'body', metatype: ConfigureBraveDto }),
       ).resolves.toBeDefined();
     });
 
     it('fails validation when apiKey is missing', async () => {
-      const dto = { projectId: 'proj-abc', cseId: 'cx-testid' };
+      const dto = { projectId: 'proj-abc' };
 
       await expect(
-        pipe.transform(dto, { type: 'body', metatype: ConfigureCseDto }),
-      ).rejects.toThrow();
-    });
-
-    it('fails validation when cseId is missing', async () => {
-      const dto = { projectId: 'proj-abc', apiKey: 'AIzaSy_valid_key_1234567890' };
-
-      await expect(
-        pipe.transform(dto, { type: 'body', metatype: ConfigureCseDto }),
+        pipe.transform(dto, { type: 'body', metatype: ConfigureBraveDto }),
       ).rejects.toThrow();
     });
 
     it('fails validation when projectId is missing', async () => {
-      const dto = { apiKey: 'AIzaSy_valid_key_1234567890', cseId: 'cx-testid' };
+      const dto = { apiKey: 'BSAxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx' };
 
       await expect(
-        pipe.transform(dto, { type: 'body', metatype: ConfigureCseDto }),
+        pipe.transform(dto, { type: 'body', metatype: ConfigureBraveDto }),
       ).rejects.toThrow();
     });
 
     it('fails validation when apiKey is too short (< 20 chars)', async () => {
-      const dto = { projectId: 'proj-abc', apiKey: 'short', cseId: 'cx-testid' };
+      const dto = { projectId: 'proj-abc', apiKey: 'short' };
 
       await expect(
-        pipe.transform(dto, { type: 'body', metatype: ConfigureCseDto }),
+        pipe.transform(dto, { type: 'body', metatype: ConfigureBraveDto }),
       ).rejects.toThrow();
     });
   });

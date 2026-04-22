@@ -2,10 +2,10 @@ import { Controller, Get, Post, Put, Delete, Body, Param, Query, BadRequestExcep
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { CompetitorStatus } from '@prisma/client';
 import { SeoService } from './seo.service';
-import { CseConfigService } from './cse-config.service';
+import { BraveSearchConfigService } from './brave-search-config.service';
 import { RankTrackingService } from './rank-tracking.service';
 import { CompetitorSuggestionService } from './competitor-suggestion.service';
-import { ConfigureCseDto } from './dto/configure-cse.dto';
+import { ConfigureBraveDto } from './dto/configure-brave.dto';
 import { ProjectAccessGuard } from '../common/guards/project-access.guard';
 import { KeywordAccessGuard } from '../common/guards/keyword-access.guard';
 import { CompetitorAccessGuard } from '../common/guards/competitor-access.guard';
@@ -16,7 +16,7 @@ import { CompetitorAccessGuard } from '../common/guards/competitor-access.guard'
 export class SeoController {
   constructor(
     private seoService: SeoService,
-    private cseConfig: CseConfigService,
+    private braveConfig: BraveSearchConfigService,
     private rankTracking: RankTrackingService,
     private competitorSuggestion: CompetitorSuggestionService,
   ) {}
@@ -74,7 +74,7 @@ export class SeoController {
       return await this.rankTracking.checkKeyword(id, 'manual');
     } catch (err) {
       if (err instanceof HttpException) throw err; // pass through 429 + rank-tracking errors
-      // Map CSE_NOT_CONFIGURED surfaced as a skipped result gets returned normally (not thrown).
+      // Map BRAVE_NOT_CONFIGURED surfaced as a skipped result gets returned normally (not thrown).
       throw err;
     }
   }
@@ -139,28 +139,28 @@ export class SeoController {
     return this.seoService.addCompetitorSnapshot(id, dto.data);
   }
 
-  // ── CSE Config ─────────────────────────────────────────────────
+  // ── Brave Search Config ────────────────────────────────────────
 
-  @Post('cse/config')
+  @Post('brave/config')
   @UseGuards(ProjectAccessGuard)
-  @ApiOperation({ summary: 'Save Google CSE credentials for a project' })
-  async configureCse(@Body() dto: ConfigureCseDto) {
-    await this.cseConfig.saveCredentials(dto.projectId, { apiKey: dto.apiKey, cseId: dto.cseId });
+  @ApiOperation({ summary: 'Save Brave Search API key for a project' })
+  async configureBrave(@Body() dto: ConfigureBraveDto) {
+    await this.braveConfig.saveCredentials(dto.projectId, { apiKey: dto.apiKey });
     return { status: 'ok' };
   }
 
-  @Get('cse/config/:projectId')
+  @Get('brave/config/:projectId')
   @UseGuards(ProjectAccessGuard)
-  @ApiOperation({ summary: 'Get CSE configuration status for a project' })
-  async getCseStatus(@Param('projectId') projectId: string) {
-    return this.cseConfig.getStatus(projectId);
+  @ApiOperation({ summary: 'Get Brave Search configuration status for a project' })
+  async getBraveStatus(@Param('projectId') projectId: string) {
+    return this.braveConfig.getStatus(projectId);
   }
 
-  @Delete('cse/config/:projectId')
+  @Delete('brave/config/:projectId')
   @UseGuards(ProjectAccessGuard)
   @HttpCode(204)
-  @ApiOperation({ summary: 'Clear CSE credentials for a project' })
-  async clearCse(@Param('projectId') projectId: string) {
-    await this.cseConfig.clearCredentials(projectId);
+  @ApiOperation({ summary: 'Clear Brave Search credentials for a project' })
+  async clearBrave(@Param('projectId') projectId: string) {
+    await this.braveConfig.clearCredentials(projectId);
   }
 }
