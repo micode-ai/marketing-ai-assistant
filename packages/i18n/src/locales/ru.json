@@ -1184,23 +1184,22 @@
       "viewHistory": "История"
     },
     "errors": {
-      "cseNotConfigured": "Настройте Google CSE в параметрах проекта для отслеживания позиций",
-      "cseQuotaExceeded": "Превышена дневная квота Google CSE",
-      "cseInvalidKey": "Ключ Google CSE недействителен. Обновите его в настройках проекта.",
+      "braveNotConfigured": "Настройте Brave Search в параметрах проекта для отслеживания позиций",
+      "braveQuotaExceeded": "Превышена месячная квота Brave Search",
+      "braveInvalidKey": "Ключ API Brave Search недействителен. Обновите его в настройках проекта.",
       "noTargetUrl": "Добавьте целевой URL для проверки позиции этого ключевого слова",
-      "cseBanner": "Ошибка Google CSE: {error}. Исправьте её в настройках проекта."
+      "braveBanner": "Ошибка Brave Search: {error}. Исправьте её в настройках проекта."
     },
-    "cseConfig": {
-      "title": "Google Custom Search (отслеживание позиций SEO)",
-      "description": "Вставьте ключ API Google и идентификатор CSE для автоматической проверки позиций. Бесплатный план: 100 поисковых запросов в день на проект Google Cloud.",
-      "setupLink": "Руководство по настройке",
+    "braveConfig": {
+      "title": "Brave Search (отслеживание позиций SEO)",
+      "description": "Вставьте ключ API Brave Search для автоматической проверки позиций. Бесплатный план: 2000 запросов в месяц.",
+      "setupLink": "Получить ключ API",
       "apiKey": "Ключ API",
-      "cseId": "Идентификатор CSE",
       "connect": "Подключить",
       "disconnect": "Отключить",
       "connected": "Подключено",
-      "validationError": "Google отклонил учётные данные: {error}. Введите их заново ниже.",
-      "connectSuccess": "Google CSE настроен — отслеживание позиций теперь активно.",
+      "validationError": "Brave Search отклонил ключ API: {error}. Введите его заново ниже.",
+      "connectSuccess": "Brave Search настроен — отслеживание позиций теперь активно.",
       "reconnect": "Переподключить"
     },
     "competitors": {

@@ -1186,23 +1186,22 @@
       "viewHistory": "Historia"
     },
     "errors": {
-      "cseNotConfigured": "Skonfiguruj Google CSE w ustawieniach projektu, aby włączyć śledzenie pozycji",
-      "cseQuotaExceeded": "Przekroczono dzienny limit Google CSE",
-      "cseInvalidKey": "Klucz Google CSE jest nieprawidłowy. Zaktualizuj go w ustawieniach projektu.",
+      "braveNotConfigured": "Skonfiguruj Brave Search w ustawieniach projektu, aby włączyć śledzenie pozycji",
+      "braveQuotaExceeded": "Przekroczono miesięczny limit Brave Search",
+      "braveInvalidKey": "Klucz API Brave Search jest nieprawidłowy. Zaktualizuj go w ustawieniach projektu.",
       "noTargetUrl": "Dodaj docelowy URL, aby sprawdzić pozycję tego słowa kluczowego",
-      "cseBanner": "Błąd Google CSE: {error}. Napraw go w ustawieniach projektu."
+      "braveBanner": "Błąd Brave Search: {error}. Napraw go w ustawieniach projektu."
     },
-    "cseConfig": {
-      "title": "Google Custom Search (śledzenie pozycji SEO)",
-      "description": "Wklej klucz API Google i identyfikator CSE, aby włączyć automatyczne sprawdzanie pozycji. Darmowy plan: 100 wyszukiwań dziennie na projekt Google Cloud.",
-      "setupLink": "Przewodnik konfiguracji",
+    "braveConfig": {
+      "title": "Brave Search (śledzenie pozycji SEO)",
+      "description": "Wklej klucz API Brave Search, aby włączyć automatyczne sprawdzanie pozycji. Darmowy plan: 2000 wyszukiwań miesięcznie.",
+      "setupLink": "Uzyskaj klucz API",
       "apiKey": "Klucz API",
-      "cseId": "Identyfikator CSE",
       "connect": "Połącz",
       "disconnect": "Rozłącz",
       "connected": "Połączono",
-      "validationError": "Google odrzucił dane uwierzytelniające: {error}. Wprowadź je ponownie poniżej.",
-      "connectSuccess": "Google CSE skonfigurowany — śledzenie pozycji jest teraz aktywne.",
+      "validationError": "Brave Search odrzucił klucz API: {error}. Wprowadź go ponownie poniżej.",
+      "connectSuccess": "Brave Search skonfigurowany — śledzenie pozycji jest teraz aktywne.",
       "reconnect": "Połącz ponownie"
     },
     "competitors": {
