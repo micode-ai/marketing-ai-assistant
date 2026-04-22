@@ -15,19 +15,19 @@ Track search rankings and discover competitors for your project.
    - **Intent** — Informational / Navigational / Commercial / Transactional. Helps AI-generated content match user intent.
    - **Target rank** (optional) — your goal rank, used as a reference line on the history chart.
 
-### Connecting Google Custom Search
+### Connecting Brave Search
 
-Rank tracking uses Google's Custom Search JSON API — free tier, 100 searches per day per Google Cloud project.
+Rank tracking uses the Brave Search API — free tier, 2000 searches per month.
 
-1. Create a project in the Google Cloud Console and enable **Custom Search API**.
-2. Create an API key in Credentials.
-3. Create a Programmable Search Engine at programmablesearchengine.google.com, enabled to search the entire web, and copy the **CSE ID**.
-4. Open **Project settings → Google Custom Search**, paste the API key and CSE ID, click **Connect**.
+1. Sign up at https://api.search.brave.com/app/register
+2. Confirm your email and create an API key in the dashboard (https://api.search.brave.com/app/dashboard). Pick the "Data for AI" free plan.
+3. Copy the API key.
+4. Open **Project settings → Brave Search**, paste the API key, click **Connect**.
 
 Once connected, the app will check your tracked keywords on a schedule:
 - **Free plan:** up to 5 keywords, weekly on Mondays.
 - **Pro plan:** up to 30 keywords, daily.
-- **Enterprise plan:** up to 90 keywords, daily.
+- **Enterprise plan:** up to 90 keywords, daily. May exceed the 2000/month free Brave quota — upgrade your Brave plan if needed.
 
 You can also click **Check now** on any keyword row to run a check immediately (limited to 3 manual checks per hour per keyword).
 

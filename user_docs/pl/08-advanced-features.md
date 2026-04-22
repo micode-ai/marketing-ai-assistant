@@ -15,19 +15,19 @@
    - **Intencja** — Informacyjna / Nawigacyjna / Komercyjna / Transakcyjna. Pomaga dopasować generowane przez AI treści do intencji użytkownika.
    - **Docelowa pozycja** (opcjonalnie) — Twój cel pozycyjny, wyświetlany jako linia referencyjna na wykresie historii.
 
-### Podłączenie Google Custom Search
+### Podłączenie Brave Search
 
-Śledzenie pozycji korzysta z Google Custom Search JSON API — plan bezpłatny, 100 zapytań dziennie na projekt Google Cloud.
+Śledzenie pozycji korzysta z Brave Search API — plan bezpłatny, 2000 zapytań miesięcznie.
 
-1. Utwórz projekt w Google Cloud Console i włącz **Custom Search API**.
-2. Utwórz klucz API w sekcji Credentials.
-3. Utwórz Programowalną Wyszukiwarkę na programmablesearchengine.google.com, skonfigurowaną do przeszukiwania całego internetu, i skopiuj **CSE ID**.
-4. Otwórz **Ustawienia projektu → Google Custom Search**, wklej klucz API i CSE ID, kliknij **Połącz**.
+1. Zarejestruj się na https://api.search.brave.com/app/register
+2. Potwierdź e-mail i utwórz klucz API w panelu (https://api.search.brave.com/app/dashboard). Wybierz plan bezpłatny „Data for AI".
+3. Skopiuj klucz API.
+4. Otwórz **Ustawienia projektu → Brave Search**, wklej klucz API, kliknij **Połącz**.
 
 Po podłączeniu aplikacja będzie sprawdzać śledzone słowa kluczowe według harmonogramu:
 - **Plan Free:** do 5 słów kluczowych, raz w tygodniu w poniedziałki.
 - **Plan Pro:** do 30 słów kluczowych, codziennie.
-- **Plan Enterprise:** do 90 słów kluczowych, codziennie.
+- **Plan Enterprise:** do 90 słów kluczowych, codziennie. Może przekroczyć bezpłatny limit 2000 zapytań miesięcznie — w razie potrzeby należy wykupić wyższy plan Brave.
 
 Możesz też kliknąć **Sprawdź teraz** przy dowolnym słowie kluczowym, aby uruchomić sprawdzenie natychmiast (limit: 3 ręczne sprawdzenia na godzinę na słowo kluczowe).
 
