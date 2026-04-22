@@ -15,6 +15,7 @@ interface PlanLimits {
   maxKeywords: number;
 }
 
+// NOTE: ENTERPRISE at 90 keywords × daily = ~2700 requests/month, which may exceed Brave's 2000/month free tier — users on ENTERPRISE may need to upgrade their Brave Search plan.
 const PLAN_LIMITS: Record<string, PlanLimits> = {
   FREE:       { cadence: 'weekly', maxKeywords: 5  },
   PRO:        { cadence: 'daily',  maxKeywords: 30 },
@@ -45,7 +46,7 @@ export class RankTrackingCronService {
   /** Extracted so tests can inject a fixed date. */
   async run(now: Date): Promise<void> {
     const integrations = await this.prisma.projectApiKey.findMany({
-      where: { platform: 'GOOGLE_CSE' },
+      where: { platform: 'BRAVE_SEARCH' },
       include: {
         project: {
           include: {
@@ -121,16 +122,16 @@ export class RankTrackingCronService {
         );
       }
 
-      // 500 ms courtesy delay between CSE calls (skip after last keyword)
+      // 1100 ms delay between Brave Search calls — free tier limit is 1 req/s (skip after last keyword)
       if (i < keywords.length - 1) {
-        await this.sleep(500);
+        await this.sleep(1100);
       }
     }
   }
 
   private mapError(err: any): string {
-    if (err?.message?.includes('CSE_QUOTA_EXCEEDED')) return 'CSE_QUOTA_EXCEEDED';
-    if (err?.message?.includes('CSE_INVALID_KEY')) return 'CSE_INVALID_KEY';
+    if (err?.message?.includes('BRAVE_QUOTA_EXCEEDED')) return 'BRAVE_QUOTA_EXCEEDED';
+    if (err?.message?.includes('BRAVE_INVALID_KEY')) return 'BRAVE_INVALID_KEY';
     return 'RANK_TRACKING_ERROR';
   }
 

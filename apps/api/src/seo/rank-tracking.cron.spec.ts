@@ -49,7 +49,7 @@ function makeIntegration(
   return {
     id: 'key-1',
     projectId,
-    platform: 'GOOGLE_CSE',
+    platform: 'BRAVE_SEARCH',
     project: {
       id: projectId,
       name: projectName,
@@ -118,7 +118,7 @@ describe('RankTrackingCronService', () => {
     mockRankTracking.checkKeyword.mockResolvedValue({ skipped: false, rank: 10 });
 
     const runPromise = service.run(MONDAY);
-    // Advance through all 500 ms sleep calls (4 between 5 keywords)
+    // Advance through all 1100 ms sleep calls (4 between 5 keywords)
     await jest.runAllTimersAsync();
     await runPromise;
 
@@ -220,10 +220,10 @@ describe('RankTrackingCronService', () => {
   });
 
   // -------------------------------------------------------------------------
-  // 500 ms delay between calls
+  // 1100 ms delay between calls (Brave free tier: 1 req/s)
   // -------------------------------------------------------------------------
 
-  it('waits 500 ms between consecutive checkKeyword calls', async () => {
+  it('waits 1100 ms between consecutive checkKeyword calls', async () => {
     mockPrisma.projectApiKey.findMany.mockResolvedValue([
       makeIntegration({ subscriptionPlan: 'PRO', orgPlan: 'PRO' }),
     ]);
@@ -242,9 +242,9 @@ describe('RankTrackingCronService', () => {
     await runPromise;
 
     expect(mockRankTracking.checkKeyword).toHaveBeenCalledTimes(3);
-    // Each consecutive call should be ~500 ms apart
-    expect(callTimes[1] - callTimes[0]).toBeGreaterThanOrEqual(500);
-    expect(callTimes[2] - callTimes[1]).toBeGreaterThanOrEqual(500);
+    // Each consecutive call should be ~1100 ms apart (Brave rate limit)
+    expect(callTimes[1] - callTimes[0]).toBeGreaterThanOrEqual(1100);
+    expect(callTimes[2] - callTimes[1]).toBeGreaterThanOrEqual(1100);
   });
 
   // -------------------------------------------------------------------------
@@ -365,12 +365,12 @@ describe('RankTrackingCronService', () => {
     );
   });
 
-  it('batch-level error with CSE_QUOTA_EXCEEDED in message: errorCode is CSE_QUOTA_EXCEEDED', async () => {
+  it('batch-level error with BRAVE_QUOTA_EXCEEDED in message: errorCode is BRAVE_QUOTA_EXCEEDED', async () => {
     mockPrisma.projectApiKey.findMany.mockResolvedValue([
       makeIntegration({ subscriptionPlan: 'PRO', orgPlan: 'PRO' }),
     ]);
 
-    mockPrisma.keyword.findMany.mockRejectedValue(new Error('CSE_QUOTA_EXCEEDED limit hit'));
+    mockPrisma.keyword.findMany.mockRejectedValue(new Error('BRAVE_QUOTA_EXCEEDED limit hit'));
     mockCronFailure.report.mockResolvedValue(undefined);
 
     const runPromise = service.run(TUESDAY);
@@ -378,16 +378,16 @@ describe('RankTrackingCronService', () => {
     await runPromise;
 
     expect(mockCronFailure.report).toHaveBeenCalledWith(
-      expect.objectContaining({ errorCode: 'CSE_QUOTA_EXCEEDED' }),
+      expect.objectContaining({ errorCode: 'BRAVE_QUOTA_EXCEEDED' }),
     );
   });
 
-  it('batch-level error with CSE_INVALID_KEY in message: errorCode is CSE_INVALID_KEY', async () => {
+  it('batch-level error with BRAVE_INVALID_KEY in message: errorCode is BRAVE_INVALID_KEY', async () => {
     mockPrisma.projectApiKey.findMany.mockResolvedValue([
       makeIntegration({ subscriptionPlan: 'PRO', orgPlan: 'PRO' }),
     ]);
 
-    mockPrisma.keyword.findMany.mockRejectedValue(new Error('CSE_INVALID_KEY provided'));
+    mockPrisma.keyword.findMany.mockRejectedValue(new Error('BRAVE_INVALID_KEY provided'));
     mockCronFailure.report.mockResolvedValue(undefined);
 
     const runPromise = service.run(TUESDAY);
@@ -395,7 +395,7 @@ describe('RankTrackingCronService', () => {
     await runPromise;
 
     expect(mockCronFailure.report).toHaveBeenCalledWith(
-      expect.objectContaining({ errorCode: 'CSE_INVALID_KEY' }),
+      expect.objectContaining({ errorCode: 'BRAVE_INVALID_KEY' }),
     );
   });
 

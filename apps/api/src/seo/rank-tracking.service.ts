@@ -1,15 +1,15 @@
 import { Injectable, Logger, NotFoundException, HttpException, HttpStatus } from '@nestjs/common';
-import { google } from 'googleapis';
+import axios from 'axios';
 import { PrismaService } from '../database/prisma.service';
 import { SeoService } from './seo.service';
-import { CseConfigService } from './cse-config.service';
+import { BraveSearchConfigService } from './brave-search-config.service';
 
 // ---------------------------------------------------------------------------
 // Public types
 // ---------------------------------------------------------------------------
 
 export type CheckResult =
-  | { skipped: true; reason: 'NOT_TRACKING' | 'ORG_SCOPED_NOT_SUPPORTED' | 'NO_TARGET_URL' | 'CSE_NOT_CONFIGURED' }
+  | { skipped: true; reason: 'NOT_TRACKING' | 'ORG_SCOPED_NOT_SUPPORTED' | 'NO_TARGET_URL' | 'BRAVE_NOT_CONFIGURED' }
   | { skipped: false; rank: number | null };
 
 // ---------------------------------------------------------------------------
@@ -17,18 +17,18 @@ export type CheckResult =
 // ---------------------------------------------------------------------------
 
 /**
- * Converts a locale tag (e.g. 'pl-PL') to Google CSE gl/hl params.
- * gl = country code (lowercased 2nd segment), hl = language (lowercased 1st segment).
- * Malformed or missing country segment falls back to { gl: 'us', hl: 'en' }.
+ * Converts a locale tag (e.g. 'pl-PL') to Brave Search query params.
+ * country = lowercased 2nd segment, search_lang = lowercased 1st segment.
+ * Malformed or missing country segment falls back to { country: 'us', search_lang: 'en' }.
  */
-export function localeToGlHl(locale: string): { gl: string; hl: string } {
+export function localeToBraveParams(locale: string): { country: string; search_lang: string } {
   const parts = (locale ?? '').split('-');
   if (parts.length < 2 || !parts[0] || !parts[1]) {
-    return { gl: 'us', hl: 'en' };
+    return { country: 'us', search_lang: 'en' };
   }
   return {
-    hl: parts[0].toLowerCase(),
-    gl: parts[1].toLowerCase(),
+    search_lang: parts[0].toLowerCase(),
+    country: parts[1].toLowerCase(),
   };
 }
 
@@ -53,30 +53,20 @@ export function hostMatches(a: string, b: string): boolean {
 // Error mapping
 // ---------------------------------------------------------------------------
 
-type GoogleErrorCode = 'CSE_QUOTA_EXCEEDED' | 'CSE_INVALID_KEY' | 'CSE_UNKNOWN_ERROR';
+type BraveErrorCode = 'BRAVE_QUOTA_EXCEEDED' | 'BRAVE_INVALID_KEY' | 'BRAVE_UNKNOWN_ERROR';
 
-function mapGoogleError(err: unknown): GoogleErrorCode {
+function mapBraveError(err: unknown): BraveErrorCode {
   const e = err as any;
+  const status: number | undefined = e?.response?.status ?? e?.status ?? e?.code;
 
-  // HTTP 429 or explicit quota reason
-  if (e?.code === 429) return 'CSE_QUOTA_EXCEEDED';
+  if (status === 429) return 'BRAVE_QUOTA_EXCEEDED';
+  if (status === 401 || status === 403) return 'BRAVE_INVALID_KEY';
 
-  const reason: string | undefined = e?.errors?.[0]?.reason ?? e?.reason ?? '';
+  // axios error with response object
+  if (e?.response?.status === 429) return 'BRAVE_QUOTA_EXCEEDED';
+  if (e?.response?.status === 401 || e?.response?.status === 403) return 'BRAVE_INVALID_KEY';
 
-  if (reason === 'dailyLimitExceeded' || reason === 'quotaExceeded') {
-    return 'CSE_QUOTA_EXCEEDED';
-  }
-
-  // HTTP 403 with quotaExceeded
-  if (e?.code === 403 && reason === 'quotaExceeded') {
-    return 'CSE_QUOTA_EXCEEDED';
-  }
-
-  if (reason === 'keyInvalid') {
-    return 'CSE_INVALID_KEY';
-  }
-
-  return 'CSE_UNKNOWN_ERROR';
+  return 'BRAVE_UNKNOWN_ERROR';
 }
 
 // ---------------------------------------------------------------------------
@@ -93,7 +83,7 @@ export class RankTrackingService {
   constructor(
     private prisma: PrismaService,
     private seo: SeoService,
-    private cseConfig: CseConfigService,
+    private braveConfig: BraveSearchConfigService,
   ) {}
 
   private throttleOrAllow(keywordId: string): void {
@@ -148,48 +138,44 @@ export class RankTrackingService {
       return { skipped: true, reason: 'NO_TARGET_URL' };
     }
 
-    // 5. Require CSE credentials
-    const creds = await this.cseConfig.getCredentials(keyword.projectId);
+    // 5. Require Brave Search credentials
+    const creds = await this.braveConfig.getCredentials(keyword.projectId);
     if (!creds) {
       await this.prisma.keyword.update({
         where: { id: keywordId },
-        data: { lastCheckError: 'CSE_NOT_CONFIGURED', lastCheckedAt: now },
+        data: { lastCheckError: 'BRAVE_NOT_CONFIGURED', lastCheckedAt: now },
       });
-      return { skipped: true, reason: 'CSE_NOT_CONFIGURED' };
+      return { skipped: true, reason: 'BRAVE_NOT_CONFIGURED' };
     }
 
-    // 6. Locale → gl/hl
-    const { gl, hl } = localeToGlHl(keyword.locale);
+    // 6. Locale → Brave country/search_lang params
+    const { country, search_lang } = localeToBraveParams(keyword.locale);
 
-    // 7. Query Google CSE
-    const customsearch = google.customsearch('v1');
+    // 7. Query Brave Search API (top-20 only — single request per keyword fits free tier)
     let rank: number | null = null;
 
     try {
-      outer: for (let page = 0; page < 10; page++) {
-        const start = page * 10 + 1; // 1, 11, 21, …, 91
-
-        const response = await customsearch.cse.list({
+      const response = await axios.get('https://api.search.brave.com/res/v1/web/search', {
+        headers: {
+          'X-Subscription-Token': creds.apiKey,
+          'Accept': 'application/json',
+        },
+        params: {
           q: keyword.keyword,
-          cx: creds.cseId,
-          auth: creds.apiKey,
-          gl,
-          hl,
-          num: 10,
-          start,
-        } as any);
+          country,
+          search_lang,
+          count: 20,
+          offset: 0,
+        },
+      });
 
-        const items: Array<{ link?: string }> = (response as any)?.data?.items ?? [];
+      const results: Array<{ url: string }> = response.data?.web?.results ?? [];
 
-        for (let i = 0; i < items.length; i++) {
-          if (hostMatches(items[i].link ?? '', keyword.url!)) {
-            rank = start + i;
-            break outer;
-          }
+      for (let i = 0; i < results.length; i++) {
+        if (hostMatches(results[i].url ?? '', keyword.url!)) {
+          rank = i + 1;
+          break;
         }
-
-        // If Google returned fewer than 10 results, there are no more pages
-        if (items.length < 10) break;
       }
 
       // 8. Record success
@@ -204,15 +190,15 @@ export class RankTrackingService {
         },
       });
 
-      await this.cseConfig.clearValidationError(keyword.projectId);
+      await this.braveConfig.clearValidationError(keyword.projectId);
 
       return { skipped: false, rank };
     } catch (err) {
-      // 9. Map and persist Google error
-      const code = mapGoogleError(err);
+      // 9. Map and persist Brave error
+      const code = mapBraveError(err);
 
       this.logger.warn(
-        `[${source}] CSE error for keyword "${keyword.keyword}" (${keywordId}): ${code}`,
+        `[${source}] Brave Search error for keyword "${keyword.keyword}" (${keywordId}): ${code}`,
         err instanceof Error ? err.message : String(err),
       );
 
@@ -221,8 +207,8 @@ export class RankTrackingService {
         data: { lastCheckError: code, lastCheckedAt: now },
       });
 
-      if (code === 'CSE_QUOTA_EXCEEDED' || code === 'CSE_INVALID_KEY') {
-        await this.cseConfig.markValidationError(keyword.projectId, code);
+      if (code === 'BRAVE_QUOTA_EXCEEDED' || code === 'BRAVE_INVALID_KEY') {
+        await this.braveConfig.markValidationError(keyword.projectId, code);
       }
 
       throw err;

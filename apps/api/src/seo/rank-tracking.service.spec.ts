@@ -1,21 +1,20 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, HttpException, HttpStatus } from '@nestjs/common';
-import { RankTrackingService, localeToGlHl, hostMatches } from './rank-tracking.service';
+import { RankTrackingService, localeToBraveParams, hostMatches } from './rank-tracking.service';
 import { PrismaService } from '../database/prisma.service';
 import { SeoService } from './seo.service';
-import { CseConfigService } from './cse-config.service';
+import { BraveSearchConfigService } from './brave-search-config.service';
 
 // ---------------------------------------------------------------------------
-// Mock googleapis
+// Mock axios
 // ---------------------------------------------------------------------------
 
-const mockCseList = jest.fn();
+const mockAxiosGet = jest.fn();
 
-jest.mock('googleapis', () => ({
-  google: {
-    customsearch: jest.fn(() => ({
-      cse: { list: mockCseList },
-    })),
+jest.mock('axios', () => ({
+  __esModule: true,
+  default: {
+    get: (...args: any[]) => mockAxiosGet(...args),
   },
 }));
 
@@ -34,7 +33,7 @@ const mockSeo = {
   addRankHistory: jest.fn(),
 };
 
-const mockCseConfig = {
+const mockBraveConfig = {
   getCredentials: jest.fn(),
   markValidationError: jest.fn(),
   clearValidationError: jest.fn(),
@@ -60,11 +59,13 @@ function makeKeyword(overrides: Record<string, unknown> = {}) {
   };
 }
 
-/** Builds a minimal CSE page response with the given link hostnames */
-function makeCseResponse(links: string[]) {
+/** Builds a Brave Search response with the given result URLs */
+function makeBraveResponse(urls: string[]) {
   return {
     data: {
-      items: links.map((link) => ({ link })),
+      web: {
+        results: urls.map((url) => ({ url, title: 'Test Result' })),
+      },
     },
   };
 }
@@ -84,7 +85,7 @@ describe('RankTrackingService', () => {
         RankTrackingService,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: SeoService, useValue: mockSeo },
-        { provide: CseConfigService, useValue: mockCseConfig },
+        { provide: BraveSearchConfigService, useValue: mockBraveConfig },
       ],
     }).compile();
 
@@ -105,13 +106,13 @@ describe('RankTrackingService', () => {
   // Skip: isTracking === false
   // -------------------------------------------------------------------------
 
-  it('skips when isTracking is false — no Google call, no DB write', async () => {
+  it('skips when isTracking is false — no Brave call, no DB write', async () => {
     mockPrisma.keyword.findUnique.mockResolvedValue(makeKeyword({ isTracking: false }));
 
     const result = await service.checkKeyword('kw-1');
 
     expect(result).toEqual({ skipped: true, reason: 'NOT_TRACKING' });
-    expect(mockCseList).not.toHaveBeenCalled();
+    expect(mockAxiosGet).not.toHaveBeenCalled();
     expect(mockPrisma.keyword.update).not.toHaveBeenCalled();
     expect(mockSeo.addRankHistory).not.toHaveBeenCalled();
   });
@@ -147,28 +148,28 @@ describe('RankTrackingService', () => {
         data: expect.objectContaining({ lastCheckError: 'NO_TARGET_URL' }),
       }),
     );
-    expect(mockCseList).not.toHaveBeenCalled();
+    expect(mockAxiosGet).not.toHaveBeenCalled();
   });
 
   // -------------------------------------------------------------------------
-  // Skip: CSE credentials not configured
+  // Skip: Brave credentials not configured
   // -------------------------------------------------------------------------
 
-  it('skips and sets CSE_NOT_CONFIGURED when credentials are missing', async () => {
+  it('skips and sets BRAVE_NOT_CONFIGURED when credentials are missing', async () => {
     mockPrisma.keyword.findUnique.mockResolvedValue(makeKeyword());
-    mockCseConfig.getCredentials.mockResolvedValue(null);
+    mockBraveConfig.getCredentials.mockResolvedValue(null);
     mockPrisma.keyword.update.mockResolvedValue({});
 
     const result = await service.checkKeyword('kw-1');
 
-    expect(result).toEqual({ skipped: true, reason: 'CSE_NOT_CONFIGURED' });
+    expect(result).toEqual({ skipped: true, reason: 'BRAVE_NOT_CONFIGURED' });
     expect(mockPrisma.keyword.update).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { id: 'kw-1' },
-        data: expect.objectContaining({ lastCheckError: 'CSE_NOT_CONFIGURED' }),
+        data: expect.objectContaining({ lastCheckError: 'BRAVE_NOT_CONFIGURED' }),
       }),
     );
-    expect(mockCseList).not.toHaveBeenCalled();
+    expect(mockAxiosGet).not.toHaveBeenCalled();
   });
 
   // -------------------------------------------------------------------------
@@ -177,23 +178,17 @@ describe('RankTrackingService', () => {
 
   it('finds rank 3 when 3rd result matches the target host', async () => {
     mockPrisma.keyword.findUnique.mockResolvedValue(makeKeyword({ url: 'https://example.com/page' }));
-    mockCseConfig.getCredentials.mockResolvedValue({ apiKey: 'key-123', cseId: 'cx-abc' });
+    mockBraveConfig.getCredentials.mockResolvedValue({ apiKey: 'BSAtest123' });
     mockSeo.addRankHistory.mockResolvedValue({});
     mockPrisma.keyword.update.mockResolvedValue({});
 
-    // First page: 10 results, match is index 2 (rank 3)
-    mockCseList.mockResolvedValueOnce(
-      makeCseResponse([
+    mockAxiosGet.mockResolvedValueOnce(
+      makeBraveResponse([
         'https://other1.com/foo',
         'https://other2.com/bar',
         'https://example.com/different-page',
         'https://other3.com/',
         'https://other4.com/',
-        'https://other5.com/',
-        'https://other6.com/',
-        'https://other7.com/',
-        'https://other8.com/',
-        'https://other9.com/',
       ]),
     );
 
@@ -201,72 +196,82 @@ describe('RankTrackingService', () => {
 
     expect(result).toEqual({ skipped: false, rank: 3 });
     expect(mockSeo.addRankHistory).toHaveBeenCalledWith('kw-1', 3, 'https://example.com/page');
-    expect(mockCseConfig.clearValidationError).toHaveBeenCalledWith('proj-1');
-    // Should only have called list once (found on first page)
-    expect(mockCseList).toHaveBeenCalledTimes(1);
+    expect(mockBraveConfig.clearValidationError).toHaveBeenCalledWith('proj-1');
+    // Single request to Brave API (top-20 only)
+    expect(mockAxiosGet).toHaveBeenCalledTimes(1);
   });
 
   // -------------------------------------------------------------------------
-  // Successful rank: match on 3rd page (rank 23)
+  // Successful rank: match at position 1
   // -------------------------------------------------------------------------
 
-  it('finds rank 23 when match is result index 2 on the third page (start=21)', async () => {
+  it('finds rank 1 when first result matches the target host', async () => {
     mockPrisma.keyword.findUnique.mockResolvedValue(makeKeyword({ url: 'https://example.com' }));
-    mockCseConfig.getCredentials.mockResolvedValue({ apiKey: 'key-123', cseId: 'cx-abc' });
+    mockBraveConfig.getCredentials.mockResolvedValue({ apiKey: 'BSAtest123' });
     mockSeo.addRankHistory.mockResolvedValue({});
     mockPrisma.keyword.update.mockResolvedValue({});
 
-    const misses = Array(10).fill('https://other.com/page');
-
-    // Pages 1 and 2 — no match
-    mockCseList
-      .mockResolvedValueOnce(makeCseResponse(misses))
-      .mockResolvedValueOnce(makeCseResponse(misses));
-
-    // Page 3: match at index 2 → rank 21 + 2 = 23
-    const page3Links = [
-      'https://other1.com/',
-      'https://other2.com/',
-      'https://example.com/landing',
-      'https://other4.com/',
-      'https://other5.com/',
-      'https://other6.com/',
-      'https://other7.com/',
-      'https://other8.com/',
-      'https://other9.com/',
-      'https://other10.com/',
-    ];
-    mockCseList.mockResolvedValueOnce(makeCseResponse(page3Links));
+    mockAxiosGet.mockResolvedValueOnce(
+      makeBraveResponse(['https://example.com/home', 'https://other.com/']),
+    );
 
     const result = await service.checkKeyword('kw-1');
 
-    expect(result).toEqual({ skipped: false, rank: 23 });
-    expect(mockSeo.addRankHistory).toHaveBeenCalledWith('kw-1', 23, 'https://example.com');
-    // Should stop after 3 pages
-    expect(mockCseList).toHaveBeenCalledTimes(3);
+    expect(result).toEqual({ skipped: false, rank: 1 });
   });
 
   // -------------------------------------------------------------------------
-  // No match across all 100 results
+  // No match in top 20 → rank = null
   // -------------------------------------------------------------------------
 
-  it('returns rank=null and calls addRankHistory(keywordId, null, url) when not in top 100', async () => {
+  it('returns rank=null and calls addRankHistory(keywordId, null, url) when not in top 20', async () => {
     mockPrisma.keyword.findUnique.mockResolvedValue(makeKeyword({ url: 'https://example.com' }));
-    mockCseConfig.getCredentials.mockResolvedValue({ apiKey: 'key-123', cseId: 'cx-abc' });
+    mockBraveConfig.getCredentials.mockResolvedValue({ apiKey: 'BSAtest123' });
     mockSeo.addRankHistory.mockResolvedValue({});
     mockPrisma.keyword.update.mockResolvedValue({});
 
-    const misses = makeCseResponse(Array(10).fill('https://nomatch.com/'));
-    // 10 pages (start = 1, 11, 21, ..., 91)
-    for (let i = 0; i < 10; i++) {
-      mockCseList.mockResolvedValueOnce(misses);
-    }
+    mockAxiosGet.mockResolvedValueOnce(
+      makeBraveResponse(Array(20).fill('https://nomatch.com/')),
+    );
 
     const result = await service.checkKeyword('kw-1');
 
     expect(result).toEqual({ skipped: false, rank: null });
     expect(mockSeo.addRankHistory).toHaveBeenCalledWith('kw-1', null, 'https://example.com');
-    expect(mockCseList).toHaveBeenCalledTimes(10);
+    // Only one request (top-20 in a single call)
+    expect(mockAxiosGet).toHaveBeenCalledTimes(1);
+  });
+
+  // -------------------------------------------------------------------------
+  // Brave API call params
+  // -------------------------------------------------------------------------
+
+  it('calls Brave API with correct headers and params for pl-PL locale', async () => {
+    mockPrisma.keyword.findUnique.mockResolvedValue(
+      makeKeyword({ locale: 'pl-PL', url: 'https://example.com', keyword: 'narzędzie seo' }),
+    );
+    mockBraveConfig.getCredentials.mockResolvedValue({ apiKey: 'BSApolish' });
+    mockSeo.addRankHistory.mockResolvedValue({});
+    mockPrisma.keyword.update.mockResolvedValue({});
+    mockAxiosGet.mockResolvedValueOnce(makeBraveResponse([]));
+
+    await service.checkKeyword('kw-1');
+
+    expect(mockAxiosGet).toHaveBeenCalledWith(
+      'https://api.search.brave.com/res/v1/web/search',
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          'X-Subscription-Token': 'BSApolish',
+        }),
+        params: expect.objectContaining({
+          q: 'narzędzie seo',
+          country: 'pl',
+          search_lang: 'pl',
+          count: 20,
+          offset: 0,
+        }),
+      }),
+    );
   });
 
   // -------------------------------------------------------------------------
@@ -275,15 +280,15 @@ describe('RankTrackingService', () => {
 
   it('on success: clears lastCheckError, sets lastCheckedAt, updates currentRank, clears validationError', async () => {
     mockPrisma.keyword.findUnique.mockResolvedValue(
-      makeKeyword({ url: 'https://example.com', lastCheckError: 'CSE_UNKNOWN_ERROR' }),
+      makeKeyword({ url: 'https://example.com', lastCheckError: 'BRAVE_UNKNOWN_ERROR' }),
     );
-    mockCseConfig.getCredentials.mockResolvedValue({ apiKey: 'key', cseId: 'cx' });
+    mockBraveConfig.getCredentials.mockResolvedValue({ apiKey: 'key' });
     mockSeo.addRankHistory.mockResolvedValue({});
     mockPrisma.keyword.update.mockResolvedValue({});
 
     // One result that matches
-    mockCseList.mockResolvedValueOnce(
-      makeCseResponse(['https://example.com/home', ...Array(9).fill('https://other.com/')]),
+    mockAxiosGet.mockResolvedValueOnce(
+      makeBraveResponse(['https://example.com/home', 'https://other.com/']),
     );
 
     await service.checkKeyword('kw-1');
@@ -292,70 +297,91 @@ describe('RankTrackingService', () => {
     expect(updateCall.data.lastCheckError).toBeNull();
     expect(updateCall.data.lastCheckedAt).toBeInstanceOf(Date);
     expect(updateCall.data.currentRank).toBe(1);
-    expect(mockCseConfig.clearValidationError).toHaveBeenCalledWith('proj-1');
+    expect(mockBraveConfig.clearValidationError).toHaveBeenCalledWith('proj-1');
   });
 
   // -------------------------------------------------------------------------
-  // Google error: quota exceeded
+  // Brave error: quota exceeded (HTTP 429)
   // -------------------------------------------------------------------------
 
-  it('on CSE_QUOTA_EXCEEDED: sets error on keyword, calls markValidationError, rethrows', async () => {
+  it('on BRAVE_QUOTA_EXCEEDED (HTTP 429): sets error on keyword, calls markValidationError, rethrows', async () => {
     mockPrisma.keyword.findUnique.mockResolvedValue(makeKeyword());
-    mockCseConfig.getCredentials.mockResolvedValue({ apiKey: 'key', cseId: 'cx' });
+    mockBraveConfig.getCredentials.mockResolvedValue({ apiKey: 'key' });
     mockPrisma.keyword.update.mockResolvedValue({});
-    mockCseConfig.markValidationError.mockResolvedValue(undefined);
+    mockBraveConfig.markValidationError.mockResolvedValue(undefined);
 
-    const quotaErr = Object.assign(new Error('Daily Limit Exceeded'), {
-      code: 429,
-      errors: [{ reason: 'dailyLimitExceeded' }],
+    const quotaErr = Object.assign(new Error('Too Many Requests'), {
+      response: { status: 429 },
     });
-    mockCseList.mockRejectedValueOnce(quotaErr);
+    mockAxiosGet.mockRejectedValueOnce(quotaErr);
 
     await expect(service.checkKeyword('kw-1')).rejects.toThrow();
 
     const updateCall = mockPrisma.keyword.update.mock.calls[0][0];
-    expect(updateCall.data.lastCheckError).toBe('CSE_QUOTA_EXCEEDED');
-    expect(mockCseConfig.markValidationError).toHaveBeenCalledWith('proj-1', 'CSE_QUOTA_EXCEEDED');
+    expect(updateCall.data.lastCheckError).toBe('BRAVE_QUOTA_EXCEEDED');
+    expect(mockBraveConfig.markValidationError).toHaveBeenCalledWith('proj-1', 'BRAVE_QUOTA_EXCEEDED');
   });
 
   // -------------------------------------------------------------------------
-  // Google error: invalid key
+  // Brave error: invalid key (HTTP 401)
   // -------------------------------------------------------------------------
 
-  it('on CSE_INVALID_KEY: sets error on keyword, calls markValidationError, rethrows', async () => {
+  it('on BRAVE_INVALID_KEY (HTTP 401): sets error on keyword, calls markValidationError, rethrows', async () => {
     mockPrisma.keyword.findUnique.mockResolvedValue(makeKeyword());
-    mockCseConfig.getCredentials.mockResolvedValue({ apiKey: 'bad-key', cseId: 'cx' });
+    mockBraveConfig.getCredentials.mockResolvedValue({ apiKey: 'bad-key' });
     mockPrisma.keyword.update.mockResolvedValue({});
-    mockCseConfig.markValidationError.mockResolvedValue(undefined);
+    mockBraveConfig.markValidationError.mockResolvedValue(undefined);
 
-    const keyErr = Object.assign(new Error('API key not valid'), {
-      errors: [{ reason: 'keyInvalid' }],
+    const keyErr = Object.assign(new Error('Unauthorized'), {
+      response: { status: 401 },
     });
-    mockCseList.mockRejectedValueOnce(keyErr);
+    mockAxiosGet.mockRejectedValueOnce(keyErr);
 
     await expect(service.checkKeyword('kw-1')).rejects.toThrow();
 
     const updateCall = mockPrisma.keyword.update.mock.calls[0][0];
-    expect(updateCall.data.lastCheckError).toBe('CSE_INVALID_KEY');
-    expect(mockCseConfig.markValidationError).toHaveBeenCalledWith('proj-1', 'CSE_INVALID_KEY');
+    expect(updateCall.data.lastCheckError).toBe('BRAVE_INVALID_KEY');
+    expect(mockBraveConfig.markValidationError).toHaveBeenCalledWith('proj-1', 'BRAVE_INVALID_KEY');
   });
 
   // -------------------------------------------------------------------------
-  // Google error: unknown
+  // Brave error: invalid key (HTTP 403)
   // -------------------------------------------------------------------------
 
-  it('on unknown Google error: sets CSE_UNKNOWN_ERROR, does NOT call markValidationError, rethrows', async () => {
+  it('on BRAVE_INVALID_KEY (HTTP 403): sets error on keyword, calls markValidationError, rethrows', async () => {
     mockPrisma.keyword.findUnique.mockResolvedValue(makeKeyword());
-    mockCseConfig.getCredentials.mockResolvedValue({ apiKey: 'key', cseId: 'cx' });
+    mockBraveConfig.getCredentials.mockResolvedValue({ apiKey: 'bad-key' });
     mockPrisma.keyword.update.mockResolvedValue({});
+    mockBraveConfig.markValidationError.mockResolvedValue(undefined);
 
-    mockCseList.mockRejectedValueOnce(new Error('Internal Server Error'));
+    const keyErr = Object.assign(new Error('Forbidden'), {
+      response: { status: 403 },
+    });
+    mockAxiosGet.mockRejectedValueOnce(keyErr);
 
     await expect(service.checkKeyword('kw-1')).rejects.toThrow();
 
     const updateCall = mockPrisma.keyword.update.mock.calls[0][0];
-    expect(updateCall.data.lastCheckError).toBe('CSE_UNKNOWN_ERROR');
-    expect(mockCseConfig.markValidationError).not.toHaveBeenCalled();
+    expect(updateCall.data.lastCheckError).toBe('BRAVE_INVALID_KEY');
+    expect(mockBraveConfig.markValidationError).toHaveBeenCalledWith('proj-1', 'BRAVE_INVALID_KEY');
+  });
+
+  // -------------------------------------------------------------------------
+  // Brave error: unknown
+  // -------------------------------------------------------------------------
+
+  it('on unknown Brave error: sets BRAVE_UNKNOWN_ERROR, does NOT call markValidationError, rethrows', async () => {
+    mockPrisma.keyword.findUnique.mockResolvedValue(makeKeyword());
+    mockBraveConfig.getCredentials.mockResolvedValue({ apiKey: 'key' });
+    mockPrisma.keyword.update.mockResolvedValue({});
+
+    mockAxiosGet.mockRejectedValueOnce(new Error('Internal Server Error'));
+
+    await expect(service.checkKeyword('kw-1')).rejects.toThrow();
+
+    const updateCall = mockPrisma.keyword.update.mock.calls[0][0];
+    expect(updateCall.data.lastCheckError).toBe('BRAVE_UNKNOWN_ERROR');
+    expect(mockBraveConfig.markValidationError).not.toHaveBeenCalled();
   });
 
   // -------------------------------------------------------------------------
@@ -366,7 +392,7 @@ describe('RankTrackingService', () => {
     it('4th call within 1 hour throws HttpException 429 with { code: "RATE_LIMITED" }', async () => {
       // Calls 1-3 are allowed; call 4 is blocked before Prisma lookup.
       // Calls 1-3: set up Prisma to return a keyword that is skipped so we
-      // don't need to deal with full CSE flow.
+      // don't need to deal with full Brave flow.
       mockPrisma.keyword.findUnique.mockResolvedValue(makeKeyword({ isTracking: false }));
 
       await service.checkKeyword('kw-throttle', 'manual');
@@ -456,26 +482,26 @@ describe('RankTrackingService', () => {
 });
 
 // =============================================================================
-// localeToGlHl helper
+// localeToBraveParams helper
 // =============================================================================
 
-describe('localeToGlHl', () => {
-  it('converts pl-PL → { gl: "pl", hl: "pl" }', () => {
-    expect(localeToGlHl('pl-PL')).toEqual({ gl: 'pl', hl: 'pl' });
+describe('localeToBraveParams', () => {
+  it('converts pl-PL → { country: "pl", search_lang: "pl" }', () => {
+    expect(localeToBraveParams('pl-PL')).toEqual({ country: 'pl', search_lang: 'pl' });
   });
 
-  it('converts en-US → { gl: "us", hl: "en" }', () => {
-    expect(localeToGlHl('en-US')).toEqual({ gl: 'us', hl: 'en' });
+  it('converts en-US → { country: "us", search_lang: "en" }', () => {
+    expect(localeToBraveParams('en-US')).toEqual({ country: 'us', search_lang: 'en' });
   });
 
-  it('converts ru-RU → { gl: "ru", hl: "ru" }', () => {
-    expect(localeToGlHl('ru-RU')).toEqual({ gl: 'ru', hl: 'ru' });
+  it('converts ru-RU → { country: "ru", search_lang: "ru" }', () => {
+    expect(localeToBraveParams('ru-RU')).toEqual({ country: 'ru', search_lang: 'ru' });
   });
 
-  it('falls back to { gl: "us", hl: "en" } for malformed input', () => {
-    expect(localeToGlHl('invalid')).toEqual({ gl: 'us', hl: 'en' });
-    expect(localeToGlHl('')).toEqual({ gl: 'us', hl: 'en' });
-    expect(localeToGlHl('en')).toEqual({ gl: 'us', hl: 'en' });
+  it('falls back to { country: "us", search_lang: "en" } for malformed input', () => {
+    expect(localeToBraveParams('invalid')).toEqual({ country: 'us', search_lang: 'en' });
+    expect(localeToBraveParams('')).toEqual({ country: 'us', search_lang: 'en' });
+    expect(localeToBraveParams('en')).toEqual({ country: 'us', search_lang: 'en' });
   });
 });
 
