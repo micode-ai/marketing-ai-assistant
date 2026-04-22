@@ -1165,9 +1165,6 @@
     "locale": "Lokalizacja wyszukiwania",
     "localeHelper": "Rynek Google do sprawdzenia — wpływa na kolejność wyników",
     "intentHelper": "Intencja wyszukiwania: informacyjna (nauka), nawigacyjna (szukanie strony), komercyjna (porównywanie opcji) lub transakcyjna (zakup).",
-    "checkNow": "Sprawdź teraz",
-    "checkNowRateLimited": "Limit żądań: 3 sprawdzenia na godzinę dla słowa kluczowego",
-    "checkingRank": "Sprawdzanie…",
     "history": {
       "title": "Historia pozycji",
       "range7d": "Ostatnie 7 dni",
@@ -1181,29 +1178,24 @@
       "tableHeaderRank": "Pozycja",
       "tableHeaderUrl": "Znaleziony URL",
       "notRanked": "Poza rankingiem",
-      "empty": "Brak historii pozycji. Kliknij Sprawdź teraz, aby pobrać aktualną pozycję.",
+      "empty": "Brak historii pozycji. Użyj Zapisz pozycję, aby dodać pierwsze sprawdzenie.",
       "lastCheckedAt": "Ostatnio sprawdzono: {when}",
       "viewHistory": "Historia"
     },
     "errors": {
-      "cseNotConfigured": "Skonfiguruj Google CSE w ustawieniach projektu, aby włączyć śledzenie pozycji",
-      "cseQuotaExceeded": "Przekroczono dzienny limit Google CSE",
-      "cseInvalidKey": "Klucz Google CSE jest nieprawidłowy. Zaktualizuj go w ustawieniach projektu.",
-      "noTargetUrl": "Dodaj docelowy URL, aby sprawdzić pozycję tego słowa kluczowego",
-      "cseBanner": "Błąd Google CSE: {error}. Napraw go w ustawieniach projektu."
+      "noTargetUrl": "Dodaj docelowy URL, aby sprawdzić pozycję tego słowa kluczowego"
     },
-    "cseConfig": {
-      "title": "Google Custom Search (śledzenie pozycji SEO)",
-      "description": "Wklej klucz API Google i identyfikator CSE, aby włączyć automatyczne sprawdzanie pozycji. Darmowy plan: 100 wyszukiwań dziennie na projekt Google Cloud.",
-      "setupLink": "Przewodnik konfiguracji",
-      "apiKey": "Klucz API",
-      "cseId": "Identyfikator CSE",
-      "connect": "Połącz",
-      "disconnect": "Rozłącz",
-      "connected": "Połączono",
-      "validationError": "Google odrzucił dane uwierzytelniające: {error}. Wprowadź je ponownie poniżej.",
-      "connectSuccess": "Google CSE skonfigurowany — śledzenie pozycji jest teraz aktywne.",
-      "reconnect": "Połącz ponownie"
+    "recordPosition": {
+      "title": "Zapisz pozycję",
+      "description": "Ręcznie wpisz, na której pozycji w Google aktualnie znajduje się to słowo kluczowe.",
+      "rank": "Aktualna pozycja",
+      "rankPlaceholder": "np. 3",
+      "notInTop100": "Poza top 100",
+      "url": "Dopasowany URL",
+      "urlHelper": "URL, który Google pokazał dla tego słowa kluczowego (domyślnie Twój docelowy URL)",
+      "save": "Zapisz pozycję",
+      "recordSuccess": "Pozycja zapisana",
+      "recordFailed": "Nie udało się zapisać pozycji"
     },
     "competitors": {
       "suggestWithAi": "Zaproponuj konkurentów z AI",
