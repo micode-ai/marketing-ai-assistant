@@ -17,17 +17,17 @@
 
 ### Podłączenie Brave Search
 
-Śledzenie pozycji korzysta z Brave Search API — plan bezpłatny, 2000 zapytań miesięcznie.
+Śledzenie pozycji korzysta z Brave Search API — plan bezpłatny, 5 USD kredytów miesięcznie (około 1000 zapytań przy 0,005 USD za zapytanie).
 
-1. Zarejestruj się na https://api.search.brave.com/app/register
-2. Potwierdź e-mail i utwórz klucz API w panelu (https://api.search.brave.com/app/dashboard). Wybierz plan bezpłatny „Data for AI".
+1. Zarejestruj się na https://api-dashboard.search.brave.com/register
+2. Potwierdź e-mail i utwórz klucz API na https://api-dashboard.search.brave.com/app/keys. Bezpłatne kredyty miesięczne są naliczane automatycznie.
 3. Skopiuj klucz API.
 4. Otwórz **Ustawienia projektu → Brave Search**, wklej klucz API, kliknij **Połącz**.
 
 Po podłączeniu aplikacja będzie sprawdzać śledzone słowa kluczowe według harmonogramu:
-- **Plan Free:** do 5 słów kluczowych, raz w tygodniu w poniedziałki.
-- **Plan Pro:** do 30 słów kluczowych, codziennie.
-- **Plan Enterprise:** do 90 słów kluczowych, codziennie. Może przekroczyć bezpłatny limit 2000 zapytań miesięcznie — w razie potrzeby należy wykupić wyższy plan Brave.
+- **Plan Free:** do 5 słów kluczowych, raz w tygodniu w poniedziałki (~20 zapytań miesięcznie).
+- **Plan Pro:** do 30 słów kluczowych, codziennie (~900 zapytań miesięcznie — mieści się w bezpłatnych kredytach).
+- **Plan Enterprise:** do 90 słów kluczowych, codziennie (~2700 zapytań miesięcznie — za nadwyżkę ponad 5 USD kredytu zapłacisz Brave, około 8,50 USD miesięcznie).
 
 Możesz też kliknąć **Sprawdź teraz** przy dowolnym słowie kluczowym, aby uruchomić sprawdzenie natychmiast (limit: 3 ręczne sprawdzenia na godzinę na słowo kluczowe).
 

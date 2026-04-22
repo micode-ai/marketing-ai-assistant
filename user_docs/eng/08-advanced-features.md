@@ -17,17 +17,17 @@ Track search rankings and discover competitors for your project.
 
 ### Connecting Brave Search
 
-Rank tracking uses the Brave Search API — free tier, 2000 searches per month.
+Rank tracking uses the Brave Search API — free tier, $5 in credits every month (~1000 searches at $0.005 per request).
 
-1. Sign up at https://api.search.brave.com/app/register
-2. Confirm your email and create an API key in the dashboard (https://api.search.brave.com/app/dashboard). Pick the "Data for AI" free plan.
+1. Sign up at https://api-dashboard.search.brave.com/register
+2. Confirm your email and create an API key at https://api-dashboard.search.brave.com/app/keys. The free monthly credits are applied automatically.
 3. Copy the API key.
 4. Open **Project settings → Brave Search**, paste the API key, click **Connect**.
 
 Once connected, the app will check your tracked keywords on a schedule:
-- **Free plan:** up to 5 keywords, weekly on Mondays.
-- **Pro plan:** up to 30 keywords, daily.
-- **Enterprise plan:** up to 90 keywords, daily. May exceed the 2000/month free Brave quota — upgrade your Brave plan if needed.
+- **Free plan:** up to 5 keywords, weekly on Mondays (~20 requests/month).
+- **Pro plan:** up to 30 keywords, daily (~900 requests/month — fits within free credits).
+- **Enterprise plan:** up to 90 keywords, daily (~2700 requests/month — you'll pay Brave for the overage beyond the $5 free credit, roughly $8.50/month).
 
 You can also click **Check now** on any keyword row to run a check immediately (limited to 3 manual checks per hour per keyword).
 

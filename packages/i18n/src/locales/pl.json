@@ -1194,7 +1194,7 @@
     },
     "braveConfig": {
       "title": "Brave Search (śledzenie pozycji SEO)",
-      "description": "Wklej klucz API Brave Search, aby włączyć automatyczne sprawdzanie pozycji. Darmowy plan: 2000 wyszukiwań miesięcznie.",
+      "description": "Wklej klucz API Brave Search, aby włączyć automatyczne sprawdzanie pozycji. Plan bezpłatny: 5 USD kredytów miesięcznie (~1000 wyszukiwań).",
       "setupLink": "Uzyskaj klucz API",
       "apiKey": "Klucz API",
       "connect": "Połącz",

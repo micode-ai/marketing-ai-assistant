@@ -507,7 +507,7 @@
       <h2 class="text-base font-semibold text-gray-900">{$_('seo.braveConfig.title')}</h2>
       <p class="text-sm text-gray-500 mt-0.5">{$_('seo.braveConfig.description')}</p>
       <a
-        href="https://api.search.brave.com/app/keys"
+        href="https://api-dashboard.search.brave.com/app/keys"
         target="_blank"
         rel="noopener"
         class="text-sm text-primary-600 hover:underline mt-1 inline-block"

@@ -1214,7 +1214,7 @@
     },
     "braveConfig": {
       "title": "Brave Search (SEO rank tracking)",
-      "description": "Paste your Brave Search API key to enable automatic rank checks. Free tier: 2000 searches/month.",
+      "description": "Paste your Brave Search API key to enable automatic rank checks. Free tier: $5 in credits every month (~1000 searches).",
       "setupLink": "Get API key",
       "apiKey": "API key",
       "connect": "Connect",
