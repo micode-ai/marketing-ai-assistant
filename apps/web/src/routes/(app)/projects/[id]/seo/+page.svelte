@@ -64,31 +64,36 @@
     toastTimer = setTimeout(() => { toast = null; }, 5000);
   }
 
-  // CSE config status
-  let cseStatus: { configured: boolean; lastValidationError?: string | null } | null = null;
+  // Brave Search config status
+  let braveStatus: { configured: boolean; lastValidationError?: string | null } | null = null;
 
-  // Amber banner: shown if any keyword has CSE error or CSE config has lastValidationError
-  $: cseBannerError = (() => {
-    if (cseStatus?.lastValidationError) return cseStatus.lastValidationError;
+  // Amber banner: shown if any keyword has Brave error or Brave config has lastValidationError
+  $: braveBannerError = (() => {
+    if (braveStatus?.lastValidationError) {
+      const code = braveStatus.lastValidationError;
+      if (code === 'BRAVE_QUOTA_EXCEEDED') return $_('seo.errors.braveQuotaExceeded');
+      if (code === 'BRAVE_INVALID_KEY') return $_('seo.errors.braveInvalidKey');
+      return code;
+    }
     const errorKw = keywords.find(
-      (k) => k.lastCheckError === 'CSE_QUOTA_EXCEEDED' || k.lastCheckError === 'CSE_INVALID_KEY',
+      (k) => k.lastCheckError === 'BRAVE_QUOTA_EXCEEDED' || k.lastCheckError === 'BRAVE_INVALID_KEY',
     );
     if (errorKw) {
-      return errorKw.lastCheckError === 'CSE_QUOTA_EXCEEDED'
-        ? $_('seo.errors.cseQuotaExceeded')
-        : $_('seo.errors.cseInvalidKey');
+      return errorKw.lastCheckError === 'BRAVE_QUOTA_EXCEEDED'
+        ? $_('seo.errors.braveQuotaExceeded')
+        : $_('seo.errors.braveInvalidKey');
     }
     return null;
   })();
 
   onMount(async () => {
     await fetchKeywords();
-    fetchCseStatus();
+    fetchBraveStatus();
   });
 
-  async function fetchCseStatus() {
+  async function fetchBraveStatus() {
     try {
-      cseStatus = await api.get<any>(`/seo/cse/config/${projectId}`);
+      braveStatus = await api.get<any>(`/seo/brave/config/${projectId}`);
     } catch {
       // not critical — just don't show banner
     }
@@ -216,8 +221,8 @@
       const result = await response.json();
 
       if (result.skipped) {
-        if (result.reason === 'CSE_NOT_CONFIGURED') {
-          showToast($_('seo.errors.cseNotConfigured'), 'warning');
+        if (result.reason === 'BRAVE_NOT_CONFIGURED') {
+          showToast($_('seo.errors.braveNotConfigured'), 'warning');
         } else if (result.reason === 'NO_TARGET_URL') {
           showToast($_('seo.errors.noTargetUrl'), 'warning');
         } else {
@@ -305,14 +310,14 @@
 <div class="p-4 sm:p-6">
   <SectionHint sectionKey="seo" titleKey="hints.seo.title" descKey="hints.seo.desc" />
 
-  <!-- Amber CSE error banner -->
-  {#if cseBannerError}
+  <!-- Amber Brave error banner -->
+  {#if braveBannerError}
     <div class="mb-4 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
       <svg xmlns="http://www.w3.org/2000/svg" class="mt-0.5 w-4 h-4 flex-shrink-0 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
       </svg>
       <span>
-        {$_('seo.errors.cseBanner', { values: { error: cseBannerError } })}
+        {$_('seo.errors.braveBanner', { values: { error: braveBannerError } })}
         <a href="/projects/{projectId}/settings" class="ml-1 font-medium underline hover:no-underline">{$_('common.settings')}</a>
       </span>
     </div>
