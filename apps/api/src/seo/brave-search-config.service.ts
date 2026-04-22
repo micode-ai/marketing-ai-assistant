@@ -3,15 +3,14 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../database/prisma.service';
 import { encryptData, decryptData } from '../common/crypto.util';
 
-interface CsePayload {
-  type: 'CSE';
+interface BraveSearchPayload {
+  type: 'BRAVE_SEARCH';
   apiKey: string;
-  cseId: string;
 }
 
 @Injectable()
-export class CseConfigService {
-  private readonly logger = new Logger(CseConfigService.name);
+export class BraveSearchConfigService {
+  private readonly logger = new Logger(BraveSearchConfigService.name);
 
   constructor(
     private prisma: PrismaService,
@@ -19,19 +18,15 @@ export class CseConfigService {
   ) {}
 
   /**
-   * Upsert encrypted CSE credentials in ProjectApiKey (platform: GOOGLE_CSE).
+   * Upsert encrypted Brave Search credentials in ProjectApiKey (platform: BRAVE_SEARCH).
    * Also clears any pre-existing lastValidationError on the row.
    */
-  async saveCredentials(
-    projectId: string,
-    credentials: { apiKey: string; cseId: string },
-  ): Promise<void> {
+  async saveCredentials(projectId: string, credentials: { apiKey: string }): Promise<void> {
     const encryptionKey = this.config.get<string>('ENCRYPTION_KEY', '');
 
-    const payload: CsePayload = {
-      type: 'CSE',
+    const payload: BraveSearchPayload = {
+      type: 'BRAVE_SEARCH',
       apiKey: credentials.apiKey,
-      cseId: credentials.cseId,
     };
 
     const encryptedKey = encryptData(payload, encryptionKey);
@@ -40,12 +35,12 @@ export class CseConfigService {
       where: {
         projectId_platform: {
           projectId,
-          platform: 'GOOGLE_CSE',
+          platform: 'BRAVE_SEARCH',
         },
       },
       create: {
         projectId,
-        platform: 'GOOGLE_CSE',
+        platform: 'BRAVE_SEARCH',
         encryptedKey,
         scopes: [],
         lastValidationError: null,
@@ -58,16 +53,14 @@ export class CseConfigService {
   }
 
   /**
-   * Returns { apiKey, cseId } (decrypted) or null when no row exists.
+   * Returns { apiKey } (decrypted) or null when no row exists.
    */
-  async getCredentials(
-    projectId: string,
-  ): Promise<{ apiKey: string; cseId: string } | null> {
+  async getCredentials(projectId: string): Promise<{ apiKey: string } | null> {
     const record = await this.prisma.projectApiKey.findUnique({
       where: {
         projectId_platform: {
           projectId,
-          platform: 'GOOGLE_CSE',
+          platform: 'BRAVE_SEARCH',
         },
       },
     });
@@ -77,28 +70,25 @@ export class CseConfigService {
     }
 
     const encryptionKey = this.config.get<string>('ENCRYPTION_KEY', '');
-    const payload = decryptData(record.encryptedKey, encryptionKey) as CsePayload;
+    const payload = decryptData(record.encryptedKey, encryptionKey) as BraveSearchPayload;
 
-    return { apiKey: payload.apiKey, cseId: payload.cseId };
+    return { apiKey: payload.apiKey };
   }
 
   /**
    * UI-safe status:
-   *   missing:  { configured: false, lastValidationError: null }
-   *   present:  { configured: true, cseId, lastValidationError: string | null }
+   *   missing: { configured: false, lastValidationError: null }
+   *   present: { configured: true, lastValidationError: string | null }
    * Never returns apiKey.
    */
   async getStatus(
     projectId: string,
-  ): Promise<
-    | { configured: false; lastValidationError: null }
-    | { configured: true; cseId: string; lastValidationError: string | null }
-  > {
+  ): Promise<{ configured: false; lastValidationError: null } | { configured: true; lastValidationError: string | null }> {
     const record = await this.prisma.projectApiKey.findUnique({
       where: {
         projectId_platform: {
           projectId,
-          platform: 'GOOGLE_CSE',
+          platform: 'BRAVE_SEARCH',
         },
       },
     });
@@ -107,22 +97,18 @@ export class CseConfigService {
       return { configured: false, lastValidationError: null };
     }
 
-    const encryptionKey = this.config.get<string>('ENCRYPTION_KEY', '');
-    const payload = decryptData(record.encryptedKey, encryptionKey) as CsePayload;
-
     return {
       configured: true,
-      cseId: payload.cseId,
       lastValidationError: record.lastValidationError ?? null,
     };
   }
 
   /**
-   * Delete the ProjectApiKey row for GOOGLE_CSE.
+   * Delete the ProjectApiKey row for BRAVE_SEARCH.
    */
   async clearCredentials(projectId: string): Promise<void> {
     await this.prisma.projectApiKey.deleteMany({
-      where: { projectId, platform: 'GOOGLE_CSE' },
+      where: { projectId, platform: 'BRAVE_SEARCH' },
     });
   }
 
@@ -134,7 +120,7 @@ export class CseConfigService {
     try {
       await this.prisma.projectApiKey.update({
         where: {
-          projectId_platform: { projectId, platform: 'GOOGLE_CSE' },
+          projectId_platform: { projectId, platform: 'BRAVE_SEARCH' },
         },
         data: { lastValidationError: errorCode },
       });
@@ -153,7 +139,7 @@ export class CseConfigService {
     try {
       await this.prisma.projectApiKey.update({
         where: {
-          projectId_platform: { projectId, platform: 'GOOGLE_CSE' },
+          projectId_platform: { projectId, platform: 'BRAVE_SEARCH' },
         },
         data: { lastValidationError: null },
       });
