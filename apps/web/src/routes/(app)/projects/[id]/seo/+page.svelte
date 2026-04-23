@@ -33,6 +33,8 @@
 
   $: defaultSearchLocale = deriveSearchLocale($locale);
 
+  let projectWebsite = '';
+
   let form = {
     keyword: '',
     targetRank: 10,
@@ -42,8 +44,14 @@
   };
 
   // Keep form.searchLocale in sync with locale when modal opens
+  // Pre-fill Target URL with project website so the common case (promote homepage)
+  // is zero-input. User can still override for specific landing pages.
   $: if (showModal) {
-    form = { ...form, searchLocale: defaultSearchLocale };
+    form = {
+      ...form,
+      searchLocale: defaultSearchLocale,
+      url: form.url || projectWebsite,
+    };
   }
 
   // Rank history cache: keywordId -> number[]
@@ -69,7 +77,7 @@
   function openRecordModal(kw: any) {
     recordModalKeyword = kw;
     recordRank = '';
-    recordUrl = kw.url || '';
+    recordUrl = kw.url || projectWebsite || '';
     recordNotInTop100 = false;
   }
 
@@ -102,6 +110,13 @@
   }
 
   onMount(async () => {
+    // Load project website so Target URL defaults to the homepage.
+    try {
+      const project = await api.get<any>(`/projects/${projectId}`);
+      if (project?.website) projectWebsite = project.website;
+    } catch {
+      // Non-blocking — form just stays empty.
+    }
     await fetchKeywords();
   });
 
@@ -257,6 +272,17 @@
       return new URL(url).host;
     } catch {
       return url;
+    }
+  }
+
+  function getTargetUrlPath(url: string | null | undefined): string {
+    if (!url) return '';
+    try {
+      const u = new URL(url);
+      const path = u.pathname + u.search;
+      return path === '/' ? '' : path;
+    } catch {
+      return '';
     }
   }
 
@@ -533,7 +559,12 @@
                 <!-- Target URL -->
                 <td class="px-5 py-3.5 max-w-[140px]">
                   {#if urlHost}
-                    <span class="text-sm text-gray-600 truncate block" title={kw.url}>{urlHost}</span>
+                    {#if projectWebsite && kw.url === projectWebsite}
+                      <span class="text-xs text-gray-500 italic" title={kw.url}>Homepage</span>
+                    {:else}
+                      {@const pathOnly = getTargetUrlPath(kw.url)}
+                      <span class="text-sm text-gray-600 truncate block" title={kw.url}>{pathOnly || urlHost}</span>
+                    {/if}
                   {:else}
                     <span class="text-sm text-gray-400">—</span>
                   {/if}
@@ -751,17 +782,22 @@
 
         <!-- Target URL -->
         <div>
-          <label for="seo-url" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('seo.targetUrl')}</label>
+          <label for="seo-url" class="block text-sm font-medium text-gray-700 mb-1.5">
+            {$_('seo.targetUrl')}
+            <span class="font-normal text-gray-400 text-xs ml-1">— {$_('common.optional')}</span>
+          </label>
           <input
             id="seo-url"
             type="text"
             bind:value={form.url}
             class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
               {urlError ? 'border-red-400 focus:ring-red-400' : 'border-gray-300'}"
-            placeholder="https://your-page.com/path"
+            placeholder={projectWebsite || 'https://your-page.com/path'}
           />
           {#if urlError}
             <p class="mt-1 text-xs text-red-500">Must start with https:// or http://</p>
+          {:else if projectWebsite && form.url === projectWebsite}
+            <p class="mt-1 text-xs text-gray-400">Defaulted to your project website. Change only if you want to rank a specific page for this keyword.</p>
           {:else}
             <p class="mt-1 text-xs text-gray-400">{$_('seo.targetUrlHelper')}</p>
           {/if}
