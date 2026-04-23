@@ -15,9 +15,21 @@
    - **Intencja** — Informacyjna / Nawigacyjna / Komercyjna / Transakcyjna. Pomaga dopasować generowane przez AI treści do intencji użytkownika.
    - **Docelowa pozycja** (opcjonalnie) — Twój cel pozycyjny, wyświetlany jako linia referencyjna na wykresie historii.
 
-### Zapisywanie pozycji
+### Łączenie z Google Search Console
 
-Śledzenie pozycji jest w tej wersji ręczne — samodzielnie sprawdzasz wyniki w Google (lub korzystasz z narzędzia SEO) i zapisujesz aktualną pozycję.
+Najszybszy sposób na wypełnienie historii pozycji — Search Console jest bezpłatne i dostarcza oficjalne dane Google.
+
+1. Upewnij się, że strona projektu jest zweryfikowana w Google Search Console.
+2. Otwórz **Ustawienia projektu → Google Search Console**, kliknij **Połącz Google Search Console** i zezwól na dostęp do Search Console w trybie tylko do odczytu.
+3. W ustawieniach wpisz zweryfikowany URL witryny (np. `https://twojastrona.pl/`) i kliknij **Zapisz**.
+4. Przejdź do **SEO → Synchronizuj z Google Search Console**. Aplikacja pobierze pozycje z wczoraj dla każdego śledzonego słowa kluczowego i zapisze je w historii.
+5. Codzienny cron utrzymuje dane aktualne (03:00 UTC) — po pierwszej synchronizacji możesz przestać klikać przycisk ręcznie.
+
+Dane GSC są opóźnione o 2–3 dni. Dla słów kluczowych, które nie są jeszcze zindeksowane w GSC, lub gdy chcesz sprawdzić pozycję dzisiaj, użyj **Zapisz pozycję** przy każdym słowie kluczowym.
+
+### Zapisywanie pozycji (opcja awaryjna)
+
+Użyj tej metody, gdy słowo kluczowe nie jest jeszcze widoczne w GSC lub gdy GSC nie jest połączony.
 
 1. Na liście słów kluczowych kliknij **Zapisz pozycję** przy wybranym słowie kluczowym.
 2. W oknie dialogowym wprowadź:
@@ -26,10 +38,6 @@
 3. Kliknij **Zapisz pozycję**.
 
 Każde zapisane sprawdzenie trafia do historii słowa kluczowego z dzisiejszą datą. Otwórz stronę szczegółową słowa kluczowego, aby zobaczyć pełny wykres historii.
-
-### Dlaczego ręcznie?
-
-Automatyczne śledzenie pozycji wymaga zewnętrznego API SERP (SerpAPI, DataForSEO, Brave Search itp.), które albo kosztuje, albo wymaga podania karty kredytowej. Aplikacja pozostaje niezależna od dostawcy i bezpłatna. Jeśli chcesz automatyzacji, możesz pisać skrypty korzystające z `POST /seo/keywords/:id/rank` z dowolnym wybranym dostawcą SERP.
 
 ### Przeglądanie historii pozycji
 

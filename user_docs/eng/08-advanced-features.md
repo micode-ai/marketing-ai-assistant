@@ -15,9 +15,21 @@ Track search rankings and discover competitors for your project.
    - **Intent** — Informational / Navigational / Commercial / Transactional. Helps AI-generated content match user intent.
    - **Target rank** (optional) — your goal rank, used as a reference line on the history chart.
 
-### Recording positions
+### Connecting Google Search Console
 
-Rank tracking is manual in this version — you check Google yourself (or use a third-party SEO tool) and record the current position.
+The fastest way to populate rank history — Search Console is free and gives official Google data.
+
+1. Make sure the project's website is verified in Google Search Console.
+2. Open **Project settings → Google Search Console**, click **Connect Google Search Console**, and grant access to Search Console read-only.
+3. Back in settings, enter the verified site URL (e.g. `https://yoursite.com/`) and click **Save**.
+4. Open **SEO → Sync from Google Search Console**. The app pulls yesterday's positions for every tracked keyword and writes them into the history.
+5. A daily cron keeps things up-to-date (03:00 UTC) — you can stop pressing the button manually after the first sync.
+
+GSC data lags by 2–3 days. For keywords that aren't yet indexed or for a quick check today, use **Record position** on each keyword row (it calls the manual entry flow).
+
+### Recording positions (manual fallback)
+
+Use this when a keyword isn't indexed yet in GSC, or when GSC is not connected.
 
 1. From the keyword list, click **Record position** on the keyword row.
 2. In the modal, enter:
@@ -26,10 +38,6 @@ Rank tracking is manual in this version — you check Google yourself (or use a 
 3. Click **Save position**.
 
 Each recorded check is saved to the keyword's history with today's date. Open the keyword's detail page to see the full history chart.
-
-### Why manual?
-
-Automatic rank tracking requires a third-party SERP API (SerpAPI, DataForSEO, Brave Search, etc.) which either costs money or requires a credit card. The app keeps rank tracking provider-agnostic and free. If you want automation, you can script it against `POST /seo/keywords/:id/rank` using your own SERP provider of choice.
 
 ### Viewing rank history
 
