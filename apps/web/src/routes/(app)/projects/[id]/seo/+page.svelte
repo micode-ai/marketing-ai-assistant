@@ -173,17 +173,32 @@
     }
   }
 
+  interface GscSyncDetail {
+    keywordId: string;
+    keyword: string;
+    rank: number | null;
+    previousRank: number | null;
+    reason?: 'NO_URL' | 'NO_MATCH_IN_GSC';
+  }
+  interface GscSyncResult {
+    synced: number;
+    matched: number;
+    skipped: string[];
+    details: GscSyncDetail[];
+    siteUrl: string;
+    date: string;
+  }
+
+  let lastSyncResult: GscSyncResult | null = null;
+
   async function syncFromGsc() {
     syncing = true;
     try {
-      const result = await api.post<{ synced: number; matched: number; skipped: string[] }>(
+      const result = await api.post<GscSyncResult>(
         '/seo/keywords/sync-from-gsc',
         { projectId },
       );
-      showToast(
-        $_('seo.syncSuccess', { values: { matched: result.matched, skipped: result.skipped.length } }),
-        'success',
-      );
+      lastSyncResult = result;
       await fetchKeywords();
     } catch (e: any) {
       const code = e?.body?.code || e?.code;
@@ -195,6 +210,18 @@
     } finally {
       syncing = false;
     }
+  }
+
+  function rankDelta(now: number | null, prev: number | null): { text: string; color: string } | null {
+    if (now === null || prev === null) return null;
+    if (now === prev) return { text: '=', color: 'text-gray-500' };
+    const diff = prev - now; // lower rank is better; positive diff = improvement
+    if (diff > 0) return { text: `↑ ${diff}`, color: 'text-green-600' };
+    return { text: `↓ ${Math.abs(diff)}`, color: 'text-red-600' };
+  }
+
+  function dismissSyncResult() {
+    lastSyncResult = null;
   }
 
   async function runSeoAudit() {
@@ -357,6 +384,89 @@
       </button>
     </div>
   </div>
+
+  <!-- GSC sync result panel -->
+  {#if lastSyncResult}
+    <div class="bg-white rounded-xl border border-primary-200 p-5 mb-4 shadow-sm">
+      <div class="flex items-start justify-between mb-3">
+        <div>
+          <h3 class="text-sm font-semibold text-gray-900 flex items-center gap-2">
+            <svg class="w-5 h-5 text-primary-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+            </svg>
+            Sync complete — pulled Google Search Console data for {lastSyncResult.date}
+          </h3>
+          <p class="text-xs text-gray-500 mt-1">
+            Site: <span class="font-mono text-gray-700">{lastSyncResult.siteUrl}</span>
+            &nbsp;·&nbsp;
+            {lastSyncResult.matched} of {lastSyncResult.synced} keywords matched in GSC
+            {#if lastSyncResult.synced - lastSyncResult.matched > 0}
+              · {lastSyncResult.synced - lastSyncResult.matched} not found
+            {/if}
+          </p>
+        </div>
+        <button
+          on:click={dismissSyncResult}
+          class="text-gray-400 hover:text-gray-600 p-1"
+          title="Dismiss"
+        >
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      {#if lastSyncResult.details.length > 0}
+        <div class="overflow-hidden border border-gray-100 rounded-lg">
+          <table class="w-full text-sm">
+            <thead class="bg-gray-50">
+              <tr class="text-left text-xs text-gray-500 uppercase">
+                <th class="px-3 py-2 font-medium">Keyword</th>
+                <th class="px-3 py-2 font-medium">Previous</th>
+                <th class="px-3 py-2 font-medium">New rank</th>
+                <th class="px-3 py-2 font-medium">Change</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50">
+              {#each lastSyncResult.details as d}
+                <tr class="hover:bg-gray-50">
+                  <td class="px-3 py-2 text-gray-900">{d.keyword}</td>
+                  <td class="px-3 py-2 text-gray-500">
+                    {d.previousRank ?? '—'}
+                  </td>
+                  <td class="px-3 py-2">
+                    {#if d.rank !== null}
+                      <span class="font-semibold text-gray-900">#{d.rank}</span>
+                    {:else if d.reason === 'NO_MATCH_IN_GSC'}
+                      <span class="text-gray-400 italic">not ranked in GSC</span>
+                    {:else if d.reason === 'NO_URL'}
+                      <span class="text-amber-600 italic">no target URL</span>
+                    {/if}
+                  </td>
+                  <td class="px-3 py-2">
+                    {#if d.rank !== null}
+                      {@const delta = rankDelta(d.rank, d.previousRank)}
+                      {#if delta}
+                        <span class={delta.color + ' font-medium text-xs'}>{delta.text}</span>
+                      {:else}
+                        <span class="text-gray-400 text-xs">new</span>
+                      {/if}
+                    {:else}
+                      <span class="text-gray-300">—</span>
+                    {/if}
+                  </td>
+                </tr>
+              {/each}
+            </tbody>
+          </table>
+        </div>
+      {/if}
+
+      <p class="text-xs text-gray-400 mt-3">
+        GSC data lags by 2–3 days. Positions shown are an average over {lastSyncResult.date}. For faster feedback use <strong>Record position</strong> on individual keywords.
+      </p>
+    </div>
+  {/if}
 
   {#if loading}
     <!-- Loading skeleton -->
