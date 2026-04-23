@@ -1182,9 +1182,6 @@
       "lastCheckedAt": "Ostatnio sprawdzono: {when}",
       "viewHistory": "Historia"
     },
-    "errors": {
-      "noTargetUrl": "Dodaj docelowy URL, aby sprawdzić pozycję tego słowa kluczowego"
-    },
     "recordPosition": {
       "title": "Zapisz pozycję",
       "description": "Ręcznie wpisz, na której pozycji w Google aktualnie znajduje się to słowo kluczowe.",
@@ -1196,6 +1193,28 @@
       "save": "Zapisz pozycję",
       "recordSuccess": "Pozycja zapisana",
       "recordFailed": "Nie udało się zapisać pozycji"
+    },
+    "gscConfig": {
+      "title": "Google Search Console",
+      "description": "Połącz Search Console, aby automatycznie synchronizować pozycje z oficjalnych danych Google (aktualizowane codziennie, opóźnienie 2–3 dni).",
+      "connect": "Połącz Google Search Console",
+      "disconnect": "Rozłącz",
+      "connected": "Połączono",
+      "siteUrl": "Zweryfikowany URL witryny",
+      "siteUrlPlaceholder": "https://twoja-strona.pl/",
+      "siteUrlHelper": "Wybierz właściwość zweryfikowaną w Search Console dla tego projektu",
+      "save": "Zapisz",
+      "saveSuccess": "Zapisano"
+    },
+    "syncFromGsc": "Synchronizuj z Google Search Console",
+    "syncing": "Synchronizacja z GSC…",
+    "syncSuccess": "Zsynchronizowano {matched} słów kluczowych z GSC (pominięto {skipped})",
+    "syncFailed": "Synchronizacja nie powiodła się",
+    "lastSyncedAt": "Ostatnia synchronizacja: {when}",
+    "errors": {
+      "noTargetUrl": "Dodaj docelowy URL, aby sprawdzić pozycję tego słowa kluczowego",
+      "gscNotConfigured": "Najpierw połącz Google Search Console, aby włączyć automatyczną synchronizację",
+      "gscError": "Błąd Google Search Console: {error}"
     },
     "competitors": {
       "suggestWithAi": "Zaproponuj konkurentów z AI",

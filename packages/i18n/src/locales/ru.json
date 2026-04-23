@@ -1180,9 +1180,6 @@
       "lastCheckedAt": "Последняя проверка: {when}",
       "viewHistory": "История"
     },
-    "errors": {
-      "noTargetUrl": "Добавьте целевой URL для проверки позиции этого ключевого слова"
-    },
     "recordPosition": {
       "title": "Записать позицию",
       "description": "Вручную введите текущую позицию этого ключевого слова в Google.",
@@ -1194,6 +1191,28 @@
       "save": "Сохранить позицию",
       "recordSuccess": "Позиция записана",
       "recordFailed": "Не удалось записать позицию"
+    },
+    "gscConfig": {
+      "title": "Google Search Console",
+      "description": "Подключите Search Console для автоматической синхронизации позиций из официальных данных Google (обновляется ежедневно, задержка 2–3 дня).",
+      "connect": "Подключить Google Search Console",
+      "disconnect": "Отключить",
+      "connected": "Подключено",
+      "siteUrl": "Проверенный URL сайта",
+      "siteUrlPlaceholder": "https://ваш-сайт.ru/",
+      "siteUrlHelper": "Укажите ресурс, подтверждённый в Search Console для этого проекта",
+      "save": "Сохранить",
+      "saveSuccess": "Сохранено"
+    },
+    "syncFromGsc": "Синхронизировать из Google Search Console",
+    "syncing": "Синхронизация из GSC…",
+    "syncSuccess": "Синхронизировано {matched} ключевых слов из GSC (пропущено {skipped})",
+    "syncFailed": "Ошибка синхронизации",
+    "lastSyncedAt": "Последняя синхронизация: {when}",
+    "errors": {
+      "noTargetUrl": "Добавьте целевой URL для проверки позиции этого ключевого слова",
+      "gscNotConfigured": "Сначала подключите Google Search Console для автоматической синхронизации",
+      "gscError": "Ошибка Google Search Console: {error}"
     },
     "competitors": {
       "suggestWithAi": "Предложить конкурентов с помощью AI",

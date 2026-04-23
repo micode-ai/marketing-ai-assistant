@@ -1202,9 +1202,6 @@
       "lastCheckedAt": "Last checked {when}",
       "viewHistory": "View history"
     },
-    "errors": {
-      "noTargetUrl": "Add a target URL to check this keyword's rank"
-    },
     "recordPosition": {
       "title": "Record position",
       "description": "Manually enter where this keyword currently ranks in Google.",
@@ -1216,6 +1213,28 @@
       "save": "Save position",
       "recordSuccess": "Position recorded",
       "recordFailed": "Failed to record position"
+    },
+    "gscConfig": {
+      "title": "Google Search Console",
+      "description": "Connect Search Console to auto-sync rank positions from Google's official data (updated daily, 2-3 day delay).",
+      "connect": "Connect Google Search Console",
+      "disconnect": "Disconnect",
+      "connected": "Connected",
+      "siteUrl": "Verified site URL",
+      "siteUrlPlaceholder": "https://your-site.com/",
+      "siteUrlHelper": "Pick the property verified in Search Console for this project",
+      "save": "Save",
+      "saveSuccess": "Saved"
+    },
+    "syncFromGsc": "Sync from Google Search Console",
+    "syncing": "Syncing from GSC…",
+    "syncSuccess": "Synced {matched} keywords from GSC ({skipped} skipped)",
+    "syncFailed": "Sync failed",
+    "lastSyncedAt": "Last synced: {when}",
+    "errors": {
+      "noTargetUrl": "Add a target URL to check this keyword's rank",
+      "gscNotConfigured": "Connect Google Search Console first to enable auto-sync",
+      "gscError": "Google Search Console error: {error}"
     },
     "competitors": {
       "suggestWithAi": "Suggest competitors with AI",
