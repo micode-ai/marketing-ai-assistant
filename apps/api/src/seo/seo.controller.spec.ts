@@ -1,5 +1,4 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException } from '@nestjs/common';
 import { CompetitorStatus } from '@prisma/client';
 import { SeoController } from './seo.controller';
 import { SeoService } from './seo.service';
