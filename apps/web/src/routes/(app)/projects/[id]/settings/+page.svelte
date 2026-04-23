@@ -319,8 +319,13 @@
     }
   }
 
-  function connectGsc() {
-    window.location.href = `/api/google/auth?projectId=${projectId}`;
+  async function connectGsc() {
+    try {
+      const result = await api.get<{ url: string }>('/google/auth-url', { projectId });
+      window.location.href = result.url;
+    } catch (e: any) {
+      gscError = e.message || 'Failed to start Google OAuth';
+    }
   }
 
   async function saveGscSiteUrl() {
