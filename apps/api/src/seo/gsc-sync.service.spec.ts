@@ -199,7 +199,14 @@ describe('GscSyncService', () => {
 
     const result = await service.syncProject('proj-1');
 
-    expect(result).toEqual({ synced: 0, matched: 0, skipped: [] });
+    expect(result).toEqual({
+      synced: 0,
+      matched: 0,
+      skipped: [],
+      details: [],
+      siteUrl: GSC_CONFIG.siteUrl,
+      date: expect.any(String),
+    });
     expect(mockGoogleIntegrations.fetchSearchConsoleData).not.toHaveBeenCalled();
   });
 });
