@@ -5,6 +5,7 @@
   import { api } from '$lib/api/client';
   import SectionHint from '$lib/components/SectionHint.svelte';
   import MobileAnalyticsDashboard from '$lib/components/analytics/MobileAnalyticsDashboard.svelte';
+  import SearchConsolePanel from '$lib/components/analytics/SearchConsolePanel.svelte';
   import { currentProjectStore, projectsStore } from '$lib/stores/projects';
 
   $: projectId = $page.params['id'];
@@ -294,6 +295,9 @@
       {/each}
     </div>
   </div>
+
+  <!-- Google Search Console Performance Panel -->
+  <SearchConsolePanel {projectId} />
 
   <!-- Tabs -->
   <div class="flex border-b border-gray-200 mb-6">

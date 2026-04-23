@@ -27,6 +27,8 @@ The fastest way to populate rank history — Search Console is free and gives of
 
 GSC data lags by 2–3 days. For keywords that aren't yet indexed or for a quick check today, use **Record position** on each keyword row (it calls the manual entry flow).
 
+Once Search Console is connected and a site URL is saved, the **Analytics page** for your project will show a **Google Search Performance** block at the top. It displays total clicks, impressions, average CTR, and average position for a selected period (7, 28, or 90 days), along with sparkline charts, a sortable top-queries table, a top-pages table, a device breakdown, and a top-countries overview. The data is fetched live from Search Console and cached for up to one hour.
+
 ### Recording positions (manual fallback)
 
 Use this when a keyword isn't indexed yet in GSC, or when GSC is not connected.

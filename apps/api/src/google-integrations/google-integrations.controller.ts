@@ -1,9 +1,10 @@
-import { Controller, Get, Post, Delete, Body, Query, Res } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Body, Query, Res, BadRequestException, HttpException, HttpStatus, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
 import { GoogleIntegrationsService } from './google-integrations.service';
 import { Public } from '../common/decorators/public.decorator';
+import { ProjectAccessGuard } from '../common/guards/project-access.guard';
 
 @ApiTags('google')
 @ApiBearerAuth()
@@ -144,5 +145,26 @@ export class GoogleIntegrationsController {
       siteUrl: dto.siteUrl,
       propertyId: dto.propertyId,
     });
+  }
+
+  @Get('search-console/summary')
+  @UseGuards(ProjectAccessGuard)
+  async getSearchConsoleSummary(
+    @Query('projectId') projectId: string,
+    @Query('days') daysParam?: string,
+  ) {
+    if (!projectId) throw new BadRequestException('projectId is required');
+
+    const days = Math.min(90, Math.max(7, parseInt(daysParam || '28', 10) || 28));
+
+    try {
+      return await this.googleService.fetchSearchConsoleSummary(projectId, days);
+    } catch (err: any) {
+      if (err?.code === 'GSC_NOT_CONFIGURED') {
+        throw new HttpException({ code: 'GSC_NOT_CONFIGURED' }, HttpStatus.BAD_REQUEST);
+      }
+      const message = err instanceof Error ? err.message : 'Unknown GSC error';
+      throw new HttpException({ code: 'GSC_ERROR', message }, HttpStatus.BAD_GATEWAY);
+    }
   }
 }

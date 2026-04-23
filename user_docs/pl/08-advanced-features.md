@@ -27,6 +27,8 @@ Najszybszy sposób na wypełnienie historii pozycji — Search Console jest bezp
 
 Dane GSC są opóźnione o 2–3 dni. Dla słów kluczowych, które nie są jeszcze zindeksowane w GSC, lub gdy chcesz sprawdzić pozycję dzisiaj, użyj **Zapisz pozycję** przy każdym słowie kluczowym.
 
+Po połączeniu Search Console i zapisaniu adresu URL witryny, strona **Analityka** projektu wyświetli blok **Wyniki w Google Search** na górze. Zawiera on łączną liczbę kliknięć, wyświetleń, średni CTR i średnią pozycję dla wybranego okresu (7, 28 lub 90 dni), wraz z wykresami przebiegu, sortowalną tabelą najlepszych zapytań, tabelą najlepszych stron, podziałem według urządzeń oraz przeglądem krajów. Dane są pobierane na żywo z Search Console i cache'owane przez maksymalnie godzinę.
+
 ### Zapisywanie pozycji (opcja awaryjna)
 
 Użyj tej metody, gdy słowo kluczowe nie jest jeszcze widoczne w GSC lub gdy GSC nie jest połączony.
