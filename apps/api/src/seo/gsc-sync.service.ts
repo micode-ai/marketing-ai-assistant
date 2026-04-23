@@ -3,10 +3,21 @@ import { PrismaService } from '../database/prisma.service';
 import { GoogleIntegrationsService } from '../google-integrations/google-integrations.service';
 import { SeoService } from './seo.service';
 
+export interface GscSyncDetail {
+  keywordId: string;
+  keyword: string;
+  rank: number | null;
+  previousRank: number | null;
+  reason?: 'NO_URL' | 'NO_MATCH_IN_GSC';
+}
+
 export interface GscSyncSummary {
   synced: number;
   matched: number;
   skipped: string[];
+  details: GscSyncDetail[];
+  siteUrl: string;
+  date: string;
 }
 
 @Injectable()
@@ -42,7 +53,14 @@ export class GscSyncService {
     });
 
     if (keywords.length === 0) {
-      return { synced: 0, matched: 0, skipped: [] };
+      return {
+        synced: 0,
+        matched: 0,
+        skipped: [],
+        details: [],
+        siteUrl,
+        date: getYesterdayDateString(),
+      };
     }
 
     // Ensure fresh access token
@@ -81,10 +99,20 @@ export class GscSyncService {
     // 4. Match each keyword to a GSC row
     let matched = 0;
     const skipped: string[] = [];
+    const details: GscSyncDetail[] = [];
 
     for (const keyword of keywords) {
+      const previousRank = keyword.currentRank ?? null;
+
       if (!keyword.url) {
         skipped.push(`${keyword.keyword}:NO_URL`);
+        details.push({
+          keywordId: keyword.id,
+          keyword: keyword.keyword,
+          rank: null,
+          previousRank,
+          reason: 'NO_URL',
+        });
         continue;
       }
 
@@ -96,6 +124,13 @@ export class GscSyncService {
 
       if (!row) {
         skipped.push(`${keyword.keyword}:NO_MATCH_IN_GSC`);
+        details.push({
+          keywordId: keyword.id,
+          keyword: keyword.keyword,
+          rank: null,
+          previousRank,
+          reason: 'NO_MATCH_IN_GSC',
+        });
         continue;
       }
 
@@ -104,19 +139,33 @@ export class GscSyncService {
       // 5. Upsert rank history for yesterday
       await this.seo.addRankHistoryForDate(keyword.id, roundedRank, row.keys[1], getYesterdayDate());
 
-      // 6. Update keyword metadata
+      // 6. Update keyword metadata (including currentRank so the summary chart/row reflects latest)
       await this.prisma.keyword.update({
         where: { id: keyword.id },
         data: {
           lastCheckedAt: new Date(),
           lastCheckError: null,
+          currentRank: roundedRank,
         },
       });
 
+      details.push({
+        keywordId: keyword.id,
+        keyword: keyword.keyword,
+        rank: roundedRank,
+        previousRank,
+      });
       matched++;
     }
 
-    return { synced: keywords.length, matched, skipped };
+    return {
+      synced: keywords.length,
+      matched,
+      skipped,
+      details,
+      siteUrl,
+      date: getYesterdayDateString(),
+    };
   }
 }
 
