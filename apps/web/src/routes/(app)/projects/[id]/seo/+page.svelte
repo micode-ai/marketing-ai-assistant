@@ -113,10 +113,11 @@
     // Load project website so Target URL defaults to the homepage.
     try {
       const project = await api.get<any>(`/projects/${projectId}`);
-      if (project?.website) projectWebsite = project.website;
+      if (project?.websiteUrl) projectWebsite = project.websiteUrl;
     } catch {
       // Non-blocking — form just stays empty.
     }
+    loadPersistedSyncResult();
     await fetchKeywords();
   });
 
@@ -205,6 +206,34 @@
   }
 
   let lastSyncResult: GscSyncResult | null = null;
+  let lastSyncAt: string | null = null;
+
+  function syncStorageKey(pid: string) {
+    return `seo:lastSync:${pid}`;
+  }
+
+  function loadPersistedSyncResult() {
+    try {
+      const raw = localStorage.getItem(syncStorageKey(projectId));
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as { result: GscSyncResult; at: string };
+      lastSyncResult = parsed.result;
+      lastSyncAt = parsed.at;
+    } catch {
+      // ignore corrupted entry
+    }
+  }
+
+  function persistSyncResult(result: GscSyncResult) {
+    try {
+      localStorage.setItem(
+        syncStorageKey(projectId),
+        JSON.stringify({ result, at: new Date().toISOString() }),
+      );
+    } catch {
+      // localStorage can be disabled/full — ignore
+    }
+  }
 
   async function syncFromGsc() {
     syncing = true;
@@ -214,6 +243,8 @@
         { projectId },
       );
       lastSyncResult = result;
+      lastSyncAt = new Date().toISOString();
+      persistSyncResult(result);
       await fetchKeywords();
     } catch (e: any) {
       const code = e?.body?.code || e?.code;
@@ -237,6 +268,12 @@
 
   function dismissSyncResult() {
     lastSyncResult = null;
+    lastSyncAt = null;
+    try {
+      localStorage.removeItem(syncStorageKey(projectId));
+    } catch {
+      // ignore
+    }
   }
 
   async function runSeoAudit() {
@@ -488,9 +525,17 @@
         </div>
       {/if}
 
-      <p class="text-xs text-gray-400 mt-3">
-        GSC data lags by 2–3 days. Positions shown are an average over {lastSyncResult.date}. For faster feedback use <strong>Record position</strong> on individual keywords.
-      </p>
+      <div class="text-xs text-gray-400 mt-3 space-y-1">
+        <p>GSC data lags by 2–3 days. Positions shown are an average for {lastSyncResult.date}. For same-day feedback use <strong>Record position</strong> on individual keywords.</p>
+        {#if lastSyncResult.matched === 0 && lastSyncResult.synced > 0}
+          <p class="text-amber-700">
+            <strong>Why no matches?</strong> Your site isn't yet ranking in the top ~100 Google results for these keywords, or Google hasn't indexed your content yet. Check back in a few days as Google discovers and ranks your pages.
+          </p>
+        {/if}
+        {#if lastSyncAt}
+          <p>Last sync: {new Date(lastSyncAt).toLocaleString()}</p>
+        {/if}
+      </div>
     </div>
   {/if}
 
