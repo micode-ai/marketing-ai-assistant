@@ -10,6 +10,22 @@ export interface GSCQueryRow {
   position: number;
 }
 
+export interface GSCSummaryMetric {
+  clicks: number;
+  impressions: number;
+  ctr: number;
+  position: number;
+}
+
+export interface GSCSummary {
+  totals: GSCSummaryMetric;
+  byDate: Array<{ date: string } & GSCSummaryMetric>;
+  topQueries: Array<{ query: string } & GSCSummaryMetric>;
+  topPages: Array<{ page: string } & GSCSummaryMetric>;
+  byDevice: Array<{ device: string; clicks: number; impressions: number }>;
+  byCountry: Array<{ country: string; clicks: number; impressions: number }>;
+}
+
 export interface GA4MetricRow {
   dimensions: Record<string, string>;
   metrics: Record<string, number>;
@@ -18,6 +34,10 @@ export interface GA4MetricRow {
 @Injectable()
 export class GoogleIntegrationsService {
   private readonly logger = new Logger(GoogleIntegrationsService.name);
+
+  /** In-memory cache: key → { data, fetchedAt } */
+  private readonly summaryCache = new Map<string, { data: GSCSummary; fetchedAt: number }>();
+  private readonly CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
 
   constructor(
     private prisma: PrismaService,
@@ -273,5 +293,108 @@ export class GoogleIntegrationsService {
     if (key) {
       await this.prisma.projectApiKey.delete({ where: { id: key.id } });
     }
+  }
+
+  /**
+   * Ensure access token is fresh; rotates in DB if refreshed.
+   * Returns the valid access token.
+   */
+  async ensureFreshToken(projectId: string, config: Record<string, unknown>): Promise<string> {
+    let accessToken = config.accessToken as string;
+    if (new Date(config.expiresAt as string) < new Date() && config.refreshToken) {
+      accessToken = await this.refreshAccessToken(config.refreshToken as string);
+      await this.saveIntegration(projectId, 'gsc', {
+        ...config,
+        accessToken,
+        expiresAt: new Date(Date.now() + 3600 * 1000).toISOString(),
+      });
+    }
+    return accessToken;
+  }
+
+  /**
+   * Fetch a structured GSC summary for the given project + period.
+   * Results are cached in memory for 1 hour per (projectId, days) pair.
+   */
+  async fetchSearchConsoleSummary(projectId: string, days: number): Promise<GSCSummary> {
+    const cacheKey = `${projectId}:${days}`;
+    const cached = this.summaryCache.get(cacheKey);
+    if (cached && Date.now() - cached.fetchedAt < this.CACHE_TTL_MS) {
+      return cached.data;
+    }
+
+    const config = await this.getIntegration(projectId);
+    if (!config?.accessToken || !config?.siteUrl) {
+      throw Object.assign(new Error('GSC_NOT_CONFIGURED'), { code: 'GSC_NOT_CONFIGURED' });
+    }
+
+    const accessToken = await this.ensureFreshToken(projectId, config);
+    const siteUrl = config.siteUrl as string;
+
+    // endDate = today - 2 (accounts for GSC 2-3 day lag)
+    const endDate = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const startDate = new Date(
+      new Date(endDate).getTime() - (days - 1) * 24 * 60 * 60 * 1000,
+    ).toISOString().slice(0, 10);
+
+    const [totalsRows, dateRows, queryRows, pageRows, deviceRows, countryRows] =
+      await Promise.all([
+        this.fetchSearchConsoleData(accessToken, siteUrl, startDate, endDate, [], 1),
+        this.fetchSearchConsoleData(accessToken, siteUrl, startDate, endDate, ['date'], days + 5),
+        this.fetchSearchConsoleData(accessToken, siteUrl, startDate, endDate, ['query'], 20),
+        this.fetchSearchConsoleData(accessToken, siteUrl, startDate, endDate, ['page'], 20),
+        this.fetchSearchConsoleData(accessToken, siteUrl, startDate, endDate, ['device'], 10),
+        this.fetchSearchConsoleData(accessToken, siteUrl, startDate, endDate, ['country'], 10),
+      ]);
+
+    const totalsRow = totalsRows[0];
+    const totals: GSCSummaryMetric = totalsRow
+      ? {
+          clicks: totalsRow.clicks,
+          impressions: totalsRow.impressions,
+          ctr: totalsRow.ctr,
+          position: totalsRow.position,
+        }
+      : { clicks: 0, impressions: 0, ctr: 0, position: 0 };
+
+    const byDate = dateRows.map((r) => ({
+      date: r.keys[0] ?? '',
+      clicks: r.clicks,
+      impressions: r.impressions,
+      ctr: r.ctr,
+      position: r.position,
+    }));
+
+    const topQueries = queryRows.map((r) => ({
+      query: r.keys[0] ?? '',
+      clicks: r.clicks,
+      impressions: r.impressions,
+      ctr: r.ctr,
+      position: r.position,
+    }));
+
+    const topPages = pageRows.map((r) => ({
+      page: r.keys[0] ?? '',
+      clicks: r.clicks,
+      impressions: r.impressions,
+      ctr: r.ctr,
+      position: r.position,
+    }));
+
+    const byDevice = deviceRows.map((r) => ({
+      device: r.keys[0] ?? '',
+      clicks: r.clicks,
+      impressions: r.impressions,
+    }));
+
+    const byCountry = countryRows.map((r) => ({
+      country: r.keys[0] ?? '',
+      clicks: r.clicks,
+      impressions: r.impressions,
+    }));
+
+    const summary: GSCSummary = { totals, byDate, topQueries, topPages, byDevice, byCountry };
+    this.summaryCache.set(cacheKey, { data: summary, fetchedAt: Date.now() });
+    return summary;
   }
 }
