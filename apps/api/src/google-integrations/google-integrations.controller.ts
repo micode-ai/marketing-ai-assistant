@@ -52,6 +52,25 @@ export class GoogleIntegrationsController {
     return this.googleService.getIntegration(projectId);
   }
 
+  @Get('gsc/sites')
+  async listGscSites(@Query('projectId') projectId: string) {
+    const config = await this.googleService.getIntegration(projectId);
+    if (!config?.accessToken) return { sites: [] };
+
+    let accessToken = config.accessToken as string;
+    if (new Date(config.expiresAt as string) < new Date() && config.refreshToken) {
+      accessToken = await this.googleService.refreshAccessToken(config.refreshToken as string);
+      await this.googleService.saveIntegration(projectId, 'gsc', {
+        ...config,
+        accessToken,
+        expiresAt: new Date(Date.now() + 3600 * 1000).toISOString(),
+      });
+    }
+
+    const sites = await this.googleService.listSearchConsoleSites(accessToken);
+    return { sites };
+  }
+
   @Delete('integration')
   deleteIntegration(@Query('projectId') projectId: string) {
     return this.googleService.deleteIntegration(projectId);
