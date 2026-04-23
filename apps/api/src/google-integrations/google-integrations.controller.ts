@@ -3,6 +3,7 @@ import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
 import { GoogleIntegrationsService } from './google-integrations.service';
+import { Public } from '../common/decorators/public.decorator';
 
 @ApiTags('google')
 @ApiBearerAuth()
@@ -13,15 +14,15 @@ export class GoogleIntegrationsController {
     private config: ConfigService,
   ) {}
 
-  @Get('auth')
-  authorize(@Query('projectId') projectId: string, @Res() res: Response) {
+  @Get('auth-url')
+  getAuthUrl(@Query('projectId') projectId: string) {
     const apiUrl = this.config.get('API_URL') || 'http://localhost:3000';
     const redirectUri = `${apiUrl}/api/google/callback`;
-    const url = this.googleService.getAuthUrl(redirectUri, projectId);
-    res.redirect(url);
+    return { url: this.googleService.getAuthUrl(redirectUri, projectId) };
   }
 
   @Get('callback')
+  @Public()
   async callback(
     @Query('code') code: string,
     @Query('state') projectId: string,
