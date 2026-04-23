@@ -132,18 +132,33 @@
 
   const marketingPathSegments = ['content', 'checklists', 'documents', 'campaigns', 'email', 'analytics', 'finances', 'seo', 'competitors', 'experiments', 'sequences', 'calendar'];
 
+  // Extracts the marketing section for both org-level (/content) and project-level (/projects/:id/content) URLs.
+  function getMarketingSegment(p: string): string | null {
+    const projectMatch = p.match(/^\/projects\/[^/]+\/([^/]+)/);
+    if (projectMatch && marketingPathSegments.includes(projectMatch[1])) {
+      return projectMatch[1];
+    }
+    const firstSeg = p.replace(/^\//, '').split('/')[0];
+    if (firstSeg && marketingPathSegments.includes(firstSeg)) {
+      return firstSeg;
+    }
+    return null;
+  }
+
   function isActive(href: string, path: string = currentPath): boolean {
     if (path === href || path.startsWith(href + '/')) return true;
-    const segment = href.replace('/', '');
-    if (marketingPathSegments.includes(segment)) {
-      const projectRouteMatch = path.match(/^\/projects\/[^/]+\/(.+)/);
-      if (projectRouteMatch) {
-        const subPath = projectRouteMatch[1].split('/')[0];
-        return subPath === segment;
-      }
-    }
-    return false;
+    const hrefSeg = getMarketingSegment(href);
+    const pathSeg = getMarketingSegment(path);
+    return hrefSeg !== null && hrefSeg === pathSeg;
   }
+
+  // When a project is selected, marketing links navigate directly to the project-scoped page
+  // (avoids the org-level hub that then forwards you into the project anyway). Computed as a
+  // reactive statement so Svelte tracks the $currentProjectStore dependency and re-renders
+  // sidebar links when the selection changes.
+  $: projectPrefix = $currentProjectStore ? `/projects/${$currentProjectStore.id}` : '';
+  $: resolvedMarketingLinks = marketingLinks.map(l => ({ ...l, href: projectPrefix + l.href }));
+  $: resolvedAdvancedLinks = advancedMarketingLinks.map(l => ({ ...l, href: projectPrefix + l.href }));
 
   // Auto-expand advanced section when navigating to an advanced route
   $: {
@@ -282,7 +297,7 @@
             </li>
           {/if}
 
-          {#each marketingLinks as link}
+          {#each resolvedMarketingLinks as link}
             <li>
               <a
                 href={link.href}
@@ -314,7 +329,7 @@
           </li>
 
           {#if showAdvanced}
-            {#each advancedMarketingLinks as link}
+            {#each resolvedAdvancedLinks as link}
               <li>
                 <a
                   href={link.href}
