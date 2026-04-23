@@ -3,9 +3,6 @@
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
   import { api } from '$lib/api/client';
-  import { API_URL } from '$lib/config';
-  import { authStore } from '$stores/auth';
-  import { get } from 'svelte/store';
   import SectionHint from '$lib/components/SectionHint.svelte';
   import { currentProjectStore, projectsStore } from '$lib/stores/projects';
 
@@ -14,6 +11,7 @@
   let showModal = false;
   let adding = false;
   let auditing = false;
+  let syncing = false;
   let deletingId: string | null = null;
   $: projectId = $page.params['id'];
 
@@ -51,8 +49,12 @@
   // Rank history cache: keywordId -> number[]
   let historyMap: Record<string, number[]> = {};
 
-  // Per-row check-now in-flight state
-  let checkingId: string | null = null;
+  // Record position modal state
+  let recordModalKeyword: any = null;
+  let recordRank: number | string = '';
+  let recordUrl = '';
+  let recordNotInTop100 = false;
+  let recordSaving = false;
 
   // Toast notification
   let toast: { message: string; type: 'success' | 'error' | 'warning' } | null = null;
@@ -64,35 +66,44 @@
     toastTimer = setTimeout(() => { toast = null; }, 5000);
   }
 
-  // CSE config status
-  let cseStatus: { configured: boolean; lastValidationError?: string | null } | null = null;
+  function openRecordModal(kw: any) {
+    recordModalKeyword = kw;
+    recordRank = '';
+    recordUrl = kw.url || '';
+    recordNotInTop100 = false;
+  }
 
-  // Amber banner: shown if any keyword has CSE error or CSE config has lastValidationError
-  $: cseBannerError = (() => {
-    if (cseStatus?.lastValidationError) return cseStatus.lastValidationError;
-    const errorKw = keywords.find(
-      (k) => k.lastCheckError === 'CSE_QUOTA_EXCEEDED' || k.lastCheckError === 'CSE_INVALID_KEY',
-    );
-    if (errorKw) {
-      return errorKw.lastCheckError === 'CSE_QUOTA_EXCEEDED'
-        ? $_('seo.errors.cseQuotaExceeded')
-        : $_('seo.errors.cseInvalidKey');
+  function closeRecordModal() {
+    recordModalKeyword = null;
+    recordSaving = false;
+  }
+
+  function handleRecordModalKeydown(e: KeyboardEvent) {
+    if (e.key === 'Escape') closeRecordModal();
+  }
+
+  async function saveRecordPosition() {
+    if (!recordModalKeyword) return;
+    recordSaving = true;
+    try {
+      const rank = recordNotInTop100 ? null : Number(recordRank);
+      await api.post(`/seo/keywords/${recordModalKeyword.id}/rank`, {
+        rank,
+        url: recordUrl.trim() || undefined,
+      });
+      showToast($_('seo.recordPosition.recordSuccess'), 'success');
+      closeRecordModal();
+      await fetchKeywords();
+    } catch (e: any) {
+      showToast(e.message || $_('seo.recordPosition.recordFailed'), 'error');
+    } finally {
+      recordSaving = false;
     }
-    return null;
-  })();
+  }
 
   onMount(async () => {
     await fetchKeywords();
-    fetchCseStatus();
   });
-
-  async function fetchCseStatus() {
-    try {
-      cseStatus = await api.get<any>(`/seo/cse/config/${projectId}`);
-    } catch {
-      // not critical — just don't show banner
-    }
-  }
 
   async function fetchKeywords() {
     loading = true;
@@ -162,6 +173,30 @@
     }
   }
 
+  async function syncFromGsc() {
+    syncing = true;
+    try {
+      const result = await api.post<{ synced: number; matched: number; skipped: string[] }>(
+        '/seo/keywords/sync-from-gsc',
+        { projectId },
+      );
+      showToast(
+        $_('seo.syncSuccess', { values: { matched: result.matched, skipped: result.skipped.length } }),
+        'success',
+      );
+      await fetchKeywords();
+    } catch (e: any) {
+      const code = e?.body?.code || e?.code;
+      if (code === 'GSC_NOT_CONFIGURED') {
+        showToast($_('seo.errors.gscNotConfigured'), 'warning');
+      } else {
+        showToast(e.message || $_('seo.syncFailed'), 'error');
+      }
+    } finally {
+      syncing = false;
+    }
+  }
+
   async function runSeoAudit() {
     auditing = true;
     try {
@@ -186,52 +221,6 @@
       alert(e.message);
     } finally {
       auditing = false;
-    }
-  }
-
-  async function checkNow(kwId: string) {
-    if (checkingId) return;
-    checkingId = kwId;
-    try {
-      const auth = get(authStore);
-      const response = await fetch(`${API_URL}/seo/keywords/${kwId}/check-now`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(auth.accessToken ? { Authorization: `Bearer ${auth.accessToken}` } : {}),
-        },
-      });
-
-      if (response.status === 429) {
-        showToast($_('seo.checkNowRateLimited'), 'warning');
-        return;
-      }
-
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({ message: 'Request failed' }));
-        showToast(err.message || $_('common.error'), 'error');
-        return;
-      }
-
-      const result = await response.json();
-
-      if (result.skipped) {
-        if (result.reason === 'CSE_NOT_CONFIGURED') {
-          showToast($_('seo.errors.cseNotConfigured'), 'warning');
-        } else if (result.reason === 'NO_TARGET_URL') {
-          showToast($_('seo.errors.noTargetUrl'), 'warning');
-        } else {
-          showToast($_('common.error'), 'error');
-        }
-        return;
-      }
-
-      // Success — refetch keywords to get updated rank
-      await fetchKeywords();
-    } catch (e: any) {
-      showToast(e.message || $_('common.error'), 'error');
-    } finally {
-      checkingId = null;
     }
   }
 
@@ -264,12 +253,6 @@
     return 'bg-red-500';
   }
 
-  function difficultyLabel(val: number): string {
-    if (val < 30) return 'seo.difficultyEasy';
-    if (val <= 60) return 'seo.difficultyMedium';
-    return 'seo.difficultyHard';
-  }
-
   function trendIndicator(history: number[]): { icon: 'up' | 'down' | 'stable'; color: string } {
     if (!history || history.length < 2) return { icon: 'stable', color: 'text-gray-400' };
     const recent = history[history.length - 1];
@@ -300,23 +283,20 @@
     if (trend.icon === 'down') return '#ef4444';
     return '#9ca3af';
   }
+
+  $: lastSyncedAt = (() => {
+    const ts = keywords
+      .map((k) => k.lastCheckedAt)
+      .filter(Boolean)
+      .map((s: string) => new Date(s).getTime())
+      .sort((a, b) => b - a)[0];
+    if (!ts) return null;
+    return new Date(ts).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+  })();
 </script>
 
 <div class="p-4 sm:p-6">
   <SectionHint sectionKey="seo" titleKey="hints.seo.title" descKey="hints.seo.desc" />
-
-  <!-- Amber CSE error banner -->
-  {#if cseBannerError}
-    <div class="mb-4 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-      <svg xmlns="http://www.w3.org/2000/svg" class="mt-0.5 w-4 h-4 flex-shrink-0 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
-      </svg>
-      <span>
-        {$_('seo.errors.cseBanner', { values: { error: cseBannerError } })}
-        <a href="/projects/{projectId}/settings" class="ml-1 font-medium underline hover:no-underline">{$_('common.settings')}</a>
-      </span>
-    </div>
-  {/if}
 
   <!-- Header -->
   <div class="flex items-center justify-between mb-6">
@@ -325,6 +305,29 @@
       <p class="text-sm text-gray-500 mt-1">{$_('seo.subtitle')}</p>
     </div>
     <div class="flex items-center gap-3">
+      <!-- Sync from GSC button -->
+      <button
+        on:click={syncFromGsc}
+        disabled={syncing}
+        class="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors duration-150 flex items-center gap-2 cursor-pointer disabled:opacity-50"
+        title={$_('seo.syncFromGsc')}
+      >
+        {#if syncing}
+          <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+          </svg>
+          {$_('seo.syncing')}
+        {:else}
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+          </svg>
+          {$_('seo.syncFromGsc')}
+        {/if}
+      </button>
       <button
         on:click={runSeoAudit}
         disabled={auditing}
@@ -524,24 +527,15 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
                       </svg>
                     </a>
-                    <!-- Check now button -->
+                    <!-- Record position button -->
                     <button
-                      on:click={() => checkNow(kw.id)}
-                      disabled={checkingId !== null}
-                      class="text-gray-400 hover:text-primary-600 transition-colors duration-150 cursor-pointer p-1 disabled:opacity-50"
-                      title={$_('seo.checkNow')}
+                      on:click={() => openRecordModal(kw)}
+                      class="text-gray-400 hover:text-primary-600 transition-colors duration-150 cursor-pointer p-1"
+                      title={$_('seo.recordPosition.title')}
                     >
-                      {#if checkingId === kw.id}
-                        <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-                        </svg>
-                      {:else}
-                        <!-- Refresh / play icon -->
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
-                        </svg>
-                      {/if}
+                      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+                      </svg>
                     </button>
                     <!-- Delete button -->
                     <button
@@ -566,9 +560,19 @@
         <span class="text-xs text-gray-500">
           {$_('seo.totalKeywords', { values: { count: keywords.length } })}
         </span>
-        <span class="text-xs text-gray-400">
-          {$_('seo.avgDifficulty', { values: { avg: keywords.filter(k => k.difficulty != null).length > 0 ? Math.round(keywords.filter(k => k.difficulty != null).reduce((sum, k) => sum + k.difficulty, 0) / keywords.filter(k => k.difficulty != null).length) : 0 } })}
-        </span>
+        <div class="flex items-center gap-4">
+          {#if lastSyncedAt}
+            <span class="text-xs text-gray-400 flex items-center gap-1">
+              <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
+              </svg>
+              {$_('seo.lastSyncedAt', { values: { when: lastSyncedAt } })}
+            </span>
+          {/if}
+          <span class="text-xs text-gray-400">
+            {$_('seo.avgDifficulty', { values: { avg: keywords.filter(k => k.difficulty != null).length > 0 ? Math.round(keywords.filter(k => k.difficulty != null).reduce((sum, k) => sum + k.difficulty, 0) / keywords.filter(k => k.difficulty != null).length) : 0 } })}
+          </span>
+        </div>
       </div>
     </div>
   {/if}
@@ -751,6 +755,90 @@
             {$_('common.cancel')}
           </button>
         </div>
+      </div>
+    </div>
+  </div>
+{/if}
+
+<!-- Record Position Modal -->
+{#if recordModalKeyword}
+  <!-- svelte-ignore a11y-click-events-have-key-events -->
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
+  <div
+    class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+    on:click|self={closeRecordModal}
+    on:keydown={handleRecordModalKeydown}
+  >
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+      <div class="p-6 border-b border-gray-100 flex items-center gap-2.5">
+        <div class="w-8 h-8 bg-primary-50 rounded-lg flex items-center justify-center flex-shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+          </svg>
+        </div>
+        <div class="min-w-0 flex-1">
+          <h2 class="text-lg font-semibold text-gray-900">{$_('seo.recordPosition.title')}</h2>
+          <p class="text-xs text-gray-500 truncate">{recordModalKeyword.keyword}</p>
+        </div>
+      </div>
+      <div class="p-6 space-y-4">
+        <p class="text-sm text-gray-500">{$_('seo.recordPosition.description')}</p>
+
+        <!-- Current rank -->
+        <div>
+          <label for="record-rank" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('seo.recordPosition.rank')}</label>
+          <input
+            id="record-rank"
+            type="number"
+            min="1"
+            max="100"
+            bind:value={recordRank}
+            disabled={recordNotInTop100}
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-400"
+            placeholder={$_('seo.recordPosition.rankPlaceholder')}
+          />
+          <label class="flex items-center gap-2 mt-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              bind:checked={recordNotInTop100}
+              class="w-4 h-4 text-primary-600 rounded border-gray-300 cursor-pointer"
+            />
+            <span class="text-sm text-gray-600">{$_('seo.recordPosition.notInTop100')}</span>
+          </label>
+        </div>
+
+        <!-- Matched URL -->
+        <div>
+          <label for="record-url" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('seo.recordPosition.url')}</label>
+          <input
+            id="record-url"
+            type="text"
+            bind:value={recordUrl}
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            placeholder="https://example.com/page"
+          />
+          <p class="mt-1 text-xs text-gray-400">{$_('seo.recordPosition.urlHelper')}</p>
+        </div>
+      </div>
+      <div class="p-6 border-t border-gray-100 flex gap-3">
+        <button
+          on:click={saveRecordPosition}
+          disabled={recordSaving || (!recordNotInTop100 && (!recordRank || Number(recordRank) < 1 || Number(recordRank) > 100))}
+          class="flex-1 bg-primary-600 text-white py-2.5 rounded-lg font-medium hover:bg-primary-700 transition-colors duration-150 disabled:opacity-50 text-sm flex items-center justify-center gap-2 cursor-pointer"
+        >
+          {#if recordSaving}
+            <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+            </svg>
+            {$_('common.loading')}
+          {:else}
+            {$_('seo.recordPosition.save')}
+          {/if}
+        </button>
+        <button on:click={closeRecordModal} class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 text-sm cursor-pointer">
+          {$_('common.cancel')}
+        </button>
       </div>
     </div>
   </div>

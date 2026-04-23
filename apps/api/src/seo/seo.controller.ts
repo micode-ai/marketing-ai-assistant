@@ -1,13 +1,10 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, BadRequestException, UseGuards, HttpCode, HttpException } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, BadRequestException, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { CompetitorStatus } from '@prisma/client';
 import { SeoService } from './seo.service';
-import { CseConfigService } from './cse-config.service';
-import { RankTrackingService } from './rank-tracking.service';
 import { CompetitorSuggestionService } from './competitor-suggestion.service';
-import { ConfigureCseDto } from './dto/configure-cse.dto';
+import { GscSyncService } from './gsc-sync.service';
 import { ProjectAccessGuard } from '../common/guards/project-access.guard';
-import { KeywordAccessGuard } from '../common/guards/keyword-access.guard';
 import { CompetitorAccessGuard } from '../common/guards/competitor-access.guard';
 
 @ApiTags('seo')
@@ -16,9 +13,8 @@ import { CompetitorAccessGuard } from '../common/guards/competitor-access.guard'
 export class SeoController {
   constructor(
     private seoService: SeoService,
-    private cseConfig: CseConfigService,
-    private rankTracking: RankTrackingService,
     private competitorSuggestion: CompetitorSuggestionService,
+    private gscSync: GscSyncService,
   ) {}
 
   // ── Keywords ───────────────────────────────────────────────────
@@ -62,21 +58,19 @@ export class SeoController {
   }
 
   @Post('keywords/:id/rank')
-  addRankHistory(@Param('id') id: string, @Body() dto: { rank: number; url?: string }) {
+  @ApiOperation({ summary: 'Manually record a rank position for a keyword' })
+  addRankHistory(@Param('id') id: string, @Body() dto: { rank: number | null; url?: string }) {
     return this.seoService.addRankHistory(id, dto.rank, dto.url);
   }
 
-  @Post('keywords/:id/check-now')
-  @UseGuards(KeywordAccessGuard)
-  @ApiOperation({ summary: 'Manually trigger a rank check for a keyword (max 3/hour)' })
-  async checkNow(@Param('id') id: string) {
-    try {
-      return await this.rankTracking.checkKeyword(id, 'manual');
-    } catch (err) {
-      if (err instanceof HttpException) throw err; // pass through 429 + rank-tracking errors
-      // Map CSE_NOT_CONFIGURED surfaced as a skipped result gets returned normally (not thrown).
-      throw err;
+  @Post('keywords/sync-from-gsc')
+  @UseGuards(ProjectAccessGuard)
+  @ApiOperation({ summary: 'Sync rank positions from Google Search Console for all tracked keywords' })
+  syncFromGsc(@Body() dto: { projectId: string }) {
+    if (!dto.projectId) {
+      throw new BadRequestException('projectId is required');
     }
+    return this.gscSync.syncProject(dto.projectId);
   }
 
   // ── Competitors ────────────────────────────────────────────────
@@ -137,30 +131,5 @@ export class SeoController {
   @Post('competitors/:id/snapshot')
   addCompetitorSnapshot(@Param('id') id: string, @Body() dto: { data: Record<string, unknown> }) {
     return this.seoService.addCompetitorSnapshot(id, dto.data);
-  }
-
-  // ── CSE Config ─────────────────────────────────────────────────
-
-  @Post('cse/config')
-  @UseGuards(ProjectAccessGuard)
-  @ApiOperation({ summary: 'Save Google CSE credentials for a project' })
-  async configureCse(@Body() dto: ConfigureCseDto) {
-    await this.cseConfig.saveCredentials(dto.projectId, { apiKey: dto.apiKey, cseId: dto.cseId });
-    return { status: 'ok' };
-  }
-
-  @Get('cse/config/:projectId')
-  @UseGuards(ProjectAccessGuard)
-  @ApiOperation({ summary: 'Get CSE configuration status for a project' })
-  async getCseStatus(@Param('projectId') projectId: string) {
-    return this.cseConfig.getStatus(projectId);
-  }
-
-  @Delete('cse/config/:projectId')
-  @UseGuards(ProjectAccessGuard)
-  @HttpCode(204)
-  @ApiOperation({ summary: 'Clear CSE credentials for a project' })
-  async clearCse(@Param('projectId') projectId: string) {
-    await this.cseConfig.clearCredentials(projectId);
   }
 }

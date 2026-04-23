@@ -15,21 +15,29 @@
    - **Intencja** — Informacyjna / Nawigacyjna / Komercyjna / Transakcyjna. Pomaga dopasować generowane przez AI treści do intencji użytkownika.
    - **Docelowa pozycja** (opcjonalnie) — Twój cel pozycyjny, wyświetlany jako linia referencyjna na wykresie historii.
 
-### Podłączenie Google Custom Search
+### Łączenie z Google Search Console
 
-Śledzenie pozycji korzysta z Google Custom Search JSON API — plan bezpłatny, 100 zapytań dziennie na projekt Google Cloud.
+Najszybszy sposób na wypełnienie historii pozycji — Search Console jest bezpłatne i dostarcza oficjalne dane Google.
 
-1. Utwórz projekt w Google Cloud Console i włącz **Custom Search API**.
-2. Utwórz klucz API w sekcji Credentials.
-3. Utwórz Programowalną Wyszukiwarkę na programmablesearchengine.google.com, skonfigurowaną do przeszukiwania całego internetu, i skopiuj **CSE ID**.
-4. Otwórz **Ustawienia projektu → Google Custom Search**, wklej klucz API i CSE ID, kliknij **Połącz**.
+1. Upewnij się, że strona projektu jest zweryfikowana w Google Search Console.
+2. Otwórz **Ustawienia projektu → Google Search Console**, kliknij **Połącz Google Search Console** i zezwól na dostęp do Search Console w trybie tylko do odczytu.
+3. W ustawieniach wpisz zweryfikowany URL witryny (np. `https://twojastrona.pl/`) i kliknij **Zapisz**.
+4. Przejdź do **SEO → Synchronizuj z Google Search Console**. Aplikacja pobierze pozycje z wczoraj dla każdego śledzonego słowa kluczowego i zapisze je w historii.
+5. Codzienny cron utrzymuje dane aktualne (03:00 UTC) — po pierwszej synchronizacji możesz przestać klikać przycisk ręcznie.
 
-Po podłączeniu aplikacja będzie sprawdzać śledzone słowa kluczowe według harmonogramu:
-- **Plan Free:** do 5 słów kluczowych, raz w tygodniu w poniedziałki.
-- **Plan Pro:** do 30 słów kluczowych, codziennie.
-- **Plan Enterprise:** do 90 słów kluczowych, codziennie.
+Dane GSC są opóźnione o 2–3 dni. Dla słów kluczowych, które nie są jeszcze zindeksowane w GSC, lub gdy chcesz sprawdzić pozycję dzisiaj, użyj **Zapisz pozycję** przy każdym słowie kluczowym.
 
-Możesz też kliknąć **Sprawdź teraz** przy dowolnym słowie kluczowym, aby uruchomić sprawdzenie natychmiast (limit: 3 ręczne sprawdzenia na godzinę na słowo kluczowe).
+### Zapisywanie pozycji (opcja awaryjna)
+
+Użyj tej metody, gdy słowo kluczowe nie jest jeszcze widoczne w GSC lub gdy GSC nie jest połączony.
+
+1. Na liście słów kluczowych kliknij **Zapisz pozycję** przy wybranym słowie kluczowym.
+2. W oknie dialogowym wprowadź:
+   - **Aktualna pozycja** — miejsce (1–100), na którym Twój docelowy URL wyświetla się w Google dla tego słowa kluczowego. Zaznacz pole **„Poza top 100"**, jeśli Twoja strona nie pojawia się w pierwszych 100 wynikach.
+   - **Dopasowany URL** — URL, który Google pokazał dla tego słowa kluczowego; domyślnie Twój docelowy URL. Edytuj tylko wtedy, gdy Google pozycjonuje inną podstronę.
+3. Kliknij **Zapisz pozycję**.
+
+Każde zapisane sprawdzenie trafia do historii słowa kluczowego z dzisiejszą datą. Otwórz stronę szczegółową słowa kluczowego, aby zobaczyć pełny wykres historii.
 
 ### Przeglądanie historii pozycji
 
