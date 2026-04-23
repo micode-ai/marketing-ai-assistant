@@ -182,6 +182,26 @@ Content agent supports **multilingual generation**: pass `languages: ['en', 'pl'
 - When Facebook Graph returns an `OAuthException` (code 190 or `type === 'OAuthException'`), the service flips the account to `REAUTH_REQUIRED` and emits a `CronFailureNotifier.report` with `errorCode: 'FB_TOKEN_EXPIRED'`. `SocialSchedulerService` then does NOT re-notify for that specific failure to avoid double emails.
 - UI: `/settings/integrations` shows an orange "Reconnect required" banner + swaps the "Edit" button text for "Reconnect" when a Facebook account is in `REAUTH_REQUIRED`. i18n keys: `social.reauthRequired.{badge,description,cta}` in all three locales.
 
+### SEO Module
+- Files: `apps/api/src/seo/seo.service.ts`, `gsc-sync.service.ts`, `competitor-suggestion.service.ts`, `rank-tracking.cron.ts`, `seo.controller.ts`, `seo.module.ts`.
+- Endpoints: `GET/POST/PATCH/DELETE /seo/keywords*`, `GET/POST/DELETE /seo/competitors*`, `POST /seo/keywords/sync-from-gsc`, `POST /seo/keywords/:id/rank`.
+- GSC integration lives at `apps/api/src/google-integrations/`.
+- Schema: `Keyword` (locale, intent, targetRank, currentRank, isTracking, url), `KeywordRankHistory` (keywordId+date unique, rank nullable), `Competitor` (CompetitorStatus: SUGGESTED/ACTIVE/DISMISSED).
+- GSC sync: `GscSyncService.syncProject` — queries GSC `searchanalytics.query` for yesterday, matches by query text + host, upserts history. Falls back to `project.websiteUrl` when `keyword.url` is null.
+- Daily cron `@Cron('0 3 * * *')`: FREE → top 5 Mondays only; PRO → top 30 daily; ENTERPRISE → top 90 daily.
+- i18n namespace: `seo.*` — see `seo.gscConfig.*`, `seo.recordPosition.*`, `seo.searchConsolePanel.*`, `seo.errors.*`.
+- Frontend: `apps/web/src/routes/(app)/projects/[id]/seo/` (list + keyword detail with Chart.js); `SearchConsolePanel.svelte` on Analytics page; GSC settings section in project settings.
+- Sync result card persisted to `localStorage` per projectId.
+- User docs: "SEO and Keywords" section in `user_docs/*/08-advanced-features.md`; technical docs in `docs/eng/11-seo-rank-tracking.md` and `docs/ru/11-seo-rank-tracking.md`.
+
+### Google Integrations
+- Module: `apps/api/src/google-integrations/` — `GoogleIntegrationsController`, `GoogleIntegrationsService`.
+- OAuth pattern: `GET /api/google/auth-url?projectId=...` returns `{url}` (JSON) — frontend navigates via `window.location.href`. `GET /api/google/callback` is `@Public()` because Google's redirect carries no Bearer token; `state` param carries base64 `projectId`.
+- Token storage: one `ProjectApiKey` row per project with `platform = 'GOOGLE'`, `apiKey` = base64 JSON `{accessToken, refreshToken, expiresAt, siteUrl, propertyId}`. Auto-refreshed on 401 via `refreshAccessToken()`.
+- Endpoints: `GET /api/google/auth-url`, `GET /api/google/callback` (`@Public()`), `GET /api/google/integration`, `POST /api/google/config`, `DELETE /api/google/integration`, `GET /api/google/gsc/sites`, `GET /api/google/search-console`, `GET /api/google/search-console/summary`.
+- Services exposed: `fetchSearchConsoleData`, `listSearchConsoleSites`, `fetchSearchConsoleSummary` (6 parallel queries, 1h in-memory cache), `fetchGA4Report`.
+- Known limitation: OAuth app not yet verified by Google; users see "unverified app" interstitial (tracked in issue #70).
+
 ### Help System
 - `GET /api/help?lang=ru` — list all docs (slug + title). `@Public()`, no auth required.
 - `GET /api/help/:slug?lang=ru` — single doc content (slug, title, content, lang). Falls back to English if locale file missing.

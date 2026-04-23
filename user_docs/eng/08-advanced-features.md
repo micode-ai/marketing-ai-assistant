@@ -2,7 +2,7 @@
 
 ## SEO and Keywords
 
-Track search rankings and discover competitors for your project.
+Track search engine positions and discover competitors for your project. The SEO module lets you maintain a keyword list, pull official ranking data from Google Search Console, record positions manually, and review rank trends over time.
 
 ### Adding keywords
 
@@ -10,54 +10,126 @@ Track search rankings and discover competitors for your project.
 2. Click **Add keyword**.
 3. Fill in:
    - **Keyword** — the phrase you want to rank for.
-   - **Target URL** — the page on your site that should rank for this keyword.
+   - **Target URL** — the page on your site that should rank for this keyword. Defaults to the project's website URL when left blank.
    - **Search locale** — which Google market to check (pl-PL, en-US, ru-RU).
    - **Intent** — Informational / Navigational / Commercial / Transactional. Helps AI-generated content match user intent.
-   - **Target rank** (optional) — your goal rank, used as a reference line on the history chart.
+   - **Target rank** (optional) — your goal position, shown as a dashed reference line on the history chart.
 
 ### Connecting Google Search Console
 
-The fastest way to populate rank history — Search Console is free and gives official Google data.
+Connecting Search Console lets the platform pull your official Google ranking data automatically. Search Console is free and gives exact click, impression, and position data.
 
-1. Make sure the project's website is verified in Google Search Console.
-2. Open **Project settings → Google Search Console**, click **Connect Google Search Console**, and grant access to Search Console read-only.
-3. Back in settings, enter the verified site URL (e.g. `https://yoursite.com/`) and click **Save**.
-4. Open **SEO → Sync from Google Search Console**. The app pulls yesterday's positions for every tracked keyword and writes them into the history.
-5. A daily cron keeps things up-to-date (03:00 UTC) — you can stop pressing the button manually after the first sync.
+**Before you start:** your site must already be verified in Google Search Console (via DNS record, HTML file, or Google Analytics).
 
-GSC data lags by 2–3 days. For keywords that aren't yet indexed or for a quick check today, use **Record position** on each keyword row (it calls the manual entry flow).
+1. Open **Project settings → Google Search Console**.
+2. Click **Connect Google Search Console**. You will be redirected to a Google consent screen.
+3. **If you see "This app isn't verified"**: click **Advanced**, then **Go to [app name] (unsafe)**. The app is in production use and is safe — Google shows this warning while the OAuth verification review is still pending. See [issue #70](https://github.com/your-org/marketing-ai-assistant/issues/70) for status.
+4. Grant **Search Console read-only** access and complete the flow. You will be redirected back to settings.
+5. In the **Verified Search Console property** dropdown, select your site. The dropdown lists all properties verified under your Google account. The app pre-selects the best match for your project domain automatically.
+6. Click **Save**.
 
-Once Search Console is connected and a site URL is saved, the **Analytics page** for your project will show a **Google Search Performance** block at the top. It displays total clicks, impressions, average CTR, and average position for a selected period (7, 28, or 90 days), along with sparkline charts, a sortable top-queries table, a top-pages table, a device breakdown, and a top-countries overview. The data is fetched live from Search Console and cached for up to one hour.
+Once connected, a **Google Search Performance** block appears at the top of the project **Analytics** page (see below). The **Sync from GSC** button also becomes available on the SEO page.
 
-### Recording positions (manual fallback)
+### Syncing rank positions from GSC
 
-Use this when a keyword isn't indexed yet in GSC, or when GSC is not connected.
+After connecting Search Console, use the sync feature to populate rank history for all your tracked keywords at once.
 
-1. From the keyword list, click **Record position** on the keyword row.
+1. On the **SEO** page, click **Sync from Google Search Console**.
+2. The platform queries GSC for yesterday's ranking data, matches each keyword by query text and target URL (host-matched), and writes the result to the keyword's history.
+3. After the sync completes, a **result card** appears showing each keyword with:
+   - Previous rank → new rank
+   - Up/down arrows indicating movement
+   - "No match" label for keywords not found in GSC results
+
+The result card persists across page reloads until you dismiss it.
+
+**Understanding "0 of N matched":**
+
+If zero keywords matched, one or more of the following applies:
+
+| Reason | What to do |
+|--------|-----------|
+| Site is not indexed or has low visibility | Check `site:yourdomain.com` in Google. If few or no pages appear, submit a sitemap in GSC. |
+| Keywords have no clicks/impressions in GSC | Open GSC → Performance → Search results. If your keywords don't appear, your site is not yet ranking in the top ~100 for them. |
+| Site is new | New sites typically take 2–6 weeks to appear in Google results. Use manual entry (below) in the meantime. |
+| GSC data lag | GSC reports data with a 2–3 day delay. Today's searches will appear in 2–3 days. |
+| Mismatched target URL | The page Google is actually ranking may differ from your stored Target URL. Check GSC → Performance to see which URLs Google shows. |
+
+**Daily automatic sync:** a cron job runs at 03:00 UTC every day and keeps rank history updated automatically. You only need to press the button manually for an on-demand update.
+
+**Plan cadence:** FREE plan syncs on Mondays (top 5 keywords); PRO syncs daily (top 30); ENTERPRISE syncs daily (top 90).
+
+### Recording positions manually
+
+Use manual entry when GSC is not connected, when a keyword is too new to appear in GSC data, or when you want to record today's position before GSC data is available.
+
+1. On the keyword list, click **Record position** on any keyword row.
 2. In the modal, enter:
-   - **Current rank** — the position (1–100) where your Target URL currently shows for the keyword in Google. Check the box **"Not in top 100"** if your site isn't showing in the first 100 results.
-   - **Matched URL** — the URL Google showed for this keyword; defaults to your target URL. Edit only if Google is ranking a different page of yours.
+   - **Current rank** — the position (1–100) where your Target URL currently shows in Google for this keyword. Tick **"Not in top 100"** if your site isn't in the first 100 results.
+   - **Matched URL** — the URL Google showed for this keyword. Defaults to your target URL. Change it only if Google is ranking a different page of yours for this keyword.
 3. Click **Save position**.
 
-Each recorded check is saved to the keyword's history with today's date. Open the keyword's detail page to see the full history chart.
+The check is stored in the keyword's history with today's date.
 
 ### Viewing rank history
 
-Click **View history** on any keyword to open its detail page. You'll see:
-- A line chart of rank over time (rank 1 at the top — lower position = higher up)
-- A dashed line at your target rank
-- Date range tabs: 7 days / 30 days / 90 days / custom
-- A recent history table with the URL Google matched on each check
+Click **View history** on any keyword row to open the detail page. It shows:
+
+- A line chart of rank over time — rank 1 at the top; a lower number means a higher position in search results.
+- A dashed horizontal line at your target rank (if set).
+- Date range controls: **7 days / 30 days / 90 days / custom**.
+- A table of recent checks showing the date, rank, and the URL Google matched.
+
+### Google Search Performance block on Analytics
+
+When Google Search Console is connected, the project **Analytics** page shows a **Google Search Performance** block with:
+
+| Card | Description |
+|------|-------------|
+| Total clicks | Sum of all clicks in the selected period |
+| Total impressions | Sum of all impressions |
+| Avg CTR | Average click-through rate |
+| Avg position | Average rank (lower = better; chart y-axis is inverted) |
+
+Each card includes a sparkline chart showing the metric over time.
+
+Below the KPI cards:
+
+- **Top 20 queries** — sortable table (query, clicks, impressions, CTR, position)
+- **Top 20 pages** — same columns, showing your URLs
+- **Device breakdown** — doughnut chart (desktop / mobile / tablet)
+- **Top 10 countries** — table of traffic by country
+
+**Period selector:** 7 days / 28 days / 90 days. Data is fetched live from Search Console and cached for up to one hour.
+
+If GSC is not connected, a compact banner with a link to settings is shown instead.
 
 ### Competitors
 
 #### Adding competitors manually
 
-Click **Add competitor**, enter the name and website URL.
+On the **SEO** page, go to the **Competitors** tab. Click **Add competitor**, enter the name and website URL, and save.
 
 #### AI competitor suggestions
 
-Click **Suggest competitors with AI**. The app sends your project context and tracked keywords to the AI agent, which proposes up to 5 real competitors with a short rationale. Review each card and click **Approve** to add it to your list, or **Dismiss** to reject (dismissed suggestions won't be proposed again).
+Click **Suggest competitors with AI**. The platform sends your project context and tracked keywords to the AI agent, which proposes up to 5 real competitors with a short rationale explaining why each is relevant. Review each suggestion card:
+
+- **Approve** — adds the competitor to your active list.
+- **Dismiss** — rejects the suggestion (dismissed entries will not be proposed again).
+
+### What to do when "0 of N keywords matched"
+
+Work through this checklist:
+
+1. **Check indexation.** Run `site:yourdomain.com` in Google. If very few pages appear, your site is not indexed well. Submit a sitemap via GSC → Sitemaps.
+2. **Check GSC Performance directly.** Open Google Search Console → Performance → Search results. Search for your keyword in the filter. If it shows impressions, the sync should eventually pick it up. If it shows nothing, you are not ranking for it yet.
+3. **Wait for new sites.** Brand new sites typically start appearing in Google results 2–6 weeks after launch.
+4. **Check GSC lag.** GSC data is 2–3 days behind. Syncing today will reflect rankings from 2–3 days ago.
+5. **Verify target URLs.** Open each keyword in the app and confirm the Target URL matches what GSC reports as the ranking URL. Fix mismatches by editing the keyword.
+6. **Generate more content.** Use the Content Studio to create pages and blog posts targeting your keywords. More on-topic content improves coverage.
+7. **Fix technical SEO.** Check for `noindex` tags, crawl errors in GSC → Coverage, and missing canonical tags.
+
+---
 
 ## A/B Testing
 
@@ -148,28 +220,6 @@ Embed a tracking snippet on your website to collect analytics data.
 ### Tracking Pixel
 
 For email tracking, use the tracking pixel URL (`/t/pixel.gif`) to track email opens without JavaScript.
-
-## Google Integrations
-
-Connect Google Search Console and Google Analytics 4 for enhanced data.
-
-### Connecting
-
-1. Go to **Settings > Integrations**
-2. Click **Connect Google**
-3. Authorize access to Search Console and/or GA4
-4. Data syncs automatically
-
-### Available Data
-
-| Source | Data |
-|--------|------|
-| Search Console | Top queries, pages, positions, CTR, impressions |
-| Google Analytics 4 | Sessions, users, bounce rate, conversions |
-
-### Manual Sync
-
-Click **Sync** to manually trigger a data refresh from Google services.
 
 ## Content Calendar
 
