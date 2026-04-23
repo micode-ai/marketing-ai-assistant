@@ -49,10 +49,13 @@
   let gscConfig: { siteUrl?: string; accessToken?: string } | null = null;
   let gscLoading = false;
   let gscSiteUrl = '';
+  let gscSites: Array<{ siteUrl: string; permissionLevel: string }> = [];
+  let gscSitesLoading = false;
   let gscSaving = false;
   let gscDisconnecting = false;
   let gscError = '';
   let gscSuccess = '';
+  let projectWebsite = '';
 
   const platformIcon: Record<string, string> = {
     LINKEDIN: `<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>`,
@@ -112,6 +115,7 @@
       enabledIds = new Set(enabled.map((a: any) => a.id));
       trackingInfo = tracking;
       if (project.baseCurrency) baseCurrency = project.baseCurrency;
+      if (project.website) projectWebsite = project.website;
     } catch (e) {
       console.error(e);
     } finally {
@@ -312,11 +316,70 @@
       const result = await api.get<any>('/google/integration', { projectId });
       gscConfig = result;
       gscSiteUrl = result?.siteUrl || '';
+      if (result?.accessToken) {
+        await fetchGscSites();
+      }
     } catch {
       gscConfig = null;
     } finally {
       gscLoading = false;
     }
+  }
+
+  async function fetchGscSites() {
+    gscSitesLoading = true;
+    try {
+      const { sites } = await api.get<{ sites: Array<{ siteUrl: string; permissionLevel: string }> }>(
+        '/google/gsc/sites',
+        { projectId },
+      );
+      gscSites = sites;
+      // Pre-select if nothing saved yet
+      if (!gscSiteUrl && sites.length > 0) {
+        gscSiteUrl = pickBestSiteUrl(sites, projectWebsite);
+      }
+    } catch {
+      gscSites = [];
+    } finally {
+      gscSitesLoading = false;
+    }
+  }
+
+  function pickBestSiteUrl(
+    sites: Array<{ siteUrl: string }>,
+    website: string,
+  ): string {
+    if (sites.length === 0) return '';
+    if (!website) return sites[0]!.siteUrl;
+    const hostMatch = (a: string, b: string): boolean => {
+      try {
+        const ha = new URL(a).hostname.replace(/^www\./, '').toLowerCase();
+        const hb = new URL(b).hostname.replace(/^www\./, '').toLowerCase();
+        return ha === hb;
+      } catch {
+        return false;
+      }
+    };
+    // Prefer sc-domain: that covers the project domain
+    for (const s of sites) {
+      if (s.siteUrl.startsWith('sc-domain:')) {
+        const domain = s.siteUrl.replace('sc-domain:', '').toLowerCase();
+        try {
+          if (new URL(website).hostname.replace(/^www\./, '').toLowerCase() === domain) {
+            return s.siteUrl;
+          }
+        } catch {
+          // ignore
+        }
+      }
+    }
+    // Then URL-prefix property that matches
+    for (const s of sites) {
+      if (!s.siteUrl.startsWith('sc-domain:') && hostMatch(s.siteUrl, website)) {
+        return s.siteUrl;
+      }
+    }
+    return sites[0]!.siteUrl;
   }
 
   async function connectGsc() {
@@ -560,21 +623,36 @@
             {$_('seo.gscConfig.siteUrl')}
             <span class="font-normal text-gray-400 ml-1">— {$_('seo.gscConfig.siteUrlHelper')}</span>
           </label>
-          <div class="flex gap-2">
-            <input
-              type="text"
-              bind:value={gscSiteUrl}
-              placeholder={$_('seo.gscConfig.siteUrlPlaceholder')}
-              class="flex-1 px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-            />
-            <button
-              on:click={saveGscSiteUrl}
-              disabled={gscSaving || !gscSiteUrl.trim()}
-              class="px-3 py-1.5 bg-gray-800 text-white rounded-lg text-sm font-medium hover:bg-gray-900 transition-colors duration-150 disabled:opacity-40 cursor-pointer whitespace-nowrap"
-            >
-              {gscSaving ? $_('common.loading') : $_('seo.gscConfig.save')}
-            </button>
-          </div>
+          {#if gscSitesLoading}
+            <div class="h-10 bg-gray-100 rounded-lg animate-pulse"></div>
+          {:else if gscSites.length === 0}
+            <div class="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800">
+              No verified properties found in this Google account. Add and verify your site in <a href="https://search.google.com/search-console" target="_blank" rel="noopener" class="underline">Google Search Console</a>, then reconnect.
+            </div>
+          {:else}
+            <div class="flex gap-2">
+              <select
+                bind:value={gscSiteUrl}
+                class="flex-1 px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              >
+                {#each gscSites as site}
+                  <option value={site.siteUrl}>{site.siteUrl}</option>
+                {/each}
+              </select>
+              <button
+                on:click={saveGscSiteUrl}
+                disabled={gscSaving || !gscSiteUrl}
+                class="px-3 py-1.5 bg-gray-800 text-white rounded-lg text-sm font-medium hover:bg-gray-900 transition-colors duration-150 disabled:opacity-40 cursor-pointer whitespace-nowrap"
+              >
+                {gscSaving ? $_('common.loading') : $_('seo.gscConfig.save')}
+              </button>
+            </div>
+            {#if projectWebsite}
+              <p class="text-xs text-gray-500 mt-1.5">
+                Project website: <span class="font-medium">{projectWebsite}</span> — pre-selected the matching property if available.
+              </p>
+            {/if}
+          {/if}
         </div>
 
         <button

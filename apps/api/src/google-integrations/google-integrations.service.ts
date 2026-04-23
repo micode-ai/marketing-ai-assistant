@@ -106,6 +106,27 @@ export class GoogleIntegrationsService {
   }
 
   /**
+   * List all sites verified in the user's Search Console.
+   * Returns { siteUrl, permissionLevel } for each site.
+   */
+  async listSearchConsoleSites(
+    accessToken: string,
+  ): Promise<Array<{ siteUrl: string; permissionLevel: string }>> {
+    const response = await fetch('https://www.googleapis.com/webmasters/v3/sites', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!response.ok) {
+      const err = await response.text();
+      this.logger.warn(`GSC sites.list error: ${err}`);
+      return [];
+    }
+    const data = (await response.json()) as {
+      siteEntry?: Array<{ siteUrl: string; permissionLevel: string }>;
+    };
+    return data.siteEntry || [];
+  }
+
+  /**
    * Fetch Search Console performance data
    */
   async fetchSearchConsoleData(
