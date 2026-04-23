@@ -1163,9 +1163,6 @@
     "locale": "Локаль поиска",
     "localeHelper": "Рынок Google для проверки — влияет на порядок результатов",
     "intentHelper": "Поисковое намерение: информационное (обучение), навигационное (поиск сайта), коммерческое (сравнение вариантов) или транзакционное (покупка).",
-    "checkNow": "Проверить сейчас",
-    "checkNowRateLimited": "Превышен лимит: 3 проверки в час на ключевое слово",
-    "checkingRank": "Проверка…",
     "history": {
       "title": "История позиций",
       "range7d": "Последние 7 дней",
@@ -1179,29 +1176,43 @@
       "tableHeaderRank": "Позиция",
       "tableHeaderUrl": "Найденный URL",
       "notRanked": "Не в рейтинге",
-      "empty": "История позиций пуста. Нажмите «Проверить сейчас», чтобы получить текущую позицию.",
+      "empty": "История позиций пуста. Используйте «Записать позицию», чтобы добавить первую запись.",
       "lastCheckedAt": "Последняя проверка: {when}",
       "viewHistory": "История"
     },
-    "errors": {
-      "cseNotConfigured": "Настройте Google CSE в параметрах проекта для отслеживания позиций",
-      "cseQuotaExceeded": "Превышена дневная квота Google CSE",
-      "cseInvalidKey": "Ключ Google CSE недействителен. Обновите его в настройках проекта.",
-      "noTargetUrl": "Добавьте целевой URL для проверки позиции этого ключевого слова",
-      "cseBanner": "Ошибка Google CSE: {error}. Исправьте её в настройках проекта."
+    "recordPosition": {
+      "title": "Записать позицию",
+      "description": "Вручную введите текущую позицию этого ключевого слова в Google.",
+      "rank": "Текущая позиция",
+      "rankPlaceholder": "напр. 3",
+      "notInTop100": "Не в топ-100",
+      "url": "Найденный URL",
+      "urlHelper": "URL, который Google показал для этого ключевого слова (по умолчанию — ваш целевой URL)",
+      "save": "Сохранить позицию",
+      "recordSuccess": "Позиция записана",
+      "recordFailed": "Не удалось записать позицию"
     },
-    "cseConfig": {
-      "title": "Google Custom Search (отслеживание позиций SEO)",
-      "description": "Вставьте ключ API Google и идентификатор CSE для автоматической проверки позиций. Бесплатный план: 100 поисковых запросов в день на проект Google Cloud.",
-      "setupLink": "Руководство по настройке",
-      "apiKey": "Ключ API",
-      "cseId": "Идентификатор CSE",
-      "connect": "Подключить",
+    "gscConfig": {
+      "title": "Google Search Console",
+      "description": "Подключите Search Console для автоматической синхронизации позиций из официальных данных Google (обновляется ежедневно, задержка 2–3 дня).",
+      "connect": "Подключить Google Search Console",
       "disconnect": "Отключить",
       "connected": "Подключено",
-      "validationError": "Google отклонил учётные данные: {error}. Введите их заново ниже.",
-      "connectSuccess": "Google CSE настроен — отслеживание позиций теперь активно.",
-      "reconnect": "Переподключить"
+      "siteUrl": "Проверенный URL сайта",
+      "siteUrlPlaceholder": "https://ваш-сайт.ru/",
+      "siteUrlHelper": "Укажите ресурс, подтверждённый в Search Console для этого проекта",
+      "save": "Сохранить",
+      "saveSuccess": "Сохранено"
+    },
+    "syncFromGsc": "Синхронизировать из Google Search Console",
+    "syncing": "Синхронизация из GSC…",
+    "syncSuccess": "Синхронизировано {matched} ключевых слов из GSC (пропущено {skipped})",
+    "syncFailed": "Ошибка синхронизации",
+    "lastSyncedAt": "Последняя синхронизация: {when}",
+    "errors": {
+      "noTargetUrl": "Добавьте целевой URL для проверки позиции этого ключевого слова",
+      "gscNotConfigured": "Сначала подключите Google Search Console для автоматической синхронизации",
+      "gscError": "Ошибка Google Search Console: {error}"
     },
     "competitors": {
       "suggestWithAi": "Предложить конкурентов с помощью AI",
