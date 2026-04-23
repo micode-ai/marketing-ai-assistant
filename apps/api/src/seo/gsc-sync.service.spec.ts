@@ -18,6 +18,9 @@ const mockPrisma = {
     findMany: jest.fn(),
     update: jest.fn(),
   },
+  project: {
+    findUnique: jest.fn(),
+  },
 };
 
 const mockGoogleIntegrations = {
@@ -36,6 +39,7 @@ describe('GscSyncService', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
+    mockPrisma.project.findUnique.mockResolvedValue({ websiteUrl: 'https://example.com/' });
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [

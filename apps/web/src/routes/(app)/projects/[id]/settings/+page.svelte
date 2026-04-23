@@ -115,7 +115,7 @@
       enabledIds = new Set(enabled.map((a: any) => a.id));
       trackingInfo = tracking;
       if (project.baseCurrency) baseCurrency = project.baseCurrency;
-      if (project.website) projectWebsite = project.website;
+      if (project.websiteUrl) projectWebsite = project.websiteUrl;
     } catch (e) {
       console.error(e);
     } finally {

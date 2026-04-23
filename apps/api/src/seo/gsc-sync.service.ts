@@ -43,12 +43,20 @@ export class GscSyncService {
 
     const siteUrl = config.siteUrl as string;
 
-    // 2. Load all tracked keywords that have a url
+    // Load project website so keywords without explicit Target URL fall back to
+    // the project's homepage. Most keywords want to rank the homepage; only
+    // specific landing-page targets have their own url set.
+    const project = await this.prisma.project.findUnique({
+      where: { id: projectId },
+      select: { websiteUrl: true },
+    });
+    const projectWebsite = project?.websiteUrl || null;
+
+    // 2. Load all tracked keywords (url may be null → falls back to projectWebsite)
     const keywords = await this.prisma.keyword.findMany({
       where: {
         projectId,
         isTracking: true,
-        url: { not: null },
       },
     });
 
@@ -103,8 +111,9 @@ export class GscSyncService {
 
     for (const keyword of keywords) {
       const previousRank = keyword.currentRank ?? null;
+      const effectiveUrl = keyword.url || projectWebsite;
 
-      if (!keyword.url) {
+      if (!effectiveUrl) {
         skipped.push(`${keyword.keyword}:NO_URL`);
         details.push({
           keywordId: keyword.id,
@@ -119,7 +128,7 @@ export class GscSyncService {
       const row = rows.find(
         (r) =>
           r.keys[0]?.toLowerCase() === keyword.keyword.toLowerCase() &&
-          hostMatches(r.keys[1], keyword.url!),
+          hostMatches(r.keys[1], effectiveUrl),
       );
 
       if (!row) {
