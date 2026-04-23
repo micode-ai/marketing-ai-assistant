@@ -3,6 +3,7 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { CompetitorStatus } from '@prisma/client';
 import { SeoService } from './seo.service';
 import { CompetitorSuggestionService } from './competitor-suggestion.service';
+import { GscSyncService } from './gsc-sync.service';
 import { ProjectAccessGuard } from '../common/guards/project-access.guard';
 import { CompetitorAccessGuard } from '../common/guards/competitor-access.guard';
 
@@ -13,6 +14,7 @@ export class SeoController {
   constructor(
     private seoService: SeoService,
     private competitorSuggestion: CompetitorSuggestionService,
+    private gscSync: GscSyncService,
   ) {}
 
   // ── Keywords ───────────────────────────────────────────────────
@@ -59,6 +61,16 @@ export class SeoController {
   @ApiOperation({ summary: 'Manually record a rank position for a keyword' })
   addRankHistory(@Param('id') id: string, @Body() dto: { rank: number | null; url?: string }) {
     return this.seoService.addRankHistory(id, dto.rank, dto.url);
+  }
+
+  @Post('keywords/sync-from-gsc')
+  @UseGuards(ProjectAccessGuard)
+  @ApiOperation({ summary: 'Sync rank positions from Google Search Console for all tracked keywords' })
+  syncFromGsc(@Body() dto: { projectId: string }) {
+    if (!dto.projectId) {
+      throw new BadRequestException('projectId is required');
+    }
+    return this.gscSync.syncProject(dto.projectId);
   }
 
   // ── Competitors ────────────────────────────────────────────────

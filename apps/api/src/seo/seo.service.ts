@@ -109,11 +109,14 @@ export class SeoService {
   async addRankHistory(keywordId: string, rank: number | null, url?: string) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    return this.addRankHistoryForDate(keywordId, rank, url, today);
+  }
 
+  async addRankHistoryForDate(keywordId: string, rank: number | null, url: string | undefined, date: Date) {
     const entry = await this.prisma.keywordRankHistory.upsert({
-      where: { keywordId_date: { keywordId, date: today } },
+      where: { keywordId_date: { keywordId, date } },
       update: { rank, url },
-      create: { keywordId, date: today, rank, url },
+      create: { keywordId, date, rank, url },
     });
 
     await this.prisma.keyword.update({

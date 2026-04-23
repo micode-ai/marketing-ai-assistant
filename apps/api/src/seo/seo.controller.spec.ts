@@ -1,8 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { BadRequestException } from '@nestjs/common';
 import { CompetitorStatus } from '@prisma/client';
 import { SeoController } from './seo.controller';
 import { SeoService } from './seo.service';
 import { CompetitorSuggestionService } from './competitor-suggestion.service';
+import { GscSyncService } from './gsc-sync.service';
 import { PrismaService } from '../database/prisma.service';
 import { ProjectAccessGuard } from '../common/guards/project-access.guard';
 import { CompetitorAccessGuard } from '../common/guards/competitor-access.guard';
@@ -28,6 +30,10 @@ const mockCompetitorSuggestionService = {
   suggest: jest.fn(),
 };
 
+const mockGscSyncService = {
+  syncProject: jest.fn(),
+};
+
 describe('SeoController', () => {
   let controller: SeoController;
 
@@ -39,6 +45,7 @@ describe('SeoController', () => {
       providers: [
         { provide: SeoService, useValue: mockSeoService },
         { provide: CompetitorSuggestionService, useValue: mockCompetitorSuggestionService },
+        { provide: GscSyncService, useValue: mockGscSyncService },
         { provide: PrismaService, useValue: mockPrismaService },
       ],
     })
@@ -72,6 +79,26 @@ describe('SeoController', () => {
       await controller.addRankHistory('kw-abc', { rank: null });
 
       expect(mockSeoService.addRankHistory).toHaveBeenCalledWith('kw-abc', null, undefined);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // POST /seo/keywords/sync-from-gsc
+  // ---------------------------------------------------------------------------
+
+  describe('syncFromGsc()', () => {
+    it('calls gscSync.syncProject with projectId and returns its result', async () => {
+      const summary = { synced: 5, matched: 4, skipped: ['kw:NO_MATCH_IN_GSC'] };
+      mockGscSyncService.syncProject.mockResolvedValue(summary);
+
+      const result = await controller.syncFromGsc({ projectId: 'proj-123' });
+
+      expect(mockGscSyncService.syncProject).toHaveBeenCalledWith('proj-123');
+      expect(result).toEqual(summary);
+    });
+
+    it('throws BadRequestException when projectId is missing', () => {
+      expect(() => controller.syncFromGsc({ projectId: '' })).toThrow('projectId is required');
     });
   });
 
