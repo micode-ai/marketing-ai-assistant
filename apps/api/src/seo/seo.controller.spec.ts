@@ -220,6 +220,14 @@ describe('SeoController', () => {
 });
 
 describe('SuggestCompetitorsDto validation', () => {
+  it('accepts a CUID-shaped projectId (Project.id uses @default(cuid()))', async () => {
+    const dto = plainToInstance(SuggestCompetitorsDto, {
+      projectId: 'clg7t5gxm0000f1p2q3r4s5t6',
+    });
+    const errors = await validate(dto);
+    expect(errors).toHaveLength(0);
+  });
+
   it('accepts a valid UUID and no note', async () => {
     const dto = plainToInstance(SuggestCompetitorsDto, {
       projectId: '00000000-0000-4000-8000-000000000001',
@@ -228,8 +236,15 @@ describe('SuggestCompetitorsDto validation', () => {
     expect(errors).toHaveLength(0);
   });
 
-  it('rejects non-UUID projectId', async () => {
-    const dto = plainToInstance(SuggestCompetitorsDto, { projectId: 'not-a-uuid' });
+  it('rejects empty-string projectId', async () => {
+    const dto = plainToInstance(SuggestCompetitorsDto, { projectId: '' });
+    const errors = await validate(dto);
+    expect(errors.length).toBeGreaterThan(0);
+    expect(errors[0].property).toBe('projectId');
+  });
+
+  it('rejects missing projectId', async () => {
+    const dto = plainToInstance(SuggestCompetitorsDto, {});
     const errors = await validate(dto);
     expect(errors.length).toBeGreaterThan(0);
     expect(errors[0].property).toBe('projectId');
