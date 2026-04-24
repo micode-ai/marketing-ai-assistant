@@ -339,5 +339,21 @@ describe('CompetitorSuggestionService', () => {
       const agentInput = mockAgentService.runAgent.mock.calls[0][0].input;
       expect(agentInput.userNote).toBe('B2B SaaS');
     });
+
+    it('omits userNote when it is an empty string', async () => {
+      mockPrismaService.project.findUnique.mockResolvedValue(mockProject);
+      mockPrismaService.keyword.findMany.mockResolvedValue([]);
+      mockPrismaService.competitor.findMany.mockResolvedValue([]);
+      const completedRun = makeRun({ output: { competitors: [] } });
+      mockAgentService.runAgent.mockResolvedValue(completedRun);
+      mockPrismaService.agentRun.findUnique.mockResolvedValue(completedRun);
+
+      const resultPromise = service.suggest('proj-1', '');
+      await jest.runAllTimersAsync();
+      await resultPromise;
+
+      const agentInput = mockAgentService.runAgent.mock.calls[0][0].input;
+      expect(agentInput).not.toHaveProperty('userNote');
+    });
   });
 });
