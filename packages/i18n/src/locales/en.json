@@ -1246,7 +1246,14 @@
       "noSuggestions": "No pending suggestions",
       "suggestFailed": "Suggestion failed — please try again.",
       "approveSuccess": "Competitor approved",
-      "dismissSuccess": "Suggestion dismissed"
+      "dismissSuccess": "Suggestion dismissed",
+      "suggestModal": {
+        "title": "Suggest competitors with AI",
+        "description": "AI will find up to 5 real companies. Add optional guidance below if you want to steer the search.",
+        "noteLabel": "Additional guidance (optional)",
+        "notePlaceholder": "e.g. focus on B2B SaaS in the EU; exclude large marketplaces",
+        "submit": "Generate"
+      }
     },
     "searchConsolePanel": {
       "title": "Google Search Performance",
