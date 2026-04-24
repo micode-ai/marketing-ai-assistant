@@ -290,4 +290,54 @@ describe('CompetitorSuggestionService', () => {
       expect(result[0].name).toBe('New');
     });
   });
+
+  describe('suggest() — userNote forwarding', () => {
+    it('forwards userNote to the agent input when provided', async () => {
+      mockPrismaService.project.findUnique.mockResolvedValue(mockProject);
+      mockPrismaService.keyword.findMany.mockResolvedValue([]);
+      mockPrismaService.competitor.findMany.mockResolvedValue([]);
+      const completedRun = makeRun({ output: { competitors: [] } });
+      mockAgentService.runAgent.mockResolvedValue(completedRun);
+      mockPrismaService.agentRun.findUnique.mockResolvedValue(completedRun);
+
+      const resultPromise = service.suggest('proj-1', 'focus on EU B2B');
+      await jest.runAllTimersAsync();
+      await resultPromise;
+
+      const agentInput = mockAgentService.runAgent.mock.calls[0][0].input;
+      expect(agentInput.userNote).toBe('focus on EU B2B');
+    });
+
+    it('omits userNote when it is empty or whitespace-only', async () => {
+      mockPrismaService.project.findUnique.mockResolvedValue(mockProject);
+      mockPrismaService.keyword.findMany.mockResolvedValue([]);
+      mockPrismaService.competitor.findMany.mockResolvedValue([]);
+      const completedRun = makeRun({ output: { competitors: [] } });
+      mockAgentService.runAgent.mockResolvedValue(completedRun);
+      mockPrismaService.agentRun.findUnique.mockResolvedValue(completedRun);
+
+      const resultPromise = service.suggest('proj-1', '   ');
+      await jest.runAllTimersAsync();
+      await resultPromise;
+
+      const agentInput = mockAgentService.runAgent.mock.calls[0][0].input;
+      expect(agentInput).not.toHaveProperty('userNote');
+    });
+
+    it('trims surrounding whitespace before forwarding', async () => {
+      mockPrismaService.project.findUnique.mockResolvedValue(mockProject);
+      mockPrismaService.keyword.findMany.mockResolvedValue([]);
+      mockPrismaService.competitor.findMany.mockResolvedValue([]);
+      const completedRun = makeRun({ output: { competitors: [] } });
+      mockAgentService.runAgent.mockResolvedValue(completedRun);
+      mockPrismaService.agentRun.findUnique.mockResolvedValue(completedRun);
+
+      const resultPromise = service.suggest('proj-1', '  B2B SaaS  ');
+      await jest.runAllTimersAsync();
+      await resultPromise;
+
+      const agentInput = mockAgentService.runAgent.mock.calls[0][0].input;
+      expect(agentInput.userNote).toBe('B2B SaaS');
+    });
+  });
 });
