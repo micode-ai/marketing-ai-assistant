@@ -6,6 +6,7 @@ import { CompetitorSuggestionService } from './competitor-suggestion.service';
 import { GscSyncService } from './gsc-sync.service';
 import { ProjectAccessGuard } from '../common/guards/project-access.guard';
 import { CompetitorAccessGuard } from '../common/guards/competitor-access.guard';
+import { SuggestCompetitorsDto } from './dto/suggest-competitors.dto';
 
 @ApiTags('seo')
 @ApiBearerAuth()
@@ -95,8 +96,8 @@ export class SeoController {
   @Post('competitors/suggest')
   @UseGuards(ProjectAccessGuard)
   @ApiOperation({ summary: 'Use AI to suggest competitors for a project' })
-  suggestCompetitors(@Body() dto: { projectId: string }) {
-    return this.competitorSuggestion.suggest(dto.projectId);
+  suggestCompetitors(@Body() dto: SuggestCompetitorsDto) {
+    return this.competitorSuggestion.suggest(dto.projectId, dto.userNote);
   }
 
   @Post('competitors')
