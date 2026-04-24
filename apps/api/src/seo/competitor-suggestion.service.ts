@@ -48,7 +48,7 @@ export class CompetitorSuggestionService {
     private agentService: AgentService,
   ) {}
 
-  async suggest(projectId: string): Promise<Competitor[]> {
+  async suggest(projectId: string, userNote?: string): Promise<Competitor[]> {
     // 1. Load project context
     const project = await this.prisma.project.findUnique({
       where: { id: projectId },
@@ -85,6 +85,10 @@ export class CompetitorSuggestionService {
       .filter(Boolean)
       .map(url => normalizeToOrigin(url));
 
+    // 3b. Normalize the optional user note (trim; treat empty / whitespace as absent)
+    const trimmedNote = userNote?.trim();
+    const finalNote = trimmedNote && trimmedNote.length > 0 ? trimmedNote : undefined;
+
     // 4. Dispatch the SEO agent run
     const agentRun = await this.agentService.runAgent({
       projectId,
@@ -98,6 +102,7 @@ export class CompetitorSuggestionService {
         existingCompetitorUrls,
         locale: toLocale(null), // Project has no language field; default to en-US
         count: 5,
+        ...(finalNote ? { userNote: finalNote } : {}),
       },
     });
 

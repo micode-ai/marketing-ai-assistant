@@ -1226,7 +1226,14 @@
       "noSuggestions": "Brak oczekujących propozycji",
       "suggestFailed": "Propozycja nie powiodła się — spróbuj ponownie.",
       "approveSuccess": "Konkurent zatwierdzony",
-      "dismissSuccess": "Propozycja odrzucona"
+      "dismissSuccess": "Propozycja odrzucona",
+      "suggestModal": {
+        "title": "Zasugeruj konkurentów za pomocą AI",
+        "description": "AI znajdzie do 5 rzeczywistych firm. Poniżej możesz dodać opcjonalne wskazówki, aby ukierunkować wyszukiwanie.",
+        "noteLabel": "Dodatkowe wskazówki (opcjonalnie)",
+        "notePlaceholder": "np. skup się na B2B SaaS w UE; pomiń duże marketplace'y",
+        "submit": "Generuj"
+      }
     },
     "searchConsolePanel": {
       "title": "Wyniki w Google Search",
