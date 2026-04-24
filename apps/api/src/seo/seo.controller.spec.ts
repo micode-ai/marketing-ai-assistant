@@ -116,7 +116,7 @@ describe('SeoController', () => {
       const res = await controller.suggestCompetitors({
         projectId: '00000000-0000-4000-8000-000000000001',
         userNote: 'focus on EU B2B',
-      } as any);
+      });
 
       expect(mockCompetitorSuggestionService.suggest).toHaveBeenCalledWith(
         '00000000-0000-4000-8000-000000000001',
@@ -129,7 +129,7 @@ describe('SeoController', () => {
       mockCompetitorSuggestionService.suggest.mockResolvedValue([]);
       await controller.suggestCompetitors({
         projectId: '00000000-0000-4000-8000-000000000001',
-      } as any);
+      });
       expect(mockCompetitorSuggestionService.suggest).toHaveBeenCalledWith(
         '00000000-0000-4000-8000-000000000001',
         undefined,
@@ -249,6 +249,15 @@ describe('SuggestCompetitorsDto validation', () => {
     const dto = plainToInstance(SuggestCompetitorsDto, {
       projectId: '00000000-0000-4000-8000-000000000001',
       userNote: 'x'.repeat(500),
+    });
+    const errors = await validate(dto);
+    expect(errors).toHaveLength(0);
+  });
+
+  it('accepts an empty-string userNote (service layer normalizes to absent)', async () => {
+    const dto = plainToInstance(SuggestCompetitorsDto, {
+      projectId: '00000000-0000-4000-8000-000000000001',
+      userNote: '',
     });
     const errors = await validate(dto);
     expect(errors).toHaveLength(0);
