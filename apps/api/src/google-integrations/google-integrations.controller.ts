@@ -199,7 +199,9 @@ export class GoogleIntegrationsController {
   ) {
     if (!projectId) throw new BadRequestException('projectId is required');
     const { days, type, filters } = this.parseGscParams(daysParam, typeParam, filtersParam);
-    const dimensions = (dimensionsParam || 'query').split(',').filter(Boolean);
+    const dimensions = dimensionsParam === undefined
+      ? ['query']
+      : dimensionsParam.split(',').filter(Boolean);
     const rowLimit = Math.min(5000, Math.max(1, parseInt(rowLimitParam || '100', 10) || 100));
     const startRow = Math.max(0, parseInt(startRowParam || '0', 10) || 0);
     try {

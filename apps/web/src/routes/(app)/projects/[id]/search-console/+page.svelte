@@ -31,6 +31,10 @@
     error = null;
     notConnected = false;
     try {
+      const integration = await api.get<any>('/google/integration', { projectId });
+      notConnected = !(integration?.accessToken && integration?.siteUrl);
+      if (notConnected) return;
+
       const [totals, dated] = await Promise.all([
         api.get<{ rows: any[] }>('/google/search-console/query', {
           projectId,
@@ -52,14 +56,7 @@
       totalsRow = totals.rows[0] ?? null;
       byDate = dated.rows;
     } catch (e: any) {
-      if (
-        e?.body?.code === 'GSC_NOT_CONFIGURED' ||
-        e?.message?.includes('GSC_NOT_CONFIGURED')
-      ) {
-        notConnected = true;
-      } else {
-        error = $_('gscDetail.loadError');
-      }
+      error = $_('gscDetail.loadError');
     } finally {
       loading = false;
     }
@@ -100,15 +97,6 @@
     <h1 class="text-2xl font-semibold text-gray-900">{$_('gscDetail.title')}</h1>
     <p class="text-sm text-gray-500 mt-1">{$_('gscDetail.subtitle')}</p>
   </div>
-
-  <!-- Filters bar -->
-  <GscFilters
-    bind:days
-    bind:compare
-    bind:searchType
-    bind:filters
-    bind:brandTerm
-    on:apply={reload} />
 
   <!-- Not connected state -->
   {#if notConnected}
@@ -164,6 +152,15 @@
 
   <!-- Overview content -->
   {:else}
+    <!-- Filters bar (only when connected and loaded) -->
+    <GscFilters
+      bind:days
+      bind:compare
+      bind:searchType
+      bind:filters
+      bind:brandTerm
+      on:apply={reload} />
+
     <GscOverview totals={totalsRow} {byDate} {compare} />
 
     <!-- Queries / Pages tab switch -->

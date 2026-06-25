@@ -16,10 +16,10 @@
     impressions: number;
     ctr: number;
     position: number;
-    prevClicks?: number;
-    prevImpressions?: number;
-    prevCtr?: number;
-    prevPosition?: number;
+    prevClicks?: number | null;
+    prevImpressions?: number | null;
+    prevCtr?: number | null;
+    prevPosition?: number | null;
   }
 
   interface DrillState {
@@ -296,7 +296,7 @@
               <!-- Clicks -->
               <td class="px-3 py-2 text-right">
                 <span class="text-gray-700 font-medium">{formatNumber(row.clicks)}</span>
-                {#if compare && row.prevClicks !== undefined}
+                {#if compare && row.prevClicks != null}
                   {@const d = row.clicks - row.prevClicks}
                   <br /><span class="text-xs {deltaClass(d)}">{fmtIntDelta(d)}</span>
                 {/if}
@@ -305,7 +305,7 @@
               <!-- Impressions -->
               <td class="px-3 py-2 text-right">
                 <span class="text-gray-600">{formatNumber(row.impressions)}</span>
-                {#if compare && row.prevImpressions !== undefined}
+                {#if compare && row.prevImpressions != null}
                   {@const d = row.impressions - row.prevImpressions}
                   <br /><span class="text-xs {deltaClass(d)}">{fmtIntDelta(d)}</span>
                 {/if}
@@ -314,7 +314,7 @@
               <!-- CTR -->
               <td class="px-3 py-2 text-right">
                 <span class="text-gray-600">{formatCtr(row.ctr)}</span>
-                {#if compare && row.prevCtr !== undefined}
+                {#if compare && row.prevCtr != null}
                   {@const d = row.ctr - row.prevCtr}
                   <br /><span class="text-xs {deltaClass(d)}">{fmtCtrDelta(d)}</span>
                 {/if}
@@ -323,7 +323,7 @@
               <!-- Position (lower = better) -->
               <td class="px-3 py-2 text-right">
                 <span class="text-gray-600">{formatPosition(row.position)}</span>
-                {#if compare && row.prevPosition !== undefined}
+                {#if compare && row.prevPosition != null}
                   {@const d = row.position - row.prevPosition}
                   <br /><span class="text-xs {deltaClass(d, true)}">{fmtPosDelta(d)}</span>
                 {/if}
