@@ -2,6 +2,7 @@
   import { _, locale } from 'svelte-i18n';
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
+  import { goto } from '$app/navigation';
   import { marked } from 'marked';
   import DOMPurify from 'dompurify';
   import { api } from '$lib/api/client';
@@ -111,6 +112,26 @@
       adviceError = $_('gscDetail.adviceError');
     } finally {
       adviceLoading = false;
+    }
+  }
+
+  let openingChat = false;
+  async function continueInChat() {
+    if (!advice) return;
+    openingChat = true;
+    try {
+      const session = await api.post<{ id: string }>('/chat/sessions', {
+        projectId,
+        title: `SEO advice — ${new Date().toISOString().slice(0, 10)}`,
+      });
+      await api.post(`/chat/sessions/${session.id}/messages`, {
+        role: 'user',
+        content: `${contextSummary}\n\nAdvise how to improve these metrics.`,
+      });
+      await api.post(`/chat/sessions/${session.id}/messages`, { role: 'assistant', content: advice });
+      goto(`/ai-chat?session=${session.id}`);
+    } finally {
+      openingChat = false;
     }
   }
 </script>
@@ -244,7 +265,10 @@
       {#if advice}
         <div class="prose prose-sm max-w-none text-gray-700">{@html DOMPurify.sanitize(marked.parse(advice, { async: false }) as string)}</div>
         <div class="flex items-center gap-2 mt-4">
-          <!-- "Continue in chat" button is wired in Task 5 -->
+          <button on:click={continueInChat} disabled={openingChat}
+            class="px-3 py-1.5 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 disabled:opacity-50 cursor-pointer">
+            {$_('gscDetail.continueInChat')}
+          </button>
           <button on:click={getAdvice} disabled={adviceLoading} class="px-3 py-1.5 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer">
             {$_('gscDetail.regenerate')}
           </button>
