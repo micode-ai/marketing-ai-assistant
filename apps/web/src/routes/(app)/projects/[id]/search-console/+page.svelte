@@ -3,6 +3,7 @@
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
   import { marked } from 'marked';
+  import DOMPurify from 'dompurify';
   import { api } from '$lib/api/client';
   import GscOverview from '$lib/components/seo/GscOverview.svelte';
   import GscPerformanceTable from '$lib/components/seo/GscPerformanceTable.svelte';
@@ -241,7 +242,7 @@
       </div>
       {#if adviceError}<p class="text-sm text-red-600">{adviceError}</p>{/if}
       {#if advice}
-        <div class="prose prose-sm max-w-none text-gray-700">{@html marked.parse(advice)}</div>
+        <div class="prose prose-sm max-w-none text-gray-700">{@html DOMPurify.sanitize(marked.parse(advice, { async: false }) as string)}</div>
         <div class="flex items-center gap-2 mt-4">
           <!-- "Continue in chat" button is wired in Task 5 -->
           <button on:click={getAdvice} disabled={adviceLoading} class="px-3 py-1.5 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer">
