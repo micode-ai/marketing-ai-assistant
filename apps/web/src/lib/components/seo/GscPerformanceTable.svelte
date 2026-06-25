@@ -199,11 +199,8 @@
   }
 
   function fmtIntDelta(delta: number): string {
-    const sign = delta > 0 ? '+' : '';
-    return `${sign}${formatNumber(Math.abs(delta))}${delta < 0 ? '' : ''}`.replace(
-      /^(\+|-)(\d)/,
-      (_, s, d) => `${s}${d}`
-    );
+    const sign = delta >= 0 ? '+' : '-';
+    return `${sign}${formatNumber(Math.abs(delta))}`;
   }
 
   function fmtCtrDelta(delta: number): string {
