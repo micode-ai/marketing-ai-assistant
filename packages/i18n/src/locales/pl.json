@@ -1497,5 +1497,35 @@
       "description": "Przejdź na PRO, aby połączyć Google Play Console i uzyskać dostęp do analityki aplikacji mobilnej.",
       "button": "Przejdź na PRO"
     }
+  },
+  "gscDetail": {
+    "title": "Search Console",
+    "subtitle": "Wydajność wyszukiwania i analizy SEO",
+    "details": "Szczegóły",
+    "compare": "Porównaj z poprzednim okresem",
+    "searchType": "Typ wyszukiwania",
+    "filters": "Filtry",
+    "queryContains": "Zapytanie zawiera",
+    "country": "Kraj",
+    "device": "Urządzenie",
+    "brandOnly": "Tylko marka",
+    "nonBrandOnly": "Bez marki",
+    "brandTerm": "Termin marki",
+    "tabQueries": "Zapytania",
+    "tabPages": "Strony",
+    "insights": "Analizy",
+    "strikingDistance": "Blisko czołówki (pozycje 11–20)",
+    "strikingDistanceDesc": "Niewielki wysiłek wprowadzi je do top 10.",
+    "lowCtr": "Niski CTR przy wysokich wyświetleniach",
+    "lowCtrDesc": "Zapytania ze strony 1 tracą kliknięcia — popraw tytuł/opis.",
+    "cannibalization": "Kanibalizacja",
+    "cannibalizationDesc": "Jedno zapytanie z wieloma stronami.",
+    "movers": "Największe zmiany",
+    "moversDesc": "Największe zmiany względem poprzedniego okresu.",
+    "gainers": "Wzrosty",
+    "losers": "Spadki",
+    "missedClicks": "Utracone kliknięcia",
+    "noData": "Brak danych dla wybranych filtrów.",
+    "loadError": "Nie udało się wczytać danych Search Console."
   }
 }
