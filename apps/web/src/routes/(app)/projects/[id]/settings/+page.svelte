@@ -17,6 +17,55 @@
   }
   $: isMobileApp = $currentProjectStore?.projectType === 'MOBILE_APP';
 
+  // Reload when the URL project id changes. SvelteKit reuses this component
+  // across /projects/A → /projects/B, so onMount does NOT fire again — without
+  // this watcher the page keeps showing the previous project's data.
+  let mounted = false;
+  let prevProjectId: string | undefined = '';
+  $: if (mounted && projectId && projectId !== prevProjectId) {
+    prevProjectId = projectId;
+    reloadForProject();
+  }
+
+  async function reloadForProject() {
+    // Reset displayed/derived state for the previous project
+    loading = true;
+    allAccounts = [];
+    enabledIds = new Set();
+    trackingInfo = null;
+    baseCurrency = 'USD';
+    projectWebsite = '';
+    gpStatus = null;
+    gscConfig = null;
+    gscSiteUrl = '';
+    gscSites = [];
+
+    if (!$organizationIdStore) { loading = false; return; }
+    try {
+      const [all, enabled, tracking, project] = await Promise.all([
+        api.get<any[]>('/social/accounts', { organizationId: $organizationIdStore }),
+        api.get<any[]>('/social/project-accounts', { projectId }),
+        api.get<{ trackingId: string; snippetUrl: string }>(`/projects/${projectId}/tracking`),
+        api.get<any>(`/projects/${projectId}`),
+      ]);
+      allAccounts = all;
+      enabledIds = new Set(enabled.map((a: any) => a.id));
+      trackingInfo = tracking;
+      if (project.baseCurrency) baseCurrency = project.baseCurrency;
+      if (project.websiteUrl) projectWebsite = project.websiteUrl;
+    } catch (e) {
+      console.error(e);
+    } finally {
+      loading = false;
+    }
+
+    if (isMobileApp) {
+      await fetchGpStatus();
+    }
+
+    await fetchGscConfig();
+  }
+
   const currencies = ['USD', 'EUR', 'GBP', 'PLN', 'RUB', 'UAH', 'BYN', 'KZT', 'TRY', 'JPY', 'CNY'];
   let baseCurrency = 'USD';
   let currencySaved = false;
@@ -129,6 +178,9 @@
 
     // Fetch GSC config
     await fetchGscConfig();
+
+    prevProjectId = projectId;
+    mounted = true;
   });
 
   async function saveBaseCurrency() {

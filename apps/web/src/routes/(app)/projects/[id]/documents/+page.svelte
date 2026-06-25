@@ -35,6 +35,27 @@
     }
   }
 
+  // Reload when the URL project id changes. SvelteKit reuses this component
+  // across /projects/A → /projects/B, so onMount does NOT fire again — without
+  // this watcher the page keeps showing the previous project's data.
+  let mounted = false;
+  let prevProjectId: string | undefined = '';
+  $: if (mounted && projectId && projectId !== prevProjectId) {
+    prevProjectId = projectId;
+    reloadForProject();
+  }
+
+  async function reloadForProject() {
+    loading = true;
+    documents = [];
+    viewingDocument = null;
+    try {
+      documents = await api.get<any[]>('/documents', { projectId });
+    } finally {
+      loading = false;
+    }
+  }
+
   // AI generation
   let showGenerateModal = false;
   let generating = false;
@@ -99,6 +120,8 @@
     documents = docs;
     docTypes = types;
     loading = false;
+    prevProjectId = projectId;
+    mounted = true;
   });
 
   // --- AI Generation with polling ---

@@ -37,7 +37,7 @@
   ];
   $: tabs = allTabs.filter(t => !t.needsBucket || hasGcsBucket);
 
-  onMount(async () => {
+  async function init() {
     await checkStatus();
     if (status?.connected) {
       await syncIfStale();
@@ -49,7 +49,32 @@
     } else {
       loading = false;
     }
+  }
+
+  onMount(async () => {
+    await init();
+    prevProjectId = projectId;
+    mounted = true;
   });
+
+  // Re-initialise when the parent passes a different project (component is reused
+  // across project switches), otherwise the dashboard keeps the old app's data.
+  let mounted = false;
+  let prevProjectId = '';
+  $: if (mounted && projectId && projectId !== prevProjectId) {
+    prevProjectId = projectId;
+    reinit();
+  }
+
+  async function reinit() {
+    if (syncInterval) { clearInterval(syncInterval); syncInterval = null; }
+    metrics = [];
+    status = null;
+    hasGcsBucket = false;
+    activeTab = 'overview';
+    loading = true;
+    await init();
+  }
 
   onDestroy(() => {
     if (syncInterval) {
