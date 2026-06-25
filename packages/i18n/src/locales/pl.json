@@ -1526,6 +1526,13 @@
     "losers": "Spadki",
     "missedClicks": "Utracone kliknięcia",
     "noData": "Brak danych dla wybranych filtrów.",
-    "loadError": "Nie udało się wczytać danych Search Console."
+    "loadError": "Nie udało się wczytać danych Search Console.",
+    "back": "Wstecz",
+    "getAdvice": "Uzyskaj poradę AI",
+    "adviceTitle": "Porada AI",
+    "generating": "Generowanie…",
+    "continueInChat": "Kontynuuj w czacie",
+    "regenerate": "Wygeneruj ponownie",
+    "adviceError": "Nie udało się wygenerować porady."
   }
 }

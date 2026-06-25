@@ -71,6 +71,11 @@
 
   onMount(async () => {
     await loadSessions();
+    // Auto-open session from ?session= URL param (used by GSC "Continue in chat")
+    const sessionParam = $page.url.searchParams.get('session');
+    if (sessionParam) {
+      await selectSession(sessionParam);
+    }
     // Pre-fill from ?prompt= URL param (used by Getting Started "Do it now" links)
     const promptParam = $page.url.searchParams.get('prompt');
     if (promptParam) {

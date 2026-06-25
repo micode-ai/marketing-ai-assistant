@@ -1,7 +1,10 @@
 <script lang="ts">
-  import { _ } from 'svelte-i18n';
+  import { _, locale } from 'svelte-i18n';
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
+  import { goto } from '$app/navigation';
+  import { marked } from 'marked';
+  import DOMPurify from 'dompurify';
   import { api } from '$lib/api/client';
   import GscOverview from '$lib/components/seo/GscOverview.svelte';
   import GscPerformanceTable from '$lib/components/seo/GscPerformanceTable.svelte';
@@ -89,11 +92,57 @@
   $: settingsUrl = `/projects/${projectId}/settings`;
 
   let activeTableDim: 'query' | 'page' = 'query';
+
+  let advice = '';
+  let contextSummary = '';
+  let adviceLoading = false;
+  let adviceError = '';
+
+  function filtersBody() { return filters.length ? filters : []; }
+
+  async function getAdvice() {
+    adviceLoading = true; adviceError = '';
+    try {
+      const res = await api.post<{ advice: string; contextSummary: string }>(`/google/search-console/advice?projectId=${projectId}`, {
+        days, type: searchType, filters: filtersBody(), language: $locale || 'en',
+      });
+      advice = res.advice;
+      contextSummary = res.contextSummary;
+    } catch {
+      adviceError = $_('gscDetail.adviceError');
+    } finally {
+      adviceLoading = false;
+    }
+  }
+
+  let openingChat = false;
+  async function continueInChat() {
+    if (!advice) return;
+    openingChat = true;
+    try {
+      const session = await api.post<{ id: string }>('/chat/sessions', {
+        projectId,
+        title: `SEO advice — ${new Date().toISOString().slice(0, 10)}`,
+      });
+      await api.post(`/chat/sessions/${session.id}/messages`, {
+        role: 'user',
+        content: `${contextSummary}\n\nAdvise how to improve these metrics.`,
+      });
+      await api.post(`/chat/sessions/${session.id}/messages`, { role: 'assistant', content: advice });
+      goto(`/ai-chat?session=${session.id}`);
+    } finally {
+      openingChat = false;
+    }
+  }
 </script>
 
 <div class="p-6 max-w-7xl mx-auto">
   <!-- Page header -->
   <div class="mb-6">
+    <a href={`/projects/${projectId}/analytics`} class="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-2">
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
+      {$_('gscDetail.back')}
+    </a>
     <h1 class="text-2xl font-semibold text-gray-900">{$_('gscDetail.title')}</h1>
     <p class="text-sm text-gray-500 mt-1">{$_('gscDetail.subtitle')}</p>
   </div>
@@ -199,6 +248,32 @@
         {days}
         {searchType}
         {filters} />
+    </div>
+
+    <!-- AI Advice card -->
+    <div class="bg-white rounded-xl border border-gray-200 p-5 mt-6">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-sm font-semibold text-gray-700">{$_('gscDetail.adviceTitle')}</h3>
+        {#if !advice}
+          <button on:click={getAdvice} disabled={adviceLoading}
+            class="px-3 py-1.5 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 disabled:opacity-50 cursor-pointer">
+            {adviceLoading ? $_('gscDetail.generating') : $_('gscDetail.getAdvice')}
+          </button>
+        {/if}
+      </div>
+      {#if adviceError}<p class="text-sm text-red-600">{adviceError}</p>{/if}
+      {#if advice}
+        <div class="prose prose-sm max-w-none text-gray-700">{@html DOMPurify.sanitize(marked.parse(advice, { async: false }) as string)}</div>
+        <div class="flex items-center gap-2 mt-4">
+          <button on:click={continueInChat} disabled={openingChat}
+            class="px-3 py-1.5 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 disabled:opacity-50 cursor-pointer">
+            {$_('gscDetail.continueInChat')}
+          </button>
+          <button on:click={getAdvice} disabled={adviceLoading} class="px-3 py-1.5 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer">
+            {adviceLoading ? $_('gscDetail.generating') : $_('gscDetail.regenerate')}
+          </button>
+        </div>
+      {/if}
     </div>
   {/if}
 </div>
