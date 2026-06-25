@@ -5,7 +5,8 @@
   import { api } from '$lib/api/client';
   import GscOverview from '$lib/components/seo/GscOverview.svelte';
   import GscPerformanceTable from '$lib/components/seo/GscPerformanceTable.svelte';
-  // GscFilters, GscInsights imported in later tasks
+  import GscFilters from '$lib/components/seo/GscFilters.svelte';
+  // GscInsights imported in later tasks
 
   $: projectId = $page.params['id'];
 
@@ -13,6 +14,7 @@
   let compare = true;
   let searchType: 'web' | 'image' | 'video' | 'news' | 'discover' = 'web';
   let filters: Array<{ dimension: string; operator: string; expression: string }> = [];
+  let brandTerm = '';
 
   let loading = true;
   let error: string | null = null;
@@ -76,6 +78,12 @@
   }
 
   onMount(async () => {
+    try {
+      const project = await api.get<{ name?: string }>(`/projects/${projectId}`);
+      brandTerm = (project?.name ?? '').toLowerCase();
+    } catch {
+      // best-effort; leave brandTerm as ''
+    }
     await loadOverview();
     prevProjectId = projectId;
     mounted = true;
@@ -92,6 +100,15 @@
     <h1 class="text-2xl font-semibold text-gray-900">{$_('gscDetail.title')}</h1>
     <p class="text-sm text-gray-500 mt-1">{$_('gscDetail.subtitle')}</p>
   </div>
+
+  <!-- Filters bar -->
+  <GscFilters
+    bind:days
+    bind:compare
+    bind:searchType
+    bind:filters
+    bind:brandTerm
+    on:apply={reload} />
 
   <!-- Not connected state -->
   {#if notConnected}
@@ -176,6 +193,6 @@
       {searchType}
       {compare}
       {filters} />
-    <!-- GscFilters, GscInsights slotted in by later tasks -->
+    <!-- GscInsights slotted in by later tasks -->
   {/if}
 </div>
