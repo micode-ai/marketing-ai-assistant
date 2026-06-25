@@ -26,7 +26,7 @@ export interface InsightRow {
 }
 
 function toInsightRow(r: GSCQueryRow): InsightRow {
-  return { key: r.keys[0] ?? '', clicks: r.clicks, impressions: r.impressions, ctr: r.ctr, position: r.position };
+  return { key: r.keys?.[0] ?? '', clicks: r.clicks, impressions: r.impressions, ctr: r.ctr, position: r.position };
 }
 
 export function strikingDistance(rows: GSCQueryRow[]): InsightRow[] {
@@ -61,9 +61,9 @@ export function cannibalization(rows: GSCQueryRow[]): CannibalRow[] {
   const byQuery = new Map<string, CannibalRow['pages']>();
   for (const r of rows) {
     if (r.impressions < CANNIBAL_MIN_IMPRESSIONS) continue;
-    const query = r.keys[0] ?? '';
+    const query = r.keys?.[0] ?? '';
     const list = byQuery.get(query) ?? [];
-    list.push({ page: r.keys[1] ?? '', clicks: r.clicks, impressions: r.impressions, position: r.position });
+    list.push({ page: r.keys?.[1] ?? '', clicks: r.clicks, impressions: r.impressions, position: r.position });
     byQuery.set(query, list);
   }
   const result: CannibalRow[] = [];
@@ -90,11 +90,11 @@ export interface MoverRow {
 
 export function movers(current: GSCQueryRow[], previous: GSCQueryRow[]): { gainers: MoverRow[]; losers: MoverRow[] } {
   const prev = new Map<string, GSCQueryRow>();
-  for (const r of previous) prev.set(r.keys[0] ?? '', r);
+  for (const r of previous) prev.set(r.keys?.[0] ?? '', r);
   const moves: MoverRow[] = [];
   const seen = new Set<string>();
   for (const r of current) {
-    const key = r.keys[0] ?? '';
+    const key = r.keys?.[0] ?? '';
     seen.add(key);
     const p = prev.get(key);
     if (Math.max(r.impressions, p?.impressions ?? 0) < MOVERS_MIN_IMPRESSIONS) continue;
@@ -109,7 +109,7 @@ export function movers(current: GSCQueryRow[], previous: GSCQueryRow[]): { gaine
   }
   // Previous-only keys: dropped off the current period entirely.
   for (const p of previous) {
-    const key = p.keys[0] ?? '';
+    const key = p.keys?.[0] ?? '';
     if (seen.has(key) || p.impressions < MOVERS_MIN_IMPRESSIONS) continue;
     moves.push({ key, clicks: 0, impressions: 0, position: 0, deltaClicks: -p.clicks, deltaPosition: 0 });
   }
@@ -132,11 +132,12 @@ export interface MergedRow {
 
 export function mergePreviousMetrics(current: GSCQueryRow[], previous: GSCQueryRow[]): MergedRow[] {
   const prev = new Map<string, GSCQueryRow>();
-  for (const r of previous) prev.set(r.keys.join('|'), r);
+  // GSC omits `keys` entirely for a no-dimension (site totals) query — guard it.
+  for (const r of previous) prev.set((r.keys ?? []).join('|'), r);
   return current.map((r) => {
-    const p = prev.get(r.keys.join('|'));
+    const p = prev.get((r.keys ?? []).join('|'));
     return {
-      keys: r.keys,
+      keys: r.keys ?? [],
       clicks: r.clicks,
       impressions: r.impressions,
       ctr: r.ctr,
