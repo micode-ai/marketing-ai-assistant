@@ -1517,5 +1517,34 @@
       "description": "Upgrade to PRO to connect Google Play Console and access mobile app analytics.",
       "button": "Upgrade to PRO"
     }
+  },
+  "gscDetail": {
+    "title": "Search Console",
+    "subtitle": "Search performance and SEO insights",
+    "details": "Details",
+    "compare": "Compare to previous period",
+    "searchType": "Search type",
+    "filters": "Filters",
+    "queryContains": "Query contains",
+    "country": "Country",
+    "device": "Device",
+    "brandOnly": "Brand only",
+    "nonBrandOnly": "Non-brand only",
+    "brandTerm": "Brand term",
+    "tabQueries": "Queries",
+    "tabPages": "Pages",
+    "insights": "Insights",
+    "strikingDistance": "Striking distance (positions 11–20)",
+    "strikingDistanceDesc": "A small push could move these into the top 10.",
+    "lowCtr": "Low CTR for high impressions",
+    "lowCtrDesc": "Page-1 queries losing clicks — consider rewriting title/description.",
+    "cannibalization": "Cannibalization",
+    "cannibalizationDesc": "One query ranking with multiple pages.",
+    "movers": "Biggest movers",
+    "gainers": "Gainers",
+    "losers": "Losers",
+    "missedClicks": "Missed clicks",
+    "noData": "No data for the selected filters.",
+    "loadError": "Failed to load Search Console data."
   }
 }

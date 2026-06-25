@@ -1495,5 +1495,34 @@
       "description": "Перейдите на PRO, чтобы подключить Google Play Console и получить доступ к аналитике мобильного приложения.",
       "button": "Перейти на PRO"
     }
+  },
+  "gscDetail": {
+    "title": "Search Console",
+    "subtitle": "Эффективность поиска и SEO-инсайты",
+    "details": "Подробнее",
+    "compare": "Сравнить с прошлым периодом",
+    "searchType": "Тип поиска",
+    "filters": "Фильтры",
+    "queryContains": "Запрос содержит",
+    "country": "Страна",
+    "device": "Устройство",
+    "brandOnly": "Только бренд",
+    "nonBrandOnly": "Без бренда",
+    "brandTerm": "Брендовый термин",
+    "tabQueries": "Запросы",
+    "tabPages": "Страницы",
+    "insights": "Инсайты",
+    "strikingDistance": "Близко к топу (позиции 11–20)",
+    "strikingDistanceDesc": "Немного усилий — и попадут в топ-10.",
+    "lowCtr": "Низкий CTR при высоких показах",
+    "lowCtrDesc": "Запросы с 1-й страницы теряют клики — перепишите title/description.",
+    "cannibalization": "Каннибализация",
+    "cannibalizationDesc": "По одному запросу ранжируются несколько страниц.",
+    "movers": "Главные движения",
+    "gainers": "Выросли",
+    "losers": "Упали",
+    "missedClicks": "Недополученные клики",
+    "noData": "Нет данных под выбранные фильтры.",
+    "loadError": "Не удалось загрузить данные Search Console."
   }
 }
