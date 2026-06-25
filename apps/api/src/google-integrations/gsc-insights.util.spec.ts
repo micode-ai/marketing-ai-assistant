@@ -82,6 +82,17 @@ describe('mergePreviousMetrics', () => {
     expect(merged[0].prevPosition).toBe(6);
     expect(mergePreviousMetrics([row(['new'], 1, 10, 0.1, 5)], [])[0].prevPosition).toBeNull();
   });
+
+  it('handles no-dimension (site totals) rows where GSC omits keys entirely', () => {
+    // GSC returns the aggregate row with NO `keys` field for a no-dimension query.
+    const current = [{ clicks: 100, impressions: 2000, ctr: 0.05, position: 8 } as any];
+    const previous = [{ clicks: 80, impressions: 1800, ctr: 0.044, position: 9 } as any];
+    const merged = mergePreviousMetrics(current, previous);
+    expect(merged[0].keys).toEqual([]);
+    expect(merged[0].clicks).toBe(100);
+    expect(merged[0].prevClicks).toBe(80);
+    expect(merged[0].prevPosition).toBe(9);
+  });
 });
 
 describe('expectedCtr', () => {
