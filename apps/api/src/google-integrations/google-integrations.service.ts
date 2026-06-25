@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../database/prisma.service';
+import { buildSearchAnalyticsBody, GscQueryOptions } from './gsc-query.util';
 
 export interface GSCQueryRow {
   keys: string[];
@@ -156,6 +157,7 @@ export class GoogleIntegrationsService {
     endDate: string,
     dimensions: string[] = ['query'],
     rowLimit = 100,
+    options: GscQueryOptions = {},
   ): Promise<GSCQueryRow[]> {
     const response = await fetch(
       `https://www.googleapis.com/webmasters/v3/sites/${encodeURIComponent(siteUrl)}/searchAnalytics/query`,
@@ -165,12 +167,7 @@ export class GoogleIntegrationsService {
           Authorization: `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          startDate,
-          endDate,
-          dimensions,
-          rowLimit,
-        }),
+        body: JSON.stringify(buildSearchAnalyticsBody(startDate, endDate, dimensions, rowLimit, options)),
       },
     );
 
