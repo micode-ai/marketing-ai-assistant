@@ -6,7 +6,7 @@
   import GscOverview from '$lib/components/seo/GscOverview.svelte';
   import GscPerformanceTable from '$lib/components/seo/GscPerformanceTable.svelte';
   import GscFilters from '$lib/components/seo/GscFilters.svelte';
-  // GscInsights imported in later tasks
+  import GscInsights from '$lib/components/seo/GscInsights.svelte';
 
   $: projectId = $page.params['id'];
 
@@ -193,6 +193,15 @@
       {searchType}
       {compare}
       {filters} />
-    <!-- GscInsights slotted in by later tasks -->
+
+    <!-- Insights section -->
+    <div class="mt-10">
+      <h2 class="text-lg font-semibold text-gray-900 mb-4">{$_('gscDetail.insights')}</h2>
+      <GscInsights
+        projectId={projectId ?? ''}
+        {days}
+        {searchType}
+        {filters} />
+    </div>
   {/if}
 </div>
