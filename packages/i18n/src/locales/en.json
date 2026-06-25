@@ -890,7 +890,11 @@
     "pagesEmptyDesc": "Page analytics will appear when your tracking snippet captures page view events.",
     "pagePath": "Page Path",
     "pageViews": "Page Views",
-    "uniqueVisitors": "Unique Visitors"
+    "uniqueVisitors": "Unique Visitors",
+    "surface": {
+      "web": "Site",
+      "app": "App"
+    }
   },
   "competitors": {
     "title": "Competitor Monitoring",
