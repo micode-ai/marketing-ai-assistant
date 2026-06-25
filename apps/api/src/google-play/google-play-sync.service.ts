@@ -9,6 +9,38 @@ import {
 } from './google-play-auth.service';
 import { CronFailureNotifier } from '../common/cron-failure-notifier.service';
 
+export interface RawUserComment {
+  text: string;
+  starRating: number;
+  lastModified: { seconds: string };
+  reviewerLanguage: string;
+}
+
+export interface RawDeveloperComment {
+  text: string;
+  lastModified: { seconds: string };
+}
+
+export interface RawReviewComment {
+  userComment?: RawUserComment;
+  developerComment?: RawDeveloperComment;
+}
+
+/**
+ * Android Publisher returns a review's comments as separate array entries:
+ * comments[0] is the user comment, the developer reply is a SEPARATE entry
+ * (typically comments[1]) carrying `developerComment`. Scan the array — do NOT
+ * read both off index 0 (that loses every reply).
+ */
+export function extractReviewComments(
+  comments: RawReviewComment[] | undefined,
+): { userComment?: RawUserComment; developerComment?: RawDeveloperComment } {
+  return {
+    userComment: comments?.find((c) => c.userComment)?.userComment,
+    developerComment: comments?.find((c) => c.developerComment)?.developerComment,
+  };
+}
+
 @Injectable()
 export class GooglePlaySyncService {
   private readonly logger = new Logger(GooglePlaySyncService.name);
@@ -362,10 +394,8 @@ export class GooglePlaySyncService {
       if (!data.reviews) return;
 
       for (const review of data.reviews) {
-        const userComment = review.comments?.[0]?.userComment;
+        const { userComment, developerComment } = extractReviewComments(review.comments);
         if (!userComment) continue;
-
-        const developerComment = review.comments?.[0]?.developerComment;
 
         await this.prisma.appReview.upsert({
           where: {
