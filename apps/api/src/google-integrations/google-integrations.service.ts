@@ -1,6 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../database/prisma.service';
+import { buildSearchAnalyticsBody, GscFilter, GscQueryOptions } from './gsc-query.util';
+import {
+  strikingDistance, lowCtr, cannibalization, movers, mergePreviousMetrics,
+  InsightRow, LowCtrRow, CannibalRow, MoverRow, MergedRow,
+} from './gsc-insights.util';
 
 export interface GSCQueryRow {
   keys: string[];
@@ -24,6 +29,24 @@ export interface GSCSummary {
   topPages: Array<{ page: string } & GSCSummaryMetric>;
   byDevice: Array<{ device: string; clicks: number; impressions: number }>;
   byCountry: Array<{ country: string; clicks: number; impressions: number }>;
+}
+
+export interface GscQueryParams {
+  days: number;
+  dimensions: string[];
+  type?: string;
+  filters?: GscFilter[];
+  rowLimit?: number;
+  startRow?: number;
+  compare?: boolean;
+}
+
+export interface GscInsightsResult {
+  strikingDistance: InsightRow[];
+  lowCtr: LowCtrRow[];
+  cannibalization: CannibalRow[];
+  moversQueries: { gainers: MoverRow[]; losers: MoverRow[] };
+  moversPages: { gainers: MoverRow[]; losers: MoverRow[] };
 }
 
 export interface GA4MetricRow {
@@ -156,6 +179,7 @@ export class GoogleIntegrationsService {
     endDate: string,
     dimensions: string[] = ['query'],
     rowLimit = 100,
+    options: GscQueryOptions = {},
   ): Promise<GSCQueryRow[]> {
     const response = await fetch(
       `https://www.googleapis.com/webmasters/v3/sites/${encodeURIComponent(siteUrl)}/searchAnalytics/query`,
@@ -165,12 +189,7 @@ export class GoogleIntegrationsService {
           Authorization: `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          startDate,
-          endDate,
-          dimensions,
-          rowLimit,
-        }),
+        body: JSON.stringify(buildSearchAnalyticsBody(startDate, endDate, dimensions, rowLimit, options)),
       },
     );
 
@@ -396,5 +415,117 @@ export class GoogleIntegrationsService {
     const summary: GSCSummary = { totals, byDate, topQueries, topPages, byDevice, byCountry };
     this.summaryCache.set(cacheKey, { data: summary, fetchedAt: Date.now() });
     return summary;
+  }
+
+  /**
+   * Compute date window for GSC queries (with optional previous period).
+   * endDate = today - 2, startDate = endDate - (days - 1).
+   * prevEndDate = startDate - 1, prevStartDate = prevEndDate - (days - 1).
+   */
+  private gscWindow(days: number) {
+    const endDate = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const startDate = new Date(new Date(endDate).getTime() - (days - 1) * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const prevEndDate = new Date(new Date(startDate).getTime() - 1 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const prevStartDate = new Date(new Date(prevEndDate).getTime() - (days - 1) * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    return { startDate, endDate, prevStartDate, prevEndDate };
+  }
+
+  /**
+   * Fetch GSC data with optional comparison to previous period.
+   * When compare=false, prev* fields in result rows are 0/null.
+   */
+  async fetchSearchConsoleQuery(projectId: string, params: GscQueryParams): Promise<{ rows: MergedRow[] }> {
+    const config = await this.getIntegration(projectId);
+    if (!config?.accessToken || !config?.siteUrl) {
+      throw Object.assign(new Error('GSC_NOT_CONFIGURED'), { code: 'GSC_NOT_CONFIGURED' });
+    }
+    const accessToken = await this.ensureFreshToken(projectId, config);
+    const siteUrl = config.siteUrl as string;
+    const { startDate, endDate, prevStartDate, prevEndDate } = this.gscWindow(params.days);
+    const opts = { type: params.type, filters: params.filters, startRow: params.startRow };
+    const rowLimit = params.rowLimit ?? 100;
+
+    const current = await this.fetchSearchConsoleData(accessToken, siteUrl, startDate, endDate, params.dimensions, rowLimit, opts);
+    const previous = params.compare
+      ? await this.fetchSearchConsoleData(accessToken, siteUrl, prevStartDate, prevEndDate, params.dimensions, rowLimit, opts)
+      : [];
+    return { rows: mergePreviousMetrics(current, previous) };
+  }
+
+  /**
+   * Compute GSC insights: striking distance, low CTR, cannibalization, and movers.
+   * Fetches current + previous periods in parallel.
+   */
+  async computeGscInsights(
+    projectId: string,
+    params: { days: number; type?: string; filters?: GscFilter[] },
+  ): Promise<GscInsightsResult> {
+    const config = await this.getIntegration(projectId);
+    if (!config?.accessToken || !config?.siteUrl) {
+      throw Object.assign(new Error('GSC_NOT_CONFIGURED'), { code: 'GSC_NOT_CONFIGURED' });
+    }
+    const accessToken = await this.ensureFreshToken(projectId, config);
+    const siteUrl = config.siteUrl as string;
+    const { startDate, endDate, prevStartDate, prevEndDate } = this.gscWindow(params.days);
+    const opts = { type: params.type, filters: params.filters };
+
+    const [curQueries, prevQueries, curPages, prevPages, queryPages] = await Promise.all([
+      this.fetchSearchConsoleData(accessToken, siteUrl, startDate, endDate, ['query'], 1000, opts),
+      this.fetchSearchConsoleData(accessToken, siteUrl, prevStartDate, prevEndDate, ['query'], 1000, opts),
+      this.fetchSearchConsoleData(accessToken, siteUrl, startDate, endDate, ['page'], 1000, opts),
+      this.fetchSearchConsoleData(accessToken, siteUrl, prevStartDate, prevEndDate, ['page'], 1000, opts),
+      this.fetchSearchConsoleData(accessToken, siteUrl, startDate, endDate, ['query', 'page'], 2000, opts),
+    ]);
+
+    return {
+      strikingDistance: strikingDistance(curQueries),
+      lowCtr: lowCtr(curQueries),
+      cannibalization: cannibalization(queryPages),
+      moversQueries: movers(curQueries, prevQueries),
+      moversPages: movers(curPages, prevPages),
+    };
+  }
+
+  /**
+   * Gather GSC insights and forward to ai-agent /seo-advice endpoint.
+   * Returns advice and contextSummary from the AI agent.
+   */
+  async generateSeoAdvice(
+    projectId: string,
+    params: { days: number; type?: string; filters?: GscFilter[]; language: string },
+  ): Promise<{ advice: string; contextSummary: string }> {
+    // Reuses GSC fetching (throws GSC_NOT_CONFIGURED when not connected).
+    const insights = await this.computeGscInsights(projectId, { days: params.days, type: params.type, filters: params.filters });
+    const totalsRes = await this.fetchSearchConsoleQuery(projectId, {
+      days: params.days, dimensions: [], type: params.type, filters: params.filters, rowLimit: 1, compare: true,
+    });
+    const totals = totalsRes.rows[0] ?? null;
+
+    const project = await this.prisma.project.findUnique({
+      where: { id: projectId },
+      select: { name: true, websiteUrl: true, industry: true },
+    });
+
+    const agentUrl = process.env.AI_AGENT_URL || 'http://localhost:3001';
+    const response = await fetch(`${agentUrl}/seo-advice`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        project: project ?? {},
+        period: { days: params.days },
+        totals,
+        insights: {
+          strikingDistance: insights.strikingDistance,
+          lowCtr: insights.lowCtr,
+          cannibalization: insights.cannibalization,
+          moversQueries: insights.moversQueries,
+        },
+        language: params.language,
+      }),
+    });
+    if (!response.ok) {
+      throw new Error(`SEO advice agent failed: ${response.status}`);
+    }
+    return response.json() as Promise<{ advice: string; contextSummary: string }>;
   }
 }

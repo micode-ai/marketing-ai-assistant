@@ -56,11 +56,33 @@
     const { Chart } = await import('chart.js/auto');
     ChartJS = Chart;
     await loadIntegration();
+    prevProjectId = projectId;
+    mounted = true;
   });
 
   onDestroy(() => {
     destroyCharts();
   });
+
+  // Reload when the parent passes a different project. This component is reused
+  // across project switches (the analytics page is not remounted), so without
+  // this watcher the panel keeps showing the previous project's GSC data.
+  let mounted = false;
+  let prevProjectId = '';
+  $: if (mounted && projectId && projectId !== prevProjectId) {
+    prevProjectId = projectId;
+    reloadForProject();
+  }
+
+  async function reloadForProject() {
+    destroyCharts();
+    integration = null;
+    summary = null;
+    error = null;
+    integrationLoading = true;
+    period = 28;
+    await loadIntegration();
+  }
 
   function destroyCharts() {
     sparklineCharts.forEach(c => c?.destroy());
@@ -259,17 +281,23 @@
     </div>
 
     {#if isConnected}
-      <!-- Period selector -->
-      <div class="flex bg-gray-100 rounded-lg p-0.5">
-        {#each PERIOD_OPTIONS as p}
-          <button
-            on:click={() => changePeriod(p)}
-            disabled={dataLoading}
-            class="px-2.5 py-1 text-xs font-medium rounded-md transition-colors duration-150
-              {period === p ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}">
-            {$_(`seo.searchConsolePanel.period${p}d`)}
-          </button>
-        {/each}
+      <div class="flex items-center gap-3">
+        <a href={`/projects/${projectId}/search-console`}
+           class="text-sm font-medium text-primary-600 hover:text-primary-700 hover:underline cursor-pointer">
+          {$_('gscDetail.details')} →
+        </a>
+        <!-- Period selector -->
+        <div class="flex bg-gray-100 rounded-lg p-0.5">
+          {#each PERIOD_OPTIONS as p}
+            <button
+              on:click={() => changePeriod(p)}
+              disabled={dataLoading}
+              class="px-2.5 py-1 text-xs font-medium rounded-md transition-colors duration-150
+                {period === p ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}">
+              {$_(`seo.searchConsolePanel.period${p}d`)}
+            </button>
+          {/each}
+        </div>
       </div>
     {/if}
   </div>

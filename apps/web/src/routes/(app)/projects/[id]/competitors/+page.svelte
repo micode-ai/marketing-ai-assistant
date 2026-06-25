@@ -21,6 +21,31 @@
     }
   }
 
+  // Reload when the URL project id changes. SvelteKit reuses this component
+  // across /projects/A → /projects/B, so onMount does NOT fire again — without
+  // this watcher the page keeps showing the previous project's data.
+  let mounted = false;
+  let prevProjectId: string | undefined = '';
+  $: if (mounted && projectId && projectId !== prevProjectId) {
+    prevProjectId = projectId;
+    reloadForProject();
+  }
+
+  async function reloadForProject() {
+    loading = true;
+    competitors = [];
+    suggestedCompetitors = [];
+    snapshotCache = {};
+    expandedSnapshotId = null;
+    try {
+      await Promise.all([loadActiveCompetitors(), loadSuggestedCompetitors()]);
+    } catch (e: any) {
+      console.error('Failed to load competitors:', e);
+    } finally {
+      loading = false;
+    }
+  }
+
   let form = { name: '', websiteUrl: '', description: '' };
 
   // Delete confirm state
@@ -31,6 +56,43 @@
 
   // Suggest with AI state
   let suggesting = false;
+
+  // Suggest-with-AI modal state
+  let showSuggestModal = false;
+  let suggestNote = '';
+
+  function openSuggestModal() {
+    suggestNote = '';
+    showSuggestModal = true;
+  }
+
+  function closeSuggestModal() {
+    if (suggesting) return; // don't let users dismiss mid-request
+    showSuggestModal = false;
+  }
+
+  async function submitSuggestion() {
+    suggesting = true;
+    try {
+      const body: { projectId: string; userNote?: string } = { projectId: projectId as string };
+      const trimmed = suggestNote.trim();
+      if (trimmed.length > 0) body.userNote = trimmed;
+      await api.post('/seo/competitors/suggest', body);
+      await loadSuggestedCompetitors();
+      showSuggestModal = false;
+    } catch (e: any) {
+      showToast($_('seo.competitors.suggestFailed'), 'error');
+    } finally {
+      suggesting = false;
+    }
+  }
+
+  function onSuggestKeydown(e: KeyboardEvent) {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault();
+      submitSuggestion();
+    }
+  }
 
   // Approve/dismiss in-flight
   let approvingId: string | null = null;
@@ -68,6 +130,8 @@
     } finally {
       loading = false;
     }
+    prevProjectId = projectId;
+    mounted = true;
   });
 
   async function addCompetitor() {
@@ -109,18 +173,6 @@
       competitors = competitors.map(c => c.id === competitor.id ? { ...c, ...updated } : c);
     } catch (e: any) {
       alert(e.message);
-    }
-  }
-
-  async function suggestWithAi() {
-    suggesting = true;
-    try {
-      await api.post('/seo/competitors/suggest', { projectId });
-      await loadSuggestedCompetitors();
-    } catch (e: any) {
-      showToast($_('seo.competitors.suggestFailed'), 'error');
-    } finally {
-      suggesting = false;
     }
   }
 
@@ -252,22 +304,13 @@
     <div class="flex items-center gap-2">
       <!-- Suggest with AI -->
       <button
-        on:click={suggestWithAi}
-        disabled={suggesting}
-        class="border border-purple-300 text-purple-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-purple-50 transition-colors duration-150 flex items-center gap-2 cursor-pointer disabled:opacity-50"
+        on:click={openSuggestModal}
+        class="border border-purple-300 text-purple-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-purple-50 transition-colors duration-150 flex items-center gap-2 cursor-pointer"
       >
-        {#if suggesting}
-          <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-          </svg>
-          {$_('seo.competitors.suggesting')}
-        {:else}
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
-          </svg>
-          {$_('seo.competitors.suggestWithAi')}
-        {/if}
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
+        </svg>
+        {$_('seo.competitors.suggestWithAi')}
       </button>
       <!-- Add manually -->
       <button
@@ -600,6 +643,68 @@
           {/if}
         </button>
         <button on:click={() => showModal = false} class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 text-sm cursor-pointer">
+          {$_('common.cancel')}
+        </button>
+      </div>
+    </div>
+  </div>
+{/if}
+
+<!-- Suggest with AI modal -->
+{#if showSuggestModal}
+  <!-- svelte-ignore a11y_click_events_have_key_events -->
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
+  <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={closeSuggestModal}>
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+      <div class="p-6 border-b border-gray-100 flex items-center gap-2.5">
+        <div class="w-8 h-8 bg-purple-50 rounded-lg flex items-center justify-center flex-shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
+          </svg>
+        </div>
+        <h2 class="text-lg font-semibold text-gray-900">{$_('seo.competitors.suggestModal.title')}</h2>
+      </div>
+      <div class="p-6 space-y-4">
+        <p class="text-sm text-gray-500">{$_('seo.competitors.suggestModal.description')}</p>
+        <div>
+          <label for="suggest-note" class="block text-sm font-medium text-gray-700 mb-1.5">
+            {$_('seo.competitors.suggestModal.noteLabel')}
+          </label>
+          <!-- svelte-ignore a11y_autofocus -->
+          <textarea
+            id="suggest-note"
+            bind:value={suggestNote}
+            on:keydown={onSuggestKeydown}
+            maxlength="500"
+            rows="4"
+            autofocus
+            placeholder={$_('seo.competitors.suggestModal.notePlaceholder')}
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+          ></textarea>
+          <div class="text-xs text-gray-400 mt-1 text-right">{suggestNote.length} / 500</div>
+        </div>
+      </div>
+      <div class="p-6 border-t border-gray-100 flex gap-3">
+        <button
+          on:click={submitSuggestion}
+          disabled={suggesting}
+          class="flex-1 bg-purple-600 text-white py-2.5 rounded-lg font-medium hover:bg-purple-700 transition-colors duration-150 disabled:opacity-50 text-sm flex items-center justify-center gap-2 cursor-pointer"
+        >
+          {#if suggesting}
+            <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+            </svg>
+            {$_('seo.competitors.suggesting')}
+          {:else}
+            {$_('seo.competitors.suggestModal.submit')}
+          {/if}
+        </button>
+        <button
+          on:click={closeSuggestModal}
+          disabled={suggesting}
+          class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 text-sm cursor-pointer disabled:opacity-50"
+        >
           {$_('common.cancel')}
         </button>
       </div>

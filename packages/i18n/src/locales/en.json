@@ -890,7 +890,11 @@
     "pagesEmptyDesc": "Page analytics will appear when your tracking snippet captures page view events.",
     "pagePath": "Page Path",
     "pageViews": "Page Views",
-    "uniqueVisitors": "Unique Visitors"
+    "uniqueVisitors": "Unique Visitors",
+    "surface": {
+      "web": "Site",
+      "app": "App"
+    }
   },
   "competitors": {
     "title": "Competitor Monitoring",
@@ -1246,7 +1250,14 @@
       "noSuggestions": "No pending suggestions",
       "suggestFailed": "Suggestion failed — please try again.",
       "approveSuccess": "Competitor approved",
-      "dismissSuccess": "Suggestion dismissed"
+      "dismissSuccess": "Suggestion dismissed",
+      "suggestModal": {
+        "title": "Suggest competitors with AI",
+        "description": "AI will find up to 5 real companies. Add optional guidance below if you want to steer the search.",
+        "noteLabel": "Additional guidance (optional)",
+        "notePlaceholder": "e.g. focus on B2B SaaS in the EU; exclude large marketplaces",
+        "submit": "Generate"
+      }
     },
     "searchConsolePanel": {
       "title": "Google Search Performance",
@@ -1506,5 +1517,42 @@
       "description": "Upgrade to PRO to connect Google Play Console and access mobile app analytics.",
       "button": "Upgrade to PRO"
     }
+  },
+  "gscDetail": {
+    "title": "Search Console",
+    "subtitle": "Search performance and SEO insights",
+    "details": "Details",
+    "compare": "Compare to previous period",
+    "searchType": "Search type",
+    "filters": "Filters",
+    "queryContains": "Query contains",
+    "country": "Country",
+    "device": "Device",
+    "brandOnly": "Brand only",
+    "nonBrandOnly": "Non-brand only",
+    "brandTerm": "Brand term",
+    "tabQueries": "Queries",
+    "tabPages": "Pages",
+    "insights": "Insights",
+    "strikingDistance": "Striking distance (positions 11–20)",
+    "strikingDistanceDesc": "A small push could move these into the top 10.",
+    "lowCtr": "Low CTR for high impressions",
+    "lowCtrDesc": "Page-1 queries losing clicks — consider rewriting title/description.",
+    "cannibalization": "Cannibalization",
+    "cannibalizationDesc": "One query ranking with multiple pages.",
+    "movers": "Biggest movers",
+    "moversDesc": "Biggest changes vs the previous period.",
+    "gainers": "Gainers",
+    "losers": "Losers",
+    "missedClicks": "Missed clicks",
+    "noData": "No data for the selected filters.",
+    "loadError": "Failed to load Search Console data.",
+    "back": "Back",
+    "getAdvice": "Get AI advice",
+    "adviceTitle": "AI advice",
+    "generating": "Generating…",
+    "continueInChat": "Continue in chat",
+    "regenerate": "Regenerate",
+    "adviceError": "Failed to generate advice."
   }
 }

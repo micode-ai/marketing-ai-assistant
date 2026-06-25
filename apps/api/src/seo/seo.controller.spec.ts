@@ -1,5 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CompetitorStatus } from '@prisma/client';
+import { validate } from 'class-validator';
+import { plainToInstance } from 'class-transformer';
 import { SeoController } from './seo.controller';
 import { SeoService } from './seo.service';
 import { CompetitorSuggestionService } from './competitor-suggestion.service';
@@ -7,6 +9,7 @@ import { GscSyncService } from './gsc-sync.service';
 import { PrismaService } from '../database/prisma.service';
 import { ProjectAccessGuard } from '../common/guards/project-access.guard';
 import { CompetitorAccessGuard } from '../common/guards/competitor-access.guard';
+import { SuggestCompetitorsDto } from './dto/suggest-competitors.dto';
 
 const mockSeoService = {
   findKeywords: jest.fn(),
@@ -106,17 +109,31 @@ describe('SeoController', () => {
   // ---------------------------------------------------------------------------
 
   describe('suggestCompetitors()', () => {
-    it('calls CompetitorSuggestionService.suggest with projectId and returns the result', async () => {
-      const suggestions = [
-        { id: 'c1', name: 'CompA', websiteUrl: 'https://compa.com', status: 'SUGGESTED' },
-        { id: 'c2', name: 'CompB', websiteUrl: 'https://compb.com', status: 'SUGGESTED' },
-      ];
-      mockCompetitorSuggestionService.suggest.mockResolvedValue(suggestions);
+    it('forwards projectId and userNote to the service', async () => {
+      const mockResult = [{ id: 'c1' }];
+      mockCompetitorSuggestionService.suggest.mockResolvedValue(mockResult);
 
-      const result = await controller.suggestCompetitors({ projectId: 'proj-xyz' });
+      const res = await controller.suggestCompetitors({
+        projectId: '00000000-0000-4000-8000-000000000001',
+        userNote: 'focus on EU B2B',
+      });
 
-      expect(mockCompetitorSuggestionService.suggest).toHaveBeenCalledWith('proj-xyz');
-      expect(result).toEqual(suggestions);
+      expect(mockCompetitorSuggestionService.suggest).toHaveBeenCalledWith(
+        '00000000-0000-4000-8000-000000000001',
+        'focus on EU B2B',
+      );
+      expect(res).toBe(mockResult);
+    });
+
+    it('forwards projectId with undefined userNote when omitted', async () => {
+      mockCompetitorSuggestionService.suggest.mockResolvedValue([]);
+      await controller.suggestCompetitors({
+        projectId: '00000000-0000-4000-8000-000000000001',
+      });
+      expect(mockCompetitorSuggestionService.suggest).toHaveBeenCalledWith(
+        '00000000-0000-4000-8000-000000000001',
+        undefined,
+      );
     });
   });
 
@@ -199,5 +216,65 @@ describe('SeoController', () => {
         expect.objectContaining({ status: undefined }),
       );
     });
+  });
+});
+
+describe('SuggestCompetitorsDto validation', () => {
+  it('accepts a CUID-shaped projectId (Project.id uses @default(cuid()))', async () => {
+    const dto = plainToInstance(SuggestCompetitorsDto, {
+      projectId: 'clg7t5gxm0000f1p2q3r4s5t6',
+    });
+    const errors = await validate(dto);
+    expect(errors).toHaveLength(0);
+  });
+
+  it('accepts a valid UUID and no note', async () => {
+    const dto = plainToInstance(SuggestCompetitorsDto, {
+      projectId: '00000000-0000-4000-8000-000000000001',
+    });
+    const errors = await validate(dto);
+    expect(errors).toHaveLength(0);
+  });
+
+  it('rejects empty-string projectId', async () => {
+    const dto = plainToInstance(SuggestCompetitorsDto, { projectId: '' });
+    const errors = await validate(dto);
+    expect(errors.length).toBeGreaterThan(0);
+    expect(errors[0].property).toBe('projectId');
+  });
+
+  it('rejects missing projectId', async () => {
+    const dto = plainToInstance(SuggestCompetitorsDto, {});
+    const errors = await validate(dto);
+    expect(errors.length).toBeGreaterThan(0);
+    expect(errors[0].property).toBe('projectId');
+  });
+
+  it('rejects userNote longer than 500 characters', async () => {
+    const dto = plainToInstance(SuggestCompetitorsDto, {
+      projectId: '00000000-0000-4000-8000-000000000001',
+      userNote: 'x'.repeat(501),
+    });
+    const errors = await validate(dto);
+    expect(errors.length).toBeGreaterThan(0);
+    expect(errors[0].property).toBe('userNote');
+  });
+
+  it('accepts a 500-character userNote', async () => {
+    const dto = plainToInstance(SuggestCompetitorsDto, {
+      projectId: '00000000-0000-4000-8000-000000000001',
+      userNote: 'x'.repeat(500),
+    });
+    const errors = await validate(dto);
+    expect(errors).toHaveLength(0);
+  });
+
+  it('accepts an empty-string userNote (service layer normalizes to absent)', async () => {
+    const dto = plainToInstance(SuggestCompetitorsDto, {
+      projectId: '00000000-0000-4000-8000-000000000001',
+      userNote: '',
+    });
+    const errors = await validate(dto);
+    expect(errors).toHaveLength(0);
   });
 });

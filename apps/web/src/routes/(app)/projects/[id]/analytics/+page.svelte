@@ -18,6 +18,30 @@
     }
   }
 
+  // Refetch when the URL project id changes. SvelteKit reuses this component
+  // across /projects/A → /projects/B, so onMount does NOT fire again — without
+  // this watcher the page keeps showing the previous project's data.
+  let mounted = false;
+  let prevProjectId: string | undefined = '';
+  $: if (mounted && projectId && projectId !== prevProjectId) {
+    prevProjectId = projectId;
+    reloadForProjectChange();
+  }
+
+  async function reloadForProjectChange() {
+    // Reset cached per-tab + per-surface state so everything refetches for the
+    // newly selected project. The mobile dashboard refetches via its own watcher.
+    utmData = [];
+    funnelData = null;
+    pagesData = [];
+    dailyData = [];
+    totals = null;
+    webLoaded = false;
+    surfacesLoaded = false;
+    await detectSurfaces();
+    if (activeSurface === 'web') await ensureWebData();
+  }
+
   let loading = true;
   let chartsReady = false;
   let selectedPeriod = 30;
@@ -50,27 +74,11 @@
     const { Chart } = await import('chart.js/auto');
     ChartJS = Chart;
 
-    // Wait for project store to load before deciding which analytics to show
-    if (!$currentProjectStore && $projectsStore.length === 0) {
-      const unsub = projectsStore.subscribe((projects) => {
-        if (projects.length > 0) {
-          unsub();
-          const project = projects.find((p: any) => p.id === projectId);
-          if (project) {
-            currentProjectStore.set(project);
-            // Use project directly — store may not have updated yet
-            if (project.projectType !== 'MOBILE_APP') {
-              fetchData();
-            }
-          }
-        }
-      });
-    } else {
-      const project = $currentProjectStore || $projectsStore.find((p: any) => p.id === projectId);
-      if (project?.projectType !== 'MOBILE_APP') {
-        await fetchData();
-      }
-    }
+    await detectSurfaces();
+    if (activeSurface === 'web') await ensureWebData();
+
+    prevProjectId = projectId;
+    mounted = true;
   });
 
   onDestroy(() => {
@@ -271,15 +279,81 @@
     { id: 'pages' as const, labelKey: 'analytics.tabPages' },
   ];
 
-  $: isMobileApp = $currentProjectStore?.projectType === 'MOBILE_APP';
+  $: projectType = $currentProjectStore?.projectType;
+
+  // Which analytics surfaces are available for this project. Driven by which
+  // integrations are actually connected — NOT by projectType — so a mobile
+  // project that also has a website (GSC) shows both.
+  let appConnected = false;
+  let gscConnected = false;
+  let surfacesLoaded = false;
+  let activeSurface: 'web' | 'app' = 'web';
+  let webLoaded = false;
+
+  $: showApp = appConnected || projectType === 'MOBILE_APP';
+  $: showWeb = gscConnected || projectType !== 'MOBILE_APP';
+  $: showSurfaceTabs = showApp && showWeb;
+
+  async function detectSurfaces() {
+    const [play, gsc] = await Promise.allSettled([
+      api.get<any>('/google-play/status', { projectId }),
+      api.get<any>('/google/integration', { projectId }),
+    ]);
+    appConnected = play.status === 'fulfilled' && !!play.value?.connected;
+    gscConnected =
+      gsc.status === 'fulfilled' && !!(gsc.value?.accessToken && gsc.value?.siteUrl);
+    surfacesLoaded = true;
+    activeSurface = pickDefaultSurface();
+  }
+
+  function pickDefaultSurface(): 'web' | 'app' {
+    // Recompute locally: called inside detectSurfaces() before Svelte flushes the reactive $: statements.
+    const app = appConnected || projectType === 'MOBILE_APP';
+    const web = gscConnected || projectType !== 'MOBILE_APP';
+    if (projectType === 'MOBILE_APP' && app) return 'app';
+    if (web) return 'web';
+    return app ? 'app' : 'web';
+  }
+
+  async function ensureWebData() {
+    if (webLoaded) return;
+    webLoaded = true;
+    await fetchData();
+  }
+
+  function switchSurface(s: 'web' | 'app') {
+    activeSurface = s;
+    if (s === 'web') ensureWebData();
+  }
 </script>
 
 <div class="p-4 sm:p-6">
   <SectionHint sectionKey="analytics" titleKey="hints.analytics.title" descKey="hints.analytics.desc" />
 
-  {#if isMobileApp}
-    <MobileAnalyticsDashboard {projectId} days={selectedPeriod} />
+  {#if !surfacesLoaded}
+    <div class="flex items-center justify-center py-20">
+      <div class="w-8 h-8 rounded-full border-2 border-gray-200 border-t-primary-600 animate-spin"></div>
+    </div>
   {:else}
+    {#if showSurfaceTabs}
+      <div class="inline-flex bg-gray-100 rounded-lg p-0.5 mb-6">
+        <button on:click={() => switchSurface('web')}
+          class="px-4 py-1.5 text-sm font-medium rounded-md transition-colors duration-150 cursor-pointer
+            {activeSurface === 'web' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}">
+          {$_('analytics.surface.web')}
+        </button>
+        <button on:click={() => switchSurface('app')}
+          class="px-4 py-1.5 text-sm font-medium rounded-md transition-colors duration-150 cursor-pointer
+            {activeSurface === 'app' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}">
+          {$_('analytics.surface.app')}
+        </button>
+      </div>
+    {/if}
+
+    {#if activeSurface === 'app'}
+      <!-- projectId is always defined here (route [id] segment); ?? '' only satisfies the type -->
+      <MobileAnalyticsDashboard projectId={projectId ?? ''} days={selectedPeriod} />
+    {:else}
   <div class="flex items-center justify-between mb-6">
     <div>
       <h1 class="text-2xl font-bold text-gray-900">{$_('analytics.title')}</h1>
@@ -297,7 +371,7 @@
   </div>
 
   <!-- Google Search Console Performance Panel -->
-  <SearchConsolePanel {projectId} />
+  <SearchConsolePanel projectId={projectId ?? ''} />
 
   <!-- Tabs -->
   <div class="flex border-b border-gray-200 mb-6">
@@ -497,6 +571,7 @@
         </table>
       </div>
     {/if}
-  {/if}
+    {/if}
+    {/if}
   {/if}
 </div>

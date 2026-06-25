@@ -870,7 +870,11 @@
     "pagesEmptyDesc": "Analityka stron pojawi się, gdy snippet śledzący zarejestruje wyświetlenia stron.",
     "pagePath": "Ścieżka strony",
     "pageViews": "Wyświetlenia",
-    "uniqueVisitors": "Unikalni odwiedzający"
+    "uniqueVisitors": "Unikalni odwiedzający",
+    "surface": {
+      "web": "Strona",
+      "app": "Aplikacja"
+    }
   },
   "competitors": {
     "title": "Monitoring konkurencji",
@@ -1226,7 +1230,14 @@
       "noSuggestions": "Brak oczekujących propozycji",
       "suggestFailed": "Propozycja nie powiodła się — spróbuj ponownie.",
       "approveSuccess": "Konkurent zatwierdzony",
-      "dismissSuccess": "Propozycja odrzucona"
+      "dismissSuccess": "Propozycja odrzucona",
+      "suggestModal": {
+        "title": "Zasugeruj konkurentów za pomocą AI",
+        "description": "AI znajdzie do 5 rzeczywistych firm. Poniżej możesz dodać opcjonalne wskazówki, aby ukierunkować wyszukiwanie.",
+        "noteLabel": "Dodatkowe wskazówki (opcjonalnie)",
+        "notePlaceholder": "np. skup się na B2B SaaS w UE; pomiń duże marketplace'y",
+        "submit": "Generuj"
+      }
     },
     "searchConsolePanel": {
       "title": "Wyniki w Google Search",
@@ -1486,5 +1497,42 @@
       "description": "Przejdź na PRO, aby połączyć Google Play Console i uzyskać dostęp do analityki aplikacji mobilnej.",
       "button": "Przejdź na PRO"
     }
+  },
+  "gscDetail": {
+    "title": "Search Console",
+    "subtitle": "Wydajność wyszukiwania i analizy SEO",
+    "details": "Szczegóły",
+    "compare": "Porównaj z poprzednim okresem",
+    "searchType": "Typ wyszukiwania",
+    "filters": "Filtry",
+    "queryContains": "Zapytanie zawiera",
+    "country": "Kraj",
+    "device": "Urządzenie",
+    "brandOnly": "Tylko marka",
+    "nonBrandOnly": "Bez marki",
+    "brandTerm": "Termin marki",
+    "tabQueries": "Zapytania",
+    "tabPages": "Strony",
+    "insights": "Analizy",
+    "strikingDistance": "Blisko czołówki (pozycje 11–20)",
+    "strikingDistanceDesc": "Niewielki wysiłek wprowadzi je do top 10.",
+    "lowCtr": "Niski CTR przy wysokich wyświetleniach",
+    "lowCtrDesc": "Zapytania ze strony 1 tracą kliknięcia — popraw tytuł/opis.",
+    "cannibalization": "Kanibalizacja",
+    "cannibalizationDesc": "Jedno zapytanie z wieloma stronami.",
+    "movers": "Największe zmiany",
+    "moversDesc": "Największe zmiany względem poprzedniego okresu.",
+    "gainers": "Wzrosty",
+    "losers": "Spadki",
+    "missedClicks": "Utracone kliknięcia",
+    "noData": "Brak danych dla wybranych filtrów.",
+    "loadError": "Nie udało się wczytać danych Search Console.",
+    "back": "Wstecz",
+    "getAdvice": "Uzyskaj poradę AI",
+    "adviceTitle": "Porada AI",
+    "generating": "Generowanie…",
+    "continueInChat": "Kontynuuj w czacie",
+    "regenerate": "Wygeneruj ponownie",
+    "adviceError": "Nie udało się wygenerować porady."
   }
 }
