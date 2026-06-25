@@ -1524,6 +1524,13 @@
     "losers": "Упали",
     "missedClicks": "Недополученные клики",
     "noData": "Нет данных под выбранные фильтры.",
-    "loadError": "Не удалось загрузить данные Search Console."
+    "loadError": "Не удалось загрузить данные Search Console.",
+    "back": "Назад",
+    "getAdvice": "Получить AI-совет",
+    "adviceTitle": "AI-совет",
+    "generating": "Генерация…",
+    "continueInChat": "Продолжить в чате",
+    "regenerate": "Сгенерировать заново",
+    "adviceError": "Не удалось сгенерировать совет."
   }
 }
