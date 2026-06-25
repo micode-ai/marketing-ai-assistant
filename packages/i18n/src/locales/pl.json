@@ -1521,6 +1521,7 @@
     "cannibalization": "Kanibalizacja",
     "cannibalizationDesc": "Jedno zapytanie z wieloma stronami.",
     "movers": "Największe zmiany",
+    "moversDesc": "Największe zmiany względem poprzedniego okresu.",
     "gainers": "Wzrosty",
     "losers": "Spadki",
     "missedClicks": "Utracone kliknięcia",

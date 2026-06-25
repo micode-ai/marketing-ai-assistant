@@ -1541,6 +1541,7 @@
     "cannibalization": "Cannibalization",
     "cannibalizationDesc": "One query ranking with multiple pages.",
     "movers": "Biggest movers",
+    "moversDesc": "Biggest changes vs the previous period.",
     "gainers": "Gainers",
     "losers": "Losers",
     "missedClicks": "Missed clicks",

@@ -299,6 +299,7 @@
     <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
       <div class="px-5 py-4 border-b border-gray-100">
         <h3 class="text-sm font-semibold text-gray-900">{$_('gscDetail.movers')}</h3>
+        <p class="text-xs text-gray-500 mt-0.5">{$_('gscDetail.moversDesc')}</p>
       </div>
 
       {#if data.moversQueries.gainers.length === 0 && data.moversQueries.losers.length === 0}
@@ -336,7 +337,7 @@
                       </td>
                       <td class="px-3 py-2 text-right">
                         <span class="text-gray-600">{formatPosition(row.position)}</span>
-                        {#if row.deltaPosition !== 0}
+                        {#if Math.abs(row.deltaPosition) >= 0.0001}
                           <br /><span class="text-xs {positionDeltaClass(row.deltaPosition)}">{fmtPosDelta(row.deltaPosition)}</span>
                         {/if}
                       </td>
@@ -377,7 +378,7 @@
                       </td>
                       <td class="px-3 py-2 text-right">
                         <span class="text-gray-600">{formatPosition(row.position)}</span>
-                        {#if row.deltaPosition !== 0}
+                        {#if Math.abs(row.deltaPosition) >= 0.0001}
                           <br /><span class="text-xs {positionDeltaClass(row.deltaPosition)}">{fmtPosDelta(row.deltaPosition)}</span>
                         {/if}
                       </td>
