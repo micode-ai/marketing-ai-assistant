@@ -485,4 +485,47 @@ export class GoogleIntegrationsService {
       moversPages: movers(curPages, prevPages),
     };
   }
+
+  /**
+   * Gather GSC insights and forward to ai-agent /seo-advice endpoint.
+   * Returns advice and contextSummary from the AI agent.
+   */
+  async generateSeoAdvice(
+    projectId: string,
+    params: { days: number; type?: string; filters?: GscFilter[]; language: string },
+  ): Promise<{ advice: string; contextSummary: string }> {
+    // Reuses GSC fetching (throws GSC_NOT_CONFIGURED when not connected).
+    const insights = await this.computeGscInsights(projectId, { days: params.days, type: params.type, filters: params.filters });
+    const totalsRes = await this.fetchSearchConsoleQuery(projectId, {
+      days: params.days, dimensions: [], type: params.type, filters: params.filters, rowLimit: 1, compare: true,
+    });
+    const totals = totalsRes.rows[0] ?? null;
+
+    const project = await this.prisma.project.findUnique({
+      where: { id: projectId },
+      select: { name: true, websiteUrl: true, industry: true },
+    });
+
+    const agentUrl = process.env.AI_AGENT_URL || 'http://localhost:3001';
+    const response = await fetch(`${agentUrl}/seo-advice`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        project: project ?? {},
+        period: { days: params.days },
+        totals,
+        insights: {
+          strikingDistance: insights.strikingDistance,
+          lowCtr: insights.lowCtr,
+          cannibalization: insights.cannibalization,
+          moversQueries: insights.moversQueries,
+        },
+        language: params.language,
+      }),
+    });
+    if (!response.ok) {
+      throw new Error(`SEO advice agent failed: ${response.status}`);
+    }
+    return response.json() as Promise<{ advice: string; contextSummary: string }>;
+  }
 }

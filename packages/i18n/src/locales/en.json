@@ -1546,6 +1546,13 @@
     "losers": "Losers",
     "missedClicks": "Missed clicks",
     "noData": "No data for the selected filters.",
-    "loadError": "Failed to load Search Console data."
+    "loadError": "Failed to load Search Console data.",
+    "back": "Back",
+    "getAdvice": "Get AI advice",
+    "adviceTitle": "AI advice",
+    "generating": "Generating…",
+    "continueInChat": "Continue in chat",
+    "regenerate": "Regenerate",
+    "adviceError": "Failed to generate advice."
   }
 }
