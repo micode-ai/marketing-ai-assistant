@@ -103,7 +103,7 @@
   async function getAdvice() {
     adviceLoading = true; adviceError = '';
     try {
-      const res = await api.post<{ advice: string; contextSummary: string }>('/google/search-console/advice', {
+      const res = await api.post<{ advice: string; contextSummary: string }>(`/google/search-console/advice?projectId=${projectId}`, {
         days, type: searchType, filters: filtersBody(), language: $locale || 'en',
       });
       advice = res.advice;
@@ -270,7 +270,7 @@
             {$_('gscDetail.continueInChat')}
           </button>
           <button on:click={getAdvice} disabled={adviceLoading} class="px-3 py-1.5 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer">
-            {$_('gscDetail.regenerate')}
+            {adviceLoading ? $_('gscDetail.generating') : $_('gscDetail.regenerate')}
           </button>
         </div>
       {/if}
