@@ -18,6 +18,28 @@
     }
   }
 
+  // Reload when the URL project id changes. SvelteKit reuses this component
+  // across /projects/A → /projects/B, so onMount does NOT fire again — without
+  // this watcher the page keeps showing the previous project's data.
+  let mounted = false;
+  let prevProjectId: string | undefined = '';
+  $: if (mounted && projectId && projectId !== prevProjectId) {
+    prevProjectId = projectId;
+    reloadForProject();
+  }
+
+  async function reloadForProject() {
+    loading = true;
+    experiments = [];
+    resultsFor = null;
+    resultsData = null;
+    try {
+      experiments = await api.get<any[]>('/ab-testing', { projectId });
+    } finally {
+      loading = false;
+    }
+  }
+
   // Create modal
   let showCreateModal = false;
   let creating = false;
@@ -74,6 +96,8 @@
   onMount(async () => {
     experiments = await api.get<any[]>('/ab-testing', { projectId });
     loading = false;
+    prevProjectId = projectId;
+    mounted = true;
   });
 
   async function createExperiment() {

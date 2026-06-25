@@ -49,6 +49,30 @@
     }
   }
 
+  // Reload when the URL project id changes. SvelteKit reuses this component
+  // across /projects/A → /projects/B, so onMount does NOT fire again — without
+  // this watcher the page keeps showing the previous project's checklists.
+  let mounted = false;
+  let prevProjectId: string | undefined = '';
+  $: if (mounted && projectId && projectId !== prevProjectId) {
+    prevProjectId = projectId;
+    reloadForProject();
+  }
+
+  async function reloadForProject() {
+    loading = true;
+    checklists = [];
+    activeChecklistId = null;
+    mdCache.clear();
+    try {
+      const data = await api.get<any[]>('/checklists', { projectId });
+      preCollapseSections(data);
+      checklists = data;
+      initChatsFromDB();
+    } catch { /* silent */ }
+    loading = false;
+  }
+
   let aiForm = { type: 'LAUNCH' };
 
   // ── MD Import state ──
@@ -276,6 +300,8 @@
     // Polling every 30s + refresh on tab focus
     pollingInterval = setInterval(refreshChecklists, 30_000);
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    prevProjectId = projectId;
+    mounted = true;
   });
 
   onDestroy(() => {

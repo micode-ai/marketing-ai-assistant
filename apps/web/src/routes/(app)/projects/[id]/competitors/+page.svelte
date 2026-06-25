@@ -21,6 +21,31 @@
     }
   }
 
+  // Reload when the URL project id changes. SvelteKit reuses this component
+  // across /projects/A → /projects/B, so onMount does NOT fire again — without
+  // this watcher the page keeps showing the previous project's data.
+  let mounted = false;
+  let prevProjectId: string | undefined = '';
+  $: if (mounted && projectId && projectId !== prevProjectId) {
+    prevProjectId = projectId;
+    reloadForProject();
+  }
+
+  async function reloadForProject() {
+    loading = true;
+    competitors = [];
+    suggestedCompetitors = [];
+    snapshotCache = {};
+    expandedSnapshotId = null;
+    try {
+      await Promise.all([loadActiveCompetitors(), loadSuggestedCompetitors()]);
+    } catch (e: any) {
+      console.error('Failed to load competitors:', e);
+    } finally {
+      loading = false;
+    }
+  }
+
   let form = { name: '', websiteUrl: '', description: '' };
 
   // Delete confirm state
@@ -105,6 +130,8 @@
     } finally {
       loading = false;
     }
+    prevProjectId = projectId;
+    mounted = true;
   });
 
   async function addCompetitor() {

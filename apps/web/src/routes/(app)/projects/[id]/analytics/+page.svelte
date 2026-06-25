@@ -18,6 +18,32 @@
     }
   }
 
+  // Refetch when the URL project id changes. SvelteKit reuses this component
+  // across /projects/A → /projects/B, so onMount does NOT fire again — without
+  // this watcher the page keeps showing the previous project's data.
+  let mounted = false;
+  let prevProjectId: string | undefined = '';
+  $: if (mounted && projectId && projectId !== prevProjectId) {
+    prevProjectId = projectId;
+    reloadForProjectChange();
+  }
+
+  async function reloadForProjectChange() {
+    // Reset cached per-tab data so tabs refetch for the newly selected project.
+    utmData = [];
+    funnelData = null;
+    pagesData = [];
+    const project = $currentProjectStore?.id === projectId
+      ? $currentProjectStore
+      : $projectsStore.find((p: any) => p.id === projectId);
+    // The mobile dashboard refetches via its own projectId watcher.
+    if (project?.projectType === 'MOBILE_APP') return;
+    await fetchData();
+    if (activeTab === 'utm') fetchUtmData();
+    if (activeTab === 'funnel') fetchFunnelData();
+    if (activeTab === 'pages') fetchPagesData();
+  }
+
   let loading = true;
   let chartsReady = false;
   let selectedPeriod = 30;
@@ -71,6 +97,8 @@
         await fetchData();
       }
     }
+    prevProjectId = projectId;
+    mounted = true;
   });
 
   onDestroy(() => {

@@ -427,7 +427,7 @@
   });
 
   // Re-fetch when projectId changes (e.g. project picker)
-  let prevProjectId = '';
+  let prevProjectId: string | undefined = '';
   $: if (projectId && projectId !== prevProjectId) {
     prevProjectId = projectId;
     if (ChartJS) fetchAll();

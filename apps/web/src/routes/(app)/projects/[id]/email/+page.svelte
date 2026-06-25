@@ -16,6 +16,25 @@
     }
   }
 
+  // Reload when the URL project id changes. SvelteKit reuses this component
+  // across /projects/A → /projects/B, so onMount does NOT fire again — without
+  // this watcher the page keeps showing the previous project's data.
+  let mounted = false;
+  let prevProjectId: string | undefined = '';
+  $: if (mounted && projectId && projectId !== prevProjectId) {
+    prevProjectId = projectId;
+    reloadForProject();
+  }
+
+  function reloadForProject() {
+    lists = [];
+    campaigns = [];
+    selectedList = null;
+    subscribers = [];
+    loadLists();
+    loadCampaigns();
+  }
+
   // ── Types ────────────────────────────────────────────────────────────────
   interface EmailList {
     id: string;
@@ -106,6 +125,8 @@
   onMount(() => {
     loadLists();
     loadCampaigns();
+    prevProjectId = projectId;
+    mounted = true;
   });
 
   // ── Lists ────────────────────────────────────────────────────────────────
