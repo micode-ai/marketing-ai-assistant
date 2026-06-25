@@ -56,11 +56,33 @@
     const { Chart } = await import('chart.js/auto');
     ChartJS = Chart;
     await loadIntegration();
+    prevProjectId = projectId;
+    mounted = true;
   });
 
   onDestroy(() => {
     destroyCharts();
   });
+
+  // Reload when the parent passes a different project. This component is reused
+  // across project switches (the analytics page is not remounted), so without
+  // this watcher the panel keeps showing the previous project's GSC data.
+  let mounted = false;
+  let prevProjectId = '';
+  $: if (mounted && projectId && projectId !== prevProjectId) {
+    prevProjectId = projectId;
+    reloadForProject();
+  }
+
+  async function reloadForProject() {
+    destroyCharts();
+    integration = null;
+    summary = null;
+    error = null;
+    integrationLoading = true;
+    period = 28;
+    await loadIntegration();
+  }
 
   function destroyCharts() {
     sparklineCharts.forEach(c => c?.destroy());
