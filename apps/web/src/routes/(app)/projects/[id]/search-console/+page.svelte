@@ -4,7 +4,8 @@
   import { onMount } from 'svelte';
   import { api } from '$lib/api/client';
   import GscOverview from '$lib/components/seo/GscOverview.svelte';
-  // GscFilters, GscPerformanceTable, GscInsights imported in later tasks
+  import GscPerformanceTable from '$lib/components/seo/GscPerformanceTable.svelte';
+  // GscFilters, GscInsights imported in later tasks
 
   $: projectId = $page.params['id'];
 
@@ -81,6 +82,8 @@
   });
 
   $: settingsUrl = `/projects/${projectId}/settings`;
+
+  let activeTableDim: 'query' | 'page' = 'query';
 </script>
 
 <div class="p-6 max-w-7xl mx-auto">
@@ -145,6 +148,34 @@
   <!-- Overview content -->
   {:else}
     <GscOverview totals={totalsRow} {byDate} {compare} />
-    <!-- GscFilters, GscPerformanceTable, GscInsights slotted in by later tasks -->
+
+    <!-- Queries / Pages tab switch -->
+    <div class="flex gap-1 bg-gray-100 rounded-lg p-1 w-fit mt-6 mb-3">
+      <button
+        on:click={() => (activeTableDim = 'query')}
+        class="px-4 py-1.5 text-sm font-medium rounded-md transition-colors duration-150
+          {activeTableDim === 'query'
+            ? 'bg-white text-gray-900 shadow-sm'
+            : 'text-gray-500 hover:text-gray-700'}">
+        {$_('gscDetail.tabQueries')}
+      </button>
+      <button
+        on:click={() => (activeTableDim = 'page')}
+        class="px-4 py-1.5 text-sm font-medium rounded-md transition-colors duration-150
+          {activeTableDim === 'page'
+            ? 'bg-white text-gray-900 shadow-sm'
+            : 'text-gray-500 hover:text-gray-700'}">
+        {$_('gscDetail.tabPages')}
+      </button>
+    </div>
+
+    <GscPerformanceTable
+      projectId={projectId ?? ''}
+      dimension={activeTableDim}
+      {days}
+      {searchType}
+      {compare}
+      {filters} />
+    <!-- GscFilters, GscInsights slotted in by later tasks -->
   {/if}
 </div>
