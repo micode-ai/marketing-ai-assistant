@@ -125,7 +125,7 @@
   onMount(() => { loadContent(projectId); });
 
   // Also reload when projectId changes (SvelteKit reuses component)
-  let prevProjectId = '';
+  let prevProjectId: string | undefined = '';
   $: if (projectId && projectId !== prevProjectId) {
     prevProjectId = projectId;
     loadContent(projectId);

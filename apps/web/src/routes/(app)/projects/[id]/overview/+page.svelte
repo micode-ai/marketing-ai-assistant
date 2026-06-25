@@ -22,6 +22,33 @@
     }
   }
 
+  // Reload when the URL project id changes. SvelteKit reuses this component
+  // across /projects/A → /projects/B, so onMount does NOT fire again — without
+  // this watcher the page keeps showing the previous project's data.
+  let mounted = false;
+  let prevProjectId: string | undefined = '';
+  $: if (mounted && projectId && projectId !== prevProjectId) {
+    prevProjectId = projectId;
+    reloadForProject();
+  }
+
+  async function reloadForProject() {
+    loading = true;
+    summary = null;
+    try {
+      const [project, sum] = await Promise.all([
+        api.get<Project>(`/projects/${projectId}`),
+        api.get<any>('/analytics/summary', { projectId }),
+      ]);
+      currentProjectStore.set(project);
+      summary = sum;
+    } catch (e) {
+      console.error(e);
+    } finally {
+      loading = false;
+    }
+  }
+
   // ── Export ──
   let showExportModal = false;
   let exporting = false;
@@ -79,6 +106,8 @@
   }
 
   onMount(async () => {
+    prevProjectId = projectId;
+    mounted = true;
     if (!projectId) return;
     try {
       const [project, sum] = await Promise.all([

@@ -23,6 +23,30 @@
     }
   }
 
+  // Reload when the URL project id changes. SvelteKit reuses this component
+  // across /projects/A → /projects/B, so onMount does NOT fire again — without
+  // this watcher the page keeps showing the previous project's keywords.
+  let mounted = false;
+  let prevProjectId: string | undefined = '';
+  $: if (mounted && projectId && projectId !== prevProjectId) {
+    prevProjectId = projectId;
+    reloadForProject();
+  }
+
+  async function reloadForProject() {
+    keywords = [];
+    historyMap = {};
+    loading = true;
+    try {
+      const project = await api.get<any>(`/projects/${projectId}`);
+      projectWebsite = project?.websiteUrl || '';
+    } catch {
+      projectWebsite = '';
+    }
+    loadPersistedSyncResult();
+    await fetchKeywords();
+  }
+
   // Derive default locale from svelte-i18n locale
   function deriveSearchLocale(lang: string | null | undefined): string {
     if (!lang) return 'en-US';
@@ -119,6 +143,8 @@
     }
     loadPersistedSyncResult();
     await fetchKeywords();
+    prevProjectId = projectId;
+    mounted = true;
   });
 
   async function fetchKeywords() {
