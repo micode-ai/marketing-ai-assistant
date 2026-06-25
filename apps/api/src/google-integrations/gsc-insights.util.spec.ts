@@ -19,15 +19,16 @@ describe('strikingDistance', () => {
 });
 
 describe('lowCtr', () => {
-  it('ranks page-1 high-impression rows by missed clicks vs expected CTR', () => {
+  it('ranks page-1 high-impression rows by missed clicks and drops rows at/above expected CTR', () => {
     const rows = [
-      row(['x'], 5, 1000, 0.005, 3), // expected ~0.11 -> big missed
-      row(['y'], 90, 1000, 0.09, 3), // ctr near/above expected -> ~0 missed, dropped
-      row(['z'], 0, 10, 0, 2),       // below MIN_IMPRESSIONS (20), excluded
+      row(['x'], 5, 1000, 0.005, 3), // expected ~0.11 -> big missed clicks
+      row(['y'], 120, 1000, 0.12, 3), // ctr above expected(3)=0.11 -> 0 missed -> dropped
+      row(['z'], 0, 10, 0, 2),       // below MIN_IMPRESSIONS (20) -> excluded
     ];
     const out = lowCtr(rows);
     expect(out[0].key).toBe('x');
     expect(out[0].missedClicks).toBeGreaterThan(0);
+    expect(out.find((r) => r.key === 'y')).toBeUndefined();
     expect(out.find((r) => r.key === 'z')).toBeUndefined();
   });
 });
@@ -56,6 +57,19 @@ describe('movers', () => {
     expect(gainers[0].deltaPosition).toBeCloseTo(-4); // 4 - 8 improved
     expect(losers[0].key).toBe('down');
     expect(losers[0].deltaClicks).toBe(-70);
+  });
+
+  it('surfaces previous-only keys as losers and caps each list at MOVERS_LIMIT', () => {
+    const current = [row(['stay'], 50, 500, 0.1, 5)];
+    const previous = [row(['stay'], 40, 500, 0.08, 5), row(['gone'], 200, 800, 0.25, 3)];
+    const { losers } = movers(current, previous);
+    const gone = losers.find((m) => m.key === 'gone');
+    expect(gone).toBeDefined();
+    expect(gone!.deltaClicks).toBe(-200);
+
+    const manyCurrent = Array.from({ length: 30 }, (_, i) => row([`k${i}`], i, 100, 0.1, 5));
+    const { gainers } = movers(manyCurrent, []);
+    expect(gainers.length).toBe(25);
   });
 });
 

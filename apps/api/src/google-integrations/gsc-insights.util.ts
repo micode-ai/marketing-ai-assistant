@@ -44,8 +44,9 @@ export interface LowCtrRow extends InsightRow {
 export function lowCtr(rows: GSCQueryRow[]): LowCtrRow[] {
   return rows
     .filter((r) => r.position <= 10 && r.impressions >= LOWCTR_MIN_IMPRESSIONS)
-    .map((r) => ({ ...toInsightRow(r), missedClicks: Math.round(r.impressions * Math.max(0, expectedCtr(r.position) - r.ctr)) }))
-    .filter((r) => r.missedClicks > 0)
+    .map((r) => ({ row: r, raw: r.impressions * Math.max(0, expectedCtr(r.position) - r.ctr) }))
+    .filter((x) => x.raw > 0)
+    .map((x) => ({ ...toInsightRow(x.row), missedClicks: Math.max(1, Math.round(x.raw)) }))
     .sort((a, b) => b.missedClicks - a.missedClicks)
     .slice(0, INSIGHT_LIMIT);
 }
@@ -91,8 +92,10 @@ export function movers(current: GSCQueryRow[], previous: GSCQueryRow[]): { gaine
   const prev = new Map<string, GSCQueryRow>();
   for (const r of previous) prev.set(r.keys[0] ?? '', r);
   const moves: MoverRow[] = [];
+  const seen = new Set<string>();
   for (const r of current) {
     const key = r.keys[0] ?? '';
+    seen.add(key);
     const p = prev.get(key);
     if (Math.max(r.impressions, p?.impressions ?? 0) < MOVERS_MIN_IMPRESSIONS) continue;
     moves.push({
@@ -103,6 +106,12 @@ export function movers(current: GSCQueryRow[], previous: GSCQueryRow[]): { gaine
       deltaClicks: r.clicks - (p?.clicks ?? 0),
       deltaPosition: p ? Number((r.position - p.position).toFixed(1)) : 0,
     });
+  }
+  // Previous-only keys: dropped off the current period entirely.
+  for (const p of previous) {
+    const key = p.keys[0] ?? '';
+    if (seen.has(key) || p.impressions < MOVERS_MIN_IMPRESSIONS) continue;
+    moves.push({ key, clicks: 0, impressions: 0, position: 0, deltaClicks: -p.clicks, deltaPosition: 0 });
   }
   const gainers = [...moves].sort((a, b) => b.deltaClicks - a.deltaClicks).slice(0, MOVERS_LIMIT);
   const losers = [...moves].sort((a, b) => a.deltaClicks - b.deltaClicks).slice(0, MOVERS_LIMIT);
