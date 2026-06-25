@@ -307,6 +307,7 @@
   }
 
   function pickDefaultSurface(): 'web' | 'app' {
+    // Recompute locally: called inside detectSurfaces() before Svelte flushes the reactive $: statements.
     const app = appConnected || projectType === 'MOBILE_APP';
     const web = gscConnected || projectType !== 'MOBILE_APP';
     if (projectType === 'MOBILE_APP' && app) return 'app';
@@ -350,6 +351,7 @@
     {/if}
 
     {#if activeSurface === 'app'}
+      <!-- projectId is always defined here (route [id] segment); ?? '' only satisfies the type -->
       <MobileAnalyticsDashboard projectId={projectId ?? ''} days={selectedPeriod} />
     {:else}
   <div class="flex items-center justify-between mb-6">
