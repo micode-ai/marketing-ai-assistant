@@ -870,7 +870,11 @@
     "pagesEmptyDesc": "Analityka stron pojawi się, gdy snippet śledzący zarejestruje wyświetlenia stron.",
     "pagePath": "Ścieżka strony",
     "pageViews": "Wyświetlenia",
-    "uniqueVisitors": "Unikalni odwiedzający"
+    "uniqueVisitors": "Unikalni odwiedzający",
+    "surface": {
+      "web": "Strona",
+      "app": "Aplikacja"
+    }
   },
   "competitors": {
     "title": "Monitoring konkurencji",
