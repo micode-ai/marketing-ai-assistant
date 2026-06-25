@@ -235,4 +235,26 @@ export class GoogleIntegrationsController {
       throw new HttpException({ code: 'GSC_ERROR', message: err instanceof Error ? err.message : 'Unknown GSC error' }, HttpStatus.BAD_GATEWAY);
     }
   }
+
+  @Post('search-console/advice')
+  @UseGuards(ProjectAccessGuard)
+  async getSeoAdvice(
+    @Query('projectId') projectId: string,
+    @Body() dto: { days?: number; type?: string; filters?: GscFilter[]; language?: string },
+  ) {
+    if (!projectId) throw new BadRequestException('projectId is required');
+    const days = Math.min(90, Math.max(7, Number(dto?.days) || 28));
+    const allowedTypes = ['web', 'image', 'video', 'news', 'discover'];
+    const type = allowedTypes.includes(dto?.type || '') ? dto!.type : 'web';
+    const filters = Array.isArray(dto?.filters) ? dto!.filters : [];
+    const language = (dto?.language || 'en').slice(0, 8);
+    try {
+      return await this.googleService.generateSeoAdvice(projectId, { days, type, filters, language });
+    } catch (err: any) {
+      if (err?.code === 'GSC_NOT_CONFIGURED') {
+        throw new HttpException({ code: 'GSC_NOT_CONFIGURED' }, HttpStatus.BAD_REQUEST);
+      }
+      throw new HttpException({ code: 'GSC_ERROR', message: err instanceof Error ? err.message : 'Unknown GSC error' }, HttpStatus.BAD_GATEWAY);
+    }
+  }
 }
