@@ -97,6 +97,16 @@ describe('MetaOAuthService', () => {
     await expect(service.getLongLivedToken('bad-tok')).rejects.toThrow('token_expired');
   });
 
+  it('getLongLivedToken: throws when FACEBOOK_APP_ID is missing', async () => {
+    config.get.mockImplementation((k: string) =>
+      k === 'FACEBOOK_APP_SECRET' ? 'secret123' : undefined,
+    );
+
+    await expect(service.getLongLivedToken('tok')).rejects.toThrow(
+      /FACEBOOK_APP_ID not configured/,
+    );
+  });
+
   // ── discoverInstagramAccount ─────────────────────────────────────────────────
 
   it('discovers the first page that has a linked Instagram business account', async () => {

@@ -86,6 +86,22 @@ describe('MetaOAuthController', () => {
     it('throws BadRequestException for unsupported platform', () => {
       expect(() => controller.getAuthUrl(mockUser('OWNER'), 'FACEBOOK')).toThrow(BadRequestException);
     });
+
+    it('throws BadRequestException when organizationId is passed for an org the user is not a member of', () => {
+      const user = { id: 'user-1', memberships: [{ organizationId: 'org-1', role: 'OWNER' }] };
+      expect(() => controller.getAuthUrl(user, 'INSTAGRAM', 'org-999')).toThrow(BadRequestException);
+    });
+
+    it('throws ForbiddenException when organizationId is passed for an org where the user role is MEMBER', () => {
+      const user = {
+        id: 'user-1',
+        memberships: [
+          { organizationId: 'org-1', role: 'OWNER' },
+          { organizationId: 'org-2', role: 'MEMBER' },
+        ],
+      };
+      expect(() => controller.getAuthUrl(user, 'INSTAGRAM', 'org-2')).toThrow(ForbiddenException);
+    });
   });
 
   // ─── state sign / verify ───────────────────────────────────────────────────

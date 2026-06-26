@@ -57,15 +57,22 @@ export class MetaOAuthController {
   }
 
   @Get('auth-url')
-  getAuthUrl(@CurrentUser() user: any, @Query('platform') platform: string) {
-    const membership = user.memberships?.[0];
-    const organizationId: string = membership?.organizationId;
-    if (!organizationId) throw new BadRequestException('No organization');
+  getAuthUrl(
+    @CurrentUser() user: any,
+    @Query('platform') platform: string,
+    @Query('organizationId') organizationId?: string,
+  ) {
+    const memberships = user.memberships || [];
+    const membership = organizationId
+      ? memberships.find((m: any) => m.organizationId === organizationId)
+      : memberships[0];
+    if (!membership) throw new BadRequestException('No organization');
     if (!['OWNER', 'ADMIN'].includes(membership.role)) {
       throw new ForbiddenException('Only OWNER or ADMIN can connect social accounts');
     }
+    const orgId = membership.organizationId;
     if (platform !== 'INSTAGRAM') throw new BadRequestException('Unsupported platform');
-    const state = this.signState({ organizationId, platform });
+    const state = this.signState({ organizationId: orgId, platform });
     return { url: this.metaService.getInstagramAuthUrl(this.redirectUri(), state) };
   }
 

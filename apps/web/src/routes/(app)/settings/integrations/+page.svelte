@@ -40,7 +40,8 @@
       alert($_('social.instagram.connected'));
       history.replaceState(null, '', window.location.pathname);
     } else if (params.get('instagram') === 'error') {
-      alert($_('social.instagram.error'));
+      const reason = params.get('reason');
+      alert(reason === 'no_ig_account' ? $_('social.instagram.noAccount') : $_('social.instagram.error'));
       history.replaceState(null, '', window.location.pathname);
     }
   });
@@ -217,7 +218,7 @@
 
   async function connectInstagram() {
     try {
-      const result = await api.get<{ url: string }>('/meta/auth-url', { platform: 'INSTAGRAM' });
+      const result = await api.get<{ url: string }>('/meta/auth-url', { platform: 'INSTAGRAM', organizationId: $organizationIdStore });
       window.location.href = result.url;
     } catch (e: any) {
       alert(e.message || $_('social.instagram.error'));
