@@ -212,6 +212,26 @@ describe('SocialService.publishToInstagram', () => {
     const parent = mockedAxios.post.mock.calls[2][1];
     expect(parent).toMatchObject({ media_type: 'CAROUSEL', children: 'child1,child2' });
   });
+
+  it('publishes a Reel: REELS container, waits for processing, then publishes', async () => {
+    const waitSpy = jest.spyOn(SocialService.prototype as any, 'waitForContainer').mockResolvedValue(undefined);
+    mockedAxios.post
+      .mockResolvedValueOnce({ data: { id: 'reelContainer' } })  // REELS /media
+      .mockResolvedValueOnce({ data: { id: 'reelPost' } });      // media_publish
+    mockedAxios.get.mockResolvedValueOnce({ data: { permalink: 'https://instagram.com/reel/xyz' } });
+
+    const result = await (service as any).publishToAccount(
+      { id: 'c1', body: 'My reel', mediaUrls: ['/uploads/videos/reel.mp4'] },
+      { id: 'a1', organizationId: 'o1', platform: 'INSTAGRAM', encryptedTokens: '{}', status: 'ACTIVE' },
+    );
+
+    expect(result.status).toBe('PUBLISHED');
+    expect(result.platformPostId).toBe('reelPost');
+    const createCall = mockedAxios.post.mock.calls[0][1];
+    expect(createCall).toMatchObject({ media_type: 'REELS', video_url: 'https://app.example.com/uploads/videos/reel.mp4', share_to_feed: true });
+    expect(waitSpy).toHaveBeenCalledWith('reelContainer', 'page-tok');
+    waitSpy.mockRestore();
+  });
 });
 
 describe('SocialService.cancelPublication', () => {
