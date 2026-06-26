@@ -41,6 +41,8 @@ export enum SocialPlatform {
   GOOGLE = 'GOOGLE',
   TELEGRAM = 'TELEGRAM',
   GOOGLE_PLAY = 'GOOGLE_PLAY',
+  GOOGLE_CSE = 'GOOGLE_CSE',
+  THREADS = 'THREADS',
 }
 
 export enum CampaignType {

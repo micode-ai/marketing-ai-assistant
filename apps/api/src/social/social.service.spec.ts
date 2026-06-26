@@ -31,7 +31,7 @@ describe('SocialService.publishToAccount', () => {
   it('returns FAILED for unsupported platform', async () => {
     const result = await (service as any).publishToAccount(
       { id: 'c1', body: 'hi', mediaUrls: [] },
-      { platform: 'INSTAGRAM', encryptedTokens: '{}', status: 'ACTIVE' },
+      { platform: 'GOOGLE', encryptedTokens: '{}', status: 'ACTIVE' },
     );
     expect(result.status).toBe('FAILED');
     expect(result.error).toMatch(/not yet supported/i);
@@ -93,6 +93,144 @@ describe('SocialService.publishToAccount', () => {
     );
 
     decryptSpy.mockRestore();
+  });
+});
+
+describe('SocialService.upsertOAuthAccount', () => {
+  let service: SocialService;
+  const prisma = { socialAccount: { upsert: jest.fn().mockResolvedValue({ id: 'acc1', platform: 'INSTAGRAM', accountName: 'mybrand', accountId: 'ig1', status: 'ACTIVE' }) } } as any;
+
+  beforeEach(async () => {
+    jest.clearAllMocks();
+    const mod: TestingModule = await Test.createTestingModule({
+      providers: [
+        SocialService,
+        { provide: PrismaService, useValue: prisma },
+        { provide: ConfigService, useValue: { get: jest.fn().mockReturnValue('a'.repeat(64)) } },
+        { provide: CronFailureNotifier, useValue: { report: jest.fn() } },
+      ],
+    }).compile();
+    service = mod.get(SocialService);
+  });
+
+  it('upserts an Instagram account with encrypted tokens by (org, platform, accountId)', async () => {
+    await service.upsertOAuthAccount('org1', {
+      platform: 'INSTAGRAM',
+      accountId: 'ig1',
+      accountName: 'mybrand',
+      tokens: { accessToken: 'page-tok', igUserId: 'ig1', pageId: 'p1' },
+      scopes: ['instagram_basic'],
+    });
+    const arg = prisma.socialAccount.upsert.mock.calls[0][0];
+    expect(arg.where.organizationId_platform_accountId).toEqual({ organizationId: 'org1', platform: 'INSTAGRAM', accountId: 'ig1' });
+    expect(typeof arg.create.encryptedTokens).toBe('string');
+    expect(arg.create.encryptedTokens).not.toContain('page-tok'); // encrypted, not plaintext
+    expect(arg.update.status).toBe('ACTIVE');
+  });
+});
+
+describe('SocialService.publishToInstagram', () => {
+  let service: SocialService;
+  const prisma = { socialAccount: { update: jest.fn().mockResolvedValue({}) } } as any;
+  const config = { get: jest.fn().mockReturnValue('https://app.example.com') } as any;
+
+  beforeEach(async () => {
+    jest.clearAllMocks();
+    const mod: TestingModule = await Test.createTestingModule({
+      providers: [
+        SocialService,
+        { provide: PrismaService, useValue: prisma },
+        { provide: ConfigService, useValue: config },
+        { provide: CronFailureNotifier, useValue: { report: jest.fn() } },
+      ],
+    }).compile();
+    service = mod.get(SocialService);
+    jest.spyOn(SocialService.prototype as any, 'decryptTokens')
+      .mockReturnValue({ accessToken: 'page-tok', igUserId: 'ig1', pageId: 'p1' });
+  });
+
+  it('publishes a single image: creates a container then publishes it', async () => {
+    mockedAxios.post
+      .mockResolvedValueOnce({ data: { id: 'container1' } })  // /media
+      .mockResolvedValueOnce({ data: { id: 'post1' } });      // /media_publish
+    mockedAxios.get.mockResolvedValueOnce({ data: { permalink: 'https://instagram.com/p/abc' } });
+
+    const result = await (service as any).publishToAccount(
+      { id: 'c1', body: 'Nice ![x](/uploads/images/x.png)', mediaUrls: [] },
+      { id: 'a1', organizationId: 'o1', platform: 'INSTAGRAM', encryptedTokens: '{}', status: 'ACTIVE' },
+    );
+
+    expect(result.status).toBe('PUBLISHED');
+    expect(result.platformPostId).toBe('post1');
+    expect(result.platformPostUrl).toBe('https://instagram.com/p/abc');
+    const createCall = mockedAxios.post.mock.calls[0];
+    expect(createCall[0]).toContain('/ig1/media');
+    expect(createCall[1]).toMatchObject({ image_url: 'https://app.example.com/uploads/images/x.png' });
+    const publishCall = mockedAxios.post.mock.calls[1];
+    expect(publishCall[0]).toContain('/ig1/media_publish');
+    expect(publishCall[1]).toEqual({ creation_id: 'container1' });
+  });
+
+  it('fails clearly when there is no media (Instagram disallows text-only)', async () => {
+    const result = await (service as any).publishToAccount(
+      { id: 'c1', body: 'just text', mediaUrls: [] },
+      { id: 'a1', organizationId: 'o1', platform: 'INSTAGRAM', encryptedTokens: '{}', status: 'ACTIVE' },
+    );
+    expect(result.status).toBe('FAILED');
+    expect(result.error).toMatch(/requires at least one image or video/i);
+  });
+
+  it('flips Instagram account to REAUTH_REQUIRED on OAuthException', async () => {
+    const err: any = new Error('bad token');
+    err.response = { status: 400, data: { error: { code: 190, type: 'OAuthException', message: 'expired' } } };
+    mockedAxios.post.mockRejectedValue(err);
+
+    const result = await (service as any).publishToAccount(
+      { id: 'c1', body: '![x](/uploads/images/x.png)', mediaUrls: [] },
+      { id: 'a1', organizationId: 'o1', platform: 'INSTAGRAM', accountName: 'brand', encryptedTokens: '{}', status: 'ACTIVE' },
+    );
+    expect(result.status).toBe('FAILED');
+    expect(prisma.socialAccount.update).toHaveBeenCalledWith({ where: { id: 'a1' }, data: { status: 'REAUTH_REQUIRED' } });
+  });
+
+  it('publishes a carousel: creates a child container per image, then a CAROUSEL parent', async () => {
+    mockedAxios.post
+      .mockResolvedValueOnce({ data: { id: 'child1' } })   // image 1
+      .mockResolvedValueOnce({ data: { id: 'child2' } })   // image 2
+      .mockResolvedValueOnce({ data: { id: 'parent1' } })  // CAROUSEL container
+      .mockResolvedValueOnce({ data: { id: 'post1' } });   // media_publish
+    mockedAxios.get.mockResolvedValueOnce({ data: { permalink: 'https://instagram.com/p/car' } });
+
+    const result = await (service as any).publishToAccount(
+      { id: 'c1', body: '![a](/uploads/images/a.png) ![b](/uploads/images/b.png)', mediaUrls: [] },
+      { id: 'a1', organizationId: 'o1', platform: 'INSTAGRAM', encryptedTokens: '{}', status: 'ACTIVE' },
+    );
+
+    expect(result.status).toBe('PUBLISHED');
+    const child1 = mockedAxios.post.mock.calls[0][1];
+    expect(child1).toMatchObject({ is_carousel_item: true });
+    const parent = mockedAxios.post.mock.calls[2][1];
+    expect(parent).toMatchObject({ media_type: 'CAROUSEL', children: 'child1,child2' });
+  });
+
+  it('publishes a Reel: REELS container, waits for processing, then publishes', async () => {
+    const waitSpy = jest.spyOn(SocialService.prototype as any, 'waitForContainer').mockResolvedValue(undefined);
+    mockedAxios.post
+      .mockResolvedValueOnce({ data: { id: 'reelContainer' } })  // REELS /media
+      .mockResolvedValueOnce({ data: { id: 'reelPost' } });      // media_publish
+    mockedAxios.get.mockResolvedValueOnce({ data: { permalink: 'https://instagram.com/reel/xyz' } });
+
+    const result = await (service as any).publishToAccount(
+      { id: 'c1', body: 'My reel', mediaUrls: ['/uploads/videos/reel.mp4'] },
+      { id: 'a1', organizationId: 'o1', platform: 'INSTAGRAM', encryptedTokens: '{}', status: 'ACTIVE' },
+    );
+
+    expect(result.status).toBe('PUBLISHED');
+    expect(result.platformPostId).toBe('reelPost');
+    const createCall = mockedAxios.post.mock.calls[0][1];
+    expect(createCall).toMatchObject({ media_type: 'REELS', video_url: 'https://app.example.com/uploads/videos/reel.mp4', share_to_feed: true });
+    expect(waitSpy).toHaveBeenCalledWith('reelContainer', 'page-tok');
+    waitSpy.mockRestore();
   });
 });
 
