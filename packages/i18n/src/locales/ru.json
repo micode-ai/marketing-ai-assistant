@@ -905,7 +905,14 @@
     },
     "accountLanguage": "Язык аккаунта",
     "noLanguage": "Нет языка по умолчанию",
-    "selectLanguageVersion": "Выберите языковую версию"
+    "selectLanguageVersion": "Выберите языковую версию",
+    "instagram": {
+      "connect": "Подключить Instagram",
+      "description": "Подключите аккаунт Instagram Business или Creator для публикации постов и Reels.",
+      "connected": "Instagram успешно подключён",
+      "error": "Не удалось подключить Instagram. Попробуйте снова.",
+      "noAccount": "К вашей странице Facebook не привязан аккаунт Instagram Business."
+    }
   },
   "tracking": {
     "title": "Отслеживание сайта",
