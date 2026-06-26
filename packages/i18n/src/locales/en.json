@@ -848,7 +848,14 @@
     },
     "accountLanguage": "Account language",
     "noLanguage": "No default language",
-    "selectLanguageVersion": "Select language version"
+    "selectLanguageVersion": "Select language version",
+    "instagram": {
+      "connect": "Connect Instagram",
+      "description": "Connect an Instagram Business or Creator account to publish posts and Reels.",
+      "connected": "Instagram connected successfully",
+      "error": "Could not connect Instagram. Please try again.",
+      "noAccount": "No Instagram Business account is linked to your Facebook Page."
+    }
   },
   "analytics": {
     "title": "Analytics",

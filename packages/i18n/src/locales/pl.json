@@ -828,7 +828,14 @@
     },
     "accountLanguage": "Język konta",
     "noLanguage": "Brak domyślnego języka",
-    "selectLanguageVersion": "Wybierz wersję językową"
+    "selectLanguageVersion": "Wybierz wersję językową",
+    "instagram": {
+      "connect": "Połącz Instagram",
+      "description": "Połącz konto Instagram Business lub Twórca, aby publikować posty i Reels.",
+      "connected": "Instagram połączony pomyślnie",
+      "error": "Nie udało się połączyć Instagrama. Spróbuj ponownie.",
+      "noAccount": "Żadne konto Instagram Business nie jest połączone z Twoją stroną na Facebooku."
+    }
   },
   "analytics": {
     "title": "Analityka",
