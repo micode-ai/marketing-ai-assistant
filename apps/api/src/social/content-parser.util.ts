@@ -34,3 +34,22 @@ export function stripMarkdown(body: string): string {
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 }
+
+const VIDEO_EXT = /\.(mp4|mov|m4v)(\?.*)?$/i;
+
+export function resolvePublishMedia(
+  content: { body?: string; mediaUrls?: string[] },
+  publicUrl: string,
+): { images: string[]; videos: string[] } {
+  const baseUrl = publicUrl.replace(/\/$/, '');
+  const toAbs = (u: string) =>
+    u.startsWith('http://') || u.startsWith('https://') ? u : u.startsWith('/') ? `${baseUrl}${u}` : u;
+
+  const bodyImages = extractImageUrls(content.body || '', publicUrl);
+  const media = content.mediaUrls || [];
+  const videos = media.filter((u) => VIDEO_EXT.test(u)).map(toAbs);
+  const mediaImages = media.filter((u) => !VIDEO_EXT.test(u)).map(toAbs);
+  const images = [...bodyImages, ...mediaImages.filter((u) => !bodyImages.includes(u))];
+
+  return { images, videos };
+}
