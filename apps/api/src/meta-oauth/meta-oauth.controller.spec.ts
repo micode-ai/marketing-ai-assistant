@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import * as crypto from 'crypto';
-import { BadRequestException, ForbiddenException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { MetaOAuthController } from './meta-oauth.controller';
 import { MetaOAuthService } from './meta-oauth.service';
@@ -47,6 +47,8 @@ describe('MetaOAuthController', () => {
                 API_URL: 'http://localhost:3000',
                 WEB_URL: 'http://localhost:5173',
                 ENCRYPTION_KEY: TEST_ENCRYPTION_KEY,
+                FACEBOOK_APP_ID: 'app-123',
+                FACEBOOK_APP_SECRET: 'secret-123',
               };
               return map[key];
             }),
@@ -85,6 +87,16 @@ describe('MetaOAuthController', () => {
 
     it('throws BadRequestException for unsupported platform', () => {
       expect(() => controller.getAuthUrl(mockUser('OWNER'), 'FACEBOOK')).toThrow(BadRequestException);
+    });
+
+    it('throws ServiceUnavailableException when Meta app credentials are not configured', () => {
+      const cfg = { get: jest.fn((k: string) => (k === 'ENCRYPTION_KEY' ? TEST_ENCRYPTION_KEY : undefined)) };
+      const ctrl = new MetaOAuthController(
+        { getInstagramAuthUrl: jest.fn() } as any,
+        { upsertOAuthAccount: jest.fn() } as any,
+        cfg as any,
+      );
+      expect(() => ctrl.getAuthUrl(mockUser('OWNER'), 'INSTAGRAM')).toThrow(ServiceUnavailableException);
     });
 
     it('throws BadRequestException when organizationId is passed for an org the user is not a member of', () => {
