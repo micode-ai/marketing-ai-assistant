@@ -35,9 +35,11 @@ export class MetaOAuthService {
   async exchangeCode(code: string, redirectUri: string): Promise<{ access_token: string; expires_in?: number }> {
     const clientId = this.config.get('FACEBOOK_APP_ID');
     const clientSecret = this.config.get('FACEBOOK_APP_SECRET');
+    if (!clientId) throw new Error('FACEBOOK_APP_ID not configured');
+    if (!clientSecret) throw new Error('FACEBOOK_APP_SECRET not configured');
     const params = new URLSearchParams({
-      client_id: clientId || '',
-      client_secret: clientSecret || '',
+      client_id: clientId,
+      client_secret: clientSecret,
       redirect_uri: redirectUri,
       code,
     });
@@ -49,10 +51,12 @@ export class MetaOAuthService {
   async getLongLivedToken(shortLivedToken: string): Promise<{ access_token: string; expires_in: number }> {
     const clientId = this.config.get('FACEBOOK_APP_ID');
     const clientSecret = this.config.get('FACEBOOK_APP_SECRET');
+    if (!clientId) throw new Error('FACEBOOK_APP_ID not configured');
+    if (!clientSecret) throw new Error('FACEBOOK_APP_SECRET not configured');
     const params = new URLSearchParams({
       grant_type: 'fb_exchange_token',
-      client_id: clientId || '',
-      client_secret: clientSecret || '',
+      client_id: clientId,
+      client_secret: clientSecret,
       fb_exchange_token: shortLivedToken,
     });
     const res = await fetch(`${GRAPH}/oauth/access_token?${params}`);
@@ -69,8 +73,7 @@ export class MetaOAuthService {
     });
     const res = await fetch(`${GRAPH}/me/accounts?${params}`);
     if (!res.ok) {
-      this.logger.warn(`Meta /me/accounts failed: ${await res.text()}`);
-      return null;
+      throw new Error(`Meta /me/accounts failed: ${await res.text()}`);
     }
     const data = (await res.json()) as {
       data?: Array<{ id: string; name: string; access_token: string; instagram_business_account?: { id: string; username: string; profile_picture_url?: string } }>;
