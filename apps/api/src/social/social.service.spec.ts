@@ -192,6 +192,26 @@ describe('SocialService.publishToInstagram', () => {
     expect(result.status).toBe('FAILED');
     expect(prisma.socialAccount.update).toHaveBeenCalledWith({ where: { id: 'a1' }, data: { status: 'REAUTH_REQUIRED' } });
   });
+
+  it('publishes a carousel: creates a child container per image, then a CAROUSEL parent', async () => {
+    mockedAxios.post
+      .mockResolvedValueOnce({ data: { id: 'child1' } })   // image 1
+      .mockResolvedValueOnce({ data: { id: 'child2' } })   // image 2
+      .mockResolvedValueOnce({ data: { id: 'parent1' } })  // CAROUSEL container
+      .mockResolvedValueOnce({ data: { id: 'post1' } });   // media_publish
+    mockedAxios.get.mockResolvedValueOnce({ data: { permalink: 'https://instagram.com/p/car' } });
+
+    const result = await (service as any).publishToAccount(
+      { id: 'c1', body: '![a](/uploads/images/a.png) ![b](/uploads/images/b.png)', mediaUrls: [] },
+      { id: 'a1', organizationId: 'o1', platform: 'INSTAGRAM', encryptedTokens: '{}', status: 'ACTIVE' },
+    );
+
+    expect(result.status).toBe('PUBLISHED');
+    const child1 = mockedAxios.post.mock.calls[0][1];
+    expect(child1).toMatchObject({ is_carousel_item: true });
+    const parent = mockedAxios.post.mock.calls[2][1];
+    expect(parent).toMatchObject({ media_type: 'CAROUSEL', children: 'child1,child2' });
+  });
 });
 
 describe('SocialService.cancelPublication', () => {
