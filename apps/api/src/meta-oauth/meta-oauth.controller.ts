@@ -1,4 +1,4 @@
-import { Controller, Get, Query, Res, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { Controller, Get, Query, Res, BadRequestException, ForbiddenException, ServiceUnavailableException } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
@@ -72,6 +72,11 @@ export class MetaOAuthController {
     }
     const orgId = membership.organizationId;
     if (platform !== 'INSTAGRAM') throw new BadRequestException('Unsupported platform');
+    if (!this.config.get('FACEBOOK_APP_ID') || !this.config.get('FACEBOOK_APP_SECRET')) {
+      throw new ServiceUnavailableException(
+        'Instagram integration is not configured on this server yet. An administrator must set FACEBOOK_APP_ID and FACEBOOK_APP_SECRET.',
+      );
+    }
     const state = this.signState({ organizationId: orgId, platform });
     return { url: this.metaService.getInstagramAuthUrl(this.redirectUri(), state) };
   }
