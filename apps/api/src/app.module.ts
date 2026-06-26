@@ -29,6 +29,7 @@ import { ChatModule } from './chat/chat.module';
 import { WebhooksModule } from './webhooks/webhooks.module';
 import { GoogleIntegrationsModule } from './google-integrations/google-integrations.module';
 import { GooglePlayModule } from './google-play/google-play.module';
+import { MetaOAuthModule } from './meta-oauth/meta-oauth.module';
 import { InvitationsModule } from './invitations/invitations.module';
 import { MailModule } from './mail/mail.module';
 import { EntityLinksModule } from './entity-links/entity-links.module';
@@ -66,6 +67,7 @@ import { FinancesModule } from './finances/finances.module';
     AnalyticsModule,
     AgentModule,
     SocialModule,
+    MetaOAuthModule,
     TrackingModule,
     SeoModule,
     ABTestingModule,
