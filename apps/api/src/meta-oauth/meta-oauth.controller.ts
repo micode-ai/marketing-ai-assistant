@@ -1,11 +1,14 @@
-import { Controller, Get, Query, Res, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Query, Res, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
+import * as crypto from 'crypto';
 import { MetaOAuthService } from './meta-oauth.service';
 import { SocialService } from '../social/social.service';
 import { Public } from '../common/decorators/public.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+
+const STATE_TTL_MS = 600_000; // 10 minutes
 
 @ApiTags('meta')
 @ApiBearerAuth()
@@ -22,12 +25,47 @@ export class MetaOAuthController {
     return `${apiUrl}/api/meta/callback`;
   }
 
+  private signState(payload: object): string {
+    const secret = this.config.get('ENCRYPTION_KEY') || '';
+    const body = Buffer.from(JSON.stringify({ ...payload, ts: Date.now() })).toString('base64url');
+    const sig = Buffer.from(
+      crypto.createHmac('sha256', secret).update(body).digest(),
+    ).toString('base64url');
+    return `${body}.${sig}`;
+  }
+
+  private verifyState(state: string): { organizationId: string; platform: string } | null {
+    try {
+      const dotIdx = state.lastIndexOf('.');
+      if (dotIdx === -1) return null;
+      const body = state.slice(0, dotIdx);
+      const sigB64 = state.slice(dotIdx + 1);
+      const secret = this.config.get('ENCRYPTION_KEY') || '';
+      const expectedB64 = Buffer.from(
+        crypto.createHmac('sha256', secret).update(body).digest(),
+      ).toString('base64url');
+      const sigBuf = Buffer.from(sigB64, 'base64url');
+      const expectedBuf = Buffer.from(expectedB64, 'base64url');
+      if (sigBuf.length !== expectedBuf.length) return null;
+      if (!crypto.timingSafeEqual(sigBuf, expectedBuf)) return null;
+      const parsed = JSON.parse(Buffer.from(body, 'base64url').toString('utf-8'));
+      if (!parsed.ts || Date.now() - parsed.ts > STATE_TTL_MS) return null;
+      return { organizationId: parsed.organizationId, platform: parsed.platform };
+    } catch {
+      return null;
+    }
+  }
+
   @Get('auth-url')
   getAuthUrl(@CurrentUser() user: any, @Query('platform') platform: string) {
-    const organizationId: string = user.memberships?.[0]?.organizationId;
+    const membership = user.memberships?.[0];
+    const organizationId: string = membership?.organizationId;
     if (!organizationId) throw new BadRequestException('No organization');
+    if (!['OWNER', 'ADMIN'].includes(membership.role)) {
+      throw new ForbiddenException('Only OWNER or ADMIN can connect social accounts');
+    }
     if (platform !== 'INSTAGRAM') throw new BadRequestException('Unsupported platform');
-    const state = Buffer.from(JSON.stringify({ organizationId, platform })).toString('base64');
+    const state = this.signState({ organizationId, platform });
     return { url: this.metaService.getInstagramAuthUrl(this.redirectUri(), state) };
   }
 
@@ -37,12 +75,8 @@ export class MetaOAuthController {
     const webUrl = (this.config.get('WEB_URL') || 'http://localhost:5173').replace(/\/$/, '');
     const fail = (reason: string) => res.redirect(`${webUrl}/settings/integrations?instagram=error&reason=${reason}`);
 
-    let parsed: { organizationId: string; platform: string };
-    try {
-      parsed = JSON.parse(Buffer.from(state, 'base64').toString('utf-8'));
-    } catch {
-      return fail('bad_state');
-    }
+    const parsed = this.verifyState(state);
+    if (!parsed) return fail('bad_state');
     if (!code) return fail('no_code');
 
     try {
