@@ -103,6 +103,49 @@ export class SocialService {
     });
   }
 
+  async upsertOAuthAccount(
+    organizationId: string,
+    params: {
+      platform: string;
+      accountId: string;
+      accountName: string;
+      profileImageUrl?: string;
+      tokens: Record<string, string | undefined>;
+      scopes?: string[];
+      expiresAt?: Date | null;
+    },
+  ) {
+    const encrypted = this.encryptTokens(params.tokens);
+    return this.prisma.socialAccount.upsert({
+      where: {
+        organizationId_platform_accountId: {
+          organizationId,
+          platform: params.platform as any,
+          accountId: params.accountId,
+        },
+      },
+      create: {
+        organizationId,
+        platform: params.platform as any,
+        accountName: params.accountName,
+        accountId: params.accountId,
+        profileImageUrl: params.profileImageUrl,
+        encryptedTokens: encrypted,
+        scopes: params.scopes ?? [],
+        expiresAt: params.expiresAt ?? null,
+      },
+      update: {
+        accountName: params.accountName,
+        profileImageUrl: params.profileImageUrl,
+        encryptedTokens: encrypted,
+        status: 'ACTIVE',
+        scopes: params.scopes ?? [],
+        expiresAt: params.expiresAt ?? null,
+      },
+      select: { id: true, platform: true, accountName: true, accountId: true, status: true },
+    });
+  }
+
   async updateAccount(id: string, organizationId: string, dto: any) {
     const account = await this.prisma.socialAccount.findFirst({ where: { id, organizationId } });
     if (!account) throw new NotFoundException('Social account not found');

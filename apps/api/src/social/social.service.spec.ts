@@ -96,6 +96,39 @@ describe('SocialService.publishToAccount', () => {
   });
 });
 
+describe('SocialService.upsertOAuthAccount', () => {
+  let service: SocialService;
+  const prisma = { socialAccount: { upsert: jest.fn().mockResolvedValue({ id: 'acc1', platform: 'INSTAGRAM', accountName: 'mybrand', accountId: 'ig1', status: 'ACTIVE' }) } } as any;
+
+  beforeEach(async () => {
+    jest.clearAllMocks();
+    const mod: TestingModule = await Test.createTestingModule({
+      providers: [
+        SocialService,
+        { provide: PrismaService, useValue: prisma },
+        { provide: ConfigService, useValue: { get: jest.fn().mockReturnValue('a'.repeat(64)) } },
+        { provide: CronFailureNotifier, useValue: { report: jest.fn() } },
+      ],
+    }).compile();
+    service = mod.get(SocialService);
+  });
+
+  it('upserts an Instagram account with encrypted tokens by (org, platform, accountId)', async () => {
+    await service.upsertOAuthAccount('org1', {
+      platform: 'INSTAGRAM',
+      accountId: 'ig1',
+      accountName: 'mybrand',
+      tokens: { accessToken: 'page-tok', igUserId: 'ig1', pageId: 'p1' },
+      scopes: ['instagram_basic'],
+    });
+    const arg = prisma.socialAccount.upsert.mock.calls[0][0];
+    expect(arg.where.organizationId_platform_accountId).toEqual({ organizationId: 'org1', platform: 'INSTAGRAM', accountId: 'ig1' });
+    expect(typeof arg.create.encryptedTokens).toBe('string');
+    expect(arg.create.encryptedTokens).not.toContain('page-tok'); // encrypted, not plaintext
+    expect(arg.update.status).toBe('ACTIVE');
+  });
+});
+
 describe('SocialService.cancelPublication', () => {
   let service: SocialService;
   const prisma = {
