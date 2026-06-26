@@ -5,7 +5,7 @@ import axios from 'axios';
 import { TwitterApi } from 'twitter-api-v2';
 import { encryptData, decryptData } from '../common/crypto.util';
 import { CronFailureNotifier } from '../common/cron-failure-notifier.service';
-import { extractImageUrls, stripMarkdown } from './content-parser.util';
+import { extractImageUrls, stripMarkdown, resolvePublishMedia } from './content-parser.util';
 
 @Injectable()
 export class SocialService {
@@ -244,27 +244,28 @@ export class SocialService {
       return { status: 'FAILED', error: 'Account requires reauthentication' };
     }
     try {
-      const supported = ['LINKEDIN', 'TWITTER', 'FACEBOOK', 'TELEGRAM'];
+      const supported = ['LINKEDIN', 'TWITTER', 'FACEBOOK', 'TELEGRAM', 'INSTAGRAM'];
       if (!supported.includes(account.platform)) {
         throw new Error(`Publishing to ${account.platform} is not yet supported`);
       }
       const tokens = this.decryptTokens(account.encryptedTokens);
       let result: { postId?: string; postUrl?: string };
-      if (account.platform === 'LINKEDIN')      result = await this.publishToLinkedIn(content, tokens);
-      else if (account.platform === 'TWITTER')  result = await this.publishToTwitter(content, tokens);
-      else if (account.platform === 'FACEBOOK') result = await this.publishToFacebook(content, tokens);
-      else                                      result = await this.publishToTelegram(content, tokens);
+      if (account.platform === 'LINKEDIN')        result = await this.publishToLinkedIn(content, tokens);
+      else if (account.platform === 'TWITTER')   result = await this.publishToTwitter(content, tokens);
+      else if (account.platform === 'FACEBOOK')  result = await this.publishToFacebook(content, tokens);
+      else if (account.platform === 'INSTAGRAM') result = await this.publishToInstagram(content, tokens);
+      else                                       result = await this.publishToTelegram(content, tokens);
       return { status: 'PUBLISHED', platformPostId: result.postId, platformPostUrl: result.postUrl };
     } catch (err: any) {
       const data = err?.response?.data;
       const error = (data && (data.description || data.error?.message || data.message)) || err?.message || 'Unknown error';
 
-      const fbCode = data?.error?.code;
-      const isFbTokenExpired =
-        account.platform === 'FACEBOOK' &&
-        (fbCode === 190 || data?.error?.type === 'OAuthException');
+      const metaCode = data?.error?.code;
+      const isMetaTokenExpired =
+        ['FACEBOOK', 'INSTAGRAM'].includes(account.platform) &&
+        (metaCode === 190 || data?.error?.type === 'OAuthException');
 
-      if (isFbTokenExpired) {
+      if (isMetaTokenExpired) {
         try {
           await this.prisma.socialAccount.update({
             where: { id: account.id },
@@ -280,7 +281,7 @@ export class SocialService {
           resourceType: 'SocialAccount',
           resourceId: account.id,
           resourceLabel: `${account.platform}: ${account.accountName || account.accountId}`,
-          errorCode: 'FB_TOKEN_EXPIRED',
+          errorCode: account.platform === 'INSTAGRAM' ? 'IG_TOKEN_EXPIRED' : 'FB_TOKEN_EXPIRED',
           error,
           actionUrl: `${webUrl}/settings/integrations`,
         });
@@ -583,6 +584,67 @@ export class SocialService {
     );
     const postId: string = res.data?.id || '';
     return { postId, postUrl: this.fbPostUrl(postId) };
+  }
+
+  private async publishToInstagram(content: any, tokens: any) {
+    const GRAPH = 'https://graph.facebook.com/v21.0';
+    const igUserId = tokens.igUserId;
+    const token = tokens.accessToken;
+    if (!igUserId) throw new Error('Instagram account not fully connected (missing igUserId)');
+
+    const { images, videos } = resolvePublishMedia(content, this.publicUrl);
+    if (videos.length === 0 && images.length === 0) {
+      throw new Error('Instagram requires at least one image or video');
+    }
+    const caption = stripMarkdown(content.body || '').slice(0, 2200);
+    const params = { access_token: token };
+
+    let creationId: string;
+    if (videos.length > 0) {
+      const create = await axios.post(`${GRAPH}/${igUserId}/media`,
+        { media_type: 'REELS', video_url: videos[0], caption, share_to_feed: true }, { params });
+      creationId = create.data.id;
+      await this.waitForContainer(creationId, token);
+    } else if (images.length === 1) {
+      const create = await axios.post(`${GRAPH}/${igUserId}/media`,
+        { image_url: images[0], caption }, { params });
+      creationId = create.data.id;
+    } else {
+      const childIds: string[] = [];
+      for (const url of images.slice(0, 10)) {
+        const c = await axios.post(`${GRAPH}/${igUserId}/media`,
+          { image_url: url, is_carousel_item: true }, { params });
+        if (c.data?.id) childIds.push(c.data.id);
+      }
+      const create = await axios.post(`${GRAPH}/${igUserId}/media`,
+        { media_type: 'CAROUSEL', children: childIds.join(','), caption }, { params });
+      creationId = create.data.id;
+    }
+
+    const publish = await axios.post(`${GRAPH}/${igUserId}/media_publish`,
+      { creation_id: creationId }, { params });
+    const postId: string = publish.data?.id || '';
+
+    let postUrl = '';
+    try {
+      const info = await axios.get(`${GRAPH}/${postId}`, { params: { fields: 'permalink', access_token: token } });
+      postUrl = info.data?.permalink || '';
+    } catch {
+      // permalink is best-effort
+    }
+    return { postId, postUrl };
+  }
+
+  private async waitForContainer(creationId: string, token: string, maxAttempts = 20, delayMs = 3000): Promise<void> {
+    const GRAPH = 'https://graph.facebook.com/v21.0';
+    for (let i = 0; i < maxAttempts; i++) {
+      const r = await axios.get(`${GRAPH}/${creationId}`, { params: { fields: 'status_code', access_token: token } });
+      const status = r.data?.status_code;
+      if (status === 'FINISHED') return;
+      if (status === 'ERROR' || status === 'EXPIRED') throw new Error(`Instagram media processing ${status}`);
+      await new Promise((res) => setTimeout(res, delayMs));
+    }
+    throw new Error('Instagram media processing timed out');
   }
 
   private async publishToTelegram(content: any, tokens: any) {
