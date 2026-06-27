@@ -1,0 +1,471 @@
+<script lang="ts">
+  import { _, locale } from 'svelte-i18n';
+  import { onMount, onDestroy, tick } from 'svelte';
+  import { goto } from '$app/navigation';
+  import { marked } from 'marked';
+  import DOMPurify from 'dompurify';
+  import { api } from '$lib/api/client';
+  import {
+    resolveInstagramView,
+    isSyncStale,
+    type InstagramStatus,
+  } from './instagram-dashboard-state';
+
+  export let projectId: string;
+
+  type Period = 7 | 28 | 90;
+
+  interface AccountPoint {
+    date: string;
+    followersCount: number | null;
+    reach: number | null;
+    views: number | null;
+    accountsEngaged: number | null;
+    totalInteractions: number | null;
+  }
+
+  interface MediaPost {
+    id: string;
+    igMediaId: string;
+    mediaType: string;
+    caption: string | null;
+    permalink: string | null;
+    timestamp: string;
+    likeCount: number | null;
+    commentsCount: number | null;
+    reach: number | null;
+    views: number | null;
+    engagementRate: number | null;
+  }
+
+  interface Metrics {
+    account: AccountPoint[];
+    topPosts: MediaPost[];
+    worstPosts: MediaPost[];
+  }
+
+  const PERIODS: Period[] = [7, 28, 90];
+  const SYNC_INTERVAL_MS = 5 * 60 * 1000; // periodic refresh while mounted
+
+  let status: InstagramStatus | null = null;
+  let metrics: Metrics = { account: [], topPosts: [], worstPosts: [] };
+  let loading = true;
+  let dataLoading = false;
+  let syncing = false;
+  let period: Period = 28;
+  let syncInterval: ReturnType<typeof setInterval> | null = null;
+
+  // Chart
+  let ChartJS: any = null;
+  let chartCanvas: HTMLCanvasElement;
+  let chart: any = null;
+
+  // AI advice
+  let advice = '';
+  let contextSummary = '';
+  let adviceLoading = false;
+  let adviceError = '';
+  let openingChat = false;
+
+  $: view = resolveInstagramView({ loading, status });
+
+  onMount(async () => {
+    const { Chart } = await import('chart.js/auto');
+    ChartJS = Chart;
+    await init();
+    prevProjectId = projectId;
+    mounted = true;
+  });
+
+  // Re-initialise when the parent passes a different project. This component is
+  // reused across project switches (the analytics page is not remounted), so
+  // without this watcher it keeps showing the previous project's IG data.
+  let mounted = false;
+  let prevProjectId = '';
+  $: if (mounted && projectId && projectId !== prevProjectId) {
+    prevProjectId = projectId;
+    reinit();
+  }
+
+  async function init() {
+    loading = true;
+    await checkStatus();
+    if (status?.connected && status.insightsGranted) {
+      await syncIfStale();
+      await fetchMetrics();
+      syncInterval = setInterval(syncAndRefresh, SYNC_INTERVAL_MS);
+    }
+    loading = false;
+  }
+
+  async function reinit() {
+    if (syncInterval) { clearInterval(syncInterval); syncInterval = null; }
+    destroyChart();
+    status = null;
+    metrics = { account: [], topPosts: [], worstPosts: [] };
+    advice = '';
+    contextSummary = '';
+    adviceError = '';
+    period = 28;
+    await init();
+  }
+
+  onDestroy(() => {
+    if (syncInterval) clearInterval(syncInterval);
+    destroyChart();
+  });
+
+  function destroyChart() {
+    chart?.destroy();
+    chart = null;
+  }
+
+  async function checkStatus() {
+    try {
+      status = await api.get<InstagramStatus>('/instagram/status', { projectId });
+    } catch {
+      status = { connected: false, insightsGranted: false };
+    }
+  }
+
+  async function syncIfStale() {
+    if (isSyncStale(status?.lastSyncAt)) {
+      await triggerSync();
+    }
+  }
+
+  async function triggerSync() {
+    syncing = true;
+    try {
+      await api.post('/instagram/sync?projectId=' + projectId);
+      await checkStatus();
+    } catch {
+      /* best effort — keep showing existing data */
+    } finally {
+      syncing = false;
+    }
+  }
+
+  async function syncAndRefresh() {
+    await triggerSync();
+    await fetchMetrics();
+  }
+
+  async function fetchMetrics() {
+    dataLoading = true;
+    try {
+      metrics = await api.get<Metrics>('/instagram/metrics', { projectId, days: period });
+      await tick();
+      renderChart();
+    } catch {
+      metrics = { account: [], topPosts: [], worstPosts: [] };
+    } finally {
+      dataLoading = false;
+    }
+  }
+
+  async function changePeriod(p: Period) {
+    period = p;
+    await fetchMetrics();
+  }
+
+  function renderChart() {
+    if (!ChartJS || !chartCanvas || metrics.account.length === 0) return;
+    destroyChart();
+    const labels = metrics.account.map((d) =>
+      new Date(d.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+    );
+    chart = new ChartJS(chartCanvas, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: $_('instagram.followers'),
+            data: metrics.account.map((d) => d.followersCount ?? 0),
+            borderColor: '#EC4899',
+            backgroundColor: 'rgba(236, 72, 153, 0.1)',
+            fill: true,
+            tension: 0.3,
+            pointRadius: period <= 28 ? 2 : 0,
+            yAxisID: 'y1',
+          },
+          {
+            label: $_('instagram.reach'),
+            data: metrics.account.map((d) => d.reach ?? 0),
+            borderColor: '#8B5CF6',
+            backgroundColor: 'rgba(139, 92, 246, 0.1)',
+            fill: false,
+            tension: 0.3,
+            pointRadius: period <= 28 ? 2 : 0,
+          },
+          {
+            label: $_('instagram.views'),
+            data: metrics.account.map((d) => d.views ?? 0),
+            borderColor: '#3B82F6',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            fill: false,
+            tension: 0.3,
+            pointRadius: period <= 28 ? 2 : 0,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: { legend: { position: 'top' } },
+        scales: {
+          x: { ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 12 } },
+          y: { type: 'linear', position: 'left', beginAtZero: true },
+          y1: { type: 'linear', position: 'right', beginAtZero: false, grid: { drawOnChartArea: false } },
+        },
+      },
+    });
+  }
+
+  // --- KPIs ---
+  $: currentFollowers = metrics.account.length
+    ? metrics.account[metrics.account.length - 1].followersCount ?? 0
+    : 0;
+  $: totalReach = metrics.account.reduce((s, d) => s + (d.reach ?? 0), 0);
+  $: totalViews = metrics.account.reduce((s, d) => s + (d.views ?? 0), 0);
+
+  function formatNumber(n: number | null | undefined): string {
+    const v = n ?? 0;
+    if (v >= 1_000_000) return (v / 1_000_000).toFixed(1) + 'M';
+    if (v >= 1_000) return (v / 1_000).toFixed(1) + 'K';
+    return v.toLocaleString();
+  }
+
+  function formatEngagement(rate: number | null | undefined): string {
+    if (rate == null) return '—';
+    return (rate * 100).toFixed(1) + '%';
+  }
+
+  function truncate(text: string | null, len = 60): string {
+    if (!text) return '—';
+    return text.length > len ? text.slice(0, len) + '…' : text;
+  }
+
+  // --- AI advice ---
+  async function getAdvice() {
+    adviceLoading = true;
+    adviceError = '';
+    try {
+      const res = await api.post<{ advice: string; contextSummary: string }>(
+        `/instagram/advice?projectId=${projectId}`,
+        { language: $locale || 'en' },
+      );
+      advice = res.advice;
+      contextSummary = res.contextSummary;
+    } catch {
+      adviceError = $_('instagram.adviceError');
+    } finally {
+      adviceLoading = false;
+    }
+  }
+
+  async function continueInChat() {
+    if (!advice) return;
+    openingChat = true;
+    try {
+      const session = await api.post<{ id: string }>('/chat/sessions', {
+        projectId,
+        title: `Instagram advice — ${new Date().toISOString().slice(0, 10)}`,
+      });
+      await api.post(`/chat/sessions/${session.id}/messages`, {
+        role: 'user',
+        content: `${contextSummary}\n\nAdvise how to improve these Instagram metrics.`,
+      });
+      await api.post(`/chat/sessions/${session.id}/messages`, {
+        role: 'assistant',
+        content: advice,
+      });
+      goto(`/ai-chat?session=${session.id}`);
+    } finally {
+      openingChat = false;
+    }
+  }
+</script>
+
+{#if view === 'loading'}
+  <!-- nothing while resolving status (avoids a flash before we know IG is linked) -->
+{:else if view === 'hidden'}
+  <!-- No Instagram account linked: keep a quiet inline hint -->
+  <!-- self-hides; rendered nothing keeps the analytics page clean -->
+{:else if view === 'reconnect'}
+  <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 flex items-start gap-3">
+    <svg class="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+    </svg>
+    <div class="flex-1">
+      <h3 class="text-sm font-semibold text-amber-900">{$_('instagram.reconnectTitle')}</h3>
+      <p class="text-sm text-amber-700 mt-0.5">{$_('instagram.reconnectDescription')}</p>
+      <a href="/settings/integrations"
+         class="inline-flex items-center gap-1 mt-2 text-sm font-medium text-amber-800 hover:text-amber-900 hover:underline">
+        {$_('instagram.reconnectCta')} →
+      </a>
+    </div>
+  </div>
+{:else}
+  <!-- Connected with insights -->
+  <div class="bg-white rounded-xl border border-gray-200 overflow-hidden mb-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 bg-pink-50 rounded-lg flex items-center justify-center flex-shrink-0">
+          <svg class="w-5 h-5 text-pink-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <rect x="3" y="3" width="18" height="18" rx="5" />
+            <circle cx="12" cy="12" r="4" />
+            <circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" />
+          </svg>
+        </div>
+        <div>
+          <h2 class="text-sm font-semibold text-gray-900">{$_('instagram.title')}</h2>
+          <p class="text-xs text-gray-500">
+            {status?.accountName ? '@' + status.accountName : $_('instagram.subtitle')}
+          </p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <button on:click={syncAndRefresh} disabled={syncing}
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-40 cursor-pointer">
+          {#if syncing}
+            <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            {$_('instagram.syncing')}
+          {:else}
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
+            </svg>
+            {$_('instagram.syncNow')}
+          {/if}
+        </button>
+        <div class="flex bg-gray-100 rounded-lg p-0.5">
+          {#each PERIODS as p}
+            <button on:click={() => changePeriod(p)} disabled={dataLoading}
+              class="px-2.5 py-1 text-xs font-medium rounded-md transition-colors
+                {period === p ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}">
+              {$_(`instagram.period${p}`)}
+            </button>
+          {/each}
+        </div>
+      </div>
+    </div>
+
+    {#if dataLoading && metrics.account.length === 0}
+      <div class="p-5 space-y-6 animate-pulse">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {#each Array(3) as _skeleton}<div class="bg-gray-100 rounded-xl h-24"></div>{/each}
+        </div>
+        <div class="bg-gray-100 rounded-xl h-64"></div>
+      </div>
+    {:else if metrics.account.length === 0}
+      <div class="px-5 py-12 text-center text-sm text-gray-500">{$_('instagram.noData')}</div>
+    {:else}
+      <div class="p-5 space-y-6">
+        <!-- KPI cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div class="bg-white border border-gray-200 rounded-xl p-4 border-t-4 border-t-pink-400">
+            <div class="text-xs text-gray-500 mb-1">{$_('instagram.currentFollowers')}</div>
+            <div class="text-2xl font-bold text-gray-900">{formatNumber(currentFollowers)}</div>
+          </div>
+          <div class="bg-white border border-gray-200 rounded-xl p-4 border-t-4 border-t-purple-400">
+            <div class="text-xs text-gray-500 mb-1">{$_('instagram.totalReach')}</div>
+            <div class="text-2xl font-bold text-gray-900">{formatNumber(totalReach)}</div>
+          </div>
+          <div class="bg-white border border-gray-200 rounded-xl p-4 border-t-4 border-t-blue-400">
+            <div class="text-xs text-gray-500 mb-1">{$_('instagram.totalViews')}</div>
+            <div class="text-2xl font-bold text-gray-900">{formatNumber(totalViews)}</div>
+          </div>
+        </div>
+
+        <!-- Trend chart -->
+        <div>
+          <h3 class="text-sm font-semibold text-gray-700 mb-3">{$_('instagram.trend')}</h3>
+          <div class="relative" style="height: 264px;">
+            <canvas bind:this={chartCanvas} style="width: 100%; height: 100%;"></canvas>
+          </div>
+        </div>
+
+        <!-- Posts & Reels -->
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-5">
+          {#each [{ key: 'best', title: 'instagram.bestPosts', rows: metrics.topPosts }, { key: 'worst', title: 'instagram.worstPosts', rows: metrics.worstPosts }] as group (group.key)}
+            <div>
+              <h3 class="text-sm font-semibold text-gray-700 mb-3">{$_(group.title)}</h3>
+              {#if group.rows.length === 0}
+                <div class="text-sm text-gray-400 py-6 text-center bg-gray-50 rounded-xl">{$_('instagram.noPosts')}</div>
+              {:else}
+                <div class="rounded-xl border border-gray-200 overflow-x-auto">
+                  <table class="w-full text-sm min-w-[460px]">
+                    <thead>
+                      <tr class="bg-gray-50 border-b border-gray-200">
+                        <th class="text-left px-3 py-2.5 text-xs font-semibold text-gray-500">{$_('instagram.caption')}</th>
+                        <th class="text-left px-3 py-2.5 text-xs font-semibold text-gray-500">{$_('instagram.type')}</th>
+                        <th class="text-right px-3 py-2.5 text-xs font-semibold text-gray-500">{$_('instagram.likes')}</th>
+                        <th class="text-right px-3 py-2.5 text-xs font-semibold text-gray-500">{$_('instagram.comments')}</th>
+                        <th class="text-right px-3 py-2.5 text-xs font-semibold text-gray-500">{$_('instagram.reach')}</th>
+                        <th class="text-right px-3 py-2.5 text-xs font-semibold text-gray-500">{$_('instagram.engagement')}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {#each group.rows as post (post.id)}
+                        <tr class="border-b border-gray-100 hover:bg-gray-50">
+                          <td class="px-3 py-2 text-gray-800 max-w-[180px] truncate" title={post.caption ?? ''}>
+                            {#if post.permalink}
+                              <a href={post.permalink} target="_blank" rel="noopener noreferrer"
+                                 class="text-primary-600 hover:underline">{truncate(post.caption)}</a>
+                            {:else}
+                              {truncate(post.caption)}
+                            {/if}
+                          </td>
+                          <td class="px-3 py-2">
+                            <span class="inline-block px-2 py-0.5 text-[10px] font-medium rounded-full bg-pink-50 text-pink-700">{post.mediaType}</span>
+                          </td>
+                          <td class="px-3 py-2 text-right text-gray-700 font-medium">{formatNumber(post.likeCount)}</td>
+                          <td class="px-3 py-2 text-right text-gray-600">{formatNumber(post.commentsCount)}</td>
+                          <td class="px-3 py-2 text-right text-gray-600">{formatNumber(post.reach)}</td>
+                          <td class="px-3 py-2 text-right text-gray-600">{formatEngagement(post.engagementRate)}</td>
+                        </tr>
+                      {/each}
+                    </tbody>
+                  </table>
+                </div>
+              {/if}
+            </div>
+          {/each}
+        </div>
+
+        <!-- AI advice -->
+        <div class="bg-gray-50 rounded-xl border border-gray-100 p-5">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-sm font-semibold text-gray-700">{$_('instagram.advice')}</h3>
+            {#if !advice}
+              <button on:click={getAdvice} disabled={adviceLoading}
+                class="px-3 py-1.5 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 disabled:opacity-50 cursor-pointer">
+                {adviceLoading ? $_('instagram.generating') : $_('instagram.generateAdvice')}
+              </button>
+            {/if}
+          </div>
+          {#if adviceError}<p class="text-sm text-red-600">{adviceError}</p>{/if}
+          {#if advice}
+            <div class="prose prose-sm max-w-none text-gray-700">{@html DOMPurify.sanitize(marked.parse(advice, { async: false }) as string)}</div>
+            <div class="flex items-center gap-2 mt-4">
+              <button on:click={continueInChat} disabled={openingChat}
+                class="px-3 py-1.5 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 disabled:opacity-50 cursor-pointer">
+                {$_('instagram.continueInChat')}
+              </button>
+              <button on:click={getAdvice} disabled={adviceLoading}
+                class="px-3 py-1.5 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer">
+                {adviceLoading ? $_('instagram.generating') : $_('instagram.regenerate')}
+              </button>
+            </div>
+          {/if}
+        </div>
+      </div>
+    {/if}
+  </div>
+{/if}
