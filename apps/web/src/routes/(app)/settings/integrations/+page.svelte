@@ -264,10 +264,11 @@
 
   async function updateAccountLanguage(account: any) {
     try {
-      await api.post(`/social/accounts?organizationId=${$organizationIdStore}`, {
-        platform: account.platform,
-        accountName: account.accountName,
-        accountId: account.accountId,
+      // PUT (updateAccount), not POST (createAccount): POST upserts by
+      // (org, platform, accountId) and resets scopes=[] + an empty token,
+      // which destroys OAuth connections (Instagram/Threads/etc.). PUT only
+      // touches the language and preserves the token + granted scopes.
+      await api.put(`/social/accounts/${account.id}`, {
         language: account.language || null,
       });
     } catch (e: any) {
