@@ -29,6 +29,16 @@
 
   let disconnectingId: string | null = null;
 
+  // Toast notification (same pattern as the SEO page)
+  let toast: { message: string; type: 'success' | 'error' | 'warning' } | null = null;
+  let toastTimer: ReturnType<typeof setTimeout> | null = null;
+
+  function showToast(message: string, type: 'success' | 'error' | 'warning' = 'error') {
+    if (toastTimer) clearTimeout(toastTimer);
+    toast = { message: message || $_('social.instagram.error'), type };
+    toastTimer = setTimeout(() => { toast = null; }, 5000);
+  }
+
   onMount(async () => {
     if ($organizationIdStore) {
       await loadAccounts();
@@ -37,11 +47,11 @@
 
     const params = new URLSearchParams(window.location.search);
     if (params.get('instagram') === 'connected') {
-      alert($_('social.instagram.connected'));
+      showToast($_('social.instagram.connected'), 'success');
       history.replaceState(null, '', window.location.pathname);
     } else if (params.get('instagram') === 'error') {
       const reason = params.get('reason');
-      alert(reason === 'no_ig_account' ? $_('social.instagram.noAccount') : $_('social.instagram.error'));
+      showToast(reason === 'no_ig_account' ? $_('social.instagram.noAccount') : $_('social.instagram.error'), 'error');
       history.replaceState(null, '', window.location.pathname);
     }
   });
@@ -88,7 +98,7 @@
       linkedInForm = { accountName: '', accountId: '', accessToken: '', language: '' };
       await loadAccounts();
     } catch (e: any) {
-      alert(e.message);
+      showToast(e.message);
     } finally {
       linkedInSaving = false;
     }
@@ -108,7 +118,7 @@
       twitterForm = { accountName: '', accountId: '', appKey: '', appSecret: '', accessToken: '', accessSecret: '', language: '' };
       await loadAccounts();
     } catch (e: any) {
-      alert(e.message);
+      showToast(e.message);
     } finally {
       twitterSaving = false;
     }
@@ -159,7 +169,7 @@
       closeFacebookModal();
       await loadAccounts();
     } catch (e: any) {
-      alert(e.message);
+      showToast(e.message);
     } finally {
       facebookSaving = false;
     }
@@ -210,7 +220,7 @@
       closeTelegramModal();
       await loadAccounts();
     } catch (e: any) {
-      alert(e.message);
+      showToast(e.message);
     } finally {
       telegramSaving = false;
     }
@@ -221,7 +231,7 @@
       const result = await api.get<{ url: string }>('/meta/auth-url', { platform: 'INSTAGRAM', organizationId: $organizationIdStore });
       window.location.href = result.url;
     } catch (e: any) {
-      alert(e.message || $_('social.instagram.error'));
+      showToast(e.message || $_('social.instagram.error'));
     }
   }
 
@@ -230,7 +240,7 @@
       await api.delete(`/social/accounts/${id}`);
       accounts = accounts.filter(a => a.id !== id);
     } catch (e: any) {
-      alert(e.message);
+      showToast(e.message);
     } finally {
       disconnectingId = null;
     }
@@ -245,7 +255,7 @@
         language: account.language || null,
       });
     } catch (e: any) {
-      alert(e.message);
+      showToast(e.message);
     }
   }
 
@@ -807,6 +817,40 @@
           {$_('common.cancel')}
         </button>
       </div>
+    </div>
+  </div>
+{/if}
+
+<!-- Toast notification -->
+{#if toast}
+  <div class="fixed bottom-6 right-6 z-[60] max-w-sm">
+    <div class="flex items-start gap-3 rounded-xl shadow-lg border px-4 py-3 text-sm
+      {toast.type === 'warning' ? 'bg-amber-50 border-amber-200 text-amber-800' :
+       toast.type === 'success' ? 'bg-green-50 border-green-200 text-green-800' :
+       'bg-red-50 border-red-200 text-red-800'}">
+      {#if toast.type === 'warning'}
+        <svg xmlns="http://www.w3.org/2000/svg" class="mt-0.5 w-4 h-4 flex-shrink-0 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+        </svg>
+      {:else if toast.type === 'success'}
+        <svg xmlns="http://www.w3.org/2000/svg" class="mt-0.5 w-4 h-4 flex-shrink-0 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+        </svg>
+      {:else}
+        <svg xmlns="http://www.w3.org/2000/svg" class="mt-0.5 w-4 h-4 flex-shrink-0 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+        </svg>
+      {/if}
+      <span>{toast.message}</span>
+      <button
+        on:click={() => toast = null}
+        aria-label={$_('common.close')}
+        class="ml-auto flex-shrink-0 opacity-60 hover:opacity-100 transition-opacity"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+        </svg>
+      </button>
     </div>
   </div>
 {/if}
