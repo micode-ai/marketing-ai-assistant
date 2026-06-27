@@ -88,11 +88,11 @@
 
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
   {#each cards as card}
-    <div class="bg-white rounded-xl border border-gray-200 p-4 border-t-4 {card.borderColor}">
+    <div class="bg-surface rounded-xl border border-border p-4 border-t-4 {card.borderColor}">
       <div class="flex items-center justify-between mb-3">
         <div class="w-9 h-9 {card.color} rounded-lg flex items-center justify-center flex-shrink-0">{@html card.icon}</div>
         {#if card.change != null && card.change !== 0}
-          <span class="text-xs font-medium flex items-center gap-0.5 {card.trend === 'up' ? 'text-green-600' : card.trend === 'down' ? 'text-red-500' : 'text-gray-400'}">
+          <span class="text-xs font-medium flex items-center gap-0.5 {card.trend === 'up' ? 'text-green-600' : card.trend === 'down' ? 'text-red-500' : 'text-ink-subtle'}">
             {#if card.trend === 'up'}
               <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" /></svg>
             {:else if card.trend === 'down'}
@@ -102,8 +102,8 @@
           </span>
         {/if}
       </div>
-      <div class="text-2xl font-bold text-gray-900">{card.value}</div>
-      <div class="text-xs text-gray-500 mt-1">{$_(card.labelKey)}</div>
+      <div class="text-2xl font-bold text-ink">{card.value}</div>
+      <div class="text-xs text-ink-muted mt-1">{$_(card.labelKey)}</div>
     </div>
   {/each}
 </div>

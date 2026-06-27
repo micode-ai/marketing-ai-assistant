@@ -86,8 +86,8 @@
   }
 </script>
 
-<div class="bg-white rounded-xl border border-gray-200 p-5">
-  <h3 class="text-sm font-semibold text-gray-700 mb-4">{$_('googlePlay.metrics.installs')}</h3>
+<div class="bg-surface rounded-xl border border-border p-5">
+  <h3 class="text-sm font-semibold text-ink mb-4">{$_('googlePlay.metrics.installs')}</h3>
   <div class="relative" style="height: 288px;">
     <canvas bind:this={canvas} style="width: 100%; height: 100%;"></canvas>
   </div>

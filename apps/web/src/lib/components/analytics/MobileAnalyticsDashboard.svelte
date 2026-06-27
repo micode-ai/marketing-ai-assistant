@@ -162,11 +162,11 @@
         <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
       </svg>
     </div>
-    <h2 class="text-xl font-semibold text-gray-900 mb-2">{$_('googlePlay.notConnected.title')}</h2>
-    <p class="text-gray-500 max-w-md mb-6">{$_('googlePlay.notConnected.description')}</p>
+    <h2 class="text-xl font-semibold text-ink mb-2">{$_('googlePlay.notConnected.title')}</h2>
+    <p class="text-ink-muted max-w-md mb-6">{$_('googlePlay.notConnected.description')}</p>
     <a
       href="/projects/{projectId}/settings"
-      class="px-5 py-2.5 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors duration-150"
+      class="px-5 py-2.5 bg-brand text-white rounded-lg text-sm font-medium hover:brightness-110 transition-colors duration-150"
     >
       {$_('googlePlay.notConnected.connectButton')}
     </a>
@@ -176,7 +176,7 @@
   <div class="flex items-center justify-between mb-6">
     <div>
       <div class="flex items-center gap-3">
-        <h1 class="text-2xl font-bold text-gray-900">{$_('googlePlay.title')}</h1>
+        <h1 class="text-2xl font-bold text-ink">{$_('googlePlay.title')}</h1>
         {#if syncing}
           <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 text-blue-600 rounded-full text-xs font-medium">
             <svg class="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -189,10 +189,10 @@
       </div>
       <div class="flex items-center gap-2 mt-1">
         {#if status.packageName}
-          <span class="text-sm text-gray-500">{status.packageName}</span>
+          <span class="text-sm text-ink-muted">{status.packageName}</span>
         {/if}
         {#if lastSyncLabel}
-          <span class="text-xs text-gray-400">· {$_('googlePlay.connection.lastSync', { values: { time: lastSyncLabel } })}</span>
+          <span class="text-xs text-ink-subtle">· {$_('googlePlay.connection.lastSync', { values: { time: lastSyncLabel } })}</span>
         {/if}
       </div>
     </div>
@@ -200,7 +200,7 @@
       <button
         on:click={syncAndRefresh}
         disabled={syncing}
-        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-150 disabled:opacity-40 cursor-pointer"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-ink-muted border border-border rounded-lg hover:bg-surface-2 transition-colors duration-150 disabled:opacity-40 cursor-pointer"
       >
         {#if syncing}
           <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -214,11 +214,11 @@
         {/if}
         {$_('googlePlay.connection.syncNow')}
       </button>
-      <div class="flex bg-gray-100 rounded-lg p-0.5">
+      <div class="flex bg-surface-2 rounded-lg p-0.5">
         {#each [7, 30, 90] as period}
           <button on:click={() => switchPeriod(period)}
             class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-150 cursor-pointer
-              {selectedPeriod === period ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}">
+              {selectedPeriod === period ? 'bg-surface text-ink shadow-sm' : 'text-ink-muted hover:text-gray-700'}">
             {$_('analytics.period' + period)}
           </button>
         {/each}
@@ -227,11 +227,11 @@
   </div>
 
   <!-- Tabs -->
-  <div class="flex border-b border-gray-200 mb-6 overflow-x-auto">
+  <div class="flex border-b border-border mb-6 overflow-x-auto">
     {#each tabs as tab}
       <button on:click={() => switchTab(tab.id)}
         class="px-4 py-2.5 text-sm font-medium border-b-2 transition-colors duration-150 -mb-px cursor-pointer whitespace-nowrap
-          {activeTab === tab.id ? 'border-primary-600 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700'}">
+          {activeTab === tab.id ? 'border-primary-600 text-brand' : 'border-transparent text-ink-muted hover:text-gray-700'}">
         {$_(tab.labelKey)}
       </button>
     {/each}

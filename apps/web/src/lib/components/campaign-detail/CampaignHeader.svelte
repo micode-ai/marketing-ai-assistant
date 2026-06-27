@@ -7,7 +7,7 @@
   const dispatch = createEventDispatcher<{ edit: any; delete: string }>();
 
   const statusBadge: Record<string, string> = {
-    DRAFT: 'bg-gray-100 text-gray-600',
+    DRAFT: 'bg-surface-2 text-ink-muted',
     SCHEDULED: 'bg-yellow-100 text-yellow-700',
     ACTIVE: 'bg-green-100 text-green-700',
     PAUSED: 'bg-orange-100 text-orange-700',
@@ -43,20 +43,20 @@
   $: hasMeta = campaign?.budget != null || (campaign?.goals && campaign.goals.trim() !== '');
 </script>
 
-<div class="bg-white rounded-xl border border-gray-200 p-5">
+<div class="bg-surface rounded-xl border border-border p-5">
   <div class="flex flex-col sm:flex-row items-start justify-between gap-3">
     <div class="flex-1 min-w-0">
       <div class="flex flex-wrap items-center gap-1.5 mb-2">
-        <span class="text-xs px-2 py-0.5 rounded font-medium {typeBadge[campaign.type] || 'bg-gray-100 text-gray-600'}">
+        <span class="text-xs px-2 py-0.5 rounded font-medium {typeBadge[campaign.type] || 'bg-surface-2 text-ink-muted'}">
           {$_(typeLabel[campaign.type] || 'campaigns.email')}
         </span>
-        <span class="text-xs px-2 py-0.5 rounded {statusBadge[campaign.status] || 'bg-gray-100 text-gray-600'}">
+        <span class="text-xs px-2 py-0.5 rounded {statusBadge[campaign.status] || 'bg-surface-2 text-ink-muted'}">
           {$_(statusLabel[campaign.status] || 'campaigns.draft')}
         </span>
       </div>
-      <h1 class="text-xl font-semibold text-gray-900 truncate">{campaign.name}</h1>
+      <h1 class="text-xl font-semibold text-ink truncate">{campaign.name}</h1>
       {#if hasMeta}
-        <div class="flex flex-wrap items-center gap-3 mt-2 text-sm text-gray-500">
+        <div class="flex flex-wrap items-center gap-3 mt-2 text-sm text-ink-muted">
           {#if campaign.budget != null}
             <span class="inline-flex items-center gap-1">
               <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -74,7 +74,7 @@
     <div class="flex items-center gap-2 flex-shrink-0">
       <button
         on:click={() => dispatch('edit', campaign)}
-        class="text-xs px-3 py-1.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 cursor-pointer"
+        class="text-xs px-3 py-1.5 border border-border rounded-lg hover:bg-surface-2 transition-colors duration-150 cursor-pointer"
       >
         {$_('common.edit')}
       </button>

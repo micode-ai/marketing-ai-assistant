@@ -117,20 +117,20 @@
       <input
         type="text"
         bind:value={content.title}
-        class="text-2xl font-bold bg-transparent border-none focus:outline-none focus:ring-0 w-full text-gray-900 placeholder-gray-400"
+        class="text-2xl font-bold bg-transparent border-none focus:outline-none focus:ring-0 w-full text-ink placeholder-gray-400"
         placeholder={$_('content.title')}
       />
       <div class="flex gap-2 flex-shrink-0">
         <button
           on:click={() => goto(`/projects/${projectId}/content`)}
-          class="px-4 py-2 text-sm text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer"
+          class="px-4 py-2 text-sm text-ink-muted bg-surface border border-border rounded-lg hover:bg-surface-2 cursor-pointer"
         >
           {$_('common.cancel')}
         </button>
         <button
           on:click={save}
           disabled={saving}
-          class="px-4 py-2 text-sm text-white bg-primary-600 rounded-lg hover:bg-primary-700 disabled:opacity-50 cursor-pointer"
+          class="px-4 py-2 text-sm text-white bg-brand rounded-lg hover:brightness-110 disabled:opacity-50 cursor-pointer"
         >
           {saving ? $_('common.saving') : $_('common.save')}
         </button>
@@ -156,12 +156,12 @@
         type="text"
         bind:value={imagePrompt}
         placeholder={$_('content.imagePrompt')}
-        class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-primary-500 focus:border-primary-500"
+        class="flex-1 border border-border rounded-lg px-3 py-2 text-sm focus:ring-primary-500 focus:border-primary-500"
       />
       <button
         on:click={() => generateImage(imagePrompt)}
         disabled={generatingImage || !imagePrompt}
-        class="px-4 py-2 text-sm text-white bg-primary-600 rounded-lg hover:bg-primary-700 disabled:opacity-50 cursor-pointer whitespace-nowrap"
+        class="px-4 py-2 text-sm text-white bg-brand rounded-lg hover:brightness-110 disabled:opacity-50 cursor-pointer whitespace-nowrap"
       >
         {generatingImage ? $_('content.generating_image') : $_('content.generateImage')}
       </button>
@@ -170,11 +170,11 @@
     <!-- Attached images -->
     {#if content.mediaUrls?.length}
       <div class="mt-3">
-        <p class="text-sm text-gray-500 mb-1">{$_('content.attachedImages')}</p>
+        <p class="text-sm text-ink-muted mb-1">{$_('content.attachedImages')}</p>
         <div class="flex flex-wrap gap-2">
           {#each content.mediaUrls as url, i}
             <div class="relative group">
-              <img src={url} alt="" class="w-20 h-20 object-cover rounded border border-gray-200" />
+              <img src={url} alt="" class="w-20 h-20 object-cover rounded border border-border" />
               <button
                 on:click={() => removeImage(i)}
                 class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs leading-none flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
@@ -188,7 +188,7 @@
     <!-- Schedule -->
     {#if content.status !== 'PUBLISHED'}
       <div class="mt-6 border-t pt-4">
-        <label class="flex items-center gap-2 text-sm font-medium text-gray-700">
+        <label class="flex items-center gap-2 text-sm font-medium text-ink">
           <input type="checkbox" bind:checked={scheduleEnabled} />
           {$_('content.schedule.scheduleForLater')}
         </label>
@@ -196,17 +196,17 @@
         {#if scheduleEnabled}
           <div class="mt-3 space-y-3 max-w-2xl">
             <div>
-              <label class="block text-xs font-medium text-gray-600 mb-1">{$_('content.schedule.scheduledAt')}</label>
+              <label class="block text-xs font-medium text-ink-muted mb-1">{$_('content.schedule.scheduledAt')}</label>
               <input type="datetime-local" bind:value={scheduleAt}
                      class="w-full border rounded-lg px-3 py-2 text-sm" />
             </div>
 
             <div>
-              <label class="block text-xs font-medium text-gray-600 mb-1">{$_('content.schedule.selectAccounts')}</label>
+              <label class="block text-xs font-medium text-ink-muted mb-1">{$_('content.schedule.selectAccounts')}</label>
               {#if projectAccounts.length === 0}
-                <p class="text-xs text-gray-500">{$_('content.schedule.noProjectAccounts')}</p>
+                <p class="text-xs text-ink-muted">{$_('content.schedule.noProjectAccounts')}</p>
               {:else}
-                <p class="text-xs text-gray-500 mb-1">{$_('content.schedule.languageRoutingHint')}</p>
+                <p class="text-xs text-ink-muted mb-1">{$_('content.schedule.languageRoutingHint')}</p>
                 <div class="space-y-1 max-h-40 overflow-y-auto border rounded-lg p-2">
                   {#each projectAccounts as acc}
                     <label class="flex items-center gap-2 text-sm">
@@ -217,8 +217,8 @@
                                else scheduleAccountIds = scheduleAccountIds.filter(id => id !== acc.id);
                              }} />
                       <span class="font-medium">{acc.platform}</span>
-                      <span class="text-gray-500 truncate">{acc.accountName}</span>
-                      {#if acc.language}<span class="text-xs px-1.5 py-0.5 bg-gray-100 rounded">{acc.language.toUpperCase()}</span>{/if}
+                      <span class="text-ink-muted truncate">{acc.accountName}</span>
+                      {#if acc.language}<span class="text-xs px-1.5 py-0.5 bg-surface-2 rounded">{acc.language.toUpperCase()}</span>{/if}
                     </label>
                   {/each}
                 </div>
@@ -231,6 +231,6 @@
   </div>
 {:else}
   <div class="flex items-center justify-center h-64">
-    <p class="text-gray-500">Content not found</p>
+    <p class="text-ink-muted">Content not found</p>
   </div>
 {/if}

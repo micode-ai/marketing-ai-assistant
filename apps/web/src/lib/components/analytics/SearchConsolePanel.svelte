@@ -265,9 +265,9 @@
   $: settingsUrl = `/projects/${projectId}/settings`;
 </script>
 
-<div class="bg-white rounded-xl border border-gray-200 overflow-hidden mb-6">
+<div class="bg-surface rounded-xl border border-border overflow-hidden mb-6">
   <!-- Header -->
-  <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+  <div class="flex items-center justify-between px-5 py-4 border-b border-border">
     <div class="flex items-center gap-3">
       <div class="w-9 h-9 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -275,25 +275,25 @@
         </svg>
       </div>
       <div>
-        <h2 class="text-sm font-semibold text-gray-900">{$_('seo.searchConsolePanel.title')}</h2>
-        <p class="text-xs text-gray-500">{$_('seo.searchConsolePanel.description')}</p>
+        <h2 class="text-sm font-semibold text-ink">{$_('seo.searchConsolePanel.title')}</h2>
+        <p class="text-xs text-ink-muted">{$_('seo.searchConsolePanel.description')}</p>
       </div>
     </div>
 
     {#if isConnected}
       <div class="flex items-center gap-3">
         <a href={`/projects/${projectId}/search-console`}
-           class="text-sm font-medium text-primary-600 hover:text-primary-700 hover:underline cursor-pointer">
+           class="text-sm font-medium text-brand hover:text-primary-700 hover:underline cursor-pointer">
           {$_('gscDetail.details')} →
         </a>
         <!-- Period selector -->
-        <div class="flex bg-gray-100 rounded-lg p-0.5">
+        <div class="flex bg-surface-2 rounded-lg p-0.5">
           {#each PERIOD_OPTIONS as p}
             <button
               on:click={() => changePeriod(p)}
               disabled={dataLoading}
               class="px-2.5 py-1 text-xs font-medium rounded-md transition-colors duration-150
-                {period === p ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}">
+                {period === p ? 'bg-surface text-ink shadow-sm' : 'text-ink-muted hover:text-gray-700'}">
               {$_(`seo.searchConsolePanel.period${p}d`)}
             </button>
           {/each}
@@ -319,11 +319,11 @@
           <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" />
         </svg>
       </div>
-      <h3 class="text-base font-semibold text-gray-900 mb-1">{$_('seo.searchConsolePanel.notConnectedTitle')}</h3>
-      <p class="text-sm text-gray-500 max-w-sm mb-4">{$_('seo.searchConsolePanel.notConnectedDescription')}</p>
+      <h3 class="text-base font-semibold text-ink mb-1">{$_('seo.searchConsolePanel.notConnectedTitle')}</h3>
+      <p class="text-sm text-ink-muted max-w-sm mb-4">{$_('seo.searchConsolePanel.notConnectedDescription')}</p>
       <a
         href={settingsUrl}
-        class="inline-flex items-center gap-1.5 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition-colors">
+        class="inline-flex items-center gap-1.5 px-4 py-2 bg-brand hover:brightness-110 text-white text-sm font-medium rounded-lg transition-colors">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 011.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.893.15c.543.09.94.56.94 1.109v1.094c0 .55-.397 1.02-.94 1.11l-.893.149c-.425.07-.765.383-.93.78-.165.398-.143.854.107 1.204l.527.738c.32.447.269 1.06-.12 1.45l-.774.773a1.125 1.125 0 01-1.449.12l-.738-.527c-.35-.25-.806-.272-1.203-.107-.397.165-.71.505-.781.929l-.149.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527c-.447.32-1.06.269-1.45-.12l-.773-.774a1.125 1.125 0 01-.12-1.45l.527-.737c.25-.35.273-.806.108-1.204-.165-.397-.505-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.109v-1.094c0-.55.398-1.02.94-1.11l.894-.149c.424-.07.765-.383.93-.78.165-.398.143-.854-.107-1.204l-.527-.738a1.125 1.125 0 01.12-1.45l.773-.773a1.125 1.125 0 011.45-.12l.737.527c.35.25.807.272 1.204.107.397-.165.71-.505.78-.929l.15-.894z" />
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -339,10 +339,10 @@
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
         </svg>
       </div>
-      <p class="text-sm text-gray-700 mb-3">{error}</p>
+      <p class="text-sm text-ink mb-3">{error}</p>
       <button
         on:click={loadSummary}
-        class="px-4 py-1.5 text-sm font-medium bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors">
+        class="px-4 py-1.5 text-sm font-medium bg-surface-2 hover:bg-gray-200 text-ink rounded-lg transition-colors">
         {$_('seo.searchConsolePanel.retry')}
       </button>
     </div>
@@ -352,12 +352,12 @@
     <div class="p-5 space-y-6 animate-pulse">
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {#each Array(4) as _}
-          <div class="bg-gray-100 rounded-xl h-24"></div>
+          <div class="bg-surface-2 rounded-xl h-24"></div>
         {/each}
       </div>
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <div class="bg-gray-100 rounded-xl h-56"></div>
-        <div class="bg-gray-100 rounded-xl h-56"></div>
+        <div class="bg-surface-2 rounded-xl h-56"></div>
+        <div class="bg-surface-2 rounded-xl h-56"></div>
       </div>
     </div>
 
@@ -367,36 +367,36 @@
       <!-- KPI Metric Cards with sparklines -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <!-- Clicks -->
-        <div class="bg-white border border-gray-200 rounded-xl p-4 border-t-4 border-t-blue-400">
-          <div class="text-xs text-gray-500 mb-1">{$_('seo.searchConsolePanel.totalClicks')}</div>
-          <div class="text-2xl font-bold text-gray-900">{formatNumber(summary.totals.clicks)}</div>
+        <div class="bg-surface border border-border rounded-xl p-4 border-t-4 border-t-blue-400">
+          <div class="text-xs text-ink-muted mb-1">{$_('seo.searchConsolePanel.totalClicks')}</div>
+          <div class="text-2xl font-bold text-ink">{formatNumber(summary.totals.clicks)}</div>
           <div class="relative mt-2" style="height: 40px;">
             <canvas bind:this={sparklineCanvases[0]} style="width: 100%; height: 100%;"></canvas>
           </div>
         </div>
 
         <!-- Impressions -->
-        <div class="bg-white border border-gray-200 rounded-xl p-4 border-t-4 border-t-purple-400">
-          <div class="text-xs text-gray-500 mb-1">{$_('seo.searchConsolePanel.totalImpressions')}</div>
-          <div class="text-2xl font-bold text-gray-900">{formatNumber(summary.totals.impressions)}</div>
+        <div class="bg-surface border border-border rounded-xl p-4 border-t-4 border-t-purple-400">
+          <div class="text-xs text-ink-muted mb-1">{$_('seo.searchConsolePanel.totalImpressions')}</div>
+          <div class="text-2xl font-bold text-ink">{formatNumber(summary.totals.impressions)}</div>
           <div class="relative mt-2" style="height: 40px;">
             <canvas bind:this={sparklineCanvases[1]} style="width: 100%; height: 100%;"></canvas>
           </div>
         </div>
 
         <!-- CTR -->
-        <div class="bg-white border border-gray-200 rounded-xl p-4 border-t-4 border-t-green-400">
-          <div class="text-xs text-gray-500 mb-1">{$_('seo.searchConsolePanel.avgCtr')}</div>
-          <div class="text-2xl font-bold text-gray-900">{formatCtr(summary.totals.ctr)}</div>
+        <div class="bg-surface border border-border rounded-xl p-4 border-t-4 border-t-green-400">
+          <div class="text-xs text-ink-muted mb-1">{$_('seo.searchConsolePanel.avgCtr')}</div>
+          <div class="text-2xl font-bold text-ink">{formatCtr(summary.totals.ctr)}</div>
           <div class="relative mt-2" style="height: 40px;">
             <canvas bind:this={sparklineCanvases[2]} style="width: 100%; height: 100%;"></canvas>
           </div>
         </div>
 
         <!-- Position -->
-        <div class="bg-white border border-gray-200 rounded-xl p-4 border-t-4 border-t-amber-400">
-          <div class="text-xs text-gray-500 mb-1">{$_('seo.searchConsolePanel.avgPosition')}</div>
-          <div class="text-2xl font-bold text-gray-900">{formatPosition(summary.totals.position)}</div>
+        <div class="bg-surface border border-border rounded-xl p-4 border-t-4 border-t-amber-400">
+          <div class="text-xs text-ink-muted mb-1">{$_('seo.searchConsolePanel.avgPosition')}</div>
+          <div class="text-2xl font-bold text-ink">{formatPosition(summary.totals.position)}</div>
           <div class="relative mt-2" style="height: 40px;">
             <canvas bind:this={sparklineCanvases[3]} style="width: 100%; height: 100%;"></canvas>
           </div>
@@ -408,29 +408,29 @@
 
         <!-- Top Queries -->
         <div>
-          <h3 class="text-sm font-semibold text-gray-700 mb-3">{$_('seo.searchConsolePanel.topQueries')}</h3>
+          <h3 class="text-sm font-semibold text-ink mb-3">{$_('seo.searchConsolePanel.topQueries')}</h3>
           {#if sortedQueries.length === 0}
-            <div class="text-sm text-gray-400 py-6 text-center bg-gray-50 rounded-xl">{$_('seo.searchConsolePanel.loadError')}</div>
+            <div class="text-sm text-ink-subtle py-6 text-center bg-surface-2 rounded-xl">{$_('seo.searchConsolePanel.loadError')}</div>
           {:else}
-            <div class="rounded-xl border border-gray-200 overflow-x-auto">
+            <div class="rounded-xl border border-border overflow-x-auto">
               <table class="w-full text-sm min-w-[420px]">
                 <thead>
-                  <tr class="bg-gray-50 border-b border-gray-200">
-                    <th class="text-left px-3 py-2.5 text-xs font-semibold text-gray-500">{$_('seo.searchConsolePanel.query')}</th>
-                    <th class="text-right px-3 py-2.5 text-xs font-semibold text-gray-500 cursor-pointer hover:text-gray-700 whitespace-nowrap select-none" on:click={() => toggleQuerySort('clicks')}>{$_('seo.searchConsolePanel.clicks')} {sortIcon('clicks', querySort, querySortDir)}</th>
-                    <th class="text-right px-3 py-2.5 text-xs font-semibold text-gray-500 cursor-pointer hover:text-gray-700 whitespace-nowrap select-none" on:click={() => toggleQuerySort('impressions')}>{$_('seo.searchConsolePanel.impressions')} {sortIcon('impressions', querySort, querySortDir)}</th>
-                    <th class="text-right px-3 py-2.5 text-xs font-semibold text-gray-500 cursor-pointer hover:text-gray-700 whitespace-nowrap select-none" on:click={() => toggleQuerySort('ctr')}>{$_('seo.searchConsolePanel.ctr')} {sortIcon('ctr', querySort, querySortDir)}</th>
-                    <th class="text-right px-3 py-2.5 text-xs font-semibold text-gray-500 cursor-pointer hover:text-gray-700 whitespace-nowrap select-none" on:click={() => toggleQuerySort('position')}>{$_('seo.searchConsolePanel.position')} {sortIcon('position', querySort, querySortDir)}</th>
+                  <tr class="bg-surface-2 border-b border-border">
+                    <th class="text-left px-3 py-2.5 text-xs font-semibold text-ink-muted">{$_('seo.searchConsolePanel.query')}</th>
+                    <th class="text-right px-3 py-2.5 text-xs font-semibold text-ink-muted cursor-pointer hover:text-gray-700 whitespace-nowrap select-none" on:click={() => toggleQuerySort('clicks')}>{$_('seo.searchConsolePanel.clicks')} {sortIcon('clicks', querySort, querySortDir)}</th>
+                    <th class="text-right px-3 py-2.5 text-xs font-semibold text-ink-muted cursor-pointer hover:text-gray-700 whitespace-nowrap select-none" on:click={() => toggleQuerySort('impressions')}>{$_('seo.searchConsolePanel.impressions')} {sortIcon('impressions', querySort, querySortDir)}</th>
+                    <th class="text-right px-3 py-2.5 text-xs font-semibold text-ink-muted cursor-pointer hover:text-gray-700 whitespace-nowrap select-none" on:click={() => toggleQuerySort('ctr')}>{$_('seo.searchConsolePanel.ctr')} {sortIcon('ctr', querySort, querySortDir)}</th>
+                    <th class="text-right px-3 py-2.5 text-xs font-semibold text-ink-muted cursor-pointer hover:text-gray-700 whitespace-nowrap select-none" on:click={() => toggleQuerySort('position')}>{$_('seo.searchConsolePanel.position')} {sortIcon('position', querySort, querySortDir)}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {#each sortedQueries as row}
-                    <tr class="border-b border-gray-100 hover:bg-gray-50">
-                      <td class="px-3 py-2 text-gray-800 max-w-[160px] truncate" title={row.query}>{row.query}</td>
-                      <td class="px-3 py-2 text-right text-gray-700 font-medium">{formatNumber(row.clicks)}</td>
-                      <td class="px-3 py-2 text-right text-gray-600">{formatNumber(row.impressions)}</td>
-                      <td class="px-3 py-2 text-right text-gray-600">{formatCtr(row.ctr)}</td>
-                      <td class="px-3 py-2 text-right text-gray-600">{formatPosition(row.position)}</td>
+                    <tr class="border-b border-border hover:bg-surface-2">
+                      <td class="px-3 py-2 text-ink max-w-[160px] truncate" title={row.query}>{row.query}</td>
+                      <td class="px-3 py-2 text-right text-ink font-medium">{formatNumber(row.clicks)}</td>
+                      <td class="px-3 py-2 text-right text-ink-muted">{formatNumber(row.impressions)}</td>
+                      <td class="px-3 py-2 text-right text-ink-muted">{formatCtr(row.ctr)}</td>
+                      <td class="px-3 py-2 text-right text-ink-muted">{formatPosition(row.position)}</td>
                     </tr>
                   {/each}
                 </tbody>
@@ -441,31 +441,31 @@
 
         <!-- Top Pages -->
         <div>
-          <h3 class="text-sm font-semibold text-gray-700 mb-3">{$_('seo.searchConsolePanel.topPages')}</h3>
+          <h3 class="text-sm font-semibold text-ink mb-3">{$_('seo.searchConsolePanel.topPages')}</h3>
           {#if sortedPages.length === 0}
-            <div class="text-sm text-gray-400 py-6 text-center bg-gray-50 rounded-xl">{$_('seo.searchConsolePanel.loadError')}</div>
+            <div class="text-sm text-ink-subtle py-6 text-center bg-surface-2 rounded-xl">{$_('seo.searchConsolePanel.loadError')}</div>
           {:else}
-            <div class="rounded-xl border border-gray-200 overflow-x-auto">
+            <div class="rounded-xl border border-border overflow-x-auto">
               <table class="w-full text-sm min-w-[420px]">
                 <thead>
-                  <tr class="bg-gray-50 border-b border-gray-200">
-                    <th class="text-left px-3 py-2.5 text-xs font-semibold text-gray-500">{$_('seo.searchConsolePanel.page')}</th>
-                    <th class="text-right px-3 py-2.5 text-xs font-semibold text-gray-500 cursor-pointer hover:text-gray-700 whitespace-nowrap select-none" on:click={() => togglePageSort('clicks')}>{$_('seo.searchConsolePanel.clicks')} {sortIcon('clicks', pageSort, pageSortDir)}</th>
-                    <th class="text-right px-3 py-2.5 text-xs font-semibold text-gray-500 cursor-pointer hover:text-gray-700 whitespace-nowrap select-none" on:click={() => togglePageSort('impressions')}>{$_('seo.searchConsolePanel.impressions')} {sortIcon('impressions', pageSort, pageSortDir)}</th>
-                    <th class="text-right px-3 py-2.5 text-xs font-semibold text-gray-500 cursor-pointer hover:text-gray-700 whitespace-nowrap select-none" on:click={() => togglePageSort('ctr')}>{$_('seo.searchConsolePanel.ctr')} {sortIcon('ctr', pageSort, pageSortDir)}</th>
-                    <th class="text-right px-3 py-2.5 text-xs font-semibold text-gray-500 cursor-pointer hover:text-gray-700 whitespace-nowrap select-none" on:click={() => togglePageSort('position')}>{$_('seo.searchConsolePanel.position')} {sortIcon('position', pageSort, pageSortDir)}</th>
+                  <tr class="bg-surface-2 border-b border-border">
+                    <th class="text-left px-3 py-2.5 text-xs font-semibold text-ink-muted">{$_('seo.searchConsolePanel.page')}</th>
+                    <th class="text-right px-3 py-2.5 text-xs font-semibold text-ink-muted cursor-pointer hover:text-gray-700 whitespace-nowrap select-none" on:click={() => togglePageSort('clicks')}>{$_('seo.searchConsolePanel.clicks')} {sortIcon('clicks', pageSort, pageSortDir)}</th>
+                    <th class="text-right px-3 py-2.5 text-xs font-semibold text-ink-muted cursor-pointer hover:text-gray-700 whitespace-nowrap select-none" on:click={() => togglePageSort('impressions')}>{$_('seo.searchConsolePanel.impressions')} {sortIcon('impressions', pageSort, pageSortDir)}</th>
+                    <th class="text-right px-3 py-2.5 text-xs font-semibold text-ink-muted cursor-pointer hover:text-gray-700 whitespace-nowrap select-none" on:click={() => togglePageSort('ctr')}>{$_('seo.searchConsolePanel.ctr')} {sortIcon('ctr', pageSort, pageSortDir)}</th>
+                    <th class="text-right px-3 py-2.5 text-xs font-semibold text-ink-muted cursor-pointer hover:text-gray-700 whitespace-nowrap select-none" on:click={() => togglePageSort('position')}>{$_('seo.searchConsolePanel.position')} {sortIcon('position', pageSort, pageSortDir)}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {#each sortedPages as row}
-                    <tr class="border-b border-gray-100 hover:bg-gray-50">
+                    <tr class="border-b border-border hover:bg-surface-2">
                       <td class="px-3 py-2 max-w-[160px]">
-                        <span class="text-gray-800 truncate block" title={row.page}>{getPath(row.page)}</span>
+                        <span class="text-ink truncate block" title={row.page}>{getPath(row.page)}</span>
                       </td>
-                      <td class="px-3 py-2 text-right text-gray-700 font-medium">{formatNumber(row.clicks)}</td>
-                      <td class="px-3 py-2 text-right text-gray-600">{formatNumber(row.impressions)}</td>
-                      <td class="px-3 py-2 text-right text-gray-600">{formatCtr(row.ctr)}</td>
-                      <td class="px-3 py-2 text-right text-gray-600">{formatPosition(row.position)}</td>
+                      <td class="px-3 py-2 text-right text-ink font-medium">{formatNumber(row.clicks)}</td>
+                      <td class="px-3 py-2 text-right text-ink-muted">{formatNumber(row.impressions)}</td>
+                      <td class="px-3 py-2 text-right text-ink-muted">{formatCtr(row.ctr)}</td>
+                      <td class="px-3 py-2 text-right text-ink-muted">{formatPosition(row.position)}</td>
                     </tr>
                   {/each}
                 </tbody>
@@ -479,10 +479,10 @@
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
         <!-- Devices donut -->
-        <div class="bg-gray-50 rounded-xl p-4 border border-gray-100">
-          <h3 class="text-sm font-semibold text-gray-700 mb-3">{$_('seo.searchConsolePanel.devices')}</h3>
+        <div class="bg-surface-2 rounded-xl p-4 border border-border">
+          <h3 class="text-sm font-semibold text-ink mb-3">{$_('seo.searchConsolePanel.devices')}</h3>
           {#if summary.byDevice.length === 0}
-            <div class="text-sm text-gray-400 py-6 text-center">{$_('seo.searchConsolePanel.loadError')}</div>
+            <div class="text-sm text-ink-subtle py-6 text-center">{$_('seo.searchConsolePanel.loadError')}</div>
           {:else}
             <div class="relative mx-auto" style="height: 180px; max-width: 240px;">
               <canvas bind:this={deviceCanvas} style="width: 100%; height: 100%;"></canvas>
@@ -491,23 +491,23 @@
         </div>
 
         <!-- Countries table -->
-        <div class="bg-gray-50 rounded-xl p-4 border border-gray-100">
-          <h3 class="text-sm font-semibold text-gray-700 mb-3">{$_('seo.searchConsolePanel.countries')}</h3>
+        <div class="bg-surface-2 rounded-xl p-4 border border-border">
+          <h3 class="text-sm font-semibold text-ink mb-3">{$_('seo.searchConsolePanel.countries')}</h3>
           {#if summary.byCountry.length === 0}
-            <div class="text-sm text-gray-400 py-6 text-center">{$_('seo.searchConsolePanel.loadError')}</div>
+            <div class="text-sm text-ink-subtle py-6 text-center">{$_('seo.searchConsolePanel.loadError')}</div>
           {:else}
             <div class="space-y-1.5">
               {#each summary.byCountry as row}
                 {@const maxClicks = summary.byCountry[0]?.clicks || 1}
                 <div class="flex items-center gap-2">
-                  <span class="text-xs text-gray-600 w-28 flex-shrink-0">{getCountryName(row.country)}</span>
+                  <span class="text-xs text-ink-muted w-28 flex-shrink-0">{getCountryName(row.country)}</span>
                   <div class="flex-1 bg-gray-200 rounded-full h-2">
                     <div
                       class="h-2 rounded-full bg-blue-400 transition-all duration-300"
                       style="width: {Math.max(2, (row.clicks / maxClicks) * 100)}%">
                     </div>
                   </div>
-                  <span class="text-xs font-medium text-gray-700 w-12 text-right">{formatNumber(row.clicks)}</span>
+                  <span class="text-xs font-medium text-ink w-12 text-right">{formatNumber(row.clicks)}</span>
                 </div>
               {/each}
             </div>

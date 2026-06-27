@@ -68,7 +68,14 @@
     "orgCalendar": "Calendar",
     "orgFinances": "Finances",
     "darkMode": "Dark Mode",
-    "lightMode": "Light Mode"
+    "lightMode": "Light Mode",
+    "allProjects": "All projects",
+    "organization": "Organization",
+    "project": "Project",
+    "workspace": "Workspace",
+    "rollups": "All projects · rollups",
+    "thisProject": "This project",
+    "switchProject": "Switch project"
   },
   "header": {
     "orgContext": "Organization",

@@ -121,12 +121,12 @@
 
   /** deltaPosition negative = improved (lower rank number = higher position) → green */
   function positionDeltaClass(delta: number): string {
-    if (Math.abs(delta) < 0.0001) return 'text-gray-400';
+    if (Math.abs(delta) < 0.0001) return 'text-ink-subtle';
     return delta < 0 ? 'text-green-600' : 'text-red-500';
   }
 
   function clicksDeltaClass(delta: number): string {
-    if (Math.abs(delta) < 0.0001) return 'text-gray-400';
+    if (Math.abs(delta) < 0.0001) return 'text-ink-subtle';
     return delta > 0 ? 'text-green-600' : 'text-red-500';
   }
 
@@ -144,27 +144,27 @@
 {#if loading}
   <div class="space-y-4 animate-pulse mt-6">
     {#each Array(4) as _}
-      <div class="bg-white rounded-xl border border-gray-200 p-5">
-        <div class="h-4 bg-gray-100 rounded w-1/3 mb-2"></div>
-        <div class="h-3 bg-gray-100 rounded w-2/3 mb-4"></div>
+      <div class="bg-surface rounded-xl border border-border p-5">
+        <div class="h-4 bg-surface-2 rounded w-1/3 mb-2"></div>
+        <div class="h-3 bg-surface-2 rounded w-2/3 mb-4"></div>
         {#each Array(3) as _}
-          <div class="h-9 bg-gray-100 rounded mb-1.5"></div>
+          <div class="h-9 bg-surface-2 rounded mb-1.5"></div>
         {/each}
       </div>
     {/each}
   </div>
 
 {:else if error}
-  <div class="mt-6 bg-white rounded-xl border border-gray-200 flex flex-col items-center justify-center py-10 px-5 text-center">
+  <div class="mt-6 bg-surface rounded-xl border border-border flex flex-col items-center justify-center py-10 px-5 text-center">
     <div class="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center mb-3">
       <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
       </svg>
     </div>
-    <p class="text-sm text-gray-700 mb-3">{error}</p>
+    <p class="text-sm text-ink mb-3">{error}</p>
     <button
       on:click={fetchInsights}
-      class="px-4 py-1.5 text-sm font-medium bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors">
+      class="px-4 py-1.5 text-sm font-medium bg-surface-2 hover:bg-gray-200 text-ink rounded-lg transition-colors">
       {$_('seo.searchConsolePanel.retry')}
     </button>
   </div>
@@ -173,38 +173,38 @@
   <div class="mt-8 space-y-6">
 
     <!-- 1. Striking distance -->
-    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-      <div class="px-5 py-4 border-b border-gray-100">
-        <h3 class="text-sm font-semibold text-gray-900">{$_('gscDetail.strikingDistance')}</h3>
-        <p class="text-xs text-gray-500 mt-0.5">{$_('gscDetail.strikingDistanceDesc')}</p>
+    <div class="bg-surface rounded-xl border border-border overflow-hidden">
+      <div class="px-5 py-4 border-b border-border">
+        <h3 class="text-sm font-semibold text-ink">{$_('gscDetail.strikingDistance')}</h3>
+        <p class="text-xs text-ink-muted mt-0.5">{$_('gscDetail.strikingDistanceDesc')}</p>
       </div>
 
       {#if data.strikingDistance.length === 0}
-        <div class="text-sm text-gray-400 py-8 text-center">{$_('gscDetail.noData')}</div>
+        <div class="text-sm text-ink-subtle py-8 text-center">{$_('gscDetail.noData')}</div>
       {:else}
         <div class="overflow-x-auto">
           <table class="w-full text-sm min-w-[400px]">
             <thead>
-              <tr class="bg-gray-50 border-b border-gray-200">
-                <th class="text-left px-4 py-2.5 text-xs font-semibold text-gray-500">
+              <tr class="bg-surface-2 border-b border-border">
+                <th class="text-left px-4 py-2.5 text-xs font-semibold text-ink-muted">
                   {$_('seo.searchConsolePanel.query')}
                 </th>
-                <th class="text-right px-4 py-2.5 text-xs font-semibold text-gray-500 whitespace-nowrap">
+                <th class="text-right px-4 py-2.5 text-xs font-semibold text-ink-muted whitespace-nowrap">
                   {$_('seo.searchConsolePanel.position')}
                 </th>
-                <th class="text-right px-4 py-2.5 text-xs font-semibold text-gray-500 whitespace-nowrap">
+                <th class="text-right px-4 py-2.5 text-xs font-semibold text-ink-muted whitespace-nowrap">
                   {$_('seo.searchConsolePanel.impressions')}
                 </th>
               </tr>
             </thead>
             <tbody>
               {#each data.strikingDistance as row (row.key)}
-                <tr class="border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors">
+                <tr class="border-b border-border last:border-0 hover:bg-surface-2 transition-colors">
                   <td class="px-4 py-2.5 max-w-[300px]">
-                    <span class="text-gray-800 truncate block" title={row.key}>{row.key}</span>
+                    <span class="text-ink truncate block" title={row.key}>{row.key}</span>
                   </td>
-                  <td class="px-4 py-2.5 text-right text-gray-600">{formatPosition(row.position)}</td>
-                  <td class="px-4 py-2.5 text-right text-gray-600">{formatNumber(row.impressions)}</td>
+                  <td class="px-4 py-2.5 text-right text-ink-muted">{formatPosition(row.position)}</td>
+                  <td class="px-4 py-2.5 text-right text-ink-muted">{formatNumber(row.impressions)}</td>
                 </tr>
               {/each}
             </tbody>
@@ -214,41 +214,41 @@
     </div>
 
     <!-- 2. Low CTR -->
-    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-      <div class="px-5 py-4 border-b border-gray-100">
-        <h3 class="text-sm font-semibold text-gray-900">{$_('gscDetail.lowCtr')}</h3>
-        <p class="text-xs text-gray-500 mt-0.5">{$_('gscDetail.lowCtrDesc')}</p>
+    <div class="bg-surface rounded-xl border border-border overflow-hidden">
+      <div class="px-5 py-4 border-b border-border">
+        <h3 class="text-sm font-semibold text-ink">{$_('gscDetail.lowCtr')}</h3>
+        <p class="text-xs text-ink-muted mt-0.5">{$_('gscDetail.lowCtrDesc')}</p>
       </div>
 
       {#if data.lowCtr.length === 0}
-        <div class="text-sm text-gray-400 py-8 text-center">{$_('gscDetail.noData')}</div>
+        <div class="text-sm text-ink-subtle py-8 text-center">{$_('gscDetail.noData')}</div>
       {:else}
         <div class="overflow-x-auto">
           <table class="w-full text-sm min-w-[480px]">
             <thead>
-              <tr class="bg-gray-50 border-b border-gray-200">
-                <th class="text-left px-4 py-2.5 text-xs font-semibold text-gray-500">
+              <tr class="bg-surface-2 border-b border-border">
+                <th class="text-left px-4 py-2.5 text-xs font-semibold text-ink-muted">
                   {$_('seo.searchConsolePanel.query')}
                 </th>
-                <th class="text-right px-4 py-2.5 text-xs font-semibold text-gray-500 whitespace-nowrap">
+                <th class="text-right px-4 py-2.5 text-xs font-semibold text-ink-muted whitespace-nowrap">
                   {$_('seo.searchConsolePanel.position')}
                 </th>
-                <th class="text-right px-4 py-2.5 text-xs font-semibold text-gray-500 whitespace-nowrap">
+                <th class="text-right px-4 py-2.5 text-xs font-semibold text-ink-muted whitespace-nowrap">
                   {$_('seo.searchConsolePanel.ctr')}
                 </th>
-                <th class="text-right px-4 py-2.5 text-xs font-semibold text-gray-500 whitespace-nowrap">
+                <th class="text-right px-4 py-2.5 text-xs font-semibold text-ink-muted whitespace-nowrap">
                   {$_('gscDetail.missedClicks')}
                 </th>
               </tr>
             </thead>
             <tbody>
               {#each data.lowCtr as row (row.key)}
-                <tr class="border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors">
+                <tr class="border-b border-border last:border-0 hover:bg-surface-2 transition-colors">
                   <td class="px-4 py-2.5 max-w-[280px]">
-                    <span class="text-gray-800 truncate block" title={row.key}>{row.key}</span>
+                    <span class="text-ink truncate block" title={row.key}>{row.key}</span>
                   </td>
-                  <td class="px-4 py-2.5 text-right text-gray-600">{formatPosition(row.position)}</td>
-                  <td class="px-4 py-2.5 text-right text-gray-600">{formatCtr(row.ctr)}</td>
+                  <td class="px-4 py-2.5 text-right text-ink-muted">{formatPosition(row.position)}</td>
+                  <td class="px-4 py-2.5 text-right text-ink-muted">{formatCtr(row.ctr)}</td>
                   <td class="px-4 py-2.5 text-right text-amber-600 font-medium">{formatNumber(row.missedClicks)}</td>
                 </tr>
               {/each}
@@ -259,27 +259,27 @@
     </div>
 
     <!-- 3. Cannibalization -->
-    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-      <div class="px-5 py-4 border-b border-gray-100">
-        <h3 class="text-sm font-semibold text-gray-900">{$_('gscDetail.cannibalization')}</h3>
-        <p class="text-xs text-gray-500 mt-0.5">{$_('gscDetail.cannibalizationDesc')}</p>
+    <div class="bg-surface rounded-xl border border-border overflow-hidden">
+      <div class="px-5 py-4 border-b border-border">
+        <h3 class="text-sm font-semibold text-ink">{$_('gscDetail.cannibalization')}</h3>
+        <p class="text-xs text-ink-muted mt-0.5">{$_('gscDetail.cannibalizationDesc')}</p>
       </div>
 
       {#if data.cannibalization.length === 0}
-        <div class="text-sm text-gray-400 py-8 text-center">{$_('gscDetail.noData')}</div>
+        <div class="text-sm text-ink-subtle py-8 text-center">{$_('gscDetail.noData')}</div>
       {:else}
-        <div class="divide-y divide-gray-100">
+        <div class="divide-y divide-border">
           {#each data.cannibalization as item (item.query)}
             <div class="px-5 py-4">
               <div class="flex items-center gap-2 mb-2">
-                <span class="text-sm font-medium text-gray-800 truncate">{item.query}</span>
-                <span class="text-xs text-gray-400 whitespace-nowrap">
+                <span class="text-sm font-medium text-ink truncate">{item.query}</span>
+                <span class="text-xs text-ink-subtle whitespace-nowrap">
                   {formatNumber(item.totalImpressions)} {$_('seo.searchConsolePanel.impressions').toLowerCase()}
                 </span>
               </div>
-              <div class="space-y-1 pl-3 border-l-2 border-gray-200">
+              <div class="space-y-1 pl-3 border-l-2 border-border">
                 {#each item.pages as pg (pg.page)}
-                  <div class="flex items-center justify-between gap-4 text-xs text-gray-600">
+                  <div class="flex items-center justify-between gap-4 text-xs text-ink-muted">
                     <span class="truncate text-blue-600" title={pg.page}>{getPath(pg.page)}</span>
                     <span class="whitespace-nowrap shrink-0">
                       pos {formatPosition(pg.position)}
@@ -296,47 +296,47 @@
     </div>
 
     <!-- 4. Movers (gainers / losers from moversQueries) -->
-    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-      <div class="px-5 py-4 border-b border-gray-100">
-        <h3 class="text-sm font-semibold text-gray-900">{$_('gscDetail.movers')}</h3>
-        <p class="text-xs text-gray-500 mt-0.5">{$_('gscDetail.moversDesc')}</p>
+    <div class="bg-surface rounded-xl border border-border overflow-hidden">
+      <div class="px-5 py-4 border-b border-border">
+        <h3 class="text-sm font-semibold text-ink">{$_('gscDetail.movers')}</h3>
+        <p class="text-xs text-ink-muted mt-0.5">{$_('gscDetail.moversDesc')}</p>
       </div>
 
       {#if data.moversQueries.gainers.length === 0 && data.moversQueries.losers.length === 0}
-        <div class="text-sm text-gray-400 py-8 text-center">{$_('gscDetail.noData')}</div>
+        <div class="text-sm text-ink-subtle py-8 text-center">{$_('gscDetail.noData')}</div>
       {:else}
-        <div class="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-100">
+        <div class="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-border">
 
           <!-- Gainers -->
           <div>
-            <div class="px-4 py-3 bg-green-50 border-b border-gray-100">
+            <div class="px-4 py-3 bg-green-50 border-b border-border">
               <span class="text-xs font-semibold text-green-700 uppercase tracking-wide">{$_('gscDetail.gainers')}</span>
             </div>
             {#if data.moversQueries.gainers.length === 0}
-              <div class="text-xs text-gray-400 py-6 text-center">{$_('gscDetail.noData')}</div>
+              <div class="text-xs text-ink-subtle py-6 text-center">{$_('gscDetail.noData')}</div>
             {:else}
               <table class="w-full text-xs">
                 <thead>
-                  <tr class="bg-gray-50 border-b border-gray-100">
-                    <th class="text-left px-4 py-2 font-semibold text-gray-500">{$_('seo.searchConsolePanel.query')}</th>
-                    <th class="text-right px-3 py-2 font-semibold text-gray-500 whitespace-nowrap">{$_('seo.searchConsolePanel.clicks')}</th>
-                    <th class="text-right px-3 py-2 font-semibold text-gray-500 whitespace-nowrap">{$_('seo.searchConsolePanel.position')}</th>
+                  <tr class="bg-surface-2 border-b border-border">
+                    <th class="text-left px-4 py-2 font-semibold text-ink-muted">{$_('seo.searchConsolePanel.query')}</th>
+                    <th class="text-right px-3 py-2 font-semibold text-ink-muted whitespace-nowrap">{$_('seo.searchConsolePanel.clicks')}</th>
+                    <th class="text-right px-3 py-2 font-semibold text-ink-muted whitespace-nowrap">{$_('seo.searchConsolePanel.position')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {#each data.moversQueries.gainers as row (row.key)}
-                    <tr class="border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors">
+                    <tr class="border-b border-border last:border-0 hover:bg-surface-2 transition-colors">
                       <td class="px-4 py-2 max-w-[160px]">
-                        <span class="text-gray-800 truncate block" title={row.key}>{row.key}</span>
+                        <span class="text-ink truncate block" title={row.key}>{row.key}</span>
                       </td>
                       <td class="px-3 py-2 text-right">
-                        <span class="text-gray-700 font-medium">{formatNumber(row.clicks)}</span>
+                        <span class="text-ink font-medium">{formatNumber(row.clicks)}</span>
                         {#if row.deltaClicks !== 0}
                           <br /><span class="text-xs {clicksDeltaClass(row.deltaClicks)}">{fmtIntDelta(row.deltaClicks)}</span>
                         {/if}
                       </td>
                       <td class="px-3 py-2 text-right">
-                        <span class="text-gray-600">{formatPosition(row.position)}</span>
+                        <span class="text-ink-muted">{formatPosition(row.position)}</span>
                         {#if Math.abs(row.deltaPosition) >= 0.0001}
                           <br /><span class="text-xs {positionDeltaClass(row.deltaPosition)}">{fmtPosDelta(row.deltaPosition)}</span>
                         {/if}
@@ -350,34 +350,34 @@
 
           <!-- Losers -->
           <div>
-            <div class="px-4 py-3 bg-red-50 border-b border-gray-100">
+            <div class="px-4 py-3 bg-red-50 border-b border-border">
               <span class="text-xs font-semibold text-red-700 uppercase tracking-wide">{$_('gscDetail.losers')}</span>
             </div>
             {#if data.moversQueries.losers.length === 0}
-              <div class="text-xs text-gray-400 py-6 text-center">{$_('gscDetail.noData')}</div>
+              <div class="text-xs text-ink-subtle py-6 text-center">{$_('gscDetail.noData')}</div>
             {:else}
               <table class="w-full text-xs">
                 <thead>
-                  <tr class="bg-gray-50 border-b border-gray-100">
-                    <th class="text-left px-4 py-2 font-semibold text-gray-500">{$_('seo.searchConsolePanel.query')}</th>
-                    <th class="text-right px-3 py-2 font-semibold text-gray-500 whitespace-nowrap">{$_('seo.searchConsolePanel.clicks')}</th>
-                    <th class="text-right px-3 py-2 font-semibold text-gray-500 whitespace-nowrap">{$_('seo.searchConsolePanel.position')}</th>
+                  <tr class="bg-surface-2 border-b border-border">
+                    <th class="text-left px-4 py-2 font-semibold text-ink-muted">{$_('seo.searchConsolePanel.query')}</th>
+                    <th class="text-right px-3 py-2 font-semibold text-ink-muted whitespace-nowrap">{$_('seo.searchConsolePanel.clicks')}</th>
+                    <th class="text-right px-3 py-2 font-semibold text-ink-muted whitespace-nowrap">{$_('seo.searchConsolePanel.position')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {#each data.moversQueries.losers as row (row.key)}
-                    <tr class="border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors">
+                    <tr class="border-b border-border last:border-0 hover:bg-surface-2 transition-colors">
                       <td class="px-4 py-2 max-w-[160px]">
-                        <span class="text-gray-800 truncate block" title={row.key}>{row.key}</span>
+                        <span class="text-ink truncate block" title={row.key}>{row.key}</span>
                       </td>
                       <td class="px-3 py-2 text-right">
-                        <span class="text-gray-700 font-medium">{formatNumber(row.clicks)}</span>
+                        <span class="text-ink font-medium">{formatNumber(row.clicks)}</span>
                         {#if row.deltaClicks !== 0}
                           <br /><span class="text-xs {clicksDeltaClass(row.deltaClicks)}">{fmtIntDelta(row.deltaClicks)}</span>
                         {/if}
                       </td>
                       <td class="px-3 py-2 text-right">
-                        <span class="text-gray-600">{formatPosition(row.position)}</span>
+                        <span class="text-ink-muted">{formatPosition(row.position)}</span>
                         {#if Math.abs(row.deltaPosition) >= 0.0001}
                           <br /><span class="text-xs {positionDeltaClass(row.deltaPosition)}">{fmtPosDelta(row.deltaPosition)}</span>
                         {/if}

@@ -74,12 +74,12 @@
   $: conversionRate = totalVisitors > 0 ? ((totalConversions / totalVisitors) * 100).toFixed(1) : '0.0';
 </script>
 
-<div class="bg-white rounded-xl border border-gray-200 p-5">
+<div class="bg-surface rounded-xl border border-border p-5">
   <div class="flex items-center justify-between mb-4">
-    <h3 class="text-sm font-semibold text-gray-700">{$_('googlePlay.metrics.visitors')} vs {$_('googlePlay.metrics.conversion')}</h3>
-    <div class="flex items-center gap-4 text-xs text-gray-500">
-      <span>{$_('googlePlay.metrics.visitors')}: <strong class="text-gray-900">{totalVisitors.toLocaleString()}</strong></span>
-      <span>{$_('googlePlay.metrics.conversion')}: <strong class="text-gray-900">{conversionRate}%</strong></span>
+    <h3 class="text-sm font-semibold text-ink">{$_('googlePlay.metrics.visitors')} vs {$_('googlePlay.metrics.conversion')}</h3>
+    <div class="flex items-center gap-4 text-xs text-ink-muted">
+      <span>{$_('googlePlay.metrics.visitors')}: <strong class="text-ink">{totalVisitors.toLocaleString()}</strong></span>
+      <span>{$_('googlePlay.metrics.conversion')}: <strong class="text-ink">{conversionRate}%</strong></span>
     </div>
   </div>
   <div class="relative" style="height: 288px;">
