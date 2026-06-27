@@ -220,18 +220,18 @@
           {$currentProjectStore.name.charAt(0)}
         </div>
         <div>
-          <h1 class="text-2xl font-bold text-gray-900">{$currentProjectStore.name}</h1>
-          <p class="text-sm text-gray-500 mt-0.5">{$currentProjectStore.projectType ? $_(`projects.types.${$currentProjectStore.projectType}`) : ''}{$currentProjectStore.industry ? ' · ' + $currentProjectStore.industry : ''}{$currentProjectStore.websiteUrl ? ' · ' + $currentProjectStore.websiteUrl : ''}</p>
+          <h1 class="text-2xl font-bold text-ink">{$currentProjectStore.name}</h1>
+          <p class="text-sm text-ink-muted mt-0.5">{$currentProjectStore.projectType ? $_(`projects.types.${$currentProjectStore.projectType}`) : ''}{$currentProjectStore.industry ? ' · ' + $currentProjectStore.industry : ''}{$currentProjectStore.websiteUrl ? ' · ' + $currentProjectStore.websiteUrl : ''}</p>
         </div>
       </div>
       <div class="flex items-center gap-2 w-full sm:w-auto">
-        <button on:click={() => showExportModal = true} class="flex-1 sm:flex-initial px-3 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-150 flex items-center justify-center gap-1.5 cursor-pointer">
+        <button on:click={() => showExportModal = true} class="flex-1 sm:flex-initial px-3 py-2 text-sm text-ink-muted border border-border rounded-lg hover:bg-surface-2 transition-colors duration-150 flex items-center justify-center gap-1.5 cursor-pointer">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
           </svg>
           {$_('common.export')}
         </button>
-        <a href="/projects/{projectId}/settings" class="flex-1 sm:flex-initial px-3 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-150 flex items-center justify-center gap-1.5 cursor-pointer">
+        <a href="/projects/{projectId}/settings" class="flex-1 sm:flex-initial px-3 py-2 text-sm text-ink-muted border border-border rounded-lg hover:bg-surface-2 transition-colors duration-150 flex items-center justify-center gap-1.5 cursor-pointer">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" />
             <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -244,7 +244,7 @@
     <!-- Stats -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
       {#each stats as stat}
-        <div class="bg-white rounded-xl border border-gray-200 p-4 border-t-4
+        <div class="bg-surface rounded-xl border border-border p-4 border-t-4
           {stat.color.includes('blue') ? 'border-t-blue-400' :
            stat.color.includes('green') ? 'border-t-green-400' :
            stat.color.includes('purple') ? 'border-t-purple-400' : 'border-t-orange-400'}">
@@ -253,8 +253,8 @@
               {@html stat.icon}
             </div>
           </div>
-          <div class="text-2xl font-bold text-gray-900">{loading ? '...' : stat.value}</div>
-          <div class="text-xs text-gray-500 mt-1">{$_(stat.labelKey)}</div>
+          <div class="text-2xl font-bold text-ink">{loading ? '...' : stat.value}</div>
+          <div class="text-xs text-ink-muted mt-1">{$_(stat.labelKey)}</div>
         </div>
       {/each}
     </div>
@@ -263,7 +263,7 @@
     <div class="bg-gradient-to-r from-primary-600 to-violet-600 rounded-xl p-5 mb-8 text-white">
       <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
+          <div class="w-10 h-10 bg-surface/20 rounded-xl flex items-center justify-center flex-shrink-0">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
               <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
             </svg>
@@ -273,7 +273,7 @@
             <p class="text-primary-100 text-sm mt-0.5">{$_('projects.askAIDesc')}</p>
           </div>
         </div>
-        <a href="/ai-chat" class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-150 backdrop-blur-sm whitespace-nowrap flex-shrink-0 cursor-pointer">
+        <a href="/ai-chat" class="bg-surface/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-150 backdrop-blur-sm whitespace-nowrap flex-shrink-0 cursor-pointer">
           {$_('projects.openChat')}
         </a>
       </div>
@@ -281,31 +281,31 @@
 
     <!-- Getting Started guide — shown until dismissed or all items done -->
     {#if !dismissed && !allDone}
-      <div class="bg-white rounded-xl border border-gray-200 p-5 mb-8">
+      <div class="bg-surface rounded-xl border border-border p-5 mb-8">
         <div class="flex items-center justify-between mb-3">
           <div>
-            <h2 class="text-base font-semibold text-gray-900">{$_('projects.gs.title')}</h2>
-            <p class="text-xs text-gray-500 mt-0.5">
+            <h2 class="text-base font-semibold text-ink">{$_('projects.gs.title')}</h2>
+            <p class="text-xs text-ink-muted mt-0.5">
               {$_('projects.gs.progress', { values: { done: completedCount, total: gettingStartedItems.length } })}
             </p>
           </div>
-          <button on:click={dismissGuide} class="text-xs text-gray-400 hover:text-gray-600 cursor-pointer transition-colors duration-150">
+          <button on:click={dismissGuide} class="text-xs text-ink-subtle hover:text-gray-600 cursor-pointer transition-colors duration-150">
             {$_('projects.gs.dismiss')}
           </button>
         </div>
         <!-- Progress bar -->
-        <div class="w-full bg-gray-100 rounded-full h-1.5 mb-4">
+        <div class="w-full bg-surface-2 rounded-full h-1.5 mb-4">
           <div
-            class="bg-primary-600 h-1.5 rounded-full transition-all duration-500"
+            class="bg-brand h-1.5 rounded-full transition-all duration-500"
             style="width: {(completedCount / gettingStartedItems.length) * 100}%"
           ></div>
         </div>
         <div class="space-y-2">
           {#each gettingStartedItems as item}
-            <div class="flex items-center gap-3 p-3 rounded-lg {item.done ? 'bg-gray-50' : 'border border-gray-100'}">
+            <div class="flex items-center gap-3 p-3 rounded-lg {item.done ? 'bg-surface-2' : 'border border-border'}">
               <!-- Circle check indicator -->
               <div class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0
-                {item.done ? 'bg-green-100 text-green-600' : 'border-2 border-gray-300'}">
+                {item.done ? 'bg-green-100 text-green-600' : 'border-2 border-border'}">
                 {#if item.done}
                   <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
@@ -313,17 +313,17 @@
                 {/if}
               </div>
               <div class="flex-1 min-w-0">
-                <p class="text-sm font-medium {item.done ? 'line-through text-gray-400' : 'text-gray-900'}">
+                <p class="text-sm font-medium {item.done ? 'line-through text-ink-subtle' : 'text-ink'}">
                   {$_(item.labelKey)}
                 </p>
                 {#if !item.done}
-                  <p class="text-xs text-gray-500 mt-0.5">{$_(item.descKey)}</p>
+                  <p class="text-xs text-ink-muted mt-0.5">{$_(item.descKey)}</p>
                 {/if}
               </div>
               {#if !item.done}
                 <a
                   href={item.external ? item.href : `/projects/${projectId}/${item.href}`}
-                  class="text-xs font-medium text-primary-600 hover:text-primary-700 whitespace-nowrap cursor-pointer transition-colors duration-150"
+                  class="text-xs font-medium text-brand hover:text-primary-700 whitespace-nowrap cursor-pointer transition-colors duration-150"
                 >
                   {$_('projects.gs.doItNow')} →
                 </a>
@@ -335,18 +335,18 @@
     {/if}
 
     <!-- Quick actions grid -->
-    <h2 class="text-lg font-semibold text-gray-900 mb-4">{$_('projects.quickActions')}</h2>
+    <h2 class="text-lg font-semibold text-ink mb-4">{$_('projects.quickActions')}</h2>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {#each quickActions as action}
         <a
           href="/projects/{projectId}/{action.href}"
-          class="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md hover:border-primary-200 transition-all duration-150 group cursor-pointer"
+          class="bg-surface rounded-xl border border-border p-5 hover:shadow-md hover:border-primary-200 transition-all duration-150 group cursor-pointer"
         >
           <div class="w-11 h-11 {action.color} rounded-xl flex items-center justify-center mb-3 transition-colors duration-150">
             {@html action.icon}
           </div>
-          <h3 class="font-semibold text-gray-900 group-hover:text-primary-700 transition-colors duration-150">{$_(action.title)}</h3>
-          <p class="text-sm text-gray-500 mt-1">{$_(action.descKey)}</p>
+          <h3 class="font-semibold text-ink group-hover:text-primary-700 transition-colors duration-150">{$_(action.title)}</h3>
+          <p class="text-sm text-ink-muted mt-1">{$_(action.descKey)}</p>
         </a>
       {/each}
     </div>
@@ -371,49 +371,49 @@
 <!-- Export Modal -->
 {#if showExportModal}
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => showExportModal = false}>
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-      <div class="p-6 border-b border-gray-100">
+    <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-md">
+      <div class="p-6 border-b border-border">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 bg-primary-50 rounded-xl flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <div class="w-10 h-10 bg-brand-subtle/10 rounded-xl flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
               <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
             </svg>
           </div>
           <div>
-            <h3 class="text-lg font-semibold text-gray-900">{$_('projectExport.title')}</h3>
-            <p class="text-sm text-gray-500">{$_('projectExport.description')}</p>
+            <h3 class="text-lg font-semibold text-ink">{$_('projectExport.title')}</h3>
+            <p class="text-sm text-ink-muted">{$_('projectExport.description')}</p>
           </div>
         </div>
       </div>
 
       <div class="p-6">
         <div class="flex items-center justify-between mb-3">
-          <p class="text-sm font-medium text-gray-700">{$_('projectExport.selectSections')}</p>
-          <button on:click={toggleAllExportSections} class="text-xs text-primary-600 hover:text-primary-700 cursor-pointer">
+          <p class="text-sm font-medium text-ink">{$_('projectExport.selectSections')}</p>
+          <button on:click={toggleAllExportSections} class="text-xs text-brand hover:text-primary-700 cursor-pointer">
             {selectedExportSections.size === exportSections.length ? $_('projectExport.deselectAll') : $_('projectExport.selectAll')}
           </button>
         </div>
         <div class="space-y-2">
           {#each exportSections as section}
             <label class="flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors duration-150
-              {selectedExportSections.has(section.key) ? 'border-primary-200 bg-primary-50/50' : 'border-gray-200 hover:bg-gray-50'}">
+              {selectedExportSections.has(section.key) ? 'border-primary-200 bg-brand-subtle/10' : 'border-border hover:bg-surface-2'}">
               <input type="checkbox" checked={selectedExportSections.has(section.key)} on:change={() => toggleExportSection(section.key)}
-                class="w-4 h-4 text-primary-600 rounded border-gray-300 focus:ring-primary-500" />
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                class="w-4 h-4 text-brand rounded border-border focus:ring-primary-500" />
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-ink-subtle" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                 <path stroke-linecap="round" stroke-linejoin="round" d={section.iconPath} />
               </svg>
-              <span class="text-sm text-gray-700">{$_(section.labelKey)}</span>
+              <span class="text-sm text-ink">{$_(section.labelKey)}</span>
             </label>
           {/each}
         </div>
       </div>
 
-      <div class="p-6 border-t border-gray-100 flex justify-end gap-3">
-        <button on:click={() => showExportModal = false} class="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors duration-150">
+      <div class="p-6 border-t border-border flex justify-end gap-3">
+        <button on:click={() => showExportModal = false} class="px-4 py-2 text-sm text-ink border border-border rounded-lg hover:bg-surface-2 cursor-pointer transition-colors duration-150">
           {$_('common.cancel')}
         </button>
         <button on:click={doExport} disabled={exporting || selectedExportSections.size === 0}
-          class="px-4 py-2 text-sm text-white bg-primary-600 rounded-lg hover:bg-primary-700 disabled:opacity-50 cursor-pointer transition-colors duration-150 flex items-center gap-2">
+          class="px-4 py-2 text-sm text-white bg-brand rounded-lg hover:brightness-110 disabled:opacity-50 cursor-pointer transition-colors duration-150 flex items-center gap-2">
           {#if exporting}
             <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
             {$_('projectExport.downloading')}

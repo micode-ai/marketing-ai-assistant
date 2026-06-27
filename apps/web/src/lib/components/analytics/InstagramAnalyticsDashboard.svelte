@@ -310,9 +310,9 @@
   </div>
 {:else}
   <!-- Connected with insights -->
-  <div class="bg-white rounded-xl border border-gray-200 overflow-hidden mb-6">
+  <div class="bg-surface rounded-xl border border-border overflow-hidden mb-6">
     <!-- Header -->
-    <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+    <div class="flex items-center justify-between px-5 py-4 border-b border-border">
       <div class="flex items-center gap-3">
         <div class="w-9 h-9 bg-pink-50 rounded-lg flex items-center justify-center flex-shrink-0">
           <svg class="w-5 h-5 text-pink-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -322,15 +322,15 @@
           </svg>
         </div>
         <div>
-          <h2 class="text-sm font-semibold text-gray-900">{$_('instagram.title')}</h2>
-          <p class="text-xs text-gray-500">
+          <h2 class="text-sm font-semibold text-ink">{$_('instagram.title')}</h2>
+          <p class="text-xs text-ink-muted">
             {status?.accountName ? '@' + status.accountName : $_('instagram.subtitle')}
           </p>
         </div>
       </div>
       <div class="flex items-center gap-3">
         <button on:click={syncAndRefresh} disabled={syncing}
-          class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-40 cursor-pointer">
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-ink-muted border border-border rounded-lg hover:bg-surface-2 transition-colors disabled:opacity-40 cursor-pointer">
           {#if syncing}
             <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -344,11 +344,11 @@
             {$_('instagram.syncNow')}
           {/if}
         </button>
-        <div class="flex bg-gray-100 rounded-lg p-0.5">
+        <div class="flex bg-surface-2 rounded-lg p-0.5">
           {#each PERIODS as p}
             <button on:click={() => changePeriod(p)} disabled={dataLoading}
               class="px-2.5 py-1 text-xs font-medium rounded-md transition-colors
-                {period === p ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}">
+                {period === p ? 'bg-surface text-ink shadow-sm' : 'text-ink-muted hover:text-gray-700'}">
               {$_(`instagram.period${p}`)}
             </button>
           {/each}
@@ -359,33 +359,33 @@
     {#if dataLoading && metrics.account.length === 0}
       <div class="p-5 space-y-6 animate-pulse">
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {#each Array(3) as _skeleton}<div class="bg-gray-100 rounded-xl h-24"></div>{/each}
+          {#each Array(3) as _skeleton}<div class="bg-surface-2 rounded-xl h-24"></div>{/each}
         </div>
-        <div class="bg-gray-100 rounded-xl h-64"></div>
+        <div class="bg-surface-2 rounded-xl h-64"></div>
       </div>
     {:else if metrics.account.length === 0}
-      <div class="px-5 py-12 text-center text-sm text-gray-500">{$_('instagram.noData')}</div>
+      <div class="px-5 py-12 text-center text-sm text-ink-muted">{$_('instagram.noData')}</div>
     {:else}
       <div class="p-5 space-y-6">
         <!-- KPI cards -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div class="bg-white border border-gray-200 rounded-xl p-4 border-t-4 border-t-pink-400">
-            <div class="text-xs text-gray-500 mb-1">{$_('instagram.currentFollowers')}</div>
-            <div class="text-2xl font-bold text-gray-900">{formatNumber(currentFollowers)}</div>
+          <div class="bg-surface border border-border rounded-xl p-4 border-t-4 border-t-pink-400">
+            <div class="text-xs text-ink-muted mb-1">{$_('instagram.currentFollowers')}</div>
+            <div class="text-2xl font-bold text-ink">{formatNumber(currentFollowers)}</div>
           </div>
-          <div class="bg-white border border-gray-200 rounded-xl p-4 border-t-4 border-t-purple-400">
-            <div class="text-xs text-gray-500 mb-1">{$_('instagram.totalReach')}</div>
-            <div class="text-2xl font-bold text-gray-900">{formatNumber(totalReach)}</div>
+          <div class="bg-surface border border-border rounded-xl p-4 border-t-4 border-t-purple-400">
+            <div class="text-xs text-ink-muted mb-1">{$_('instagram.totalReach')}</div>
+            <div class="text-2xl font-bold text-ink">{formatNumber(totalReach)}</div>
           </div>
-          <div class="bg-white border border-gray-200 rounded-xl p-4 border-t-4 border-t-blue-400">
-            <div class="text-xs text-gray-500 mb-1">{$_('instagram.totalViews')}</div>
-            <div class="text-2xl font-bold text-gray-900">{formatNumber(totalViews)}</div>
+          <div class="bg-surface border border-border rounded-xl p-4 border-t-4 border-t-blue-400">
+            <div class="text-xs text-ink-muted mb-1">{$_('instagram.totalViews')}</div>
+            <div class="text-2xl font-bold text-ink">{formatNumber(totalViews)}</div>
           </div>
         </div>
 
         <!-- Trend chart -->
         <div>
-          <h3 class="text-sm font-semibold text-gray-700 mb-3">{$_('instagram.trend')}</h3>
+          <h3 class="text-sm font-semibold text-ink mb-3">{$_('instagram.trend')}</h3>
           <div class="relative" style="height: 264px;">
             <canvas bind:this={chartCanvas} style="width: 100%; height: 100%;"></canvas>
           </div>
@@ -395,29 +395,29 @@
         <div class="grid grid-cols-1 xl:grid-cols-2 gap-5">
           {#each [{ key: 'best', title: 'instagram.bestPosts', rows: metrics.topPosts }, { key: 'worst', title: 'instagram.worstPosts', rows: metrics.worstPosts }] as group (group.key)}
             <div>
-              <h3 class="text-sm font-semibold text-gray-700 mb-3">{$_(group.title)}</h3>
+              <h3 class="text-sm font-semibold text-ink mb-3">{$_(group.title)}</h3>
               {#if group.rows.length === 0}
-                <div class="text-sm text-gray-400 py-6 text-center bg-gray-50 rounded-xl">{$_('instagram.noPosts')}</div>
+                <div class="text-sm text-ink-subtle py-6 text-center bg-surface-2 rounded-xl">{$_('instagram.noPosts')}</div>
               {:else}
-                <div class="rounded-xl border border-gray-200 overflow-x-auto">
+                <div class="rounded-xl border border-border overflow-x-auto">
                   <table class="w-full text-sm min-w-[460px]">
                     <thead>
-                      <tr class="bg-gray-50 border-b border-gray-200">
-                        <th class="text-left px-3 py-2.5 text-xs font-semibold text-gray-500">{$_('instagram.caption')}</th>
-                        <th class="text-left px-3 py-2.5 text-xs font-semibold text-gray-500">{$_('instagram.type')}</th>
-                        <th class="text-right px-3 py-2.5 text-xs font-semibold text-gray-500">{$_('instagram.likes')}</th>
-                        <th class="text-right px-3 py-2.5 text-xs font-semibold text-gray-500">{$_('instagram.comments')}</th>
-                        <th class="text-right px-3 py-2.5 text-xs font-semibold text-gray-500">{$_('instagram.reach')}</th>
-                        <th class="text-right px-3 py-2.5 text-xs font-semibold text-gray-500">{$_('instagram.engagement')}</th>
+                      <tr class="bg-surface-2 border-b border-border">
+                        <th class="text-left px-3 py-2.5 text-xs font-semibold text-ink-muted">{$_('instagram.caption')}</th>
+                        <th class="text-left px-3 py-2.5 text-xs font-semibold text-ink-muted">{$_('instagram.type')}</th>
+                        <th class="text-right px-3 py-2.5 text-xs font-semibold text-ink-muted">{$_('instagram.likes')}</th>
+                        <th class="text-right px-3 py-2.5 text-xs font-semibold text-ink-muted">{$_('instagram.comments')}</th>
+                        <th class="text-right px-3 py-2.5 text-xs font-semibold text-ink-muted">{$_('instagram.reach')}</th>
+                        <th class="text-right px-3 py-2.5 text-xs font-semibold text-ink-muted">{$_('instagram.engagement')}</th>
                       </tr>
                     </thead>
                     <tbody>
                       {#each group.rows as post (post.id)}
-                        <tr class="border-b border-gray-100 hover:bg-gray-50">
-                          <td class="px-3 py-2 text-gray-800 max-w-[180px] truncate" title={post.caption ?? ''}>
+                        <tr class="border-b border-border hover:bg-surface-2">
+                          <td class="px-3 py-2 text-ink max-w-[180px] truncate" title={post.caption ?? ''}>
                             {#if post.permalink}
                               <a href={post.permalink} target="_blank" rel="noopener noreferrer"
-                                 class="text-primary-600 hover:underline">{truncate(post.caption)}</a>
+                                 class="text-brand hover:underline">{truncate(post.caption)}</a>
                             {:else}
                               {truncate(post.caption)}
                             {/if}
@@ -425,10 +425,10 @@
                           <td class="px-3 py-2">
                             <span class="inline-block px-2 py-0.5 text-[10px] font-medium rounded-full bg-pink-50 text-pink-700">{post.mediaType}</span>
                           </td>
-                          <td class="px-3 py-2 text-right text-gray-700 font-medium">{formatNumber(post.likeCount)}</td>
-                          <td class="px-3 py-2 text-right text-gray-600">{formatNumber(post.commentsCount)}</td>
-                          <td class="px-3 py-2 text-right text-gray-600">{formatNumber(post.reach)}</td>
-                          <td class="px-3 py-2 text-right text-gray-600">{formatEngagement(post.engagementRate)}</td>
+                          <td class="px-3 py-2 text-right text-ink font-medium">{formatNumber(post.likeCount)}</td>
+                          <td class="px-3 py-2 text-right text-ink-muted">{formatNumber(post.commentsCount)}</td>
+                          <td class="px-3 py-2 text-right text-ink-muted">{formatNumber(post.reach)}</td>
+                          <td class="px-3 py-2 text-right text-ink-muted">{formatEngagement(post.engagementRate)}</td>
                         </tr>
                       {/each}
                     </tbody>
@@ -440,26 +440,26 @@
         </div>
 
         <!-- AI advice -->
-        <div class="bg-gray-50 rounded-xl border border-gray-100 p-5">
+        <div class="bg-surface-2 rounded-xl border border-border p-5">
           <div class="flex items-center justify-between mb-3">
-            <h3 class="text-sm font-semibold text-gray-700">{$_('instagram.advice')}</h3>
+            <h3 class="text-sm font-semibold text-ink">{$_('instagram.advice')}</h3>
             {#if !advice}
               <button on:click={getAdvice} disabled={adviceLoading}
-                class="px-3 py-1.5 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 disabled:opacity-50 cursor-pointer">
+                class="px-3 py-1.5 text-sm font-medium text-white bg-brand rounded-lg hover:brightness-110 disabled:opacity-50 cursor-pointer">
                 {adviceLoading ? $_('instagram.generating') : $_('instagram.generateAdvice')}
               </button>
             {/if}
           </div>
           {#if adviceError}<p class="text-sm text-red-600">{adviceError}</p>{/if}
           {#if advice}
-            <div class="prose prose-sm max-w-none text-gray-700">{@html DOMPurify.sanitize(marked.parse(advice, { async: false }) as string)}</div>
+            <div class="prose prose-sm max-w-none text-ink">{@html DOMPurify.sanitize(marked.parse(advice, { async: false }) as string)}</div>
             <div class="flex items-center gap-2 mt-4">
               <button on:click={continueInChat} disabled={openingChat}
-                class="px-3 py-1.5 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 disabled:opacity-50 cursor-pointer">
+                class="px-3 py-1.5 text-sm font-medium text-white bg-brand rounded-lg hover:brightness-110 disabled:opacity-50 cursor-pointer">
                 {$_('instagram.continueInChat')}
               </button>
               <button on:click={getAdvice} disabled={adviceLoading}
-                class="px-3 py-1.5 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer">
+                class="px-3 py-1.5 text-sm text-ink-muted border border-border rounded-lg hover:bg-surface-2 cursor-pointer">
                 {adviceLoading ? $_('instagram.generating') : $_('instagram.regenerate')}
               </button>
             </div>

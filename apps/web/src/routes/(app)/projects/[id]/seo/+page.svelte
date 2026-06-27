@@ -286,7 +286,7 @@
 
   function rankDelta(now: number | null, prev: number | null): { text: string; color: string } | null {
     if (now === null || prev === null) return null;
-    if (now === prev) return { text: '=', color: 'text-gray-500' };
+    if (now === prev) return { text: '=', color: 'text-ink-muted' };
     const diff = prev - now; // lower rank is better; positive diff = improvement
     if (diff > 0) return { text: `↑ ${diff}`, color: 'text-green-600' };
     return { text: `↓ ${Math.abs(diff)}`, color: 'text-red-600' };
@@ -351,7 +351,7 @@
 
   const intentBadge: Record<string, string> = {
     INFORMATIONAL: 'bg-blue-100 text-blue-700',
-    NAVIGATIONAL: 'bg-gray-100 text-gray-700',
+    NAVIGATIONAL: 'bg-surface-2 text-ink',
     COMMERCIAL: 'bg-amber-100 text-amber-700',
     TRANSACTIONAL: 'bg-green-100 text-green-700',
   };
@@ -370,13 +370,13 @@
   }
 
   function trendIndicator(history: number[]): { icon: 'up' | 'down' | 'stable'; color: string } {
-    if (!history || history.length < 2) return { icon: 'stable', color: 'text-gray-400' };
+    if (!history || history.length < 2) return { icon: 'stable', color: 'text-ink-subtle' };
     const recent = history[history.length - 1];
     const prev = history[history.length - 2];
     // Lower rank = better position
     if (recent < prev) return { icon: 'up', color: 'text-green-600' };
     if (recent > prev) return { icon: 'down', color: 'text-red-500' };
-    return { icon: 'stable', color: 'text-gray-400' };
+    return { icon: 'stable', color: 'text-ink-subtle' };
   }
 
   function sparklinePath(history: number[]): string {
@@ -417,15 +417,15 @@
   <!-- Header -->
   <div class="flex items-center justify-between mb-6">
     <div>
-      <h1 class="text-2xl font-bold text-gray-900">{$_('seo.title')}</h1>
-      <p class="text-sm text-gray-500 mt-1">{$_('seo.subtitle')}</p>
+      <h1 class="text-2xl font-bold text-ink">{$_('seo.title')}</h1>
+      <p class="text-sm text-ink-muted mt-1">{$_('seo.subtitle')}</p>
     </div>
     <div class="flex items-center gap-3">
       <!-- Sync from GSC button -->
       <button
         on:click={syncFromGsc}
         disabled={syncing}
-        class="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors duration-150 flex items-center gap-2 cursor-pointer disabled:opacity-50"
+        class="border border-border text-ink px-4 py-2 rounded-lg text-sm font-medium hover:bg-surface-2 transition-colors duration-150 flex items-center gap-2 cursor-pointer disabled:opacity-50"
         title={$_('seo.syncFromGsc')}
       >
         {#if syncing}
@@ -447,7 +447,7 @@
       <button
         on:click={runSeoAudit}
         disabled={auditing}
-        class="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors duration-150 flex items-center gap-2 cursor-pointer disabled:opacity-50"
+        class="border border-border text-ink px-4 py-2 rounded-lg text-sm font-medium hover:bg-surface-2 transition-colors duration-150 flex items-center gap-2 cursor-pointer disabled:opacity-50"
       >
         {#if auditing}
           <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
@@ -464,7 +464,7 @@
       </button>
       <button
         on:click={() => { form = { ...form, searchLocale: defaultSearchLocale }; showModal = true; }}
-        class="bg-primary-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors duration-150 flex items-center gap-2 cursor-pointer"
+        class="bg-brand text-white px-4 py-2 rounded-lg text-sm font-medium hover:brightness-110 transition-colors duration-150 flex items-center gap-2 cursor-pointer"
       >
         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -476,17 +476,17 @@
 
   <!-- GSC sync result panel -->
   {#if lastSyncResult}
-    <div class="bg-white rounded-xl border border-primary-200 p-5 mb-4 shadow-sm">
+    <div class="bg-surface rounded-xl border border-primary-200 p-5 mb-4 shadow-sm">
       <div class="flex items-start justify-between mb-3">
         <div>
-          <h3 class="text-sm font-semibold text-gray-900 flex items-center gap-2">
-            <svg class="w-5 h-5 text-primary-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <h3 class="text-sm font-semibold text-ink flex items-center gap-2">
+            <svg class="w-5 h-5 text-brand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
             </svg>
             Sync complete — pulled Google Search Console data for {lastSyncResult.date}
           </h3>
-          <p class="text-xs text-gray-500 mt-1">
-            Site: <span class="font-mono text-gray-700">{lastSyncResult.siteUrl}</span>
+          <p class="text-xs text-ink-muted mt-1">
+            Site: <span class="font-mono text-ink">{lastSyncResult.siteUrl}</span>
             &nbsp;·&nbsp;
             {lastSyncResult.matched} of {lastSyncResult.synced} keywords matched in GSC
             {#if lastSyncResult.synced - lastSyncResult.matched > 0}
@@ -496,7 +496,7 @@
         </div>
         <button
           on:click={dismissSyncResult}
-          class="text-gray-400 hover:text-gray-600 p-1"
+          class="text-ink-subtle hover:text-gray-600 p-1"
           title="Dismiss"
         >
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -506,10 +506,10 @@
       </div>
 
       {#if lastSyncResult.details.length > 0}
-        <div class="overflow-hidden border border-gray-100 rounded-lg">
+        <div class="overflow-hidden border border-border rounded-lg">
           <table class="w-full text-sm">
-            <thead class="bg-gray-50">
-              <tr class="text-left text-xs text-gray-500 uppercase">
+            <thead class="bg-surface-2">
+              <tr class="text-left text-xs text-ink-muted uppercase">
                 <th class="px-3 py-2 font-medium">Keyword</th>
                 <th class="px-3 py-2 font-medium">Previous</th>
                 <th class="px-3 py-2 font-medium">New rank</th>
@@ -518,16 +518,16 @@
             </thead>
             <tbody class="divide-y divide-gray-50">
               {#each lastSyncResult.details as d}
-                <tr class="hover:bg-gray-50">
-                  <td class="px-3 py-2 text-gray-900">{d.keyword}</td>
-                  <td class="px-3 py-2 text-gray-500">
+                <tr class="hover:bg-surface-2">
+                  <td class="px-3 py-2 text-ink">{d.keyword}</td>
+                  <td class="px-3 py-2 text-ink-muted">
                     {d.previousRank ?? '—'}
                   </td>
                   <td class="px-3 py-2">
                     {#if d.rank !== null}
-                      <span class="font-semibold text-gray-900">#{d.rank}</span>
+                      <span class="font-semibold text-ink">#{d.rank}</span>
                     {:else if d.reason === 'NO_MATCH_IN_GSC'}
-                      <span class="text-gray-400 italic">not ranked in GSC</span>
+                      <span class="text-ink-subtle italic">not ranked in GSC</span>
                     {:else if d.reason === 'NO_URL'}
                       <span class="text-amber-600 italic">no target URL</span>
                     {/if}
@@ -538,10 +538,10 @@
                       {#if delta}
                         <span class={delta.color + ' font-medium text-xs'}>{delta.text}</span>
                       {:else}
-                        <span class="text-gray-400 text-xs">new</span>
+                        <span class="text-ink-subtle text-xs">new</span>
                       {/if}
                     {:else}
-                      <span class="text-gray-300">—</span>
+                      <span class="text-ink-subtle">—</span>
                     {/if}
                   </td>
                 </tr>
@@ -551,7 +551,7 @@
         </div>
       {/if}
 
-      <div class="text-xs text-gray-400 mt-3 space-y-1">
+      <div class="text-xs text-ink-subtle mt-3 space-y-1">
         <p>GSC data lags by 2–3 days. Positions shown are an average for {lastSyncResult.date}. For same-day feedback use <strong>Record position</strong> on individual keywords.</p>
         {#if lastSyncResult.matched === 0 && lastSyncResult.synced > 0}
           <p class="text-amber-700">
@@ -567,29 +567,29 @@
 
   {#if loading}
     <!-- Loading skeleton -->
-    <div class="bg-white rounded-xl border border-gray-200 animate-pulse">
-      <div class="p-4 border-b border-gray-100">
+    <div class="bg-surface rounded-xl border border-border animate-pulse">
+      <div class="p-4 border-b border-border">
         <div class="h-4 bg-gray-200 rounded w-1/3"></div>
       </div>
       {#each Array(5) as _}
         <div class="p-4 border-b border-gray-50">
-          <div class="h-4 bg-gray-100 rounded w-full"></div>
+          <div class="h-4 bg-surface-2 rounded w-full"></div>
         </div>
       {/each}
     </div>
   {:else if keywords.length === 0}
     <!-- Empty state -->
     <div class="flex flex-col items-center justify-center py-20 text-center">
-      <div class="w-20 h-20 bg-primary-50 rounded-2xl flex items-center justify-center mb-6">
+      <div class="w-20 h-20 bg-brand-subtle/10 rounded-2xl flex items-center justify-center mb-6">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418" />
         </svg>
       </div>
-      <h2 class="text-xl font-semibold text-gray-900 mb-2">{$_('seo.empty')}</h2>
-      <p class="text-gray-500 mb-6 max-w-sm">{$_('seo.emptyDesc')}</p>
+      <h2 class="text-xl font-semibold text-ink mb-2">{$_('seo.empty')}</h2>
+      <p class="text-ink-muted mb-6 max-w-sm">{$_('seo.emptyDesc')}</p>
       <button
         on:click={() => { form = { ...form, searchLocale: defaultSearchLocale }; showModal = true; }}
-        class="bg-primary-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-primary-700 transition-colors duration-150 flex items-center gap-2 cursor-pointer"
+        class="bg-brand text-white px-6 py-3 rounded-xl font-medium hover:brightness-110 transition-colors duration-150 flex items-center gap-2 cursor-pointer"
       >
         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -599,21 +599,21 @@
     </div>
   {:else}
     <!-- Keywords table -->
-    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div class="bg-surface rounded-xl border border-border overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full">
           <thead>
-            <tr class="border-b border-gray-100 bg-gray-50/50">
-              <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-5 py-3">{$_('seo.keyword')}</th>
-              <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-5 py-3">{$_('seo.targetUrl')}</th>
-              <th class="text-right text-xs font-medium text-gray-500 uppercase tracking-wider px-5 py-3">{$_('seo.searchVolume')}</th>
-              <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-5 py-3">{$_('seo.difficulty')}</th>
-              <th class="text-right text-xs font-medium text-gray-500 uppercase tracking-wider px-5 py-3">{$_('seo.currentRank')}</th>
-              <th class="text-right text-xs font-medium text-gray-500 uppercase tracking-wider px-5 py-3">{$_('seo.targetRank')}</th>
-              <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-5 py-3">{$_('seo.intent')}</th>
-              <th class="text-center text-xs font-medium text-gray-500 uppercase tracking-wider px-5 py-3">{$_('seo.trend')}</th>
-              <th class="text-center text-xs font-medium text-gray-500 uppercase tracking-wider px-5 py-3">{$_('seo.tracking')}</th>
-              <th class="text-right text-xs font-medium text-gray-500 uppercase tracking-wider px-5 py-3"></th>
+            <tr class="border-b border-border bg-surface-2/50">
+              <th class="text-left text-xs font-medium text-ink-muted uppercase tracking-wider px-5 py-3">{$_('seo.keyword')}</th>
+              <th class="text-left text-xs font-medium text-ink-muted uppercase tracking-wider px-5 py-3">{$_('seo.targetUrl')}</th>
+              <th class="text-right text-xs font-medium text-ink-muted uppercase tracking-wider px-5 py-3">{$_('seo.searchVolume')}</th>
+              <th class="text-left text-xs font-medium text-ink-muted uppercase tracking-wider px-5 py-3">{$_('seo.difficulty')}</th>
+              <th class="text-right text-xs font-medium text-ink-muted uppercase tracking-wider px-5 py-3">{$_('seo.currentRank')}</th>
+              <th class="text-right text-xs font-medium text-ink-muted uppercase tracking-wider px-5 py-3">{$_('seo.targetRank')}</th>
+              <th class="text-left text-xs font-medium text-ink-muted uppercase tracking-wider px-5 py-3">{$_('seo.intent')}</th>
+              <th class="text-center text-xs font-medium text-ink-muted uppercase tracking-wider px-5 py-3">{$_('seo.trend')}</th>
+              <th class="text-center text-xs font-medium text-ink-muted uppercase tracking-wider px-5 py-3">{$_('seo.tracking')}</th>
+              <th class="text-right text-xs font-medium text-ink-muted uppercase tracking-wider px-5 py-3"></th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-50">
@@ -621,65 +621,65 @@
               {@const history = historyMap[kw.id] || []}
               {@const trend = trendIndicator(history)}
               {@const urlHost = getTargetUrlHost(kw.url)}
-              <tr class="hover:bg-gray-50/50 transition-colors duration-100">
+              <tr class="hover:bg-surface-2/50 transition-colors duration-100">
                 <!-- Keyword -->
                 <td class="px-5 py-3.5">
-                  <span class="text-sm font-medium text-gray-900">{kw.keyword}</span>
+                  <span class="text-sm font-medium text-ink">{kw.keyword}</span>
                 </td>
 
                 <!-- Target URL -->
                 <td class="px-5 py-3.5 max-w-[140px]">
                   {#if urlHost}
                     {#if projectWebsite && kw.url === projectWebsite}
-                      <span class="text-xs text-gray-500 italic" title={kw.url}>Homepage</span>
+                      <span class="text-xs text-ink-muted italic" title={kw.url}>Homepage</span>
                     {:else}
                       {@const pathOnly = getTargetUrlPath(kw.url)}
-                      <span class="text-sm text-gray-600 truncate block" title={kw.url}>{pathOnly || urlHost}</span>
+                      <span class="text-sm text-ink-muted truncate block" title={kw.url}>{pathOnly || urlHost}</span>
                     {/if}
                   {:else}
-                    <span class="text-sm text-gray-400">—</span>
+                    <span class="text-sm text-ink-subtle">—</span>
                   {/if}
                 </td>
 
                 <!-- Search Volume -->
                 <td class="px-5 py-3.5 text-right">
-                  <span class="text-sm text-gray-600">{kw.searchVolume != null ? kw.searchVolume.toLocaleString() : '—'}</span>
+                  <span class="text-sm text-ink-muted">{kw.searchVolume != null ? kw.searchVolume.toLocaleString() : '—'}</span>
                 </td>
 
                 <!-- Difficulty -->
                 <td class="px-5 py-3.5">
                   {#if kw.difficulty != null}
                     <div class="flex items-center gap-2">
-                      <div class="w-16 bg-gray-100 rounded-full h-1.5">
+                      <div class="w-16 bg-surface-2 rounded-full h-1.5">
                         <div class="{difficultyColor(kw.difficulty)} h-1.5 rounded-full" style="width: {kw.difficulty}%"></div>
                       </div>
-                      <span class="text-xs text-gray-500 w-7 text-right">{kw.difficulty}</span>
+                      <span class="text-xs text-ink-muted w-7 text-right">{kw.difficulty}</span>
                     </div>
                   {:else}
-                    <span class="text-sm text-gray-400">—</span>
+                    <span class="text-sm text-ink-subtle">—</span>
                   {/if}
                 </td>
 
                 <!-- Current Rank -->
                 <td class="px-5 py-3.5 text-right">
-                  <span class="text-sm font-medium {kw.currentRank != null && kw.currentRank <= 10 ? 'text-green-600' : kw.currentRank != null && kw.currentRank <= 30 ? 'text-amber-600' : 'text-gray-600'}">
+                  <span class="text-sm font-medium {kw.currentRank != null && kw.currentRank <= 10 ? 'text-green-600' : kw.currentRank != null && kw.currentRank <= 30 ? 'text-amber-600' : 'text-ink-muted'}">
                     {kw.currentRank != null ? '#' + kw.currentRank : '—'}
                   </span>
                 </td>
 
                 <!-- Target Rank -->
                 <td class="px-5 py-3.5 text-right">
-                  <span class="text-sm text-gray-500">{kw.targetRank != null ? '#' + kw.targetRank : '—'}</span>
+                  <span class="text-sm text-ink-muted">{kw.targetRank != null ? '#' + kw.targetRank : '—'}</span>
                 </td>
 
                 <!-- Intent -->
                 <td class="px-5 py-3.5">
                   {#if kw.intent}
-                    <span class="text-xs px-2 py-0.5 rounded-full font-medium {intentBadge[kw.intent] || 'bg-gray-100 text-gray-600'}">
+                    <span class="text-xs px-2 py-0.5 rounded-full font-medium {intentBadge[kw.intent] || 'bg-surface-2 text-ink-muted'}">
                       {$_(intentLabel[kw.intent] || 'seo.intentInformational')}
                     </span>
                   {:else}
-                    <span class="text-sm text-gray-400">—</span>
+                    <span class="text-sm text-ink-subtle">—</span>
                   {/if}
                 </td>
 
@@ -706,7 +706,7 @@
                         {/if}
                       </span>
                     {:else}
-                      <span class="text-xs text-gray-400">{$_('seo.noHistory')}</span>
+                      <span class="text-xs text-ink-subtle">{$_('seo.noHistory')}</span>
                     {/if}
                   </div>
                 </td>
@@ -719,7 +719,7 @@
                       {$_('seo.active')}
                     </span>
                   {:else}
-                    <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 font-medium">
+                    <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-surface-2 text-ink-muted font-medium">
                       <span class="w-1.5 h-1.5 bg-gray-400 rounded-full"></span>
                       {$_('seo.paused')}
                     </span>
@@ -732,7 +732,7 @@
                     <!-- View history link -->
                     <a
                       href="/projects/{projectId}/seo/keywords/{kw.id}"
-                      class="text-gray-400 hover:text-primary-600 transition-colors duration-150 p-1 inline-flex items-center"
+                      class="text-ink-subtle hover:text-primary-600 transition-colors duration-150 p-1 inline-flex items-center"
                       title={$_('seo.history.viewHistory')}
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -742,7 +742,7 @@
                     <!-- Record position button -->
                     <button
                       on:click={() => openRecordModal(kw)}
-                      class="text-gray-400 hover:text-primary-600 transition-colors duration-150 cursor-pointer p-1"
+                      class="text-ink-subtle hover:text-primary-600 transition-colors duration-150 cursor-pointer p-1"
                       title={$_('seo.recordPosition.title')}
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -752,7 +752,7 @@
                     <!-- Delete button -->
                     <button
                       on:click={() => deletingId = kw.id}
-                      class="text-gray-400 hover:text-red-500 transition-colors duration-150 cursor-pointer p-1"
+                      class="text-ink-subtle hover:text-red-500 transition-colors duration-150 cursor-pointer p-1"
                       title={$_('seo.deleteKeyword')}
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -768,20 +768,20 @@
       </div>
 
       <!-- Summary footer -->
-      <div class="px-5 py-3 border-t border-gray-100 bg-gray-50/30 flex items-center justify-between">
-        <span class="text-xs text-gray-500">
+      <div class="px-5 py-3 border-t border-border bg-surface-2/30 flex items-center justify-between">
+        <span class="text-xs text-ink-muted">
           {$_('seo.totalKeywords', { values: { count: keywords.length } })}
         </span>
         <div class="flex items-center gap-4">
           {#if lastSyncedAt}
-            <span class="text-xs text-gray-400 flex items-center gap-1">
+            <span class="text-xs text-ink-subtle flex items-center gap-1">
               <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
               </svg>
               {$_('seo.lastSyncedAt', { values: { when: lastSyncedAt } })}
             </span>
           {/if}
-          <span class="text-xs text-gray-400">
+          <span class="text-xs text-ink-subtle">
             {$_('seo.avgDifficulty', { values: { avg: keywords.filter(k => k.difficulty != null).length > 0 ? Math.round(keywords.filter(k => k.difficulty != null).reduce((sum, k) => sum + k.difficulty, 0) / keywords.filter(k => k.difficulty != null).length) : 0 } })}
           </span>
         </div>
@@ -829,102 +829,102 @@
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => showModal = false}>
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-      <div class="p-6 border-b border-gray-100 flex items-center gap-2.5">
-        <div class="w-8 h-8 bg-primary-50 rounded-lg flex items-center justify-center flex-shrink-0">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+    <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-md">
+      <div class="p-6 border-b border-border flex items-center gap-2.5">
+        <div class="w-8 h-8 bg-brand-subtle/10 rounded-lg flex items-center justify-center flex-shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
           </svg>
         </div>
-        <h2 class="text-lg font-semibold text-gray-900">{$_('seo.addKeyword')}</h2>
+        <h2 class="text-lg font-semibold text-ink">{$_('seo.addKeyword')}</h2>
       </div>
       <div class="p-6 space-y-4">
         <!-- Keyword -->
         <div>
-          <label for="seo-keyword" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('seo.keyword')}</label>
+          <label for="seo-keyword" class="block text-sm font-medium text-ink mb-1.5">{$_('seo.keyword')}</label>
           <input
             id="seo-keyword"
             type="text"
             bind:value={form.keyword}
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             placeholder={$_('seo.keywordPlaceholder')}
           />
         </div>
 
         <!-- Target URL -->
         <div>
-          <label for="seo-url" class="block text-sm font-medium text-gray-700 mb-1.5">
+          <label for="seo-url" class="block text-sm font-medium text-ink mb-1.5">
             {$_('seo.targetUrl')}
-            <span class="font-normal text-gray-400 text-xs ml-1">— {$_('common.optional')}</span>
+            <span class="font-normal text-ink-subtle text-xs ml-1">— {$_('common.optional')}</span>
           </label>
           <input
             id="seo-url"
             type="text"
             bind:value={form.url}
             class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
-              {urlError ? 'border-red-400 focus:ring-red-400' : 'border-gray-300'}"
+              {urlError ? 'border-red-400 focus:ring-red-400' : 'border-border'}"
             placeholder={projectWebsite || 'https://your-page.com/path'}
           />
           {#if urlError}
             <p class="mt-1 text-xs text-red-500">Must start with https:// or http://</p>
           {:else if projectWebsite && form.url === projectWebsite}
-            <p class="mt-1 text-xs text-gray-400">Defaulted to your project website. Change only if you want to rank a specific page for this keyword.</p>
+            <p class="mt-1 text-xs text-ink-subtle">Defaulted to your project website. Change only if you want to rank a specific page for this keyword.</p>
           {:else}
-            <p class="mt-1 text-xs text-gray-400">{$_('seo.targetUrlHelper')}</p>
+            <p class="mt-1 text-xs text-ink-subtle">{$_('seo.targetUrlHelper')}</p>
           {/if}
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <!-- Target Rank -->
           <div>
-            <label for="seo-target" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('seo.targetRank')}</label>
+            <label for="seo-target" class="block text-sm font-medium text-ink mb-1.5">{$_('seo.targetRank')}</label>
             <input
               id="seo-target"
               type="number"
               min="1"
               max="100"
               bind:value={form.targetRank}
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
           </div>
 
           <!-- Intent -->
           <div>
-            <label for="seo-intent" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('seo.intent')}</label>
+            <label for="seo-intent" class="block text-sm font-medium text-ink mb-1.5">{$_('seo.intent')}</label>
             <select
               id="seo-intent"
               bind:value={form.intent}
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
               <option value="INFORMATIONAL">{$_('seo.intentInformational')}</option>
               <option value="NAVIGATIONAL">{$_('seo.intentNavigational')}</option>
               <option value="COMMERCIAL">{$_('seo.intentCommercial')}</option>
               <option value="TRANSACTIONAL">{$_('seo.intentTransactional')}</option>
             </select>
-            <p class="mt-1 text-xs text-gray-400">{$_('seo.intentHelper')}</p>
+            <p class="mt-1 text-xs text-ink-subtle">{$_('seo.intentHelper')}</p>
           </div>
         </div>
 
         <!-- Search Locale -->
         <div>
-          <label for="seo-locale" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('seo.locale')}</label>
+          <label for="seo-locale" class="block text-sm font-medium text-ink mb-1.5">{$_('seo.locale')}</label>
           <select
             id="seo-locale"
             bind:value={form.searchLocale}
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           >
             <option value="pl-PL">Polski (pl-PL)</option>
             <option value="en-US">English (en-US)</option>
             <option value="ru-RU">Русский (ru-RU)</option>
           </select>
-          <p class="mt-1 text-xs text-gray-400">{$_('seo.localeHelper')}</p>
+          <p class="mt-1 text-xs text-ink-subtle">{$_('seo.localeHelper')}</p>
         </div>
       </div>
-      <div class="p-6 border-t border-gray-100 flex gap-3">
+      <div class="p-6 border-t border-border flex gap-3">
         <button
           on:click={addKeyword}
           disabled={adding || !form.keyword.trim() || urlError}
-          class="flex-1 bg-primary-600 text-white py-2.5 rounded-lg font-medium hover:bg-primary-700 transition-colors duration-150 disabled:opacity-50 text-sm flex items-center justify-center gap-2 cursor-pointer"
+          class="flex-1 bg-brand text-white py-2.5 rounded-lg font-medium hover:brightness-110 transition-colors duration-150 disabled:opacity-50 text-sm flex items-center justify-center gap-2 cursor-pointer"
         >
           {#if adding}
             <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
@@ -939,7 +939,7 @@
             {$_('seo.addKeyword')}
           {/if}
         </button>
-        <button on:click={() => showModal = false} class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 text-sm cursor-pointer">
+        <button on:click={() => showModal = false} class="px-5 py-2.5 border border-border rounded-lg hover:bg-surface-2 transition-colors duration-150 text-sm cursor-pointer">
           {$_('common.cancel')}
         </button>
       </div>
@@ -952,15 +952,15 @@
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => deletingId = null}>
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
+    <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-sm">
       <div class="p-6">
         <div class="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center mb-4">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
           </svg>
         </div>
-        <h2 class="text-lg font-semibold text-gray-900 mb-2">{$_('seo.deleteKeyword')}</h2>
-        <p class="text-sm text-gray-500 mb-6">{$_('seo.confirmDelete')}</p>
+        <h2 class="text-lg font-semibold text-ink mb-2">{$_('seo.deleteKeyword')}</h2>
+        <p class="text-sm text-ink-muted mb-6">{$_('seo.confirmDelete')}</p>
         <div class="flex gap-3">
           <button
             on:click={() => deletingId && deleteKeyword(deletingId)}
@@ -968,7 +968,7 @@
           >
             {$_('common.delete')}
           </button>
-          <button on:click={() => deletingId = null} class="flex-1 px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 text-sm cursor-pointer">
+          <button on:click={() => deletingId = null} class="flex-1 px-5 py-2.5 border border-border rounded-lg hover:bg-surface-2 transition-colors duration-150 text-sm cursor-pointer">
             {$_('common.cancel')}
           </button>
         </div>
@@ -986,24 +986,24 @@
     on:click|self={closeRecordModal}
     on:keydown={handleRecordModalKeydown}
   >
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-      <div class="p-6 border-b border-gray-100 flex items-center gap-2.5">
-        <div class="w-8 h-8 bg-primary-50 rounded-lg flex items-center justify-center flex-shrink-0">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+    <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-md">
+      <div class="p-6 border-b border-border flex items-center gap-2.5">
+        <div class="w-8 h-8 bg-brand-subtle/10 rounded-lg flex items-center justify-center flex-shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
           </svg>
         </div>
         <div class="min-w-0 flex-1">
-          <h2 class="text-lg font-semibold text-gray-900">{$_('seo.recordPosition.title')}</h2>
-          <p class="text-xs text-gray-500 truncate">{recordModalKeyword.keyword}</p>
+          <h2 class="text-lg font-semibold text-ink">{$_('seo.recordPosition.title')}</h2>
+          <p class="text-xs text-ink-muted truncate">{recordModalKeyword.keyword}</p>
         </div>
       </div>
       <div class="p-6 space-y-4">
-        <p class="text-sm text-gray-500">{$_('seo.recordPosition.description')}</p>
+        <p class="text-sm text-ink-muted">{$_('seo.recordPosition.description')}</p>
 
         <!-- Current rank -->
         <div>
-          <label for="record-rank" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('seo.recordPosition.rank')}</label>
+          <label for="record-rank" class="block text-sm font-medium text-ink mb-1.5">{$_('seo.recordPosition.rank')}</label>
           <input
             id="record-rank"
             type="number"
@@ -1011,37 +1011,37 @@
             max="100"
             bind:value={recordRank}
             disabled={recordNotInTop100}
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-400"
+            class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-400"
             placeholder={$_('seo.recordPosition.rankPlaceholder')}
           />
           <label class="flex items-center gap-2 mt-2 cursor-pointer select-none">
             <input
               type="checkbox"
               bind:checked={recordNotInTop100}
-              class="w-4 h-4 text-primary-600 rounded border-gray-300 cursor-pointer"
+              class="w-4 h-4 text-brand rounded border-border cursor-pointer"
             />
-            <span class="text-sm text-gray-600">{$_('seo.recordPosition.notInTop100')}</span>
+            <span class="text-sm text-ink-muted">{$_('seo.recordPosition.notInTop100')}</span>
           </label>
         </div>
 
         <!-- Matched URL -->
         <div>
-          <label for="record-url" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('seo.recordPosition.url')}</label>
+          <label for="record-url" class="block text-sm font-medium text-ink mb-1.5">{$_('seo.recordPosition.url')}</label>
           <input
             id="record-url"
             type="text"
             bind:value={recordUrl}
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             placeholder="https://example.com/page"
           />
-          <p class="mt-1 text-xs text-gray-400">{$_('seo.recordPosition.urlHelper')}</p>
+          <p class="mt-1 text-xs text-ink-subtle">{$_('seo.recordPosition.urlHelper')}</p>
         </div>
       </div>
-      <div class="p-6 border-t border-gray-100 flex gap-3">
+      <div class="p-6 border-t border-border flex gap-3">
         <button
           on:click={saveRecordPosition}
           disabled={recordSaving || (!recordNotInTop100 && (!recordRank || Number(recordRank) < 1 || Number(recordRank) > 100))}
-          class="flex-1 bg-primary-600 text-white py-2.5 rounded-lg font-medium hover:bg-primary-700 transition-colors duration-150 disabled:opacity-50 text-sm flex items-center justify-center gap-2 cursor-pointer"
+          class="flex-1 bg-brand text-white py-2.5 rounded-lg font-medium hover:brightness-110 transition-colors duration-150 disabled:opacity-50 text-sm flex items-center justify-center gap-2 cursor-pointer"
         >
           {#if recordSaving}
             <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
@@ -1053,7 +1053,7 @@
             {$_('seo.recordPosition.save')}
           {/if}
         </button>
-        <button on:click={closeRecordModal} class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 text-sm cursor-pointer">
+        <button on:click={closeRecordModal} class="px-5 py-2.5 border border-border rounded-lg hover:bg-surface-2 transition-colors duration-150 text-sm cursor-pointer">
           {$_('common.cancel')}
         </button>
       </div>

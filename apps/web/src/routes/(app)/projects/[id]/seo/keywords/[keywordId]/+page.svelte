@@ -309,7 +309,7 @@
 
   const intentBadge: Record<string, string> = {
     INFORMATIONAL: 'bg-blue-100 text-blue-700',
-    NAVIGATIONAL: 'bg-gray-100 text-gray-700',
+    NAVIGATIONAL: 'bg-surface-2 text-ink',
     COMMERCIAL: 'bg-amber-100 text-amber-700',
     TRANSACTIONAL: 'bg-green-100 text-green-700',
   };
@@ -343,7 +343,7 @@
   <!-- Back link -->
   <a
     href="/projects/{projectId}/seo"
-    class="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 mb-5 transition-colors"
+    class="inline-flex items-center gap-1.5 text-sm text-ink-muted hover:text-gray-700 mb-5 transition-colors"
   >
     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
       <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
@@ -355,34 +355,34 @@
     <!-- Skeleton -->
     <div class="animate-pulse space-y-4">
       <div class="h-8 bg-gray-200 rounded w-1/3"></div>
-      <div class="h-4 bg-gray-100 rounded w-1/4"></div>
-      <div class="h-72 bg-gray-100 rounded-xl mt-6"></div>
+      <div class="h-4 bg-surface-2 rounded w-1/4"></div>
+      <div class="h-72 bg-surface-2 rounded-xl mt-6"></div>
     </div>
 
   {:else if keyword}
     <!-- Header block -->
     <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
       <div class="min-w-0 flex-1">
-        <h1 class="text-2xl font-bold text-gray-900 break-words">{keyword.keyword}</h1>
+        <h1 class="text-2xl font-bold text-ink break-words">{keyword.keyword}</h1>
 
         <!-- Badges row -->
         <div class="flex flex-wrap items-center gap-2 mt-2">
           {#if keyword.locale}
-            <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-mono">{keyword.locale}</span>
+            <span class="text-xs px-2 py-0.5 rounded-full bg-surface-2 text-ink-muted font-mono">{keyword.locale}</span>
           {/if}
           {#if keyword.intent}
-            <span class="text-xs px-2 py-0.5 rounded-full font-medium {intentBadge[keyword.intent] || 'bg-gray-100 text-gray-600'}">
+            <span class="text-xs px-2 py-0.5 rounded-full font-medium {intentBadge[keyword.intent] || 'bg-surface-2 text-ink-muted'}">
               {$_(intentLabel[keyword.intent] || 'seo.intentInformational')}
             </span>
           {/if}
           {#if keyword.currentRank != null}
             <span class="text-xs px-2 py-0.5 rounded-full font-medium
-              {keyword.currentRank <= 10 ? 'bg-green-100 text-green-700' : keyword.currentRank <= 30 ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-600'}">
+              {keyword.currentRank <= 10 ? 'bg-green-100 text-green-700' : keyword.currentRank <= 30 ? 'bg-amber-100 text-amber-700' : 'bg-surface-2 text-ink-muted'}">
               #{keyword.currentRank}
             </span>
           {/if}
           {#if keyword.lastCheckedAt}
-            <span class="text-xs text-gray-400">
+            <span class="text-xs text-ink-subtle">
               {$_('seo.history.lastCheckedAt', { values: { when: formatRelative(keyword.lastCheckedAt) } })}
             </span>
           {/if}
@@ -394,7 +394,7 @@
             href={keyword.url}
             target="_blank"
             rel="noopener noreferrer"
-            class="inline-flex items-center gap-1 mt-2 text-sm text-primary-600 hover:text-primary-700 hover:underline break-all"
+            class="inline-flex items-center gap-1 mt-2 text-sm text-brand hover:text-primary-700 hover:underline break-all"
           >
             {keyword.url}
             <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -409,7 +409,7 @@
         <!-- Record position -->
         <button
           on:click={openRecordModal}
-          class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors cursor-pointer"
+          class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-brand rounded-lg hover:brightness-110 transition-colors cursor-pointer"
         >
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
@@ -420,7 +420,7 @@
         <!-- Edit -->
         <button
           on:click={() => { editForm = { targetRank: keyword.targetRank ?? null, url: keyword.url ?? '', intent: keyword.intent ?? 'INFORMATIONAL' }; showEditModal = true; }}
-          class="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+          class="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-ink border border-border rounded-lg hover:bg-surface-2 transition-colors cursor-pointer"
         >
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
@@ -442,9 +442,9 @@
     </div>
 
     <!-- Rank History section -->
-    <div class="bg-white rounded-xl border border-gray-200 p-5 mb-6">
+    <div class="bg-surface rounded-xl border border-border p-5 mb-6">
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-        <h2 class="text-base font-semibold text-gray-800">{$_('seo.history.title')}</h2>
+        <h2 class="text-base font-semibold text-ink">{$_('seo.history.title')}</h2>
 
         <!-- Range tabs -->
         <div class="flex items-center gap-1 flex-wrap">
@@ -453,8 +453,8 @@
               on:click={() => selectedRange = r}
               class="px-3 py-1 text-xs font-medium rounded-full transition-colors cursor-pointer
                 {selectedRange === r
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}"
+                  ? 'bg-brand text-white'
+                  : 'bg-surface-2 text-ink-muted hover:bg-gray-200'}"
             >
               {#if r === '7d'}{$_('seo.history.range7d')}
               {:else if r === '30d'}{$_('seo.history.range30d')}
@@ -469,20 +469,20 @@
       <!-- Custom date pickers -->
       {#if selectedRange === 'custom'}
         <div class="flex items-center gap-3 mb-4 flex-wrap">
-          <label class="flex items-center gap-2 text-sm text-gray-600">
+          <label class="flex items-center gap-2 text-sm text-ink-muted">
             {$_('seo.history.customFrom')}
             <input
               type="date"
               bind:value={customFrom}
-              class="px-2 py-1 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+              class="px-2 py-1 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
           </label>
-          <label class="flex items-center gap-2 text-sm text-gray-600">
+          <label class="flex items-center gap-2 text-sm text-ink-muted">
             {$_('seo.history.customTo')}
             <input
               type="date"
               bind:value={customTo}
-              class="px-2 py-1 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+              class="px-2 py-1 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
           </label>
         </div>
@@ -491,15 +491,15 @@
       <!-- Chart -->
       {#if filteredHistory.length === 0}
         <div class="flex flex-col items-center justify-center py-16 text-center">
-          <div class="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <div class="w-14 h-14 bg-surface-2 rounded-2xl flex items-center justify-center mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-ink-subtle" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
               <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
             </svg>
           </div>
-          <p class="text-sm text-gray-500 max-w-xs">{$_('seo.history.empty')}</p>
+          <p class="text-sm text-ink-muted max-w-xs">{$_('seo.history.empty')}</p>
           <button
             on:click={openRecordModal}
-            class="mt-4 flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors cursor-pointer"
+            class="mt-4 flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-brand rounded-lg hover:brightness-110 transition-colors cursor-pointer"
           >
             {$_('seo.recordPosition.title')}
           </button>
@@ -513,30 +513,30 @@
 
     <!-- Recent history table -->
     {#if filteredHistory.length > 0}
-      <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div class="px-5 py-3 border-b border-gray-100">
-          <h3 class="text-sm font-semibold text-gray-700">{$_('seo.history.title')}</h3>
+      <div class="bg-surface rounded-xl border border-border overflow-hidden">
+        <div class="px-5 py-3 border-b border-border">
+          <h3 class="text-sm font-semibold text-ink">{$_('seo.history.title')}</h3>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead>
-              <tr class="border-b border-gray-100 bg-gray-50/50">
-                <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-5 py-3">{$_('seo.history.tableHeaderDate')}</th>
-                <th class="text-right text-xs font-medium text-gray-500 uppercase tracking-wider px-5 py-3">{$_('seo.history.tableHeaderRank')}</th>
-                <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-5 py-3">{$_('seo.history.tableHeaderUrl')}</th>
+              <tr class="border-b border-border bg-surface-2/50">
+                <th class="text-left text-xs font-medium text-ink-muted uppercase tracking-wider px-5 py-3">{$_('seo.history.tableHeaderDate')}</th>
+                <th class="text-right text-xs font-medium text-ink-muted uppercase tracking-wider px-5 py-3">{$_('seo.history.tableHeaderRank')}</th>
+                <th class="text-left text-xs font-medium text-ink-muted uppercase tracking-wider px-5 py-3">{$_('seo.history.tableHeaderUrl')}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-50">
               {#each [...filteredHistory].reverse().slice(0, 30) as entry}
-                <tr class="hover:bg-gray-50/50 transition-colors duration-100">
-                  <td class="px-5 py-3 text-gray-600">{formatDate(entry.date)}</td>
+                <tr class="hover:bg-surface-2/50 transition-colors duration-100">
+                  <td class="px-5 py-3 text-ink-muted">{formatDate(entry.date)}</td>
                   <td class="px-5 py-3 text-right">
                     {#if entry.rank != null}
-                      <span class="font-medium {entry.rank <= 10 ? 'text-green-600' : entry.rank <= 30 ? 'text-amber-600' : 'text-gray-700'}">
+                      <span class="font-medium {entry.rank <= 10 ? 'text-green-600' : entry.rank <= 30 ? 'text-amber-600' : 'text-ink'}">
                         #{entry.rank}
                       </span>
                     {:else}
-                      <span class="text-gray-400 italic">{$_('seo.history.notRanked')}</span>
+                      <span class="text-ink-subtle italic">{$_('seo.history.notRanked')}</span>
                     {/if}
                   </td>
                   <td class="px-5 py-3 max-w-[280px]">
@@ -545,13 +545,13 @@
                         href={entry.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        class="text-primary-600 hover:text-primary-700 hover:underline truncate block"
+                        class="text-brand hover:text-primary-700 hover:underline truncate block"
                         title={entry.url}
                       >
                         {entry.url}
                       </a>
                     {:else}
-                      <span class="text-gray-400">—</span>
+                      <span class="text-ink-subtle">—</span>
                     {/if}
                   </td>
                 </tr>
@@ -603,41 +603,41 @@
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => showEditModal = false}>
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-      <div class="p-6 border-b border-gray-100">
-        <h2 class="text-lg font-semibold text-gray-900">{$_('common.edit')} — {keyword?.keyword}</h2>
+    <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-md">
+      <div class="p-6 border-b border-border">
+        <h2 class="text-lg font-semibold text-ink">{$_('common.edit')} — {keyword?.keyword}</h2>
       </div>
       <div class="p-6 space-y-4">
         <!-- Target URL -->
         <div>
-          <label for="edit-url" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('seo.targetUrl')}</label>
+          <label for="edit-url" class="block text-sm font-medium text-ink mb-1.5">{$_('seo.targetUrl')}</label>
           <input
             id="edit-url"
             type="text"
             bind:value={editForm.url}
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+            class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
             placeholder="https://your-page.com/path"
           />
         </div>
         <!-- Target Rank -->
         <div>
-          <label for="edit-target" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('seo.targetRank')}</label>
+          <label for="edit-target" class="block text-sm font-medium text-ink mb-1.5">{$_('seo.targetRank')}</label>
           <input
             id="edit-target"
             type="number"
             min="1"
             max="100"
             bind:value={editForm.targetRank}
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+            class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
           />
         </div>
         <!-- Intent -->
         <div>
-          <label for="edit-intent" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('seo.intent')}</label>
+          <label for="edit-intent" class="block text-sm font-medium text-ink mb-1.5">{$_('seo.intent')}</label>
           <select
             id="edit-intent"
             bind:value={editForm.intent}
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+            class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             <option value="INFORMATIONAL">{$_('seo.intentInformational')}</option>
             <option value="NAVIGATIONAL">{$_('seo.intentNavigational')}</option>
@@ -646,11 +646,11 @@
           </select>
         </div>
       </div>
-      <div class="p-6 border-t border-gray-100 flex gap-3">
+      <div class="p-6 border-t border-border flex gap-3">
         <button
           on:click={saveKeyword}
           disabled={saving}
-          class="flex-1 bg-primary-600 text-white py-2.5 rounded-lg font-medium hover:bg-primary-700 disabled:opacity-50 text-sm flex items-center justify-center gap-2 cursor-pointer transition-colors"
+          class="flex-1 bg-brand text-white py-2.5 rounded-lg font-medium hover:brightness-110 disabled:opacity-50 text-sm flex items-center justify-center gap-2 cursor-pointer transition-colors"
         >
           {#if saving}
             <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
@@ -660,7 +660,7 @@
           {/if}
           {$_('common.save')}
         </button>
-        <button on:click={() => showEditModal = false} class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm cursor-pointer transition-colors">
+        <button on:click={() => showEditModal = false} class="px-5 py-2.5 border border-border rounded-lg hover:bg-surface-2 text-sm cursor-pointer transition-colors">
           {$_('common.cancel')}
         </button>
       </div>
@@ -673,15 +673,15 @@
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => showDeleteModal = false}>
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
+    <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-sm">
       <div class="p-6">
         <div class="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center mb-4">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
           </svg>
         </div>
-        <h2 class="text-lg font-semibold text-gray-900 mb-2">{$_('seo.deleteKeyword')}</h2>
-        <p class="text-sm text-gray-500 mb-6">{$_('seo.confirmDelete')}</p>
+        <h2 class="text-lg font-semibold text-ink mb-2">{$_('seo.deleteKeyword')}</h2>
+        <p class="text-sm text-ink-muted mb-6">{$_('seo.confirmDelete')}</p>
         <div class="flex gap-3">
           <button
             on:click={deleteKeyword}
@@ -690,7 +690,7 @@
           >
             {$_('common.delete')}
           </button>
-          <button on:click={() => showDeleteModal = false} class="flex-1 px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm cursor-pointer transition-colors">
+          <button on:click={() => showDeleteModal = false} class="flex-1 px-5 py-2.5 border border-border rounded-lg hover:bg-surface-2 text-sm cursor-pointer transition-colors">
             {$_('common.cancel')}
           </button>
         </div>
@@ -708,26 +708,26 @@
     on:click|self={closeRecordModal}
     on:keydown={(e) => e.key === 'Escape' && closeRecordModal()}
   >
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-      <div class="p-6 border-b border-gray-100 flex items-center gap-2.5">
-        <div class="w-8 h-8 bg-primary-50 rounded-lg flex items-center justify-center flex-shrink-0">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+    <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-md">
+      <div class="p-6 border-b border-border flex items-center gap-2.5">
+        <div class="w-8 h-8 bg-brand-subtle/10 rounded-lg flex items-center justify-center flex-shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
           </svg>
         </div>
         <div class="min-w-0 flex-1">
-          <h2 class="text-lg font-semibold text-gray-900">{$_('seo.recordPosition.title')}</h2>
+          <h2 class="text-lg font-semibold text-ink">{$_('seo.recordPosition.title')}</h2>
           {#if keyword}
-            <p class="text-xs text-gray-500 truncate">{keyword.keyword}</p>
+            <p class="text-xs text-ink-muted truncate">{keyword.keyword}</p>
           {/if}
         </div>
       </div>
       <div class="p-6 space-y-4">
-        <p class="text-sm text-gray-500">{$_('seo.recordPosition.description')}</p>
+        <p class="text-sm text-ink-muted">{$_('seo.recordPosition.description')}</p>
 
         <!-- Current rank -->
         <div>
-          <label for="detail-record-rank" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('seo.recordPosition.rank')}</label>
+          <label for="detail-record-rank" class="block text-sm font-medium text-ink mb-1.5">{$_('seo.recordPosition.rank')}</label>
           <input
             id="detail-record-rank"
             type="number"
@@ -735,37 +735,37 @@
             max="100"
             bind:value={recordRank}
             disabled={recordNotInTop100}
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-400"
+            class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-400"
             placeholder={$_('seo.recordPosition.rankPlaceholder')}
           />
           <label class="flex items-center gap-2 mt-2 cursor-pointer select-none">
             <input
               type="checkbox"
               bind:checked={recordNotInTop100}
-              class="w-4 h-4 text-primary-600 rounded border-gray-300 cursor-pointer"
+              class="w-4 h-4 text-brand rounded border-border cursor-pointer"
             />
-            <span class="text-sm text-gray-600">{$_('seo.recordPosition.notInTop100')}</span>
+            <span class="text-sm text-ink-muted">{$_('seo.recordPosition.notInTop100')}</span>
           </label>
         </div>
 
         <!-- Matched URL -->
         <div>
-          <label for="detail-record-url" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('seo.recordPosition.url')}</label>
+          <label for="detail-record-url" class="block text-sm font-medium text-ink mb-1.5">{$_('seo.recordPosition.url')}</label>
           <input
             id="detail-record-url"
             type="text"
             bind:value={recordUrl}
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             placeholder="https://example.com/page"
           />
-          <p class="mt-1 text-xs text-gray-400">{$_('seo.recordPosition.urlHelper')}</p>
+          <p class="mt-1 text-xs text-ink-subtle">{$_('seo.recordPosition.urlHelper')}</p>
         </div>
       </div>
-      <div class="p-6 border-t border-gray-100 flex gap-3">
+      <div class="p-6 border-t border-border flex gap-3">
         <button
           on:click={saveRecordPosition}
           disabled={recordSaving || (!recordNotInTop100 && (!recordRank || Number(recordRank) < 1 || Number(recordRank) > 100))}
-          class="flex-1 bg-primary-600 text-white py-2.5 rounded-lg font-medium hover:bg-primary-700 transition-colors duration-150 disabled:opacity-50 text-sm flex items-center justify-center gap-2 cursor-pointer"
+          class="flex-1 bg-brand text-white py-2.5 rounded-lg font-medium hover:brightness-110 transition-colors duration-150 disabled:opacity-50 text-sm flex items-center justify-center gap-2 cursor-pointer"
         >
           {#if recordSaving}
             <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
@@ -777,7 +777,7 @@
             {$_('seo.recordPosition.save')}
           {/if}
         </button>
-        <button on:click={closeRecordModal} class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 text-sm cursor-pointer">
+        <button on:click={closeRecordModal} class="px-5 py-2.5 border border-border rounded-lg hover:bg-surface-2 transition-colors duration-150 text-sm cursor-pointer">
           {$_('common.cancel')}
         </button>
       </div>

@@ -160,17 +160,17 @@
 <div class="p-4 sm:p-6">
   <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
     <div>
-      <h1 class="text-2xl font-bold text-gray-900">{$_('nav.dashboard')}</h1>
-      <p class="text-sm text-gray-500 mt-1">{$_('projects.manageDesc')}</p>
+      <h1 class="text-2xl font-bold text-ink">{$_('nav.dashboard')}</h1>
+      <p class="text-sm text-ink-muted mt-1">{$_('projects.manageDesc')}</p>
     </div>
     <div class="flex items-center gap-2 w-full sm:w-auto">
-      <button on:click={() => { resetImport(); showImportModal = true; }} class="flex-1 sm:flex-initial justify-center px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 flex items-center gap-2 cursor-pointer">
+      <button on:click={() => { resetImport(); showImportModal = true; }} class="flex-1 sm:flex-initial justify-center px-4 py-2 text-sm font-medium text-ink border border-border rounded-lg hover:bg-surface-2 transition-colors duration-150 flex items-center gap-2 cursor-pointer">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
         </svg>
         {$_('common.import')}
       </button>
-      <a href="/projects/new" class="flex-1 sm:flex-initial justify-center bg-primary-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors duration-150 flex items-center gap-2 cursor-pointer">
+      <a href="/projects/new" class="flex-1 sm:flex-initial justify-center bg-brand text-white px-4 py-2 rounded-lg text-sm font-medium hover:brightness-110 transition-colors duration-150 flex items-center gap-2 cursor-pointer">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
         </svg>
@@ -185,14 +185,14 @@
 
   {#if $projectsStore.length === 0}
     <div class="flex flex-col items-center justify-center py-24 text-center">
-      <div class="w-20 h-20 bg-primary-50 rounded-2xl flex items-center justify-center mb-6">
+      <div class="w-20 h-20 bg-brand-subtle/10 rounded-2xl flex items-center justify-center mb-6">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 006.16-12.12A14.98 14.98 0 009.631 8.41m5.96 5.96a14.926 14.926 0 01-5.841 2.58m-.119-8.54a6 6 0 00-7.381 5.84h4.8m2.581-5.84a14.927 14.927 0 00-2.58 5.84m2.699 2.7c-.103.021-.207.041-.311.06a15.09 15.09 0 01-2.448-2.448 14.9 14.9 0 01.06-.312m-2.24 2.39a4.493 4.493 0 00-1.757 4.306 4.493 4.493 0 004.306-1.758M16.5 9a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
         </svg>
       </div>
-      <h2 class="text-xl font-semibold text-gray-900 mb-2">{$_('projects.empty')}</h2>
-      <p class="text-gray-500 mb-8 max-w-sm">{$_('projects.emptyDesc')}</p>
-      <a href="/projects/new" class="bg-primary-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-primary-700 transition-colors duration-150 shadow-lg shadow-primary-200 cursor-pointer">
+      <h2 class="text-xl font-semibold text-ink mb-2">{$_('projects.empty')}</h2>
+      <p class="text-ink-muted mb-8 max-w-sm">{$_('projects.emptyDesc')}</p>
+      <a href="/projects/new" class="bg-brand text-white px-6 py-3 rounded-xl font-medium hover:brightness-110 transition-colors duration-150 shadow-lg shadow-primary-200 cursor-pointer">
         {$_('projects.create')}
       </a>
     </div>
@@ -202,7 +202,7 @@
         <a
           href="/projects/{project.id}/overview"
           on:click={() => currentProjectStore.set(project)}
-          class="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md hover:border-primary-200 transition-all duration-150 group cursor-pointer border-t-4 flex flex-col h-full
+          class="bg-surface rounded-xl border border-border p-6 hover:shadow-md hover:border-primary-200 transition-all duration-150 group cursor-pointer border-t-4 flex flex-col h-full
             {project.status === 'ACTIVE' ? 'border-t-green-400' : project.status === 'PAUSED' ? 'border-t-amber-400' : 'border-t-gray-200'}"
         >
           <div class="flex items-start justify-between mb-4">
@@ -215,22 +215,22 @@
                 </div>
               {/if}
               <div class="min-w-0">
-                <h3 class="font-semibold text-gray-900 group-hover:text-primary-700 transition-colors duration-150 truncate">{project.name}</h3>
-                <p class="text-xs text-gray-400 truncate">{project.industry || $_('common.overview')}</p>
+                <h3 class="font-semibold text-ink group-hover:text-primary-700 transition-colors duration-150 truncate">{project.name}</h3>
+                <p class="text-xs text-ink-subtle truncate">{project.industry || $_('common.overview')}</p>
               </div>
             </div>
             <span class="text-xs px-2 py-1 rounded-full flex-shrink-0 ml-2 flex items-center gap-1
-              {project.status === 'ACTIVE' ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}">
+              {project.status === 'ACTIVE' ? 'bg-green-50 text-green-700' : 'bg-surface-2 text-ink-muted'}">
               <span class="w-1.5 h-1.5 rounded-full flex-shrink-0 {project.status === 'ACTIVE' ? 'bg-green-500' : 'bg-gray-400'}"></span>
               {project.status === 'ACTIVE' ? $_('projects.active') : project.status === 'PAUSED' ? $_('projects.paused') : $_('projects.archived')}
             </span>
           </div>
 
           {#if project.description}
-            <p class="text-sm text-gray-500 mb-4 line-clamp-2">{project.description}</p>
+            <p class="text-sm text-ink-muted mb-4 line-clamp-2">{project.description}</p>
           {/if}
 
-          <div class="flex gap-4 text-xs text-gray-400 border-t border-gray-100 pt-4 mt-auto">
+          <div class="flex gap-4 text-xs text-ink-subtle border-t border-border pt-4 mt-auto">
             <span class="flex items-center gap-1">
               <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" /></svg>
               {(project as any)._count?.content || 0}
@@ -255,8 +255,8 @@
 <!-- Import Modal -->
 {#if showImportModal}
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => showImportModal = false}>
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-      <div class="p-6 border-b border-gray-100">
+    <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-md">
+      <div class="p-6 border-b border-border">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
@@ -264,8 +264,8 @@
             </svg>
           </div>
           <div>
-            <h3 class="text-lg font-semibold text-gray-900">{$_('projectImport.title')}</h3>
-            <p class="text-sm text-gray-500">{$_('projectImport.description')}</p>
+            <h3 class="text-lg font-semibold text-ink">{$_('projectImport.title')}</h3>
+            <p class="text-sm text-ink-muted">{$_('projectImport.description')}</p>
           </div>
         </div>
       </div>
@@ -273,16 +273,16 @@
       <div class="p-6">
         {#if importStep === 'upload'}
           <!-- Upload step -->
-          <label class="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-primary-400 hover:bg-primary-50/30 transition-colors duration-150">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <label class="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-border rounded-xl cursor-pointer hover:border-primary-400 hover:bg-brand-subtle/10 transition-colors duration-150">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-ink-subtle mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
               <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m6.75 12H9.75m3 0l-3-3m0 0l-3 3m3-3v6.75" />
             </svg>
-            <p class="text-sm text-gray-600 font-medium">{$_('projectImport.uploadFile')}</p>
-            <p class="text-xs text-gray-400 mt-1">{$_('projectImport.uploadHint')}</p>
+            <p class="text-sm text-ink-muted font-medium">{$_('projectImport.uploadFile')}</p>
+            <p class="text-xs text-ink-subtle mt-1">{$_('projectImport.uploadHint')}</p>
             <input type="file" accept=".json" class="hidden" on:change={handleImportFile} />
           </label>
           {#if validating}
-            <div class="flex items-center gap-2 mt-4 text-sm text-gray-500">
+            <div class="flex items-center gap-2 mt-4 text-sm text-ink-muted">
               <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
               {$_('projectImport.validating')}
             </div>
@@ -299,8 +299,8 @@
                 {importValidation?.projectName?.charAt(0) || 'P'}
               </div>
               <div>
-                <p class="text-sm font-semibold text-gray-900">{importValidation?.projectName}</p>
-                <p class="text-xs text-gray-500">{$_('projectImport.previewDesc')}</p>
+                <p class="text-sm font-semibold text-ink">{importValidation?.projectName}</p>
+                <p class="text-xs text-ink-muted">{$_('projectImport.previewDesc')}</p>
               </div>
             </div>
           </div>
@@ -308,13 +308,13 @@
           <div class="space-y-2">
             {#each Object.entries(importValidation?.summary || {}) as [section, count]}
               <label class="flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors duration-150
-                {selectedImportSections.has(section) ? 'border-primary-200 bg-primary-50/50' : 'border-gray-200 hover:bg-gray-50'}">
+                {selectedImportSections.has(section) ? 'border-primary-200 bg-brand-subtle/10' : 'border-border hover:bg-surface-2'}">
                 <div class="flex items-center gap-3">
                   <input type="checkbox" checked={selectedImportSections.has(section)} on:change={() => toggleImportSection(section)}
-                    class="w-4 h-4 text-primary-600 rounded border-gray-300 focus:ring-primary-500" />
-                  <span class="text-sm text-gray-700">{$_(sectionLabels[section] || section)}</span>
+                    class="w-4 h-4 text-brand rounded border-border focus:ring-primary-500" />
+                  <span class="text-sm text-ink">{$_(sectionLabels[section] || section)}</span>
                 </div>
-                <span class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{count}</span>
+                <span class="text-xs text-ink-subtle bg-surface-2 px-2 py-0.5 rounded-full">{count}</span>
               </label>
             {/each}
           </div>
@@ -325,13 +325,13 @@
         {/if}
       </div>
 
-      <div class="p-6 border-t border-gray-100 flex justify-end gap-3">
+      <div class="p-6 border-t border-border flex justify-end gap-3">
         {#if importStep === 'preview'}
-          <button on:click={() => { importStep = 'upload'; importError = ''; }} class="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors duration-150">
+          <button on:click={() => { importStep = 'upload'; importError = ''; }} class="px-4 py-2 text-sm text-ink border border-border rounded-lg hover:bg-surface-2 cursor-pointer transition-colors duration-150">
             {$_('common.back')}
           </button>
         {/if}
-        <button on:click={() => showImportModal = false} class="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors duration-150">
+        <button on:click={() => showImportModal = false} class="px-4 py-2 text-sm text-ink border border-border rounded-lg hover:bg-surface-2 cursor-pointer transition-colors duration-150">
           {$_('common.cancel')}
         </button>
         {#if importStep === 'preview'}

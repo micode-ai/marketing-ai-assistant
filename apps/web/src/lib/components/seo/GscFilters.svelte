@@ -75,19 +75,19 @@
   $: parseFiltersToLocal(), filters;
 </script>
 
-<div class="bg-white rounded-xl border border-gray-200 p-4 mb-5 space-y-4">
+<div class="bg-surface rounded-xl border border-border p-4 mb-5 space-y-4">
   <!-- Row 1: Period + Compare + Search type -->
   <div class="flex flex-wrap items-center gap-4">
     <!-- Period selector -->
-    <div class="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+    <div class="flex items-center gap-1 bg-surface-2 rounded-lg p-1">
       {#each [7, 28, 90] as d}
         <button
           type="button"
           on:click={() => onDaysChange(d)}
           class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-150
             {days === d
-              ? 'bg-white text-gray-900 shadow-sm'
-              : 'text-gray-500 hover:text-gray-700'}">
+              ? 'bg-surface text-ink shadow-sm'
+              : 'text-ink-muted hover:text-gray-700'}">
           {d}d
         </button>
       {/each}
@@ -99,16 +99,16 @@
         type="checkbox"
         checked={compare}
         on:change={onCompareChange}
-        class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500" />
-      <span class="text-sm text-gray-700">{$_('gscDetail.compare')}</span>
+        class="h-4 w-4 rounded border-border text-brand focus:ring-primary-500" />
+      <span class="text-sm text-ink">{$_('gscDetail.compare')}</span>
     </label>
 
     <!-- Search type -->
     <div class="flex items-center gap-2">
-      <label class="text-sm text-gray-600 whitespace-nowrap">{$_('gscDetail.searchType')}:</label>
+      <label class="text-sm text-ink-muted whitespace-nowrap">{$_('gscDetail.searchType')}:</label>
       <select
         bind:value={searchType}
-        class="text-sm border border-gray-300 rounded-lg px-2.5 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+        class="text-sm border border-border rounded-lg px-2.5 py-1.5 bg-surface text-ink focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
         <option value="web">Web</option>
         <option value="image">Image</option>
         <option value="video">Video</option>
@@ -119,36 +119,36 @@
   </div>
 
   <!-- Row 2: Filter inputs -->
-  <div class="border-t border-gray-100 pt-3">
-    <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 block">{$_('gscDetail.filters')}</span>
+  <div class="border-t border-border pt-3">
+    <span class="text-xs font-semibold text-ink-muted uppercase tracking-wide mb-2 block">{$_('gscDetail.filters')}</span>
     <div class="flex flex-wrap items-end gap-3">
       <!-- Query contains -->
       <div class="flex flex-col gap-1 min-w-[160px]">
-        <label class="text-xs text-gray-500">{$_('gscDetail.queryContains')}</label>
+        <label class="text-xs text-ink-muted">{$_('gscDetail.queryContains')}</label>
         <input
           type="text"
           bind:value={queryContains}
           placeholder="e.g. marketing"
-          class="text-sm border border-gray-300 rounded-lg px-3 py-1.5 bg-white text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
+          class="text-sm border border-border rounded-lg px-3 py-1.5 bg-surface text-ink placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
       </div>
 
       <!-- Country -->
       <div class="flex flex-col gap-1 min-w-[120px]">
-        <label class="text-xs text-gray-500">{$_('gscDetail.country')}</label>
+        <label class="text-xs text-ink-muted">{$_('gscDetail.country')}</label>
         <input
           type="text"
           bind:value={country}
           placeholder="usa"
           maxlength={3}
-          class="text-sm border border-gray-300 rounded-lg px-3 py-1.5 bg-white text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent uppercase" />
+          class="text-sm border border-border rounded-lg px-3 py-1.5 bg-surface text-ink placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent uppercase" />
       </div>
 
       <!-- Device -->
       <div class="flex flex-col gap-1">
-        <label class="text-xs text-gray-500">{$_('gscDetail.device')}</label>
+        <label class="text-xs text-ink-muted">{$_('gscDetail.device')}</label>
         <select
           bind:value={device}
-          class="text-sm border border-gray-300 rounded-lg px-2.5 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+          class="text-sm border border-border rounded-lg px-2.5 py-1.5 bg-surface text-ink focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
           <option value="ALL">All devices</option>
           <option value="DESKTOP">Desktop</option>
           <option value="MOBILE">Mobile</option>
@@ -158,10 +158,10 @@
 
       <!-- Brand mode -->
       <div class="flex flex-col gap-1">
-        <label class="text-xs text-gray-500">{$_('gscDetail.filters')}</label>
+        <label class="text-xs text-ink-muted">{$_('gscDetail.filters')}</label>
         <select
           bind:value={brandMode}
-          class="text-sm border border-gray-300 rounded-lg px-2.5 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+          class="text-sm border border-border rounded-lg px-2.5 py-1.5 bg-surface text-ink focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
           <option value="none">All queries</option>
           <option value="brand">{$_('gscDetail.brandOnly')}</option>
           <option value="nonbrand">{$_('gscDetail.nonBrandOnly')}</option>
@@ -171,12 +171,12 @@
       <!-- Brand term (shown when brand/nonbrand selected) -->
       {#if brandMode !== 'none'}
         <div class="flex flex-col gap-1 min-w-[140px]">
-          <label class="text-xs text-gray-500">{$_('gscDetail.brandTerm')}</label>
+          <label class="text-xs text-ink-muted">{$_('gscDetail.brandTerm')}</label>
           <input
             type="text"
             bind:value={brandTerm}
             placeholder="your brand"
-            class="text-sm border border-gray-300 rounded-lg px-3 py-1.5 bg-white text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
+            class="text-sm border border-border rounded-lg px-3 py-1.5 bg-surface text-ink placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
         </div>
       {/if}
 
@@ -184,7 +184,7 @@
       <button
         type="button"
         on:click={applyFilters}
-        class="px-4 py-1.5 text-sm font-medium bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors self-end">
+        class="px-4 py-1.5 text-sm font-medium bg-brand hover:brightness-110 text-white rounded-lg transition-colors self-end">
         Apply
       </button>
     </div>

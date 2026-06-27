@@ -68,14 +68,14 @@
     on:click|stopPropagation={() => open = !open}
     disabled={!loaded}
     class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-150 cursor-pointer max-w-[220px]
-      {!loaded ? 'bg-gray-100 text-gray-400 animate-pulse' :
+      {!loaded ? 'bg-surface-2 text-ink-subtle animate-pulse' :
        current
         ? 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100'
-        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}"
+        : 'bg-surface-2 text-ink-muted hover:bg-gray-200'}"
     title={$_('header.switchContext')}
   >
     {#if !loaded}
-      <div class="w-4 h-4 rounded-full border-2 border-gray-300 border-t-transparent animate-spin"></div>
+      <div class="w-4 h-4 rounded-full border-2 border-border border-t-transparent animate-spin"></div>
       <span class="truncate">...</span>
     {:else if current}
       <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
@@ -94,13 +94,13 @@
   </button>
 
   {#if open}
-    <div class="absolute left-0 top-full mt-1 w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-50 py-1 max-h-80 overflow-y-auto">
+    <div class="absolute left-0 top-full mt-1 w-64 bg-surface rounded-lg shadow-lg border border-border z-50 py-1 max-h-80 overflow-y-auto">
       <button
         on:click|stopPropagation={selectOrg}
         class="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-left transition-colors cursor-pointer
-          {!current ? 'bg-gray-50 text-gray-900 font-medium' : 'text-gray-600 hover:bg-gray-50'}"
+          {!current ? 'bg-surface-2 text-ink font-medium' : 'text-ink-muted hover:bg-surface-2'}"
       >
-        <svg class="w-4 h-4 flex-shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+        <svg class="w-4 h-4 flex-shrink-0 text-ink-subtle" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
           <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21" />
         </svg>
         <span>{currentOrg?.name || $_('header.orgContext')}</span>
@@ -111,12 +111,12 @@
         {/if}
       </button>
 
-      <div class="border-t border-gray-100 my-1"></div>
+      <div class="border-t border-border my-1"></div>
 
       {#if projects.length === 0}
         <a
           href="/dashboard"
-          class="block px-3 py-2 text-sm text-gray-400 hover:text-indigo-600 transition-colors"
+          class="block px-3 py-2 text-sm text-ink-subtle hover:text-indigo-600 transition-colors"
           on:click={() => open = false}
         >
           {$_('header.noProjects')}
@@ -126,9 +126,9 @@
           <button
             on:click|stopPropagation={() => selectProject(project)}
             class="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-left transition-colors cursor-pointer
-              {current?.id === project.id ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-gray-600 hover:bg-gray-50'}"
+              {current?.id === project.id ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-ink-muted hover:bg-surface-2'}"
           >
-            <svg class="w-4 h-4 flex-shrink-0 {current?.id === project.id ? 'text-indigo-500' : 'text-gray-400'}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+            <svg class="w-4 h-4 flex-shrink-0 {current?.id === project.id ? 'text-indigo-500' : 'text-ink-subtle'}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
               <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" />
             </svg>
             <span class="truncate">{project.name}</span>

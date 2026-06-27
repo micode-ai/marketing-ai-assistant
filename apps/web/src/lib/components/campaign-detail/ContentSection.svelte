@@ -12,10 +12,10 @@
   let detaching: string | null = null;
 
   const statusBadge: Record<string, string> = {
-    DRAFT: 'bg-gray-100 text-gray-600',
+    DRAFT: 'bg-surface-2 text-ink-muted',
     APPROVED: 'bg-yellow-100 text-yellow-700',
     PUBLISHED: 'bg-green-100 text-green-700',
-    ARCHIVED: 'bg-gray-50 text-gray-400',
+    ARCHIVED: 'bg-surface-2 text-ink-subtle',
   };
 
   const statusLabel: Record<string, string> = {
@@ -55,45 +55,45 @@
   }
 </script>
 
-<div class="bg-white rounded-xl border border-gray-200 p-5">
+<div class="bg-surface rounded-xl border border-border p-5">
   <div class="flex items-center justify-between mb-4">
-    <h2 class="text-base font-semibold text-gray-900">
+    <h2 class="text-base font-semibold text-ink">
       {$_('campaigns.detail.contentSection')}
-      <span class="ml-1 text-sm font-normal text-gray-500">({campaign.content?.length ?? 0})</span>
+      <span class="ml-1 text-sm font-normal text-ink-muted">({campaign.content?.length ?? 0})</span>
     </h2>
     <button
       on:click={() => (showAttach = true)}
-      class="text-xs px-3 py-1.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors cursor-pointer"
+      class="text-xs px-3 py-1.5 bg-brand text-white rounded-lg hover:brightness-110 transition-colors cursor-pointer"
     >
       + {$_('campaigns.detail.attachContent')}
     </button>
   </div>
 
   {#if !campaign.content || campaign.content.length === 0}
-    <p class="text-sm text-gray-500 py-6 text-center">{$_('campaigns.detail.emptyContent')}</p>
+    <p class="text-sm text-ink-muted py-6 text-center">{$_('campaigns.detail.emptyContent')}</p>
   {:else}
-    <ul class="divide-y divide-gray-100">
+    <ul class="divide-y divide-border">
       {#each campaign.content as item}
         <li class="py-3 flex items-center justify-between gap-3">
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2 mb-0.5">
-              <span class="text-xs px-2 py-0.5 rounded {statusBadge[item.status] || 'bg-gray-100 text-gray-600'}">
+              <span class="text-xs px-2 py-0.5 rounded {statusBadge[item.status] || 'bg-surface-2 text-ink-muted'}">
                 {$_(statusLabel[item.status] || 'campaigns.detail.statusDraft')}
               </span>
               {#if item.language}
                 <span class="text-xs px-1.5 py-0.5 bg-indigo-50 text-indigo-700 rounded">{item.language.toUpperCase()}</span>
               {/if}
-              <span class="text-xs text-gray-400">{item.type}</span>
-              <span class="text-xs text-gray-400">· {formatDate(item.updatedAt)}</span>
+              <span class="text-xs text-ink-subtle">{item.type}</span>
+              <span class="text-xs text-ink-subtle">· {formatDate(item.updatedAt)}</span>
             </div>
-            <a href={contentHref(item)} class="text-sm text-gray-900 hover:text-primary-600 truncate block">
+            <a href={contentHref(item)} class="text-sm text-ink hover:text-primary-600 truncate block">
               {item.title}
             </a>
           </div>
           <div class="flex items-center gap-1 flex-shrink-0">
             <a
               href={contentHref(item)}
-              class="text-xs px-2 py-1 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded cursor-pointer"
+              class="text-xs px-2 py-1 text-ink-muted hover:text-gray-700 hover:bg-surface-2 rounded cursor-pointer"
             >
               {$_('campaigns.detail.open')}
             </a>

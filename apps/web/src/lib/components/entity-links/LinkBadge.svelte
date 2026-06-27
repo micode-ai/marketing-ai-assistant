@@ -6,7 +6,7 @@
 </script>
 
 <span class="inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded-full
-  {linkType === 'LINK' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'}"
+  {linkType === 'LINK' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-surface-2 text-ink-muted'}"
   title={linkType === 'LINK' ? $_('entityLinks.linkedTooltip') : $_('entityLinks.copiedTooltip')}>
   {#if linkType === 'LINK'}
     <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

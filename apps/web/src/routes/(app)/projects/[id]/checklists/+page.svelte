@@ -707,19 +707,19 @@
 <div class="p-4 sm:p-6">
   <SectionHint sectionKey="checklists" titleKey="hints.checklists.title" descKey="hints.checklists.desc" />
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
-    <h1 class="text-2xl font-bold text-gray-900">{$_('checklists.title')}</h1>
+    <h1 class="text-2xl font-bold text-ink">{$_('checklists.title')}</h1>
     <div class="flex items-center gap-2 flex-wrap">
-      <button on:click={() => showCreateModal = true} class="bg-primary-600 text-white px-3 sm:px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-700 transition flex items-center gap-1.5">
+      <button on:click={() => showCreateModal = true} class="bg-brand text-white px-3 sm:px-4 py-2 rounded-lg text-sm font-medium hover:brightness-110 transition flex items-center gap-1.5">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
         <span class="hidden sm:inline">{$_('checklists.createManual')}</span>
         <span class="sm:hidden">{$_('common.create')}</span>
       </button>
-      <button on:click={() => { showImportModal = true; importParsed = null; importError = ''; }} class="border border-gray-300 text-gray-700 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition flex items-center gap-1.5">
+      <button on:click={() => { showImportModal = true; importParsed = null; importError = ''; }} class="border border-border text-ink px-3 sm:px-4 py-2 rounded-lg text-sm font-medium hover:bg-surface-2 transition flex items-center gap-1.5">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" /></svg>
         <span class="hidden sm:inline">{$_('checklists.importFromMD')}</span>
         <span class="sm:hidden">MD</span>
       </button>
-      <button on:click={() => showAIModal = true} class="border border-gray-300 text-gray-700 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition flex items-center gap-1.5">
+      <button on:click={() => showAIModal = true} class="border border-border text-ink px-3 sm:px-4 py-2 rounded-lg text-sm font-medium hover:bg-surface-2 transition flex items-center gap-1.5">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" /></svg>
         <span class="hidden sm:inline">{$_('checklists.generateWithAI')}</span>
         <span class="sm:hidden">AI</span>
@@ -728,20 +728,20 @@
   </div>
 
   {#if loading}
-    <div class="space-y-4">{#each Array(2) as _}<div class="bg-white rounded-xl border border-gray-200 p-6 h-48 animate-pulse"></div>{/each}</div>
+    <div class="space-y-4">{#each Array(2) as _}<div class="bg-surface rounded-xl border border-border p-6 h-48 animate-pulse"></div>{/each}</div>
   {:else if checklists.length === 0}
     <div class="flex flex-col items-center justify-center py-20 text-center">
-      <div class="w-20 h-20 bg-primary-50 rounded-2xl flex items-center justify-center mb-4 mx-auto">
+      <div class="w-20 h-20 bg-brand-subtle/10 rounded-2xl flex items-center justify-center mb-4 mx-auto">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
       </div>
-      <h2 class="text-xl font-semibold text-gray-900 mb-2">{$_('checklists.empty')}</h2>
-      <p class="text-gray-500 mb-6 max-w-sm">{$_('checklists.emptyDesc')}</p>
+      <h2 class="text-xl font-semibold text-ink mb-2">{$_('checklists.empty')}</h2>
+      <p class="text-ink-muted mb-6 max-w-sm">{$_('checklists.emptyDesc')}</p>
       <div class="flex gap-3">
-        <button on:click={() => showCreateModal = true} class="bg-primary-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-primary-700 transition flex items-center gap-2">
+        <button on:click={() => showCreateModal = true} class="bg-brand text-white px-6 py-3 rounded-xl font-medium hover:brightness-110 transition flex items-center gap-2">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
           {$_('checklists.createManual')}
         </button>
-        <button on:click={() => showAIModal = true} class="border border-gray-300 text-gray-700 px-6 py-3 rounded-xl font-medium hover:bg-gray-50 transition flex items-center gap-2">
+        <button on:click={() => showAIModal = true} class="border border-border text-ink px-6 py-3 rounded-xl font-medium hover:bg-surface-2 transition flex items-center gap-2">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" /></svg>
           {$_('checklists.generateWithAI')}
         </button>
@@ -755,7 +755,7 @@
         <select
           value={activeChecklistId}
           on:change={(e) => activeChecklistId = e.currentTarget.value}
-          class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+          class="w-full px-3 py-2.5 border border-border rounded-lg text-sm font-medium text-ink bg-surface focus:ring-2 focus:ring-primary-500 focus:border-transparent"
         >
           {#each checklists as cl}
             {@const clItems = cl.items || []}
@@ -767,7 +767,7 @@
         </select>
       </div>
       <!-- Desktop: tabs -->
-      <div class="hidden sm:flex gap-1 mb-4 overflow-x-auto pb-1 border-b border-gray-200">
+      <div class="hidden sm:flex gap-1 mb-4 overflow-x-auto pb-1 border-b border-border">
         {#each checklists as cl}
           {@const clItems = cl.items || []}
           {@const clCompleted = clItems.filter((i: any) => i.isCompleted).length}
@@ -777,12 +777,12 @@
             on:click={() => activeChecklistId = cl.id}
             class="flex items-center gap-2 px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 -mb-px transition-colors duration-150 cursor-pointer
               {activeChecklist?.id === cl.id
-                ? 'border-primary-600 text-primary-700'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}"
+                ? 'border-primary-600 text-brand'
+                : 'border-transparent text-ink-muted hover:text-gray-700 hover:border-gray-300'}"
           >
             <span class="truncate max-w-[200px]">{cl.name}</span>
             <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium
-              {clProgress === 100 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}">
+              {clProgress === 100 ? 'bg-green-100 text-green-700' : 'bg-surface-2 text-ink-muted'}">
               {clProgress}%
             </span>
           </button>
@@ -797,21 +797,21 @@
         {@const total = items.length}
         {@const progress = total > 0 ? Math.round((completed / total) * 100) : 0}
         {@const sections = groupBySection(items)}
-        <div class="bg-white rounded-xl border border-gray-200 p-4 sm:p-6">
+        <div class="bg-surface rounded-xl border border-border p-4 sm:p-6">
           <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-3">
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2">
-                <h3 class="font-semibold text-gray-900 text-lg truncate">{checklist.name}</h3>
-                <button on:click={() => openEditChecklist(checklist)} class="p-1 rounded text-gray-400 hover:text-primary-600 hover:bg-primary-50 transition flex-shrink-0" title={$_('checklists.editChecklist')}>
+                <h3 class="font-semibold text-ink text-lg truncate">{checklist.name}</h3>
+                <button on:click={() => openEditChecklist(checklist)} class="p-1 rounded text-ink-subtle hover:text-primary-600 hover:bg-brand-subtle/10 transition flex-shrink-0" title={$_('checklists.editChecklist')}>
                   <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Z" /></svg>
                 </button>
               </div>
-              {#if checklist.description}<p class="text-sm text-gray-500 mt-0.5">{checklist.description}</p>{/if}
+              {#if checklist.description}<p class="text-sm text-ink-muted mt-0.5">{checklist.description}</p>{/if}
             </div>
             <div class="flex items-center sm:items-start gap-3 flex-shrink-0">
               <div class="sm:text-right">
-                <span class="text-xl font-bold text-primary-600">{progress}%</span>
-                <span class="text-xs text-gray-400 ml-1 sm:ml-0 sm:block">{completed}/{total} done</span>
+                <span class="text-xl font-bold text-brand">{progress}%</span>
+                <span class="text-xs text-ink-subtle ml-1 sm:ml-0 sm:block">{completed}/{total} done</span>
               </div>
               {#if deletingId === checklist.id}
                 <div class="flex items-center gap-1">
@@ -820,20 +820,20 @@
                     <span class="hidden sm:inline">{$_('common.delete')}</span>
                     <span class="sm:hidden">{$_('common.delete')}</span>
                   </button>
-                  <button on:click={() => deletingId = null} class="px-3 py-1.5 rounded-lg bg-gray-50 text-gray-500 hover:bg-gray-100 transition text-xs font-medium">
+                  <button on:click={() => deletingId = null} class="px-3 py-1.5 rounded-lg bg-surface-2 text-ink-muted hover:bg-surface-2 transition text-xs font-medium">
                     <svg class="w-4 h-4 sm:hidden inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
                     <span>{$_('common.cancel')}</span>
                   </button>
                 </div>
               {:else}
-                <button on:click={() => deletingId = checklist.id} class="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition" title={$_('common.delete')}>
+                <button on:click={() => deletingId = checklist.id} class="p-1.5 rounded-lg text-ink-subtle hover:text-red-500 hover:bg-red-50 transition" title={$_('common.delete')}>
                   <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
                 </button>
               {/if}
             </div>
           </div>
-          <div class="w-full bg-gray-100 rounded-full h-1.5 mb-5">
-            <div class="bg-primary-600 h-1.5 rounded-full transition-all duration-500" style="width: {progress}%"></div>
+          <div class="w-full bg-surface-2 rounded-full h-1.5 mb-5">
+            <div class="bg-brand h-1.5 rounded-full transition-all duration-500" style="width: {progress}%"></div>
           </div>
           <div class="space-y-1">
             {#each sections as group, gi (`${gi}::${group.section ?? ''}`)}
@@ -847,10 +847,10 @@
                   {#if sectionComplete}
                     <svg class="w-3.5 h-3.5 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" /></svg>
                   {:else}
-                    <svg class="w-3.5 h-3.5 text-gray-400 transition-transform duration-150 {collapsedSections.has(sectionKey) ? '-rotate-90' : ''}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+                    <svg class="w-3.5 h-3.5 text-ink-subtle transition-transform duration-150 {collapsedSections.has(sectionKey) ? '-rotate-90' : ''}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
                   {/if}
-                  <h4 class="text-xs font-semibold uppercase tracking-wider {sectionComplete ? 'text-green-500 line-through' : 'text-gray-400'}">{group.section}</h4>
-                  <span class="text-xs {sectionComplete ? 'text-green-400' : 'text-gray-300'}">{sectionDone}/{group.items.length}</span>
+                  <h4 class="text-xs font-semibold uppercase tracking-wider {sectionComplete ? 'text-green-500 line-through' : 'text-ink-subtle'}">{group.section}</h4>
+                  <span class="text-xs {sectionComplete ? 'text-green-400' : 'text-ink-subtle'}">{sectionDone}/{group.items.length}</span>
                 </div>
               {/if}
               {#if !group.section || !collapsedSections.has(`${checklist.id}::${group.section}`)}
@@ -858,11 +858,11 @@
               {#each group.items.slice(0, visibleLimit) as item, itemInGroup (item.id)}
                 {@const itemIndex = group.items === items ? itemInGroup : items.indexOf(item)}
               <!-- svelte-ignore a11y_no_static_element_interactions -->
-              <div class="rounded-lg transition-colors {expandedItems.has(item.id) ? 'bg-gray-50' : 'hover:bg-gray-50/50'}" on:mouseenter={() => hoveredItemId = item.id} on:mouseleave={() => { if (hoveredItemId === item.id) hoveredItemId = null; }}>
+              <div class="rounded-lg transition-colors {expandedItems.has(item.id) ? 'bg-surface-2' : 'hover:bg-surface-2/50'}" on:mouseenter={() => hoveredItemId = item.id} on:mouseleave={() => { if (hoveredItemId === item.id) hoveredItemId = null; }}>
                 <div class="flex items-center gap-3 py-2 px-2">
                   <button
                     on:click|stopPropagation={() => toggleItem(checklist.id, item.id, !item.isCompleted)}
-                    class="w-5 h-5 rounded-md border-2 flex-shrink-0 flex items-center justify-center transition-all {item.isCompleted ? 'bg-primary-600 border-primary-600' : 'border-gray-300 hover:border-primary-400'}"
+                    class="w-5 h-5 rounded-md border-2 flex-shrink-0 flex items-center justify-center transition-all {item.isCompleted ? 'bg-brand border-primary-600' : 'border-border hover:border-primary-400'}"
                   >
                     {#if item.isCompleted}
                       <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -873,11 +873,11 @@
                   <!-- svelte-ignore a11y_click_events_have_key_events -->
                   <!-- svelte-ignore a11y_no_static_element_interactions -->
                   <div class="flex-1 min-w-0 flex items-center gap-2 cursor-pointer select-none" on:click={() => toggleExpand(item.id)}>
-                    <span class="text-sm {item.isCompleted ? 'text-gray-400 line-through' : 'text-gray-700'}">{item.title}</span>
+                    <span class="text-sm {item.isCompleted ? 'text-ink-subtle line-through' : 'text-ink'}">{item.title}</span>
                     {#if item.note}
                       <svg class="w-3.5 h-3.5 flex-shrink-0 {highlightedNotes.has(item.id) ? 'text-yellow-500 animate-pulse' : 'text-yellow-400'}" fill="currentColor" viewBox="0 0 24 24"><path d="M21.731 2.269a2.625 2.625 0 0 0-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 0 0 0-3.712ZM19.513 8.199l-3.712-3.712-8.4 8.4a5.25 5.25 0 0 0-1.32 2.214l-.8 2.685a.75.75 0 0 0 .933.933l2.685-.8a5.25 5.25 0 0 0 2.214-1.32l8.4-8.4Z" /><path d="M5.25 5.25a3 3 0 0 0-3 3v10.5a3 3 0 0 0 3 3h10.5a3 3 0 0 0 3-3V13.5a.75.75 0 0 0-1.5 0v5.25a1.5 1.5 0 0 1-1.5 1.5H5.25a1.5 1.5 0 0 1-1.5-1.5V8.25a1.5 1.5 0 0 1 1.5-1.5h5.25a.75.75 0 0 0 0-1.5H5.25Z" /></svg>
                     {/if}
-                    <svg class="w-4 h-4 flex-shrink-0 text-gray-400 transition-transform duration-200 {expandedItems.has(item.id) ? 'rotate-180' : ''}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <svg class="w-4 h-4 flex-shrink-0 text-ink-subtle transition-transform duration-200 {expandedItems.has(item.id) ? 'rotate-180' : ''}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
                     </svg>
                   </div>
@@ -885,27 +885,27 @@
                   {#if hoveredItemId === item.id || deletingItemId === item.id}
                   <div class="flex items-center gap-0.5">
                     {#if itemIndex > 0}
-                      <button on:click|stopPropagation={() => moveItem(checklist.id, items, itemIndex, 'up')} class="p-1 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-100" title={$_('checklists.moveUp')}>
+                      <button on:click|stopPropagation={() => moveItem(checklist.id, items, itemIndex, 'up')} class="p-1 rounded text-ink-subtle hover:text-gray-600 hover:bg-surface-2" title={$_('checklists.moveUp')}>
                         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" /></svg>
                       </button>
                     {/if}
                     {#if itemIndex < items.length - 1}
-                      <button on:click|stopPropagation={() => moveItem(checklist.id, items, itemIndex, 'down')} class="p-1 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-100" title={$_('checklists.moveDown')}>
+                      <button on:click|stopPropagation={() => moveItem(checklist.id, items, itemIndex, 'down')} class="p-1 rounded text-ink-subtle hover:text-gray-600 hover:bg-surface-2" title={$_('checklists.moveDown')}>
                         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
                       </button>
                     {/if}
-                    <button on:click|stopPropagation={() => openEditItem(item)} class="p-1 rounded text-gray-400 hover:text-primary-600 hover:bg-primary-50" title={$_('checklists.editItem')}>
+                    <button on:click|stopPropagation={() => openEditItem(item)} class="p-1 rounded text-ink-subtle hover:text-primary-600 hover:bg-brand-subtle/10" title={$_('checklists.editItem')}>
                       <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Z" /></svg>
                     </button>
                     {#if deletingItemId === item.id}
                       <button on:click|stopPropagation={() => deleteItem(checklist.id, item.id)} class="p-1 rounded bg-red-50 text-red-600 hover:bg-red-100">
                         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
                       </button>
-                      <button on:click|stopPropagation={() => deletingItemId = null} class="p-1 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-100">
+                      <button on:click|stopPropagation={() => deletingItemId = null} class="p-1 rounded text-ink-subtle hover:text-gray-600 hover:bg-surface-2">
                         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
                       </button>
                     {:else}
-                      <button on:click|stopPropagation={() => deletingItemId = item.id} class="p-1 rounded text-gray-400 hover:text-red-500 hover:bg-red-50" title={$_('checklists.deleteItem')}>
+                      <button on:click|stopPropagation={() => deletingItemId = item.id} class="p-1 rounded text-ink-subtle hover:text-red-500 hover:bg-red-50" title={$_('checklists.deleteItem')}>
                         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
                       </button>
                     {/if}
@@ -916,25 +916,25 @@
                 {#if expandedItems.has(item.id)}
                   <div class="px-2 pb-3 pl-12">
                     {#if item.description}
-                      <p class="text-sm text-gray-500 border-l-2 border-primary-200 pl-3 mb-3">{item.description}</p>
+                      <p class="text-sm text-ink-muted border-l-2 border-primary-200 pl-3 mb-3">{item.description}</p>
                     {/if}
 
                     <!-- Notes -->
                     <div class="mb-3">
-                      <label class="block text-xs font-medium text-gray-500 mb-1">{$_('checklists.notes')}</label>
+                      <label class="block text-xs font-medium text-ink-muted mb-1">{$_('checklists.notes')}</label>
                       <textarea
                         value={item.note || ''}
                         on:input={(e) => { const val = e.currentTarget.value; checklists = checklists.map(c => ({ ...c, items: (c.items || []).map((i: any) => i.id === item.id ? { ...i, note: val } : i) })); scheduleNoteSave(item.id, val); }}
                         placeholder={$_('checklists.notesPlaceholder')}
                         rows="2"
-                        class="w-full text-sm px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary-400 focus:border-primary-400 resize-none"
+                        class="w-full text-sm px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-1 focus:ring-primary-400 focus:border-primary-400 resize-none"
                       ></textarea>
                       <div class="flex items-center gap-2 mt-0.5">
                         {#if noteSaving.has(item.id)}
-                          <span class="text-xs text-gray-400">{$_('common.loading')}...</span>
+                          <span class="text-xs text-ink-subtle">{$_('common.loading')}...</span>
                         {/if}
                         {#if item.noteUpdatedAt}
-                          <span class="text-xs text-gray-400">{$_('checklists.noteLastUpdated', { values: { time: new Date(item.noteUpdatedAt).toLocaleString() } })}</span>
+                          <span class="text-xs text-ink-subtle">{$_('checklists.noteLastUpdated', { values: { time: new Date(item.noteUpdatedAt).toLocaleString() } })}</span>
                         {/if}
                       </div>
                     </div>
@@ -944,7 +944,7 @@
                         {#each itemChats[item.id].messages as msg, idx (idx)}
                           <div class="flex {msg.role === 'user' ? 'justify-end' : 'justify-start'}">
                             {#if msg.role === 'assistant'}
-                              <div class="max-w-[80%] px-3 py-2 rounded-lg text-sm bg-gray-100 text-gray-700 prose prose-sm prose-gray max-w-none [&>p]:m-0 [&>ul]:m-0 [&>ol]:m-0 [&>p+p]:mt-1.5">
+                              <div class="max-w-[80%] px-3 py-2 rounded-lg text-sm bg-surface-2 text-ink prose prose-sm prose-gray max-w-none [&>p]:m-0 [&>ul]:m-0 [&>ol]:m-0 [&>p+p]:mt-1.5">
                                 {@html renderMarkdownCached(msg.content)}
                               </div>
                             {:else}
@@ -956,7 +956,7 @@
                         {/each}
                         {#if itemChats[item.id].loading}
                           <div class="flex justify-start">
-                            <div class="bg-gray-100 rounded-lg px-3 py-2 text-sm text-gray-400 animate-pulse">...</div>
+                            <div class="bg-surface-2 rounded-lg px-3 py-2 text-sm text-ink-subtle animate-pulse">...</div>
                           </div>
                         {/if}
                       </div>
@@ -968,12 +968,12 @@
                         bind:value={itemChats[item.id].input}
                         on:keydown={(e) => e.key === 'Enter' && !e.shiftKey && sendItemMessage(item, checklist)}
                         placeholder={$_('checklists.askAI')}
-                        class="flex-1 text-sm px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary-400 focus:border-primary-400"
+                        class="flex-1 text-sm px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-1 focus:ring-primary-400 focus:border-primary-400"
                       />
                       <button
                         on:click={() => sendItemMessage(item, checklist)}
                         disabled={!itemChats[item.id].input.trim() || itemChats[item.id].loading}
-                        class="px-3 py-2 bg-primary-600 text-white rounded-lg text-sm hover:bg-primary-700 disabled:opacity-50 transition flex-shrink-0"
+                        class="px-3 py-2 bg-brand text-white rounded-lg text-sm hover:brightness-110 disabled:opacity-50 transition flex-shrink-0"
                       >
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
@@ -989,10 +989,10 @@
           </div>
           <!-- Add Item inline -->
           {#if addingItemToId === checklist.id}
-            <div class="mt-3 p-3 border border-dashed border-gray-300 rounded-lg">
+            <div class="mt-3 p-3 border border-dashed border-border rounded-lg">
               <div class="flex gap-2 mb-2">
-                <input type="text" bind:value={newItemForm.title} placeholder={$_('checklists.itemTitlePlaceholder')} class="flex-1 text-sm px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary-400" on:keydown={(e) => e.key === 'Enter' && addItemToChecklist(checklist.id)} />
-                <select bind:value={newItemForm.priority} class="text-sm px-2 py-2 border border-gray-200 rounded-lg">
+                <input type="text" bind:value={newItemForm.title} placeholder={$_('checklists.itemTitlePlaceholder')} class="flex-1 text-sm px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-1 focus:ring-primary-400" on:keydown={(e) => e.key === 'Enter' && addItemToChecklist(checklist.id)} />
+                <select bind:value={newItemForm.priority} class="text-sm px-2 py-2 border border-border rounded-lg">
                   <option value="LOW">{$_('checklists.low')}</option>
                   <option value="MEDIUM">{$_('checklists.medium')}</option>
                   <option value="HIGH">{$_('checklists.high')}</option>
@@ -1000,16 +1000,16 @@
                 </select>
               </div>
               <div class="flex gap-2 mb-2">
-                <textarea bind:value={newItemForm.description} placeholder={$_('checklists.descriptionLabel')} rows="2" class="flex-1 text-sm px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary-400"></textarea>
-                <input type="text" bind:value={newItemForm.section} placeholder={$_('checklists.sectionPlaceholder')} class="w-40 text-sm px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary-400" />
+                <textarea bind:value={newItemForm.description} placeholder={$_('checklists.descriptionLabel')} rows="2" class="flex-1 text-sm px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-1 focus:ring-primary-400"></textarea>
+                <input type="text" bind:value={newItemForm.section} placeholder={$_('checklists.sectionPlaceholder')} class="w-40 text-sm px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-1 focus:ring-primary-400" />
               </div>
               <div class="flex gap-2 justify-end">
-                <button on:click={() => { addingItemToId = null; newItemForm = { title: '', description: '', priority: 'MEDIUM', section: '' }; }} class="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition">{$_('common.cancel')}</button>
-                <button on:click={() => addItemToChecklist(checklist.id)} disabled={!newItemForm.title.trim()} class="px-3 py-1.5 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 transition">{$_('checklists.addItemToList')}</button>
+                <button on:click={() => { addingItemToId = null; newItemForm = { title: '', description: '', priority: 'MEDIUM', section: '' }; }} class="px-3 py-1.5 text-sm text-ink-muted hover:bg-surface-2 rounded-lg transition">{$_('common.cancel')}</button>
+                <button on:click={() => addItemToChecklist(checklist.id)} disabled={!newItemForm.title.trim()} class="px-3 py-1.5 text-sm bg-brand text-white rounded-lg hover:brightness-110 disabled:opacity-50 transition">{$_('checklists.addItemToList')}</button>
               </div>
             </div>
           {:else}
-            <button on:click={() => { addingItemToId = checklist.id; newItemForm = { title: '', description: '', priority: 'MEDIUM', section: '' }; }} class="mt-3 w-full py-2 border border-dashed border-gray-300 rounded-lg text-sm text-gray-500 hover:text-primary-600 hover:border-primary-400 transition flex items-center justify-center gap-1.5">
+            <button on:click={() => { addingItemToId = checklist.id; newItemForm = { title: '', description: '', priority: 'MEDIUM', section: '' }; }} class="mt-3 w-full py-2 border border-dashed border-border rounded-lg text-sm text-ink-muted hover:text-primary-600 hover:border-primary-400 transition flex items-center justify-center gap-1.5">
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
               {$_('checklists.addItemToList')}
             </button>
@@ -1025,18 +1025,18 @@
   <!-- svelte-ignore a11y_click_events_have_key_events -->
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => showAIModal = false}>
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+    <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-sm p-6">
       <h2 class="text-lg font-semibold mb-4">{$_('checklists.generateWithAI')}</h2>
       <div class="mb-6">
-        <label for="checklist-type" class="block text-sm font-medium text-gray-700 mb-1">{$_('checklists.type')}</label>
-        <select id="checklist-type" bind:value={aiForm.type} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+        <label for="checklist-type" class="block text-sm font-medium text-ink mb-1">{$_('checklists.type')}</label>
+        <select id="checklist-type" bind:value={aiForm.type} class="w-full px-3 py-2 border border-border rounded-lg text-sm">
           {#each typeOptions.filter(t => t !== 'CUSTOM') as t}
             <option value={t}>{$_(typeLabel[t])}</option>
           {/each}
         </select>
       </div>
       <div class="flex gap-3">
-        <button on:click={generateWithAI} disabled={creating} class="flex-1 bg-primary-600 text-white py-2.5 rounded-lg font-medium hover:bg-primary-700 disabled:opacity-50 transition text-sm flex items-center justify-center gap-2">
+        <button on:click={generateWithAI} disabled={creating} class="flex-1 bg-brand text-white py-2.5 rounded-lg font-medium hover:brightness-110 disabled:opacity-50 transition text-sm flex items-center justify-center gap-2">
           {#if creating}
             <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
           {:else}
@@ -1044,7 +1044,7 @@
           {/if}
           {creating ? $_('common.loading') : $_('checklists.generateWithAI')}
         </button>
-        <button on:click={() => showAIModal = false} class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition text-sm">{$_('common.cancel')}</button>
+        <button on:click={() => showAIModal = false} class="px-5 py-2.5 border border-border rounded-lg hover:bg-surface-2 transition text-sm">{$_('common.cancel')}</button>
       </div>
     </div>
   </div>
@@ -1055,13 +1055,13 @@
   <!-- svelte-ignore a11y_click_events_have_key_events -->
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => showImportModal = false}>
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+    <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-md p-6">
       <h2 class="text-lg font-semibold mb-2">{$_('checklists.importTitle')}</h2>
-      <p class="text-sm text-gray-500 mb-4">{$_('checklists.importDesc')}</p>
+      <p class="text-sm text-ink-muted mb-4">{$_('checklists.importDesc')}</p>
 
       <label class="block mb-4">
         <span class="sr-only">{$_('checklists.importChooseFile')}</span>
-        <input type="file" accept=".md" on:change={handleFileUpload} class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 cursor-pointer" />
+        <input type="file" accept=".md" on:change={handleFileUpload} class="block w-full text-sm text-ink-muted file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-brand-subtle/10 file:text-primary-700 hover:file:bg-primary-100 cursor-pointer" />
       </label>
 
       {#if importError}
@@ -1069,21 +1069,21 @@
       {/if}
 
       {#if importParsed}
-        <div class="mb-4 border border-gray-200 rounded-lg p-4 max-h-64 overflow-y-auto">
-          <h3 class="font-medium text-gray-900 text-sm mb-1">{importParsed.name}</h3>
+        <div class="mb-4 border border-border rounded-lg p-4 max-h-64 overflow-y-auto">
+          <h3 class="font-medium text-ink text-sm mb-1">{importParsed.name}</h3>
           {#if importParsed.description}
-            <p class="text-xs text-gray-500 mb-2">{importParsed.description}</p>
+            <p class="text-xs text-ink-muted mb-2">{importParsed.description}</p>
           {/if}
-          <div class="text-xs text-primary-600 font-medium mb-2">{$_('checklists.importItems', { values: { count: importParsed.items.length } })}</div>
+          <div class="text-xs text-brand font-medium mb-2">{$_('checklists.importItems', { values: { count: importParsed.items.length } })}</div>
           <ul class="space-y-1">
             {#each importParsed.items as item}
               <li class="flex items-center gap-2 text-sm">
-                <div class="w-4 h-4 rounded border-2 flex-shrink-0 flex items-center justify-center {item.isCompleted ? 'bg-primary-600 border-primary-600' : 'border-gray-300'}">
+                <div class="w-4 h-4 rounded border-2 flex-shrink-0 flex items-center justify-center {item.isCompleted ? 'bg-brand border-primary-600' : 'border-border'}">
                   {#if item.isCompleted}
                     <svg class="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
                   {/if}
                 </div>
-                <span class="text-gray-700 {item.isCompleted ? 'line-through text-gray-400' : ''}">{item.title}</span>
+                <span class="text-ink {item.isCompleted ? 'line-through text-ink-subtle' : ''}">{item.title}</span>
                 <div class="w-1.5 h-1.5 rounded-full flex-shrink-0 {priorityDot[item.priority] || 'bg-gray-300'}"></div>
               </li>
             {/each}
@@ -1093,14 +1093,14 @@
 
       <div class="flex gap-3">
         {#if importParsed}
-          <button on:click={importChecklist} disabled={importing} class="flex-1 bg-primary-600 text-white py-2.5 rounded-lg font-medium hover:bg-primary-700 disabled:opacity-50 transition text-sm flex items-center justify-center gap-2">
+          <button on:click={importChecklist} disabled={importing} class="flex-1 bg-brand text-white py-2.5 rounded-lg font-medium hover:brightness-110 disabled:opacity-50 transition text-sm flex items-center justify-center gap-2">
             {#if importing}
               <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
             {/if}
             {$_('checklists.importConfirm')}
           </button>
         {/if}
-        <button on:click={() => showImportModal = false} class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition text-sm">{$_('common.cancel')}</button>
+        <button on:click={() => showImportModal = false} class="px-5 py-2.5 border border-border rounded-lg hover:bg-surface-2 transition text-sm">{$_('common.cancel')}</button>
       </div>
     </div>
   </div>
@@ -1111,42 +1111,42 @@
   <!-- svelte-ignore a11y_click_events_have_key_events -->
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => showCreateModal = false}>
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
+    <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
       <h2 class="text-lg font-semibold mb-4">{$_('checklists.manualCreateTitle')}</h2>
 
       <div class="space-y-4 mb-6">
         <div>
-          <label for="create-name" class="block text-sm font-medium text-gray-700 mb-1">{$_('checklists.checklistName')}</label>
-          <input id="create-name" type="text" bind:value={createForm.name} placeholder={$_('checklists.checklistNamePlaceholder')} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary-400 focus:border-primary-400" />
+          <label for="create-name" class="block text-sm font-medium text-ink mb-1">{$_('checklists.checklistName')}</label>
+          <input id="create-name" type="text" bind:value={createForm.name} placeholder={$_('checklists.checklistNamePlaceholder')} class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary-400 focus:border-primary-400" />
         </div>
         <div>
-          <label for="create-type" class="block text-sm font-medium text-gray-700 mb-1">{$_('checklists.type')}</label>
-          <select id="create-type" bind:value={createForm.type} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+          <label for="create-type" class="block text-sm font-medium text-ink mb-1">{$_('checklists.type')}</label>
+          <select id="create-type" bind:value={createForm.type} class="w-full px-3 py-2 border border-border rounded-lg text-sm">
             {#each typeOptions as t}
               <option value={t}>{$_(typeLabel[t])}</option>
             {/each}
           </select>
         </div>
         <div>
-          <label for="create-desc" class="block text-sm font-medium text-gray-700 mb-1">{$_('checklists.checklistDescription')}</label>
-          <textarea id="create-desc" bind:value={createForm.description} placeholder={$_('checklists.checklistDescriptionPlaceholder')} rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary-400 focus:border-primary-400"></textarea>
+          <label for="create-desc" class="block text-sm font-medium text-ink mb-1">{$_('checklists.checklistDescription')}</label>
+          <textarea id="create-desc" bind:value={createForm.description} placeholder={$_('checklists.checklistDescriptionPlaceholder')} rows="2" class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary-400 focus:border-primary-400"></textarea>
         </div>
 
         <!-- Items builder -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">{$_('checklists.title')}</label>
+          <label class="block text-sm font-medium text-ink mb-2">{$_('checklists.title')}</label>
           {#if createForm.items.length === 0}
-            <p class="text-sm text-gray-400 mb-2">{$_('checklists.noItemsYet')}</p>
+            <p class="text-sm text-ink-subtle mb-2">{$_('checklists.noItemsYet')}</p>
           {:else}
             <div class="space-y-2 mb-2">
               {#each createForm.items as item, i}
-                <div class="flex gap-2 items-start p-2 bg-gray-50 rounded-lg">
+                <div class="flex gap-2 items-start p-2 bg-surface-2 rounded-lg">
                   <div class="flex-1 space-y-1.5">
-                    <input type="text" bind:value={item.title} placeholder={$_('checklists.itemTitlePlaceholder')} class="w-full text-sm px-2 py-1.5 border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-primary-400" />
+                    <input type="text" bind:value={item.title} placeholder={$_('checklists.itemTitlePlaceholder')} class="w-full text-sm px-2 py-1.5 border border-border rounded focus:outline-none focus:ring-1 focus:ring-primary-400" />
                     <div class="flex gap-2">
-                      <input type="text" bind:value={item.description} placeholder={$_('checklists.descriptionLabel')} class="flex-1 text-sm px-2 py-1.5 border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-primary-400" />
-                      <input type="text" bind:value={item.section} placeholder={$_('checklists.sectionPlaceholder')} class="w-32 text-sm px-2 py-1.5 border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-primary-400" />
-                      <select bind:value={item.priority} class="text-xs px-2 py-1.5 border border-gray-200 rounded">
+                      <input type="text" bind:value={item.description} placeholder={$_('checklists.descriptionLabel')} class="flex-1 text-sm px-2 py-1.5 border border-border rounded focus:outline-none focus:ring-1 focus:ring-primary-400" />
+                      <input type="text" bind:value={item.section} placeholder={$_('checklists.sectionPlaceholder')} class="w-32 text-sm px-2 py-1.5 border border-border rounded focus:outline-none focus:ring-1 focus:ring-primary-400" />
+                      <select bind:value={item.priority} class="text-xs px-2 py-1.5 border border-border rounded">
                         <option value="LOW">{$_('checklists.low')}</option>
                         <option value="MEDIUM">{$_('checklists.medium')}</option>
                         <option value="HIGH">{$_('checklists.high')}</option>
@@ -1154,14 +1154,14 @@
                       </select>
                     </div>
                   </div>
-                  <button on:click={() => removeCreateItem(i)} class="p-1 text-gray-400 hover:text-red-500 mt-1">
+                  <button on:click={() => removeCreateItem(i)} class="p-1 text-ink-subtle hover:text-red-500 mt-1">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
                   </button>
                 </div>
               {/each}
             </div>
           {/if}
-          <button on:click={addCreateItem} class="text-sm text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1">
+          <button on:click={addCreateItem} class="text-sm text-brand hover:text-primary-700 font-medium flex items-center gap-1">
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
             {$_('checklists.addAnotherItem')}
           </button>
@@ -1169,10 +1169,10 @@
       </div>
 
       <div class="flex gap-3">
-        <button on:click={createManualChecklist} disabled={!createForm.name.trim() || creatingManual} class="flex-1 bg-primary-600 text-white py-2.5 rounded-lg font-medium hover:bg-primary-700 disabled:opacity-50 transition text-sm">
+        <button on:click={createManualChecklist} disabled={!createForm.name.trim() || creatingManual} class="flex-1 bg-brand text-white py-2.5 rounded-lg font-medium hover:brightness-110 disabled:opacity-50 transition text-sm">
           {creatingManual ? $_('common.loading') : $_('checklists.createManual')}
         </button>
-        <button on:click={() => showCreateModal = false} class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition text-sm">{$_('common.cancel')}</button>
+        <button on:click={() => showCreateModal = false} class="px-5 py-2.5 border border-border rounded-lg hover:bg-surface-2 transition text-sm">{$_('common.cancel')}</button>
       </div>
     </div>
   </div>
@@ -1183,21 +1183,21 @@
   <!-- svelte-ignore a11y_click_events_have_key_events -->
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => editingChecklist = null}>
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+    <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-sm p-6">
       <h2 class="text-lg font-semibold mb-4">{$_('checklists.editChecklist')}</h2>
       <div class="space-y-4 mb-6">
         <div>
-          <label for="edit-name" class="block text-sm font-medium text-gray-700 mb-1">{$_('checklists.checklistName')}</label>
-          <input id="edit-name" type="text" bind:value={editChecklistForm.name} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary-400 focus:border-primary-400" />
+          <label for="edit-name" class="block text-sm font-medium text-ink mb-1">{$_('checklists.checklistName')}</label>
+          <input id="edit-name" type="text" bind:value={editChecklistForm.name} class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary-400 focus:border-primary-400" />
         </div>
         <div>
-          <label for="edit-desc" class="block text-sm font-medium text-gray-700 mb-1">{$_('checklists.descriptionLabel')}</label>
-          <textarea id="edit-desc" bind:value={editChecklistForm.description} rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary-400 focus:border-primary-400"></textarea>
+          <label for="edit-desc" class="block text-sm font-medium text-ink mb-1">{$_('checklists.descriptionLabel')}</label>
+          <textarea id="edit-desc" bind:value={editChecklistForm.description} rows="3" class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary-400 focus:border-primary-400"></textarea>
         </div>
       </div>
       <div class="flex gap-3">
-        <button on:click={saveEditChecklist} disabled={!editChecklistForm.name.trim()} class="flex-1 bg-primary-600 text-white py-2.5 rounded-lg font-medium hover:bg-primary-700 disabled:opacity-50 transition text-sm">{$_('checklists.save')}</button>
-        <button on:click={() => editingChecklist = null} class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition text-sm">{$_('common.cancel')}</button>
+        <button on:click={saveEditChecklist} disabled={!editChecklistForm.name.trim()} class="flex-1 bg-brand text-white py-2.5 rounded-lg font-medium hover:brightness-110 disabled:opacity-50 transition text-sm">{$_('checklists.save')}</button>
+        <button on:click={() => editingChecklist = null} class="px-5 py-2.5 border border-border rounded-lg hover:bg-surface-2 transition text-sm">{$_('common.cancel')}</button>
       </div>
     </div>
   </div>
@@ -1208,24 +1208,24 @@
   <!-- svelte-ignore a11y_click_events_have_key_events -->
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => editingItem = null}>
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+    <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-sm p-6">
       <h2 class="text-lg font-semibold mb-4">{$_('checklists.editItem')}</h2>
       <div class="space-y-4 mb-6">
         <div>
-          <label for="edit-item-title" class="block text-sm font-medium text-gray-700 mb-1">{$_('checklists.itemTitle')}</label>
-          <input id="edit-item-title" type="text" bind:value={editItemForm.title} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary-400 focus:border-primary-400" />
+          <label for="edit-item-title" class="block text-sm font-medium text-ink mb-1">{$_('checklists.itemTitle')}</label>
+          <input id="edit-item-title" type="text" bind:value={editItemForm.title} class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary-400 focus:border-primary-400" />
         </div>
         <div>
-          <label for="edit-item-desc" class="block text-sm font-medium text-gray-700 mb-1">{$_('checklists.descriptionLabel')}</label>
-          <textarea id="edit-item-desc" bind:value={editItemForm.description} rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary-400 focus:border-primary-400"></textarea>
+          <label for="edit-item-desc" class="block text-sm font-medium text-ink mb-1">{$_('checklists.descriptionLabel')}</label>
+          <textarea id="edit-item-desc" bind:value={editItemForm.description} rows="3" class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary-400 focus:border-primary-400"></textarea>
         </div>
         <div>
-          <label for="edit-item-section" class="block text-sm font-medium text-gray-700 mb-1">{$_('checklists.section')}</label>
-          <input id="edit-item-section" type="text" bind:value={editItemForm.section} placeholder={$_('checklists.sectionPlaceholder')} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary-400 focus:border-primary-400" />
+          <label for="edit-item-section" class="block text-sm font-medium text-ink mb-1">{$_('checklists.section')}</label>
+          <input id="edit-item-section" type="text" bind:value={editItemForm.section} placeholder={$_('checklists.sectionPlaceholder')} class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary-400 focus:border-primary-400" />
         </div>
         <div>
-          <label for="edit-item-priority" class="block text-sm font-medium text-gray-700 mb-1">{$_('checklists.priority')}</label>
-          <select id="edit-item-priority" bind:value={editItemForm.priority} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+          <label for="edit-item-priority" class="block text-sm font-medium text-ink mb-1">{$_('checklists.priority')}</label>
+          <select id="edit-item-priority" bind:value={editItemForm.priority} class="w-full px-3 py-2 border border-border rounded-lg text-sm">
             <option value="LOW">{$_('checklists.low')}</option>
             <option value="MEDIUM">{$_('checklists.medium')}</option>
             <option value="HIGH">{$_('checklists.high')}</option>
@@ -1234,8 +1234,8 @@
         </div>
       </div>
       <div class="flex gap-3">
-        <button on:click={saveEditItem} disabled={!editItemForm.title.trim()} class="flex-1 bg-primary-600 text-white py-2.5 rounded-lg font-medium hover:bg-primary-700 disabled:opacity-50 transition text-sm">{$_('checklists.save')}</button>
-        <button on:click={() => editingItem = null} class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition text-sm">{$_('common.cancel')}</button>
+        <button on:click={saveEditItem} disabled={!editItemForm.title.trim()} class="flex-1 bg-brand text-white py-2.5 rounded-lg font-medium hover:brightness-110 disabled:opacity-50 transition text-sm">{$_('checklists.save')}</button>
+        <button on:click={() => editingItem = null} class="px-5 py-2.5 border border-border rounded-lg hover:bg-surface-2 transition text-sm">{$_('common.cancel')}</button>
       </div>
     </div>
   </div>

@@ -114,7 +114,7 @@
 <svelte:window bind:innerWidth />
 
 {#if appReady}
-  <div class="flex h-screen bg-gray-50 overflow-hidden">
+  <div class="flex h-screen bg-surface-2 overflow-hidden">
     <!-- Mobile backdrop overlay -->
     {#if isMobile && sidebarOpen}
       <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -138,7 +138,7 @@
     {#if !isHelpPage}
       <button
         on:click={() => showHelpDrawer = true}
-        class="fixed bottom-6 right-6 z-40 w-10 h-10 bg-primary-600 text-white rounded-full shadow-lg hover:bg-primary-700 hover:shadow-xl transition-all duration-200 flex items-center justify-center cursor-pointer"
+        class="fixed bottom-6 right-6 z-40 w-10 h-10 bg-brand text-white rounded-full shadow-lg hover:brightness-110 hover:shadow-xl transition-all duration-200 flex items-center justify-center cursor-pointer"
         title="Help"
       >
         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -150,7 +150,7 @@
     <HelpDrawer bind:show={showHelpDrawer} slug={helpSlug} />
   </div>
 {:else}
-  <div class="flex items-center justify-center h-screen bg-gray-50">
+  <div class="flex items-center justify-center h-screen bg-surface-2">
     <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600"></div>
   </div>
 {/if}
