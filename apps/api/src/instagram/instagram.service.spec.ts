@@ -15,7 +15,16 @@ function makePrisma() {
       findFirst: jest.fn().mockResolvedValue(null),
     },
     project: {
-      findUnique: jest.fn().mockResolvedValue({ name: 'Brand', industry: 'SaaS' }),
+      // resolveAccount derives the org from the project; generateAdvice also
+      // reads name/industry — both come from this mock.
+      findUnique: jest
+        .fn()
+        .mockResolvedValue({ organizationId: 'org_1', name: 'Brand', industry: 'SaaS' }),
+    },
+    organization: {
+      findUnique: jest
+        .fn()
+        .mockResolvedValue({ subscription: { plan: 'ENTERPRISE' } }),
     },
   };
 }
@@ -25,6 +34,7 @@ function makeSyncService() {
     syncAccount: jest
       .fn()
       .mockResolvedValue({ accountSynced: true, mediaSynced: 3 }),
+    planAllowsMedia: jest.fn((plan: string) => plan !== 'FREE'),
   };
 }
 
@@ -69,7 +79,7 @@ describe('InstagramService', () => {
     it('returns not-connected when no IG account linked', async () => {
       prisma.projectSocialAccount.findMany.mockResolvedValue([]);
 
-      const status = await service.getStatus('p1', 'org_1');
+      const status = await service.getStatus('p1');
 
       expect(status).toEqual({ connected: false, insightsGranted: false });
     });
@@ -80,7 +90,7 @@ describe('InstagramService', () => {
         createdAt: new Date('2026-06-26T00:00:00Z'),
       });
 
-      const status = await service.getStatus('p1', 'org_1');
+      const status = await service.getStatus('p1');
 
       expect(status.connected).toBe(true);
       expect(status.accountName).toBe('@brand');
@@ -94,7 +104,7 @@ describe('InstagramService', () => {
         igLink({ scopes: ['instagram_business_basic'] }),
       ]);
 
-      const status = await service.getStatus('p1', 'org_1');
+      const status = await service.getStatus('p1');
 
       expect(status.connected).toBe(true);
       expect(status.insightsGranted).toBe(false);
@@ -105,7 +115,7 @@ describe('InstagramService', () => {
         igLink({ organizationId: 'other_org' }),
       ]);
 
-      const status = await service.getStatus('p1', 'org_1');
+      const status = await service.getStatus('p1');
 
       expect(status.connected).toBe(false);
     });
@@ -115,7 +125,7 @@ describe('InstagramService', () => {
         igLink({ platform: 'FACEBOOK' }),
       ]);
 
-      const status = await service.getStatus('p1', 'org_1');
+      const status = await service.getStatus('p1');
 
       expect(status.connected).toBe(false);
     });
@@ -125,7 +135,7 @@ describe('InstagramService', () => {
     it('returns empty arrays when not connected', async () => {
       prisma.projectSocialAccount.findMany.mockResolvedValue([]);
 
-      const metrics = await service.getMetrics('p1', 'org_1', 28);
+      const metrics = await service.getMetrics('p1', 28);
 
       expect(metrics).toEqual({ account: [], topPosts: [], worstPosts: [] });
     });
@@ -142,27 +152,55 @@ describe('InstagramService', () => {
           totalInteractions: 90,
         },
       ]);
-      prisma.instagramMedia.findMany
-        .mockResolvedValueOnce([{ id: 'top', engagementRate: 0.5 }])
-        .mockResolvedValueOnce([{ id: 'worst', engagementRate: 0.01 }]);
+      // A single windowed query ordered by engagementRate desc; top/worst are
+      // sliced in memory (>5 rated posts so Best and Worst don't overlap).
+      prisma.instagramMedia.findMany.mockResolvedValue([
+        { igMediaId: 'a', engagementRate: 0.6 },
+        { igMediaId: 'b', engagementRate: 0.5 },
+        { igMediaId: 'c', engagementRate: 0.4 },
+        { igMediaId: 'd', engagementRate: 0.3 },
+        { igMediaId: 'e', engagementRate: 0.2 },
+        { igMediaId: 'f', engagementRate: 0.15 },
+        { igMediaId: 'g', engagementRate: 0.1 },
+      ]);
 
-      const metrics = await service.getMetrics('p1', 'org_1', 28);
+      const metrics = await service.getMetrics('p1', 28);
 
       expect(metrics.account).toHaveLength(1);
       expect(metrics.account[0]).toMatchObject({
         followersCount: 100,
         reach: 500,
       });
-      expect(metrics.topPosts).toEqual([{ id: 'top', engagementRate: 0.5 }]);
-      expect(metrics.worstPosts).toEqual([{ id: 'worst', engagementRate: 0.01 }]);
+      expect(metrics.topPosts.map((m: any) => m.igMediaId)).toEqual([
+        'a',
+        'b',
+        'c',
+        'd',
+        'e',
+      ]);
+      // worst = bottom 5 asc, excluding the two left after the top 5 (f, g);
+      // here only f and g remain after excluding top ids.
+      expect(metrics.worstPosts.map((m: any) => m.igMediaId)).toEqual(['g', 'f']);
 
-      // top ordered desc, worst ordered asc, both filter non-null engagementRate
-      const topArgs = prisma.instagramMedia.findMany.mock.calls[0][0];
-      const worstArgs = prisma.instagramMedia.findMany.mock.calls[1][0];
-      expect(topArgs.orderBy).toEqual({ engagementRate: 'desc' });
-      expect(topArgs.take).toBe(5);
-      expect(topArgs.where.engagementRate).toEqual({ not: null });
-      expect(worstArgs.orderBy).toEqual({ engagementRate: 'asc' });
+      // Single windowed query: non-null engagementRate + timestamp >= since.
+      const args = prisma.instagramMedia.findMany.mock.calls[0][0];
+      expect(args.orderBy).toEqual({ engagementRate: 'desc' });
+      expect(args.where.engagementRate).toEqual({ not: null });
+      expect(args.where.timestamp.gte).toBeInstanceOf(Date);
+    });
+
+    it('does not list the same post under both Best and Worst for small accounts', async () => {
+      prisma.projectSocialAccount.findMany.mockResolvedValue([igLink()]);
+      prisma.instagramMedia.findMany.mockResolvedValue([
+        { igMediaId: 'a', engagementRate: 0.5 },
+        { igMediaId: 'b', engagementRate: 0.2 },
+      ]);
+
+      const metrics = await service.getMetrics('p1', 28);
+
+      expect(metrics.topPosts.map((m: any) => m.igMediaId)).toEqual(['a', 'b']);
+      // Both already in top → worst is empty (no overlap).
+      expect(metrics.worstPosts).toEqual([]);
     });
   });
 
@@ -170,7 +208,7 @@ describe('InstagramService', () => {
     it('throws when Instagram not connected', async () => {
       prisma.projectSocialAccount.findMany.mockResolvedValue([]);
 
-      await expect(service.triggerSync('p1', 'org_1')).rejects.toBeInstanceOf(
+      await expect(service.triggerSync('p1')).rejects.toBeInstanceOf(
         BadRequestException,
       );
     });
@@ -181,23 +219,27 @@ describe('InstagramService', () => {
         createdAt: new Date(Date.now() - 2 * 60 * 1000),
       });
 
-      const result = await service.triggerSync('p1', 'org_1');
+      const result = await service.triggerSync('p1');
 
       expect(result).toEqual({ skipped: true });
       expect(syncService.syncAccount).not.toHaveBeenCalled();
     });
 
-    it('calls syncAccount when no recent metrics', async () => {
+    it('calls syncAccount with media when no recent metrics (PRO/ENTERPRISE)', async () => {
       prisma.projectSocialAccount.findMany.mockResolvedValue([igLink()]);
       prisma.instagramAccountMetrics.findFirst.mockResolvedValue({
         createdAt: new Date(Date.now() - 60 * 60 * 1000),
       });
+      prisma.organization.findUnique.mockResolvedValue({
+        subscription: { plan: 'ENTERPRISE' },
+      });
 
-      const result = await service.triggerSync('p1', 'org_1');
+      const result = await service.triggerSync('p1');
 
       expect(syncService.syncAccount).toHaveBeenCalledTimes(1);
       expect(syncService.syncAccount).toHaveBeenCalledWith(
         expect.objectContaining({ id: 'acc_1' }),
+        true,
       );
       expect(result).toEqual({
         skipped: false,
@@ -206,11 +248,26 @@ describe('InstagramService', () => {
       });
     });
 
+    it('FREE: triggers syncAccount with withMedia=false (no media on the manual path)', async () => {
+      prisma.projectSocialAccount.findMany.mockResolvedValue([igLink()]);
+      prisma.instagramAccountMetrics.findFirst.mockResolvedValue(null);
+      prisma.organization.findUnique.mockResolvedValue({
+        subscription: { plan: 'FREE' },
+      });
+
+      await service.triggerSync('p1');
+
+      expect(syncService.syncAccount).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'acc_1' }),
+        false,
+      );
+    });
+
     it('calls syncAccount when there are no prior metrics at all', async () => {
       prisma.projectSocialAccount.findMany.mockResolvedValue([igLink()]);
       prisma.instagramAccountMetrics.findFirst.mockResolvedValue(null);
 
-      await service.triggerSync('p1', 'org_1');
+      await service.triggerSync('p1');
 
       expect(syncService.syncAccount).toHaveBeenCalledTimes(1);
     });

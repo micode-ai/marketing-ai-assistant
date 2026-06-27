@@ -9,6 +9,7 @@ import {
   fetchAccountInsights,
   fetchMediaList,
   fetchMediaInsights,
+  InstagramAuthError,
 } from './instagram-graph.util';
 
 const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
@@ -104,7 +105,11 @@ export class InstagramSyncService {
       if (withMedia) {
         const mediaList = await fetchMediaList(igUserId, accessToken, 25);
         for (const media of mediaList) {
-          const mediaInsights = await fetchMediaInsights(media.id, accessToken);
+          const mediaInsights = await fetchMediaInsights(
+            media.id,
+            accessToken,
+            media.mediaProductType || media.mediaType,
+          );
 
           const likeCount = media.likeCount ?? null;
           const commentsCount = media.commentsCount ?? null;
@@ -185,21 +190,16 @@ export class InstagramSyncService {
       try {
         const plan = account.organization.subscription?.plan || 'FREE';
 
-        let withMedia: boolean;
         if (plan === 'FREE') {
           // Account metrics only, once per day.
           if (await this.hasMetricsForToday(account.id)) continue;
-          withMedia = false;
         } else if (plan === 'PRO') {
           // Account + media, but skip if synced within the last 6 hours.
           if (await this.syncedWithin(account.id, SIX_HOURS_MS)) continue;
-          withMedia = true;
-        } else {
-          // ENTERPRISE: hourly, account + media.
-          withMedia = true;
         }
+        // ENTERPRISE: hourly, account + media.
 
-        await this.syncAccount(account, withMedia);
+        await this.syncAccount(account, this.planAllowsMedia(plan));
       } catch (error) {
         this.logger.error(
           `Scheduled IG sync failed for account ${account.id}: ${error}`,
@@ -236,6 +236,15 @@ export class InstagramSyncService {
   }
 
   // ---------------------------------------------------------------------------
+
+  /**
+   * Plan → media decision. FREE syncs account metrics only; PRO/ENTERPRISE also
+   * pull media insights. Public so the manual-sync path (InstagramService) can
+   * apply the same throttle as the cron.
+   */
+  planAllowsMedia(plan: string): boolean {
+    return plan !== 'FREE';
+  }
 
   /** engagement = (likes + comments + saved) / reach; null when reach falsy. */
   private computeEngagementRate(
@@ -280,6 +289,7 @@ export class InstagramSyncService {
   private isAuthError(error: unknown): boolean {
     const e = error as any;
     if (!e) return false;
+    if (error instanceof InstagramAuthError) return true;
     if (e.status === 401 || e.statusCode === 401) return true;
     const body = e.response?.data?.error ?? e.error ?? e;
     if (body?.code === 190) return true;

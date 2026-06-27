@@ -9,7 +9,6 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { ProjectAccessGuard } from '../common/guards/project-access.guard';
 import { InstagramService } from './instagram.service';
 
@@ -22,8 +21,8 @@ export class InstagramController {
 
   @Get('status')
   @ApiOperation({ summary: 'Get Instagram connection status for a project' })
-  getStatus(@Query('projectId') projectId: string, @CurrentUser() user: any) {
-    return this.service.getStatus(projectId, this.orgId(user));
+  getStatus(@Query('projectId') projectId: string) {
+    return this.service.getStatus(projectId);
   }
 
   @Get('metrics')
@@ -31,16 +30,15 @@ export class InstagramController {
   getMetrics(
     @Query('projectId') projectId: string,
     @Query('days', new DefaultValuePipe(28), ParseIntPipe) days: number,
-    @CurrentUser() user: any,
   ) {
     const clamped = Math.min(90, Math.max(7, days));
-    return this.service.getMetrics(projectId, this.orgId(user), clamped);
+    return this.service.getMetrics(projectId, clamped);
   }
 
   @Post('sync')
   @ApiOperation({ summary: 'Trigger a manual Instagram sync' })
-  triggerSync(@Query('projectId') projectId: string, @CurrentUser() user: any) {
-    return this.service.triggerSync(projectId, this.orgId(user));
+  triggerSync(@Query('projectId') projectId: string) {
+    return this.service.triggerSync(projectId);
   }
 
   @Post('advice')
@@ -48,16 +46,7 @@ export class InstagramController {
   generateAdvice(
     @Query('projectId') projectId: string,
     @Body() body: { language?: string },
-    @CurrentUser() user: any,
   ) {
-    return this.service.generateAdvice(
-      projectId,
-      this.orgId(user),
-      body?.language || 'en',
-    );
-  }
-
-  private orgId(user: any): string {
-    return user?.memberships?.[0]?.organizationId;
+    return this.service.generateAdvice(projectId, body?.language || 'en');
   }
 }

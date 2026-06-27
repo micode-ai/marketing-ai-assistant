@@ -7,6 +7,45 @@ const GRAPH = 'https://graph.instagram.com';
 
 const logger = new Logger('InstagramGraph');
 
+/**
+ * Raised when the Graph API rejects the call because the access token is
+ * expired/invalid (HTTP 401, or a Graph error body with code 190 /
+ * type OAuthException). Unlike the per-metric tolerance, these errors must
+ * propagate so the sync can flip the account to REAUTH_REQUIRED.
+ */
+export class InstagramAuthError extends Error {}
+
+/**
+ * Inspect a non-ok response for an auth failure. Throws InstagramAuthError on
+ * HTTP 401 or a Graph OAuth error body (code 190 / type OAuthException),
+ * tolerating both `{ error: { ... } }` and flat shapes. Returns the raw body
+ * text for non-auth failures so callers can still log it.
+ */
+async function throwIfAuthError(res: Response): Promise<string> {
+  if (res.status === 401) {
+    throw new InstagramAuthError('Instagram auth failed: HTTP 401');
+  }
+  let text = '';
+  try {
+    text = await res.text();
+  } catch {
+    return '';
+  }
+  if (text) {
+    try {
+      const parsed = JSON.parse(text) as any;
+      const err = parsed?.error ?? parsed;
+      if (err?.code === 190 || err?.type === 'OAuthException') {
+        throw new InstagramAuthError(`Instagram auth failed: ${text}`);
+      }
+    } catch (e) {
+      if (e instanceof InstagramAuthError) throw e;
+      // Non-JSON / non-auth body — fall through to tolerant handling.
+    }
+  }
+  return text;
+}
+
 export interface AccountProfile {
   followersCount?: number;
   mediaCount?: number;
@@ -68,7 +107,8 @@ export async function fetchAccountProfile(
   });
   const res = await fetch(`${GRAPH}/${igUserId}?${params}`);
   if (!res.ok) {
-    logger.warn(`fetchAccountProfile failed for ${igUserId}: ${res.status}`);
+    const body = await throwIfAuthError(res);
+    logger.warn(`fetchAccountProfile failed for ${igUserId}: ${res.status} ${body}`);
     return {};
   }
   const data = (await res.json()) as { followers_count?: number; media_count?: number };
@@ -114,7 +154,11 @@ async function fetchInsightsWithTolerance<T>(
       access_token: token,
     });
     const res = await fetch(`${GRAPH}/${path}/insights?${params}`);
-    if (!res.ok) return null;
+    if (!res.ok) {
+      // Auth failures throw and propagate; other failures are tolerated.
+      await throwIfAuthError(res);
+      return null;
+    }
     const json = (await res.json()) as { data?: InsightRow[] };
     return json.data ?? [];
   };
@@ -185,7 +229,8 @@ export async function fetchMediaList(
   });
   const res = await fetch(`${GRAPH}/${igUserId}/media?${params}`);
   if (!res.ok) {
-    logger.warn(`fetchMediaList failed for ${igUserId}: ${res.status}`);
+    const body = await throwIfAuthError(res);
+    logger.warn(`fetchMediaList failed for ${igUserId}: ${res.status} ${body}`);
     return [];
   }
   const json = (await res.json()) as {
@@ -216,13 +261,21 @@ export async function fetchMediaList(
 }
 
 /**
- * GET /{mediaId}/insights?metric=reach,saved,shares,views
- * Available metrics vary by media type, so individual metrics can 400 —
- * uses the same per-metric tolerance as account insights.
+ * GET /{mediaId}/insights?metric=...
+ * Available metrics vary by media type: only REELS/VIDEO expose `views`/`shares`,
+ * so requesting them for IMAGE/CAROUSEL_ALBUM 400s on every run. The metric set
+ * is chosen by media type; per-metric tolerance remains as a backstop.
  */
 export async function fetchMediaInsights(
   mediaId: string,
   token: string,
+  mediaType: string,
 ): Promise<MediaInsights> {
-  return fetchInsightsWithTolerance<MediaInsights>(mediaId, token, MEDIA_METRIC_KEYS, {});
+  const isVideo = mediaType === 'REELS' || mediaType === 'VIDEO';
+  const names = isVideo
+    ? ['reach', 'saved', 'shares', 'views']
+    : ['reach', 'saved', 'shares'];
+  const metricKeys: Record<string, keyof MediaInsights> = {};
+  for (const name of names) metricKeys[name] = MEDIA_METRIC_KEYS[name];
+  return fetchInsightsWithTolerance<MediaInsights>(mediaId, token, metricKeys, {});
 }

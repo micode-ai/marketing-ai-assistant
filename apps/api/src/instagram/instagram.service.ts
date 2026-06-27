@@ -27,12 +27,19 @@ export class InstagramService {
 
   /**
    * Resolve the INSTAGRAM SocialAccount linked to a project via
-   * ProjectSocialAccount, scoped to the caller's organization.
+   * ProjectSocialAccount. The org is derived from the project (ProjectAccessGuard
+   * has already authorized the caller for it), and the IG account is still
+   * filtered by the project's org for safety.
    */
   private async resolveAccount(
     projectId: string,
-    organizationId: string,
   ): Promise<ResolvedAccount | null> {
+    const project = await this.prisma.project.findUnique({
+      where: { id: projectId },
+      select: { organizationId: true },
+    });
+    if (!project) return null;
+
     const links = await this.prisma.projectSocialAccount.findMany({
       where: { projectId },
       include: {
@@ -53,14 +60,14 @@ export class InstagramService {
     const link = links.find(
       (l) =>
         l.socialAccount.platform === 'INSTAGRAM' &&
-        l.socialAccount.organizationId === organizationId,
+        l.socialAccount.organizationId === project.organizationId,
     );
 
     return link ? (link.socialAccount as ResolvedAccount) : null;
   }
 
-  async getStatus(projectId: string, organizationId: string) {
-    const account = await this.resolveAccount(projectId, organizationId);
+  async getStatus(projectId: string) {
+    const account = await this.resolveAccount(projectId);
     if (!account) {
       return { connected: false, insightsGranted: false };
     }
@@ -76,8 +83,8 @@ export class InstagramService {
     };
   }
 
-  async getMetrics(projectId: string, organizationId: string, days: number) {
-    const account = await this.resolveAccount(projectId, organizationId);
+  async getMetrics(projectId: string, days: number) {
+    const account = await this.resolveAccount(projectId);
     if (!account) {
       return { account: [], topPosts: [], worstPosts: [] };
     }
@@ -91,18 +98,24 @@ export class InstagramService {
       orderBy: { date: 'asc' },
     });
 
-    const [topPosts, worstPosts] = await Promise.all([
-      this.prisma.instagramMedia.findMany({
-        where: { socialAccountId: account.id, engagementRate: { not: null } },
-        orderBy: { engagementRate: 'desc' },
-        take: 5,
-      }),
-      this.prisma.instagramMedia.findMany({
-        where: { socialAccountId: account.id, engagementRate: { not: null } },
-        orderBy: { engagementRate: 'asc' },
-        take: 5,
-      }),
-    ]);
+    // Post tables are windowed to the requested period and de-duplicated:
+    // worstPosts excludes anything already shown in topPosts so small accounts
+    // don't list the same post under both Best and Worst.
+    const ratedMedia = await this.prisma.instagramMedia.findMany({
+      where: {
+        socialAccountId: account.id,
+        engagementRate: { not: null },
+        timestamp: { gte: since },
+      },
+      orderBy: { engagementRate: 'desc' },
+    });
+
+    const topPosts = ratedMedia.slice(0, 5);
+    const topIds = new Set(topPosts.map((m) => m.igMediaId));
+    const worstPosts = [...ratedMedia]
+      .reverse()
+      .filter((m) => !topIds.has(m.igMediaId))
+      .slice(0, 5);
 
     return {
       account: accountMetrics.map((m) => ({
@@ -118,8 +131,8 @@ export class InstagramService {
     };
   }
 
-  async triggerSync(projectId: string, organizationId: string) {
-    const account = await this.resolveAccount(projectId, organizationId);
+  async triggerSync(projectId: string) {
+    const account = await this.resolveAccount(projectId);
     if (!account) {
       throw new BadRequestException('Instagram not connected');
     }
@@ -137,22 +150,26 @@ export class InstagramService {
       return { skipped: true };
     }
 
-    const result = await this.syncService.syncAccount(account);
+    // Apply the same plan throttle as the cron: FREE pulls account metrics only.
+    const org = await this.prisma.organization.findUnique({
+      where: { id: account.organizationId },
+      include: { subscription: true },
+    });
+    const plan = org?.subscription?.plan || 'FREE';
+    const withMedia = this.syncService.planAllowsMedia(plan);
+
+    const result = await this.syncService.syncAccount(account, withMedia);
     return { skipped: false, ...result };
   }
 
-  async generateAdvice(
-    projectId: string,
-    organizationId: string,
-    language: string,
-  ) {
-    const account = await this.resolveAccount(projectId, organizationId);
+  async generateAdvice(projectId: string, language: string) {
+    const account = await this.resolveAccount(projectId);
     if (!account) {
       throw new BadRequestException('Instagram not connected');
     }
 
     const [metrics, project] = await Promise.all([
-      this.getMetrics(projectId, organizationId, 28),
+      this.getMetrics(projectId, 28),
       this.prisma.project.findUnique({
         where: { id: projectId },
         select: { name: true, industry: true },

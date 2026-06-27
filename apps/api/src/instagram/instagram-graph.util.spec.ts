@@ -3,6 +3,7 @@ import {
   fetchAccountInsights,
   fetchMediaList,
   fetchMediaInsights,
+  InstagramAuthError,
 } from './instagram-graph.util';
 
 function okJson(body: unknown): Response {
@@ -15,6 +16,26 @@ function notOk(status = 400): Response {
     status,
     json: async () => ({}),
     text: async () => 'error',
+  } as unknown as Response;
+}
+
+/** HTTP 401 — no body needed. */
+function unauthorized(): Response {
+  return {
+    ok: false,
+    status: 401,
+    json: async () => ({}),
+    text: async () => '',
+  } as unknown as Response;
+}
+
+/** 200-ok=false with a Graph OAuthException body (token revoked/expired). */
+function oauthErrorBody(status = 400): Response {
+  return {
+    ok: false,
+    status,
+    json: async () => ({ error: { code: 190, type: 'OAuthException' } }),
+    text: async () => JSON.stringify({ error: { code: 190, type: 'OAuthException' } }),
   } as unknown as Response;
 }
 
@@ -183,7 +204,7 @@ describe('instagram-graph.util', () => {
   });
 
   describe('fetchMediaInsights', () => {
-    it('parses metrics and tolerates a failing one', async () => {
+    it('parses metrics and tolerates a failing one (REELS requests views)', async () => {
       const fetchMock = jest.fn().mockImplementation((url: string) => {
         const metric = metricOf(url);
         if (metric.includes(',')) return Promise.resolve(notOk(400));
@@ -194,12 +215,95 @@ describe('instagram-graph.util', () => {
       });
       global.fetch = fetchMock as unknown as typeof fetch;
 
-      const result = await fetchMediaInsights('MEDIA1', 'tok');
+      const result = await fetchMediaInsights('MEDIA1', 'tok', 'REELS');
 
       expect(result).toEqual({ reach: 9, saved: 9, views: 9 });
       expect(result).not.toHaveProperty('shares');
       const calledMetrics = fetchMock.mock.calls.map((c) => metricOf(c[0] as string));
       expect(calledMetrics).toEqual(['reach,saved,shares,views', 'reach', 'saved', 'shares', 'views']);
+    });
+
+    it('omits views/shares-only-video metrics for IMAGE (requests reach,saved,shares)', async () => {
+      const fetchMock = jest.fn().mockResolvedValue(
+        okJson({
+          data: [
+            { name: 'reach', total_value: { value: 10 } },
+            { name: 'saved', total_value: { value: 2 } },
+            { name: 'shares', total_value: { value: 1 } },
+          ],
+        }),
+      );
+      global.fetch = fetchMock as unknown as typeof fetch;
+
+      const result = await fetchMediaInsights('MEDIA1', 'tok', 'IMAGE');
+
+      expect(result).toEqual({ reach: 10, saved: 2, shares: 1 });
+      // Single batched request; `views` is never requested for IMAGE.
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(metricOf(fetchMock.mock.calls[0][0] as string)).toBe('reach,saved,shares');
+    });
+
+    it('requests reach,saved,shares for CAROUSEL_ALBUM (no views)', async () => {
+      const fetchMock = jest.fn().mockResolvedValue(okJson({ data: [] }));
+      global.fetch = fetchMock as unknown as typeof fetch;
+
+      await fetchMediaInsights('MEDIA1', 'tok', 'CAROUSEL_ALBUM');
+
+      expect(metricOf(fetchMock.mock.calls[0][0] as string)).toBe('reach,saved,shares');
+    });
+  });
+
+  describe('auth-error propagation', () => {
+    it('fetchAccountProfile throws InstagramAuthError on HTTP 401', async () => {
+      global.fetch = jest.fn().mockResolvedValue(unauthorized()) as unknown as typeof fetch;
+      await expect(fetchAccountProfile('IG123', 'tok')).rejects.toBeInstanceOf(
+        InstagramAuthError,
+      );
+    });
+
+    it('fetchAccountProfile throws on a Graph OAuthException body (code 190)', async () => {
+      global.fetch = jest.fn().mockResolvedValue(oauthErrorBody(400)) as unknown as typeof fetch;
+      await expect(fetchAccountProfile('IG123', 'tok')).rejects.toBeInstanceOf(
+        InstagramAuthError,
+      );
+    });
+
+    it('fetchAccountProfile still returns {} for a non-auth 400 (tolerance preserved)', async () => {
+      global.fetch = jest.fn().mockResolvedValue(notOk(400)) as unknown as typeof fetch;
+      await expect(fetchAccountProfile('IG123', 'tok')).resolves.toEqual({});
+    });
+
+    it('fetchAccountInsights throws InstagramAuthError on 401 (not swallowed by tolerance)', async () => {
+      global.fetch = jest.fn().mockResolvedValue(unauthorized()) as unknown as typeof fetch;
+      await expect(fetchAccountInsights('IG123', 'tok')).rejects.toBeInstanceOf(
+        InstagramAuthError,
+      );
+    });
+
+    it('fetchAccountInsights throws on an OAuthException body during the batched request', async () => {
+      global.fetch = jest.fn().mockResolvedValue(oauthErrorBody(400)) as unknown as typeof fetch;
+      await expect(fetchAccountInsights('IG123', 'tok')).rejects.toBeInstanceOf(
+        InstagramAuthError,
+      );
+    });
+
+    it('fetchAccountInsights still returns {} when every metric fails non-auth', async () => {
+      global.fetch = jest.fn().mockResolvedValue(notOk(400)) as unknown as typeof fetch;
+      await expect(fetchAccountInsights('IG123', 'tok')).resolves.toEqual({});
+    });
+
+    it('fetchMediaList throws InstagramAuthError on 401', async () => {
+      global.fetch = jest.fn().mockResolvedValue(unauthorized()) as unknown as typeof fetch;
+      await expect(fetchMediaList('IG123', 'tok')).rejects.toBeInstanceOf(
+        InstagramAuthError,
+      );
+    });
+
+    it('fetchMediaInsights throws InstagramAuthError on an OAuthException body', async () => {
+      global.fetch = jest.fn().mockResolvedValue(oauthErrorBody(400)) as unknown as typeof fetch;
+      await expect(fetchMediaInsights('MEDIA1', 'tok', 'IMAGE')).rejects.toBeInstanceOf(
+        InstagramAuthError,
+      );
     });
   });
 });

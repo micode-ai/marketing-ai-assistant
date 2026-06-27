@@ -5,9 +5,19 @@ import {
   fetchAccountInsights,
   fetchMediaList,
   fetchMediaInsights,
+  InstagramAuthError,
 } from './instagram-graph.util';
 
-jest.mock('./instagram-graph.util');
+jest.mock('./instagram-graph.util', () => {
+  const actual = jest.requireActual('./instagram-graph.util');
+  return {
+    ...actual,
+    fetchAccountProfile: jest.fn(),
+    fetchAccountInsights: jest.fn(),
+    fetchMediaList: jest.fn(),
+    fetchMediaInsights: jest.fn(),
+  };
+});
 
 const mockFetchAccountProfile = fetchAccountProfile as jest.MockedFunction<
   typeof fetchAccountProfile
@@ -211,9 +221,11 @@ describe('InstagramSyncService', () => {
     });
 
     it('flips account to REAUTH_REQUIRED + reports IG_TOKEN_EXPIRED on auth error', async () => {
-      const authError: any = new Error('OAuthException: token expired');
-      authError.status = 401;
-      mockFetchAccountProfile.mockRejectedValue(authError);
+      // The graph util surfaces auth failures as InstagramAuthError (propagated,
+      // not swallowed by the per-metric tolerance).
+      mockFetchAccountProfile.mockRejectedValue(
+        new InstagramAuthError('Instagram auth failed: HTTP 401'),
+      );
       mockFetchAccountInsights.mockResolvedValue({});
 
       await expect(service.syncAccount(makeAccount(), true)).rejects.toThrow();
