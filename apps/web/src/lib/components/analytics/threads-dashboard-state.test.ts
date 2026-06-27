@@ -19,3 +19,22 @@ describe('resolveThreadsView', () => {
     expect(resolveThreadsView({ loading: false, status: s })).toBe('connected');
   });
 });
+
+describe('isSyncStale', () => {
+  const now = Date.now();
+
+  it('is stale when there is no last sync', () => {
+    expect(isSyncStale(null, now)).toBe(true);
+    expect(isSyncStale(undefined, now)).toBe(true);
+  });
+
+  it('is stale when older than 10 minutes', () => {
+    const old = new Date(now - 11 * 60 * 1000).toISOString();
+    expect(isSyncStale(old, now)).toBe(true);
+  });
+
+  it('is fresh when synced recently', () => {
+    const recent = new Date(now - 2 * 60 * 1000).toISOString();
+    expect(isSyncStale(recent, now)).toBe(false);
+  });
+});
