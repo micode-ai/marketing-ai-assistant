@@ -1,4 +1,4 @@
-import { Controller, Get, Query, Res, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { Controller, Get, Query, Res, BadRequestException, ForbiddenException, ServiceUnavailableException } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
@@ -72,6 +72,11 @@ export class MetaOAuthController {
     }
     const orgId = membership.organizationId;
     if (platform !== 'INSTAGRAM') throw new BadRequestException('Unsupported platform');
+    if (!this.config.get('INSTAGRAM_APP_ID') || !this.config.get('INSTAGRAM_APP_SECRET')) {
+      throw new ServiceUnavailableException(
+        'Instagram integration is not configured on this server yet. An administrator must set INSTAGRAM_APP_ID and INSTAGRAM_APP_SECRET.',
+      );
+    }
     const state = this.signState({ organizationId: orgId, platform });
     return { url: this.metaService.getInstagramAuthUrl(this.redirectUri(), state) };
   }
@@ -89,7 +94,7 @@ export class MetaOAuthController {
     try {
       const short = await this.metaService.exchangeCode(code, this.redirectUri());
       const long = await this.metaService.getLongLivedToken(short.access_token);
-      const ig = await this.metaService.discoverInstagramAccount(long.access_token);
+      const ig = await this.metaService.getInstagramUser(long.access_token);
       if (!ig) return fail('no_ig_account');
 
       await this.socialService.upsertOAuthAccount(parsed.organizationId, {
@@ -98,12 +103,10 @@ export class MetaOAuthController {
         accountName: ig.username,
         profileImageUrl: ig.profilePictureUrl,
         tokens: {
-          accessToken: ig.pageAccessToken,
-          userAccessToken: long.access_token,
+          accessToken: long.access_token,
           igUserId: ig.igUserId,
-          pageId: ig.pageId,
         },
-        scopes: ['instagram_basic', 'instagram_content_publish', 'instagram_manage_insights', 'instagram_manage_comments'],
+        scopes: ['instagram_business_basic', 'instagram_business_content_publish'],
         expiresAt: long.expires_in ? new Date(Date.now() + long.expires_in * 1000) : null,
       });
 
