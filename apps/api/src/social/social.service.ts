@@ -159,15 +159,23 @@ export class SocialService {
     })();
 
     const merged: Record<string, string | undefined> = { ...existingTokens };
+    let tokenChanged = false;
     for (const key of ['accessToken', 'refreshToken', 'accessSecret', 'appKey', 'appSecret', 'pageId', 'botToken', 'chatId'] as const) {
       const val = dto[key];
       if (typeof val === 'string' && val.length > 0) {
         merged[key] = val;
+        tokenChanged = true;
       }
     }
-    const encrypted = this.encryptTokens(merged);
 
-    const data: any = { encryptedTokens: encrypted };
+    const data: any = {};
+    // Only re-encrypt the token blob when the caller actually supplied a token
+    // field. A metadata-only update (e.g. changing the language) must NOT touch
+    // encryptedTokens — re-encrypting would wipe the token if the existing blob
+    // failed to decrypt, silently breaking OAuth connections.
+    if (tokenChanged) {
+      data.encryptedTokens = this.encryptTokens(merged);
+    }
     if (typeof dto.accountName === 'string' && dto.accountName.length > 0) data.accountName = dto.accountName;
     if (typeof dto.accountId === 'string' && dto.accountId.length > 0) data.accountId = dto.accountId;
     else if (typeof dto.chatId === 'string' && dto.chatId.length > 0 && account.platform === 'TELEGRAM') data.accountId = dto.chatId;

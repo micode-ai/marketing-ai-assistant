@@ -129,6 +129,54 @@ describe('SocialService.upsertOAuthAccount', () => {
   });
 });
 
+describe('SocialService.updateAccount', () => {
+  let service: SocialService;
+  const existing = {
+    id: 'acc1',
+    organizationId: 'org1',
+    platform: 'INSTAGRAM',
+    accountId: 'ig1',
+    encryptedTokens: 'opaque-existing-blob',
+    scopes: ['instagram_business_manage_insights'],
+  };
+  const prisma = {
+    socialAccount: {
+      findFirst: jest.fn().mockResolvedValue(existing),
+      update: jest.fn().mockResolvedValue(existing),
+    },
+  } as any;
+
+  beforeEach(async () => {
+    jest.clearAllMocks();
+    const mod: TestingModule = await Test.createTestingModule({
+      providers: [
+        SocialService,
+        { provide: PrismaService, useValue: prisma },
+        { provide: ConfigService, useValue: { get: jest.fn().mockReturnValue('a'.repeat(64)) } },
+        { provide: CronFailureNotifier, useValue: { report: jest.fn() } },
+      ],
+    }).compile();
+    service = mod.get(SocialService);
+  });
+
+  it('language-only update does not touch encryptedTokens or scopes (preserves OAuth connection)', async () => {
+    await service.updateAccount('acc1', 'org1', { language: 'ru' });
+    const arg = prisma.socialAccount.update.mock.calls[0][0];
+    expect(arg.data.language).toBe('ru');
+    // The bug: re-encrypting on a metadata-only update wiped the token; the
+    // upsert-via-POST path also reset scopes. Neither may be touched here.
+    expect(arg.data).not.toHaveProperty('encryptedTokens');
+    expect(arg.data).not.toHaveProperty('scopes');
+  });
+
+  it('still re-encrypts the token when an accessToken is supplied', async () => {
+    await service.updateAccount('acc1', 'org1', { accessToken: 'fresh-token' });
+    const arg = prisma.socialAccount.update.mock.calls[0][0];
+    expect(typeof arg.data.encryptedTokens).toBe('string');
+    expect(arg.data.encryptedTokens).not.toContain('fresh-token');
+  });
+});
+
 describe('SocialService.publishToInstagram', () => {
   let service: SocialService;
   const prisma = { socialAccount: { update: jest.fn().mockResolvedValue({}) } } as any;
