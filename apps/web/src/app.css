@@ -1,18 +1,52 @@
-/* Google Fonts — Space Grotesk (display/headings) + DM Sans (body/UI) */
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
+/* Google Fonts — Space Grotesk (display/headings) + Inter (body/UI) */
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
+  /* ── Iris design tokens — light (RGB channel triplets for Tailwind alpha) ── */
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --primary: 262.1 83.3% 57.8%;
-    --primary-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --radius: 0.5rem;
+    --canvas: 246 246 251;        /* #F6F6FB */
+    --surface: 255 255 255;       /* #FFFFFF */
+    --surface-2: 243 243 248;     /* #F3F3F8 */
+    --border: 236 236 244;        /* #ECECF4 */
+    --border-strong: 221 221 232; /* #DDDDE8 */
+    --text: 26 23 38;             /* #1A1726 */
+    --text-muted: 116 112 138;    /* #74708A */
+    --text-subtle: 152 147 168;   /* #9893A8 */
+    --brand: 91 61 232;           /* iris-600 #5B3DE8 */
+    --brand-fg: 255 255 255;
+    --brand-subtle: 238 240 255;  /* iris-50  #EEF0FF */
+    --brand-subtle-fg: 75 47 196; /* iris-700 #4B2FC4 */
+    --iris-700: 75 47 196;        /* gradient stop */
+    --ring: 110 86 240;           /* iris-500 #6E56F0 */
+    --ok: 22 163 74;              /* #16A34A */
+    --warn: 245 158 11;           /* #F59E0B */
+    --bad: 229 72 77;             /* #E5484D */
+    --radius: 0.625rem;           /* 10px */
+  }
+
+  /* ── Iris design tokens — dark (default interior theme) ── */
+  .dark {
+    --canvas: 11 11 20;           /* #0B0B14 */
+    --surface: 19 19 30;          /* #13131E */
+    --surface-2: 22 22 31;        /* #16161F */
+    --border: 32 32 46;           /* #20202E */
+    --border-strong: 42 42 58;    /* #2A2A3A */
+    --text: 237 237 246;          /* #EDEDF6 */
+    --text-muted: 148 148 174;    /* #9494AE */
+    --text-subtle: 108 108 134;   /* #6C6C86 */
+    --brand: 110 86 240;          /* iris-500 #6E56F0 (brighter for dark) */
+    --brand-fg: 255 255 255;
+    --brand-subtle: 110 86 240;   /* used at low alpha in dark */
+    --brand-subtle-fg: 201 194 255;
+    --iris-700: 75 47 196;
+    --ring: 138 130 251;          /* iris-400-ish */
+    --ok: 74 222 128;
+    --warn: 251 191 36;
+    --bad: 248 113 113;
   }
 
   /* Respect user's motion preferences */
@@ -26,13 +60,13 @@
 }
 
 * {
-  border-color: hsl(var(--border));
+  border-color: rgb(var(--border));
 }
 
 body {
-  font-family: 'DM Sans', system-ui, sans-serif;
-  background-color: hsl(var(--background));
-  color: hsl(var(--foreground));
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: rgb(var(--canvas));
+  color: rgb(var(--text));
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -50,11 +84,13 @@ h1, h2, h3, h4 {
 }
 
 .prose {
-  @apply text-gray-700 leading-relaxed;
+  color: rgb(var(--text-muted));
+  line-height: 1.7;
 }
 
 .prose h1, .prose h2, .prose h3 {
-  @apply font-semibold text-gray-900;
+  color: rgb(var(--text));
+  font-weight: 600;
   font-family: 'Space Grotesk', system-ui, sans-serif;
 }
 
@@ -70,9 +106,73 @@ h1, h2, h3, h4 {
   background: transparent;
 }
 .custom-scroll::-webkit-scrollbar-thumb {
-  background-color: #e5e7eb;
+  background-color: rgb(var(--border-strong));
   border-radius: 9999px;
 }
 .custom-scroll::-webkit-scrollbar-thumb:hover {
-  background-color: #d1d5db;
+  background-color: rgb(var(--text-subtle));
+}
+
+/* ── Iris component primitives ───────────────────────────────────────── */
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-colors duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-primary {
+    @apply bg-brand text-brand-fg shadow-glow hover:brightness-110;
+  }
+  .btn-secondary {
+    @apply bg-surface text-ink border border-border hover:bg-surface-2;
+  }
+  .btn-ghost {
+    @apply text-ink-muted hover:bg-surface-2 hover:text-ink;
+  }
+  .btn-danger {
+    @apply bg-bad text-white hover:brightness-110;
+  }
+
+  .card {
+    @apply bg-surface border border-border rounded-xl;
+  }
+
+  .kpi {
+    @apply bg-surface border border-border rounded-xl p-4;
+  }
+  .kpi-feature {
+    @apply rounded-xl p-4 text-white;
+    background-image: linear-gradient(135deg, rgb(var(--brand)), rgb(var(--iris-700)));
+    box-shadow: 0 20px 50px -24px rgb(var(--brand) / 0.6);
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold;
+  }
+  .badge-ok { @apply bg-ok/15 text-ok; }
+  .badge-warn { @apply bg-warn/15 text-warn; }
+  .badge-bad { @apply bg-bad/15 text-bad; }
+  .badge-brand { @apply bg-brand-subtle/15 text-brand-subtle-fg; }
+  .badge-neutral { @apply bg-surface-2 text-ink-muted; }
+
+  .input, .select, .textarea {
+    @apply w-full rounded-lg bg-surface border border-border text-ink placeholder:text-ink-subtle px-3 py-2 text-sm transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-brand;
+  }
+
+  .modal-overlay {
+    @apply fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 p-4;
+  }
+  .modal-panel {
+    @apply bg-surface border border-border rounded-2xl shadow-xl w-full;
+  }
+
+  .nav-item {
+    @apply flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-ink-muted hover:bg-surface-2 hover:text-ink transition-colors duration-150 cursor-pointer;
+  }
+  .nav-item.is-active {
+    @apply bg-brand-subtle/15 text-brand-subtle-fg font-semibold;
+    box-shadow: inset 2px 0 0 rgb(var(--brand));
+  }
+
+  .glow-brand {
+    box-shadow: 0 8px 20px -8px rgb(var(--brand) / 0.6);
+  }
 }
