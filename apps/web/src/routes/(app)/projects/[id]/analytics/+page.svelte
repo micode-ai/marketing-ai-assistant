@@ -7,6 +7,7 @@
   import MobileAnalyticsDashboard from '$lib/components/analytics/MobileAnalyticsDashboard.svelte';
   import SearchConsolePanel from '$lib/components/analytics/SearchConsolePanel.svelte';
   import InstagramAnalyticsDashboard from '$lib/components/analytics/InstagramAnalyticsDashboard.svelte';
+  import ThreadsAnalyticsDashboard from '$lib/components/analytics/ThreadsAnalyticsDashboard.svelte';
   import { currentProjectStore, projectsStore } from '$lib/stores/projects';
 
   $: projectId = $page.params['id'];
@@ -376,6 +377,9 @@
 
   <!-- Instagram Analytics (self-hides when no IG account is linked) -->
   <InstagramAnalyticsDashboard projectId={projectId ?? ''} />
+
+  <!-- Threads Analytics (self-hides when no Threads account is linked) -->
+  <ThreadsAnalyticsDashboard projectId={projectId ?? ''} />
 
   <!-- Tabs -->
   <div class="flex border-b border-border mb-6">
