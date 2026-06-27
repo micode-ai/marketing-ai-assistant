@@ -30,7 +30,7 @@ export class CreateContentDto {
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsEnum(['TWITTER', 'LINKEDIN', 'FACEBOOK', 'INSTAGRAM', 'GOOGLE', 'TELEGRAM'])
+  @IsEnum(['TWITTER', 'LINKEDIN', 'FACEBOOK', 'INSTAGRAM', 'THREADS', 'GOOGLE', 'TELEGRAM'])
   platform?: string;
 
   @ApiPropertyOptional()
