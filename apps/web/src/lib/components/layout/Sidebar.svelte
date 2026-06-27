@@ -2,7 +2,7 @@
   import { page } from '$app/stores';
   import { _ } from 'svelte-i18n';
   import { goto } from '$app/navigation';
-  import { currentProjectStore, organizationIdStore } from '$lib/stores/projects';
+  import { currentProjectStore, organizationIdStore, projectsStore } from '$lib/stores/projects';
   import { authStore, currentUser } from '$lib/stores/auth';
   import { api } from '$lib/api/client';
   import { browser } from '$app/environment';
@@ -30,12 +30,47 @@
   $: currentOrg = memberships.find((m: any) => m.organization?.id === $organizationIdStore)?.organization;
   $: hasMultipleOrgs = memberships.length > 1;
   let showOrgDropdown = false;
+  let showProjectDropdown = false;
+
+  // ── Context: organization mode vs project mode ──
+  $: inProject = !!$currentProjectStore;
+  $: projectId = $currentProjectStore?.id;
+
+  const orgSections = ['content', 'checklists', 'documents', 'campaigns', 'email', 'analytics', 'finances', 'seo', 'competitors', 'experiments', 'sequences', 'calendar'];
 
   function switchOrg(orgId: string) {
     organizationIdStore.set(orgId);
     showOrgDropdown = false;
     currentProjectStore.set(null);
     window.location.href = '/dashboard';
+  }
+
+  // Return to organization mode, preserving the section when possible (mirrors ProjectPicker).
+  function backToOrg() {
+    showProjectDropdown = false;
+    const path = $page.url.pathname;
+    if (path.startsWith('/projects/')) {
+      const m = path.match(/^\/projects\/[^/]+\/(.+)/);
+      const section = m?.[1]?.split('/')[0];
+      const target = section && orgSections.includes(section) ? `/${section}` : '/dashboard';
+      goto(target).then(() => currentProjectStore.set(null));
+    } else {
+      currentProjectStore.set(null);
+    }
+  }
+
+  // Quick-switch to another project, keeping the current section.
+  function selectProjectFromSidebar(project: any) {
+    const prevId = $currentProjectStore?.id;
+    currentProjectStore.set(project);
+    if (project.organizationId && project.organizationId !== $organizationIdStore) {
+      organizationIdStore.set(project.organizationId);
+    }
+    showProjectDropdown = false;
+    const path = $page.url.pathname;
+    if (path.startsWith('/projects/') && prevId !== project.id) {
+      goto(path.replace(/\/projects\/[^/]+/, `/projects/${project.id}`));
+    }
   }
 
   let leavingOrg: any = null;
@@ -54,12 +89,12 @@
     }
   }
 
-  function handleClickOutside(event: MouseEvent) {
+  function handleClickOutside() {
     if (showOrgDropdown) showOrgDropdown = false;
+    if (showProjectDropdown) showProjectDropdown = false;
   }
 
   // Heroicons outline 24px — stored as SVG strings for {@html} rendering
-  // Consistent with existing {@html action.icon} pattern in overview/+page.svelte
   const icons: Record<string, string> = {
     home: `<svg xmlns="http://www.w3.org/2000/svg" class="w-[18px] h-[18px] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>`,
     folder: `<svg xmlns="http://www.w3.org/2000/svg" class="w-[18px] h-[18px] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" /></svg>`,
@@ -75,7 +110,7 @@
     megaphone: `<svg xmlns="http://www.w3.org/2000/svg" class="w-[18px] h-[18px] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M10.34 15.84c-.688-.06-1.386-.09-2.09-.09H7.5a4.5 4.5 0 1 1 0-9h.75c.704 0 1.402-.03 2.09-.09m0 9.18c.253.962.584 1.892.985 2.783.247.55.06 1.21-.463 1.511l-.657.38c-.551.318-1.26.117-1.527-.461a20.845 20.845 0 0 1-1.44-4.282m3.102.069a18.03 18.03 0 0 1-.59-4.59c0-1.586.205-3.124.59-4.59m0 9.18a23.848 23.848 0 0 1 8.835 2.535M10.34 6.66a23.847 23.847 0 0 1 8.835-2.535m0 0A23.74 23.74 0 0 1 18.795 3c1.168 0 2.316.08 3.443.238.562.085.99.566.99 1.14V19.5c0 .564-.427 1.044-.989 1.129a23.95 23.95 0 0 1-3.444.238 23.844 23.844 0 0 1-1.02-.04m0-17.38V3m0 0h-3.614" /></svg>`,
     pencil: `<svg xmlns="http://www.w3.org/2000/svg" class="w-[18px] h-[18px] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" /></svg>`,
     checkcircle: `<svg xmlns="http://www.w3.org/2000/svg" class="w-[18px] h-[18px] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>`,
-    document: `<svg xmlns="http://www.w3.org/2000/svg" class="w-[18px] h-[18px] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" /></svg>`,
+    document: `<svg xmlns="http://www.w3.org/2000/svg" class="w-[18px] h-[18px] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" /></svg>`,
     presentation: `<svg xmlns="http://www.w3.org/2000/svg" class="w-[18px] h-[18px] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 0 0 6 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0 1 18 16.5h-2.25m-7.5 0h7.5m-7.5 0-1 3m8.5-3 1 3m0 0 .5 1.5m-.5-1.5h-9.5m0 0-.5 1.5m.75-9 3-3 2.148 2.148A12.061 12.061 0 0 1 16.5 7.605" /></svg>`,
     calendar: `<svg xmlns="http://www.w3.org/2000/svg" class="w-[18px] h-[18px] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" /></svg>`,
     globe: `<svg xmlns="http://www.w3.org/2000/svg" class="w-[18px] h-[18px] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5a17.92 17.92 0 0 1-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418" /></svg>`,
@@ -86,32 +121,43 @@
     questionmark: `<svg xmlns="http://www.w3.org/2000/svg" class="w-[18px] h-[18px] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" /></svg>`,
   };
 
-  const mainLinks = [
-    { href: '/dashboard', iconKey: 'home', labelKey: 'nav.dashboard' },
+  // ── Org-mode menus ──
+  const workspaceLinks = [
+    { href: '/dashboard', iconKey: 'home', labelKey: 'nav.dashboard', hint: true },
     { href: '/projects', iconKey: 'folder', labelKey: 'nav.projects' },
     { href: '/ai-chat', iconKey: 'sparkles', labelKey: 'nav.aiChat' },
     { href: '/templates', iconKey: 'clipboard', labelKey: 'nav.templates' },
   ];
-
-  const marketingLinks = [
-    { href: '/content',     iconKey: 'pencil',       labelKey: 'nav.orgContent' },
-    { href: '/checklists',  iconKey: 'checkcircle',  labelKey: 'nav.orgChecklists' },
-    { href: '/documents',   iconKey: 'document',     labelKey: 'nav.orgDocuments' },
-    { href: '/campaigns',   iconKey: 'megaphone',    labelKey: 'nav.orgCampaigns' },
-    { href: '/email',       iconKey: 'envelope',     labelKey: 'nav.orgEmail' },
-    { href: '/analytics',   iconKey: 'presentation', labelKey: 'nav.orgAnalytics' },
-    { href: '/finances',    iconKey: 'banknotes',    labelKey: 'nav.orgFinances' },
+  const rollupLinks = [
+    { href: '/analytics', iconKey: 'presentation', labelKey: 'nav.orgAnalytics' },
+    { href: '/finances', iconKey: 'banknotes', labelKey: 'nav.orgFinances' },
   ];
 
-  const advancedMarketingLinks = [
-    { href: '/seo',         iconKey: 'globe',         labelKey: 'nav.orgSeo' },
-    { href: '/competitors', iconKey: 'eye',           labelKey: 'nav.orgCompetitors' },
-    { href: '/experiments', iconKey: 'beaker',        labelKey: 'nav.orgExperiments' },
-    { href: '/sequences',   iconKey: 'mailstack',     labelKey: 'nav.orgSequences' },
-    { href: '/calendar',    iconKey: 'calendar',      labelKey: 'nav.orgCalendar' },
+  // ── Project-mode menus (seg is appended to /projects/:id) ──
+  const projectLinks = [
+    { seg: 'overview',   iconKey: 'chartbar',     labelKey: 'projects.overview' },
+    { seg: 'content',    iconKey: 'pencil',       labelKey: 'nav.orgContent' },
+    { seg: 'checklists', iconKey: 'checkcircle',  labelKey: 'nav.orgChecklists' },
+    { seg: 'documents',  iconKey: 'document',     labelKey: 'nav.orgDocuments' },
+    { seg: 'campaigns',  iconKey: 'megaphone',    labelKey: 'nav.orgCampaigns' },
+    { seg: 'email',      iconKey: 'envelope',     labelKey: 'nav.orgEmail' },
+    { seg: 'analytics',  iconKey: 'presentation', labelKey: 'nav.orgAnalytics' },
+    { seg: 'finances',   iconKey: 'banknotes',    labelKey: 'nav.orgFinances' },
+  ];
+  // AI Chat + Templates surfaced inside a project (carry project context — Task 9).
+  const projectToolLinks = [
+    { href: '/ai-chat',   iconKey: 'sparkles',  labelKey: 'nav.aiChat' },
+    { href: '/templates', iconKey: 'clipboard', labelKey: 'nav.templates' },
+  ];
+  const projectAdvanced = [
+    { seg: 'seo',         iconKey: 'globe',     labelKey: 'nav.orgSeo' },
+    { seg: 'competitors', iconKey: 'eye',       labelKey: 'nav.orgCompetitors' },
+    { seg: 'experiments', iconKey: 'beaker',    labelKey: 'nav.orgExperiments' },
+    { seg: 'sequences',   iconKey: 'mailstack', labelKey: 'nav.orgSequences' },
+    { seg: 'calendar',    iconKey: 'calendar',  labelKey: 'nav.orgCalendar' },
   ];
 
-  const settingsLinks = [
+  const orgSettingsLinks = [
     { href: '/settings/organization', iconKey: 'building', labelKey: 'nav.settings' },
     { href: '/settings/billing', iconKey: 'creditcard', labelKey: 'nav.billing' },
     { href: '/settings/team', iconKey: 'users', labelKey: 'nav.team' },
@@ -120,9 +166,7 @@
     { href: '/settings/webhooks', iconKey: 'webhook', labelKey: 'nav.webhooks' },
   ];
 
-
   let showAdvanced = browser ? localStorage.getItem('sidebarAdvanced') === 'true' : false;
-
   function toggleAdvanced() {
     showAdvanced = !showAdvanced;
     if (browser) localStorage.setItem('sidebarAdvanced', String(showAdvanced));
@@ -130,43 +174,25 @@
 
   $: currentPath = $page.url.pathname;
 
-  const marketingPathSegments = ['content', 'checklists', 'documents', 'campaigns', 'email', 'analytics', 'finances', 'seo', 'competitors', 'experiments', 'sequences', 'calendar'];
-
-  // Extracts the marketing section for both org-level (/content) and project-level (/projects/:id/content) URLs.
-  function getMarketingSegment(p: string): string | null {
-    const projectMatch = p.match(/^\/projects\/[^/]+\/([^/]+)/);
-    if (projectMatch && marketingPathSegments.includes(projectMatch[1])) {
-      return projectMatch[1];
-    }
-    const firstSeg = p.replace(/^\//, '').split('/')[0];
-    if (firstSeg && marketingPathSegments.includes(firstSeg)) {
-      return firstSeg;
-    }
-    return null;
+  // Active when path equals href or is a sub-path. For org rollups (/analytics,
+  // /finances) we require we're NOT inside a project route.
+  function isActiveOrg(href: string): boolean {
+    return currentPath === href || currentPath.startsWith(href + '/');
+  }
+  function isActiveSeg(seg: string): boolean {
+    if (!projectId) return false;
+    const base = `/projects/${projectId}/${seg}`;
+    return currentPath === base || currentPath.startsWith(base + '/');
   }
 
-  function isActive(href: string, path: string = currentPath): boolean {
-    if (path === href || path.startsWith(href + '/')) return true;
-    const hrefSeg = getMarketingSegment(href);
-    const pathSeg = getMarketingSegment(path);
-    return hrefSeg !== null && hrefSeg === pathSeg;
-  }
-
-  // When a project is selected, marketing links navigate directly to the project-scoped page
-  // (avoids the org-level hub that then forwards you into the project anyway). Computed as a
-  // reactive statement so Svelte tracks the $currentProjectStore dependency and re-renders
-  // sidebar links when the selection changes.
-  $: projectPrefix = $currentProjectStore ? `/projects/${$currentProjectStore.id}` : '';
-  $: resolvedMarketingLinks = marketingLinks.map(l => ({ ...l, href: projectPrefix + l.href }));
-  $: resolvedAdvancedLinks = advancedMarketingLinks.map(l => ({ ...l, href: projectPrefix + l.href }));
-
-  // Auto-expand advanced section when navigating to an advanced route
+  // Auto-expand advanced when navigating to an advanced project route
   $: {
-    const advancedHrefs = advancedMarketingLinks.map(l => l.href);
-    const isOnAdvanced = advancedHrefs.some(h => isActive(h, currentPath));
-    if (isOnAdvanced && !showAdvanced) {
-      showAdvanced = true;
-      if (browser) localStorage.setItem('sidebarAdvanced', 'true');
+    if (projectId) {
+      const onAdvanced = projectAdvanced.some((l) => isActiveSeg(l.seg));
+      if (onAdvanced && !showAdvanced) {
+        showAdvanced = true;
+        if (browser) localStorage.setItem('sidebarAdvanced', 'true');
+      }
     }
   }
 </script>
@@ -182,41 +208,84 @@
   style={isMobile ? `transform: translateX(${open ? '0' : '-100%'});` : `width: ${open ? '16rem' : '0'};`}
   aria-hidden={!open}
 >
-  <!-- Inner wrapper prevents content from reflowing during width transition -->
   <div class="w-64 flex flex-col h-full overflow-y-auto custom-scroll">
     <!-- Logo -->
-    <div class="p-5 border-b border-border flex-shrink-0">
+    <div class="p-4 border-b border-border flex-shrink-0">
       <a href="/dashboard" class="flex items-center gap-2.5 group cursor-pointer">
-        <!-- SparklesIcon badge — more distinctive than plain "M" letter -->
-        <div class="w-8 h-8 bg-gradient-to-br from-primary-500 to-primary-700 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm group-hover:shadow-primary-200 transition-shadow duration-200">
+        <div class="w-8 h-8 bg-gradient-to-br from-iris-500 to-iris-700 rounded-lg flex items-center justify-center flex-shrink-0 glow-brand transition-shadow duration-200">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
           </svg>
         </div>
         <div>
-          <div class="font-bold text-ink text-sm leading-none" style="font-family: 'Space Grotesk', sans-serif;">Marketing AI</div>
+          <div class="font-bold text-ink text-sm leading-none font-display">Marketing AI</div>
           <div class="text-xs text-ink-subtle mt-0.5">Assistant</div>
         </div>
       </a>
     </div>
 
-    <!-- Organization switcher -->
-    {#if hasMultipleOrgs}
-      <div class="px-4 py-3 border-b border-border relative">
+    <!-- ── Context switcher ── -->
+    <div class="px-3 pt-3 relative">
+      {#if inProject}
+        <!-- Back to organization -->
         <button
-          on:click|stopPropagation={() => (showOrgDropdown = !showOrgDropdown)}
-          class="w-full flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg hover:bg-surface-2 transition-colors duration-150 cursor-pointer"
+          on:click={backToOrg}
+          class="w-full flex items-center gap-2 px-2 py-1.5 mb-2 rounded-lg text-xs font-semibold text-ink-muted hover:bg-surface-2 hover:text-ink transition-colors duration-150 cursor-pointer"
         >
-          <div class="flex items-center gap-2 min-w-0">
-            <div class="w-6 h-6 rounded bg-primary-100 flex items-center justify-center text-brand text-xs font-bold flex-shrink-0">
-              {(currentOrg?.name || '?').charAt(0).toUpperCase()}
-            </div>
-            <span class="text-sm font-medium text-ink truncate">{currentOrg?.name || ''}</span>
-          </div>
-          <svg class="w-4 h-4 text-ink-subtle flex-shrink-0 transition-transform duration-150 {showOrgDropdown ? 'rotate-180' : ''}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-          </svg>
+          <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>
+          {$_('nav.allProjects')}
         </button>
+
+        <!-- Project chip -->
+        <button
+          on:click|stopPropagation={() => (showProjectDropdown = !showProjectDropdown)}
+          class="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg border border-brand/30 bg-brand-subtle/10 hover:bg-brand-subtle/15 transition-colors duration-150 cursor-pointer"
+        >
+          <div class="w-7 h-7 rounded-lg bg-gradient-to-br from-iris-400 to-iris-700 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+            {($currentProjectStore?.name || '?').charAt(0).toUpperCase()}
+          </div>
+          <div class="min-w-0 flex-1 text-left">
+            <div class="text-[9px] font-bold uppercase tracking-wider text-brand-subtle-fg leading-none">{$_('nav.project')}</div>
+            <div class="text-sm font-semibold text-ink truncate leading-tight mt-0.5">{$currentProjectStore?.name}</div>
+          </div>
+          <svg class="w-4 h-4 text-ink-subtle flex-shrink-0 transition-transform duration-150 {showProjectDropdown ? 'rotate-180' : ''}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 9l4-4 4 4M8 15l4 4 4-4" /></svg>
+        </button>
+
+        {#if showProjectDropdown}
+          <div class="absolute left-3 right-3 mt-1 bg-surface border border-border rounded-lg shadow-lg z-50 py-1 max-h-72 overflow-y-auto custom-scroll">
+            {#each $projectsStore as project}
+              <button
+                on:click|stopPropagation={() => selectProjectFromSidebar(project)}
+                class="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-left transition-colors duration-150 cursor-pointer
+                  {$currentProjectStore?.id === project.id ? 'bg-brand-subtle/15 text-brand-subtle-fg font-medium' : 'text-ink-muted hover:bg-surface-2'}"
+              >
+                <span class="w-5 h-5 rounded bg-gradient-to-br from-iris-400 to-iris-700 flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0">{(project.name || '?').charAt(0).toUpperCase()}</span>
+                <span class="truncate">{project.name}</span>
+                {#if $currentProjectStore?.id === project.id}
+                  <svg class="w-4 h-4 ml-auto text-brand flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                {/if}
+              </button>
+            {/each}
+          </div>
+        {/if}
+      {:else}
+        <!-- Organization chip -->
+        <button
+          on:click|stopPropagation={() => hasMultipleOrgs && (showOrgDropdown = !showOrgDropdown)}
+          class="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg border border-warn/25 bg-warn/5 transition-colors duration-150 {hasMultipleOrgs ? 'hover:bg-warn/10 cursor-pointer' : 'cursor-default'}"
+        >
+          <div class="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+            {(currentOrg?.name || '?').charAt(0).toUpperCase()}
+          </div>
+          <div class="min-w-0 flex-1 text-left">
+            <div class="text-[9px] font-bold uppercase tracking-wider text-warn leading-none">{$_('nav.organization')}</div>
+            <div class="text-sm font-semibold text-ink truncate leading-tight mt-0.5">{currentOrg?.name || ''}</div>
+          </div>
+          {#if hasMultipleOrgs}
+            <svg class="w-4 h-4 text-ink-subtle flex-shrink-0 transition-transform duration-150 {showOrgDropdown ? 'rotate-180' : ''}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 9l4-4 4 4M8 15l4 4 4-4" /></svg>
+          {/if}
+        </button>
+
         {#if showOrgDropdown}
           <div class="absolute left-3 right-3 mt-1 bg-surface border border-border rounded-lg shadow-lg z-50 py-1">
             {#each memberships as m}
@@ -226,153 +295,137 @@
                   class="flex-1 text-left px-3 py-2 text-sm flex items-center gap-2 cursor-pointer
                     {m.organization.id === $organizationIdStore ? 'text-brand font-medium' : 'text-ink-muted'}"
                 >
-                  <div class="w-5 h-5 rounded bg-primary-100 flex items-center justify-center text-brand text-[10px] font-bold flex-shrink-0">
+                  <div class="w-5 h-5 rounded bg-warn/15 flex items-center justify-center text-warn text-[10px] font-bold flex-shrink-0">
                     {(m.organization.name || '?').charAt(0).toUpperCase()}
                   </div>
                   <span class="truncate">{m.organization.name}</span>
                   {#if m.organization.id === $organizationIdStore}
-                    <svg class="w-4 h-4 text-brand ml-auto flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                    </svg>
+                    <svg class="w-4 h-4 text-brand ml-auto flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
                   {/if}
                 </button>
                 {#if m.role !== 'OWNER'}
                   <button
                     on:click|stopPropagation={() => (leavingOrg = m)}
-                    class="px-2 py-1 mr-2 text-red-400 hover:text-red-600 cursor-pointer flex-shrink-0"
+                    class="px-2 py-1 mr-2 text-bad/70 hover:text-bad cursor-pointer flex-shrink-0"
                     title={$_('settings.leaveTeam')}
                   >
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
-                    </svg>
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" /></svg>
                   </button>
                 {/if}
               </div>
             {/each}
           </div>
         {/if}
-      </div>
-    {/if}
+      {/if}
+    </div>
 
     <nav class="p-3 flex-1 space-y-6">
-      <!-- Main navigation -->
-      <div>
-        <p class="text-[10px] font-semibold text-ink-subtle uppercase tracking-widest px-3 mb-2">Navigation</p>
-        <ul class="space-y-0.5">
-          {#each mainLinks as link}
-            <li>
-              <a
-                href={link.href}
-                class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-150 cursor-pointer
-                  {isActive(link.href, currentPath)
-                    ? 'bg-brand-subtle/10 text-brand border-l-2 border-primary-600'
-                    : 'text-ink-muted hover:bg-surface-2 hover:text-gray-900 border-l-2 border-transparent'}"
-              >
-                {@html icons[link.iconKey]}
-                <span>{$_(link.labelKey)}</span>
-              </a>
-            </li>
-          {/each}
-        </ul>
-      </div>
-
-      <!-- Marketing -->
-      <div>
-        <p class="text-[10px] font-semibold text-ink-subtle uppercase tracking-widest px-3 mb-2">{$_('nav.marketing')}</p>
-        <ul class="space-y-0.5">
-          <!-- Overview — only when project selected -->
-          {#if $currentProjectStore}
-            {@const overviewHref = `/projects/${$currentProjectStore.id}/overview`}
-            <li>
-              <a
-                href={overviewHref}
-                class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-150 cursor-pointer
-                  {currentPath === overviewHref || currentPath.startsWith(overviewHref)
-                    ? 'bg-brand-subtle/10 text-brand border-l-2 border-primary-600'
-                    : 'text-ink-muted hover:bg-surface-2 hover:text-gray-900 border-l-2 border-transparent'}"
-              >
-                {@html icons['chartbar']}
-                <span>{$_('projects.overview')}</span>
-              </a>
-            </li>
-          {/if}
-
-          {#each resolvedMarketingLinks as link}
-            <li>
-              <a
-                href={link.href}
-                class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-150 cursor-pointer
-                  {isActive(link.href, currentPath)
-                    ? 'bg-brand-subtle/10 text-brand border-l-2 border-primary-600'
-                    : 'text-ink-muted hover:bg-surface-2 hover:text-gray-900 border-l-2 border-transparent'}"
-              >
-                {@html icons[link.iconKey]}
-                <span>{$_(link.labelKey)}</span>
-              </a>
-            </li>
-          {/each}
-
-          <!-- Advanced toggle -->
-          <li>
-            <button
-              on:click={toggleAdvanced}
-              class="w-full flex items-center justify-between px-3 py-2 text-xs font-medium text-ink-subtle hover:text-gray-600 cursor-pointer transition-colors duration-150 mt-1"
-            >
-              <span>{showAdvanced ? $_('nav.hideAdvanced') : $_('nav.showAdvanced')}</span>
-              <svg
-                class="w-3.5 h-3.5 transition-transform duration-200 {showAdvanced ? 'rotate-180' : ''}"
-                fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
-              >
-                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-          </li>
-
-          {#if showAdvanced}
-            {#each resolvedAdvancedLinks as link}
+      {#if inProject}
+        <!-- ═══ PROJECT MODE ═══ -->
+        <div>
+          <p class="text-[10px] font-semibold text-ink-subtle uppercase tracking-widest px-3 mb-2">{$_('nav.thisProject')}</p>
+          <ul class="space-y-0.5">
+            {#each projectLinks as link}
               <li>
-                <a
-                  href={link.href}
-                  class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-150 cursor-pointer
-                    {isActive(link.href, currentPath)
-                      ? 'bg-brand-subtle/10 text-brand border-l-2 border-primary-600'
-                      : 'text-ink-muted hover:bg-surface-2 hover:text-gray-900 border-l-2 border-transparent'}"
-                >
+                <a href={`/projects/${projectId}/${link.seg}`} class="nav-item" class:is-active={isActiveSeg(link.seg)}>
                   {@html icons[link.iconKey]}
                   <span>{$_(link.labelKey)}</span>
                 </a>
               </li>
             {/each}
-          {/if}
-        </ul>
-      </div>
+            {#each projectToolLinks as link}
+              <li>
+                <!-- AI Chat / Templates: currentProjectStore is already set, so these pages open pre-scoped to this project -->
+                <a href={link.href} class="nav-item" class:is-active={isActiveOrg(link.href)}>
+                  {@html icons[link.iconKey]}
+                  <span>{$_(link.labelKey)}</span>
+                </a>
+              </li>
+            {/each}
 
-      <!-- Settings -->
-      <div>
-        <p class="text-[10px] font-semibold text-ink-subtle uppercase tracking-widest px-3 mb-2">{$_('common.settings')}</p>
-        <ul class="space-y-0.5">
-          {#each settingsLinks as link}
             <li>
-              <a
-                href={link.href}
-                class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-150 cursor-pointer
-                  {isActive(link.href, currentPath)
-                    ? 'bg-brand-subtle/10 text-brand border-l-2 border-primary-600'
-                    : 'text-ink-muted hover:bg-surface-2 hover:text-gray-900 border-l-2 border-transparent'}"
-              >
-                {@html icons[link.iconKey]}
-                <span>{$_(link.labelKey)}</span>
+              <button on:click={toggleAdvanced} class="w-full flex items-center justify-between px-3 py-2 text-xs font-medium text-ink-subtle hover:text-ink-muted cursor-pointer transition-colors duration-150 mt-1">
+                <span>{showAdvanced ? $_('nav.hideAdvanced') : $_('nav.showAdvanced')}</span>
+                <svg class="w-3.5 h-3.5 transition-transform duration-200 {showAdvanced ? 'rotate-180' : ''}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+              </button>
+            </li>
+            {#if showAdvanced}
+              {#each projectAdvanced as link}
+                <li>
+                  <a href={`/projects/${projectId}/${link.seg}`} class="nav-item" class:is-active={isActiveSeg(link.seg)}>
+                    {@html icons[link.iconKey]}
+                    <span>{$_(link.labelKey)}</span>
+                  </a>
+                </li>
+              {/each}
+            {/if}
+          </ul>
+        </div>
+
+        <div>
+          <p class="text-[10px] font-semibold text-ink-subtle uppercase tracking-widest px-3 mb-2">{$_('common.settings')}</p>
+          <ul class="space-y-0.5">
+            <li>
+              <a href={`/projects/${projectId}/settings`} class="nav-item" class:is-active={isActiveSeg('settings')}>
+                {@html icons['building']}
+                <span>{$_('nav.settings')}</span>
               </a>
             </li>
-          {/each}
-        </ul>
-      </div>
+          </ul>
+        </div>
+      {:else}
+        <!-- ═══ ORGANIZATION MODE ═══ -->
+        <div>
+          <p class="text-[10px] font-semibold text-ink-subtle uppercase tracking-widest px-3 mb-2">{$_('nav.workspace')}</p>
+          <ul class="space-y-0.5">
+            {#each workspaceLinks as link}
+              <li>
+                <a href={link.href} class="nav-item" class:is-active={isActiveOrg(link.href)}>
+                  {@html icons[link.iconKey]}
+                  <span>{$_(link.labelKey)}</span>
+                  {#if link.hint}
+                    <span class="ml-auto text-[9px] font-medium text-ink-subtle">{$_('nav.allProjects').toLowerCase()}</span>
+                  {/if}
+                </a>
+              </li>
+            {/each}
+          </ul>
+        </div>
+
+        <div>
+          <p class="text-[10px] font-semibold text-ink-subtle uppercase tracking-widest px-3 mb-2">{$_('nav.rollups')}</p>
+          <ul class="space-y-0.5">
+            {#each rollupLinks as link}
+              <li>
+                <a href={link.href} class="nav-item" class:is-active={isActiveOrg(link.href)}>
+                  {@html icons[link.iconKey]}
+                  <span>{$_(link.labelKey)}</span>
+                </a>
+              </li>
+            {/each}
+          </ul>
+        </div>
+
+        <div>
+          <p class="text-[10px] font-semibold text-ink-subtle uppercase tracking-widest px-3 mb-2">{$_('common.settings')}</p>
+          <ul class="space-y-0.5">
+            {#each orgSettingsLinks as link}
+              <li>
+                <a href={link.href} class="nav-item" class:is-active={isActiveOrg(link.href)}>
+                  {@html icons[link.iconKey]}
+                  <span>{$_(link.labelKey)}</span>
+                </a>
+              </li>
+            {/each}
+          </ul>
+        </div>
+      {/if}
 
       <!-- User profile + logout -->
       {#if $currentUser}
         <div class="px-3 py-2 border-t border-border">
           <div class="flex items-center gap-2.5 px-3 py-2">
-            <div class="w-8 h-8 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center text-white font-semibold text-xs flex-shrink-0 select-none">
+            <div class="w-8 h-8 bg-gradient-to-br from-iris-400 to-iris-600 rounded-full flex items-center justify-center text-white font-semibold text-xs flex-shrink-0 select-none">
               {$currentUser.name?.charAt(0).toUpperCase() || 'U'}
             </div>
             <div class="flex-1 min-w-0">
@@ -383,13 +436,11 @@
             </div>
             <button
               on:click={logout}
-              class="p-1.5 rounded-lg text-ink-subtle hover:text-red-500 hover:bg-red-50 transition-colors duration-150 cursor-pointer flex-shrink-0"
+              class="p-1.5 rounded-lg text-ink-subtle hover:text-bad hover:bg-bad/10 transition-colors duration-150 cursor-pointer flex-shrink-0"
               title={$_('auth.logout')}
               aria-label={$_('auth.logout')}
             >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
             </button>
           </div>
         </div>
@@ -397,10 +448,7 @@
 
       <!-- Theme Toggle + Help -->
       <div class="px-3 py-2 border-t border-border">
-        <button
-          on:click={toggleTheme}
-          class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors duration-150 w-full text-ink-muted hover:bg-surface-2 hover:text-gray-900 cursor-pointer"
-        >
+        <button on:click={toggleTheme} class="nav-item w-full">
           {#if isDark}
             <svg class="w-[18px] h-[18px] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" /></svg>
             <span>{$_('nav.lightMode') || 'Light Mode'}</span>
@@ -409,9 +457,7 @@
             <span>{$_('nav.darkMode') || 'Dark Mode'}</span>
           {/if}
         </button>
-        <a href="/help"
-          class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors duration-150
-            {$page.url.pathname.startsWith('/help') ? 'bg-brand-subtle/10 text-brand font-medium' : 'text-ink-muted hover:bg-surface-2 hover:text-gray-900'}">
+        <a href="/help" class="nav-item" class:is-active={currentPath.startsWith('/help')}>
           {@html icons.questionmark}
           <span>{$_('nav.help')}</span>
         </a>
@@ -424,29 +470,17 @@
 {#if leavingOrg}
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
-  <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => (leavingOrg = null)}>
-    <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-sm p-6">
-      <div class="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center mb-4">
-        <svg class="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
-        </svg>
+  <div class="modal-overlay" on:click|self={() => (leavingOrg = null)}>
+    <div class="modal-panel max-w-sm p-6">
+      <div class="w-12 h-12 bg-bad/10 rounded-xl flex items-center justify-center mb-4">
+        <svg class="w-6 h-6 text-bad" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" /></svg>
       </div>
       <h2 class="text-lg font-semibold text-ink mb-1">{$_('settings.leaveTeamConfirm')}</h2>
       <p class="text-sm text-ink-muted mb-1 font-medium">{leavingOrg.organization?.name}</p>
       <p class="text-sm text-ink-muted mb-6">{$_('settings.leaveTeamDesc')}</p>
       <div class="flex gap-3">
-        <button
-          on:click={leaveOrg}
-          class="flex-1 bg-red-600 text-white py-2.5 rounded-lg font-medium text-sm hover:bg-red-700 transition-colors duration-150 cursor-pointer"
-        >
-          {$_('settings.leaveTeam')}
-        </button>
-        <button
-          on:click={() => (leavingOrg = null)}
-          class="flex-1 border border-border rounded-lg text-sm py-2.5 font-medium hover:bg-surface-2 transition-colors duration-150 cursor-pointer"
-        >
-          {$_('common.cancel')}
-        </button>
+        <button on:click={leaveOrg} class="btn btn-danger flex-1">{$_('settings.leaveTeam')}</button>
+        <button on:click={() => (leavingOrg = null)} class="btn btn-secondary flex-1">{$_('common.cancel')}</button>
       </div>
     </div>
   </div>

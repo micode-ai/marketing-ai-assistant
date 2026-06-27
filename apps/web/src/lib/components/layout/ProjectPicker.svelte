@@ -70,8 +70,8 @@
     class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-150 cursor-pointer max-w-[220px]
       {!loaded ? 'bg-surface-2 text-ink-subtle animate-pulse' :
        current
-        ? 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100'
-        : 'bg-surface-2 text-ink-muted hover:bg-gray-200'}"
+        ? 'bg-brand-subtle/15 text-brand-subtle-fg hover:bg-brand-subtle/25'
+        : 'bg-surface-2 text-ink-muted hover:bg-surface-2'}"
     title={$_('header.switchContext')}
   >
     {#if !loaded}
@@ -105,7 +105,7 @@
         </svg>
         <span>{currentOrg?.name || $_('header.orgContext')}</span>
         {#if !current}
-          <svg class="w-4 h-4 ml-auto text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <svg class="w-4 h-4 ml-auto text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
           </svg>
         {/if}
@@ -116,7 +116,7 @@
       {#if projects.length === 0}
         <a
           href="/dashboard"
-          class="block px-3 py-2 text-sm text-ink-subtle hover:text-indigo-600 transition-colors"
+          class="block px-3 py-2 text-sm text-ink-subtle hover:text-brand transition-colors"
           on:click={() => open = false}
         >
           {$_('header.noProjects')}
@@ -126,14 +126,14 @@
           <button
             on:click|stopPropagation={() => selectProject(project)}
             class="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-left transition-colors cursor-pointer
-              {current?.id === project.id ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-ink-muted hover:bg-surface-2'}"
+              {current?.id === project.id ? 'bg-brand-subtle/15 text-brand-subtle-fg font-medium' : 'text-ink-muted hover:bg-surface-2'}"
           >
-            <svg class="w-4 h-4 flex-shrink-0 {current?.id === project.id ? 'text-indigo-500' : 'text-ink-subtle'}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+            <svg class="w-4 h-4 flex-shrink-0 {current?.id === project.id ? 'text-brand' : 'text-ink-subtle'}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
               <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" />
             </svg>
             <span class="truncate">{project.name}</span>
             {#if current?.id === project.id}
-              <svg class="w-4 h-4 ml-auto text-indigo-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <svg class="w-4 h-4 ml-auto text-brand flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
               </svg>
             {/if}
