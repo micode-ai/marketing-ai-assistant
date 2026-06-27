@@ -175,32 +175,32 @@
     {
       href: 'content', title: 'content.title', descKey: 'projects.quickActionDescs.content',
       icon: `<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>`,
-      color: 'text-violet-600 bg-violet-50',
+      color: 'text-violet-500 bg-violet-500/12',
     },
     {
       href: 'campaigns', title: 'projects.campaigns', descKey: 'projects.quickActionDescs.campaigns',
       icon: `<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 006.16-12.12A14.98 14.98 0 009.631 8.41m5.96 5.96a14.926 14.926 0 01-5.841 2.58m-.119-8.54a6 6 0 00-7.381 5.84h4.8m2.581-5.84a14.927 14.927 0 00-2.58 5.84m2.699 2.7c-.103.021-.207.041-.311.06a15.09 15.09 0 01-2.448-2.448 14.9 14.9 0 01.06-.312m-2.24 2.39a4.493 4.493 0 00-1.757 4.306 4.493 4.493 0 004.306-1.758M16.5 9a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" /></svg>`,
-      color: 'text-green-600 bg-green-50',
+      color: 'text-green-500 bg-green-500/12',
     },
     {
       href: 'email', title: 'projects.email', descKey: 'projects.quickActionDescs.email',
       icon: `<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" /></svg>`,
-      color: 'text-blue-600 bg-blue-50',
+      color: 'text-blue-500 bg-blue-500/12',
     },
     {
       href: 'checklists', title: 'projects.checklists', descKey: 'projects.quickActionDescs.checklists',
       icon: `<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
-      color: 'text-orange-600 bg-orange-50',
+      color: 'text-orange-500 bg-orange-500/12',
     },
     {
       href: 'documents', title: 'projects.documents', descKey: 'projects.quickActionDescs.documents',
       icon: `<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>`,
-      color: 'text-slate-600 bg-slate-50',
+      color: 'text-slate-500 bg-slate-500/12',
     },
     {
       href: 'analytics', title: 'projects.analytics', descKey: 'projects.quickActionDescs.analytics',
       icon: `<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" /></svg>`,
-      color: 'text-pink-600 bg-pink-50',
+      color: 'text-pink-500 bg-pink-500/12',
     },
   ];
 
@@ -216,7 +216,7 @@
   {#if $currentProjectStore}
     <div class="flex flex-col sm:flex-row items-start justify-between gap-4 mb-6">
       <div class="flex items-center gap-4">
-        <div class="w-14 h-14 bg-gradient-to-br from-primary-400 to-primary-700 rounded-2xl flex items-center justify-center text-white font-bold text-2xl flex-shrink-0">
+        <div class="w-14 h-14 bg-gradient-to-br from-iris-400 to-iris-700 rounded-2xl flex items-center justify-center text-white font-bold text-2xl flex-shrink-0">
           {$currentProjectStore.name.charAt(0)}
         </div>
         <div>
@@ -241,26 +241,35 @@
       </div>
     </div>
 
-    <!-- Stats -->
+    <!-- Stats — lead metric as a confident color block, rest as token KPIs -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-      {#each stats as stat}
-        <div class="bg-surface rounded-xl border border-border p-4 border-t-4
-          {stat.color.includes('blue') ? 'border-t-blue-400' :
-           stat.color.includes('green') ? 'border-t-green-400' :
-           stat.color.includes('purple') ? 'border-t-purple-400' : 'border-t-orange-400'}">
-          <div class="flex items-center justify-between mb-3">
-            <div class="w-9 h-9 {stat.color} rounded-lg flex items-center justify-center flex-shrink-0">
-              {@html stat.icon}
+      {#each stats as stat, i}
+        {#if i === 0}
+          <div class="kpi-feature relative overflow-hidden">
+            <div class="absolute -right-7 -top-7 w-28 h-28 rounded-full bg-white/10 blur-xl"></div>
+            <div class="relative">
+              <div class="w-9 h-9 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0 text-white mb-3">
+                {@html stat.icon}
+              </div>
+              <div class="text-3xl font-bold leading-none">{loading ? '...' : stat.value}</div>
+              <div class="text-xs text-white/80 mt-1.5">{$_(stat.labelKey)}</div>
             </div>
           </div>
-          <div class="text-2xl font-bold text-ink">{loading ? '...' : stat.value}</div>
-          <div class="text-xs text-ink-muted mt-1">{$_(stat.labelKey)}</div>
-        </div>
+        {:else}
+          <div class="kpi flex flex-col">
+            <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 mb-3
+              {i === 1 ? 'bg-ok/12 text-ok' : i === 2 ? 'bg-brand-subtle/12 text-brand' : 'bg-warn/12 text-warn'}">
+              {@html stat.icon}
+            </div>
+            <div class="text-2xl font-bold text-ink">{loading ? '...' : stat.value}</div>
+            <div class="text-xs text-ink-muted mt-1">{$_(stat.labelKey)}</div>
+          </div>
+        {/if}
       {/each}
     </div>
 
     <!-- AI Chat CTA -->
-    <div class="bg-gradient-to-r from-primary-600 to-violet-600 rounded-xl p-5 mb-8 text-white">
+    <div class="bg-gradient-to-r from-iris-600 to-iris-400 rounded-xl p-5 mb-8 text-white">
       <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 bg-surface/20 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -270,7 +279,7 @@
           </div>
           <div>
             <h3 class="font-semibold text-base">{$_('projects.askAI')}</h3>
-            <p class="text-primary-100 text-sm mt-0.5">{$_('projects.askAIDesc')}</p>
+            <p class="text-white/80 text-sm mt-0.5">{$_('projects.askAIDesc')}</p>
           </div>
         </div>
         <a href="/ai-chat" class="bg-surface/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-150 backdrop-blur-sm whitespace-nowrap flex-shrink-0 cursor-pointer">
@@ -305,7 +314,7 @@
             <div class="flex items-center gap-3 p-3 rounded-lg {item.done ? 'bg-surface-2' : 'border border-border'}">
               <!-- Circle check indicator -->
               <div class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0
-                {item.done ? 'bg-green-100 text-green-600' : 'border-2 border-border'}">
+                {item.done ? 'bg-ok/15 text-ok' : 'border-2 border-border'}">
                 {#if item.done}
                   <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
@@ -323,7 +332,7 @@
               {#if !item.done}
                 <a
                   href={item.external ? item.href : `/projects/${projectId}/${item.href}`}
-                  class="text-xs font-medium text-brand hover:text-primary-700 whitespace-nowrap cursor-pointer transition-colors duration-150"
+                  class="text-xs font-medium text-brand hover:text-brand whitespace-nowrap cursor-pointer transition-colors duration-150"
                 >
                   {$_('projects.gs.doItNow')} →
                 </a>
@@ -340,12 +349,12 @@
       {#each quickActions as action}
         <a
           href="/projects/{projectId}/{action.href}"
-          class="bg-surface rounded-xl border border-border p-5 hover:shadow-md hover:border-primary-200 transition-all duration-150 group cursor-pointer"
+          class="bg-surface rounded-xl border border-border p-5 hover:border-brand/40 hover:shadow-glow transition-all duration-150 group cursor-pointer"
         >
           <div class="w-11 h-11 {action.color} rounded-xl flex items-center justify-center mb-3 transition-colors duration-150">
             {@html action.icon}
           </div>
-          <h3 class="font-semibold text-ink group-hover:text-primary-700 transition-colors duration-150">{$_(action.title)}</h3>
+          <h3 class="font-semibold text-ink group-hover:text-brand transition-colors duration-150">{$_(action.title)}</h3>
           <p class="text-sm text-ink-muted mt-1">{$_(action.descKey)}</p>
         </a>
       {/each}
@@ -389,16 +398,16 @@
       <div class="p-6">
         <div class="flex items-center justify-between mb-3">
           <p class="text-sm font-medium text-ink">{$_('projectExport.selectSections')}</p>
-          <button on:click={toggleAllExportSections} class="text-xs text-brand hover:text-primary-700 cursor-pointer">
+          <button on:click={toggleAllExportSections} class="text-xs text-brand hover:text-brand cursor-pointer">
             {selectedExportSections.size === exportSections.length ? $_('projectExport.deselectAll') : $_('projectExport.selectAll')}
           </button>
         </div>
         <div class="space-y-2">
           {#each exportSections as section}
             <label class="flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors duration-150
-              {selectedExportSections.has(section.key) ? 'border-primary-200 bg-brand-subtle/10' : 'border-border hover:bg-surface-2'}">
+              {selectedExportSections.has(section.key) ? 'border-brand/40 bg-brand-subtle/10' : 'border-border hover:bg-surface-2'}">
               <input type="checkbox" checked={selectedExportSections.has(section.key)} on:change={() => toggleExportSection(section.key)}
-                class="w-4 h-4 text-brand rounded border-border focus:ring-primary-500" />
+                class="w-4 h-4 text-brand rounded border-border focus:ring-ring" />
               <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-ink-subtle" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                 <path stroke-linecap="round" stroke-linejoin="round" d={section.iconPath} />
               </svg>
