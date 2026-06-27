@@ -111,17 +111,25 @@ export class MetaOAuthController {
       if (parsed.platform === 'THREADS') {
         const short = await this.metaService.exchangeThreadsCode(code, this.redirectUri());
         const long = await this.metaService.getThreadsLongLivedToken(short.access_token);
-        const user = await this.metaService.getThreadsUser(long.access_token);
-        if (!user) return fail('no_threads_account');
+        // The token-exchange user_id is the authoritative Threads user id; /me is
+        // only used for the display name/avatar and can be flaky, so don't abort on it.
+        let user: { threadsUserId: string; username: string; profilePictureUrl?: string } | null = null;
+        try {
+          user = await this.metaService.getThreadsUser(long.access_token);
+        } catch (e: any) {
+          console.warn('[threads.callback] getThreadsUser failed, using token user_id', e?.message || e);
+        }
+        const threadsUserId = user?.threadsUserId || short.user_id;
+        if (!threadsUserId) return fail('no_threads_account');
 
         await this.socialService.upsertOAuthAccount(parsed.organizationId, {
           platform: 'THREADS',
-          accountId: user.threadsUserId,
-          accountName: user.username,
-          profileImageUrl: user.profilePictureUrl,
+          accountId: threadsUserId,
+          accountName: user?.username || `threads_${threadsUserId}`,
+          profileImageUrl: user?.profilePictureUrl,
           tokens: {
             accessToken: long.access_token,
-            threadsUserId: user.threadsUserId,
+            threadsUserId,
           },
           scopes: ['threads_basic', 'threads_content_publish'],
           expiresAt: long.expires_in ? new Date(Date.now() + long.expires_in * 1000) : null,
