@@ -194,4 +194,42 @@ describe('MetaOAuthService (Instagram Login)', () => {
       await expect(service.getThreadsUser('t')).rejects.toThrow(/Threads \/me failed/);
     });
   });
+
+  it('refreshInstagramToken GETs graph.instagram.com with ig_refresh_token and returns the body', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ access_token: 'new-ig-tok', expires_in: 5184000 }),
+    }) as any;
+
+    const result = await service.refreshInstagramToken('old-ig-tok');
+    expect(result).toEqual({ access_token: 'new-ig-tok', expires_in: 5184000 });
+    const calledUrl = (global.fetch as jest.Mock).mock.calls[0][0] as string;
+    expect(calledUrl).toContain('https://graph.instagram.com/refresh_access_token');
+    expect(calledUrl).toContain('grant_type=ig_refresh_token');
+    expect(calledUrl).toContain('access_token=old-ig-tok');
+  });
+
+  it('refreshInstagramToken throws on a non-ok response', async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: false, text: async () => 'expired' }) as any;
+    await expect(service.refreshInstagramToken('x')).rejects.toThrow(/Instagram token refresh failed/);
+  });
+
+  it('refreshThreadsToken GETs graph.threads.net with th_refresh_token and returns the body', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ access_token: 'new-th-tok', expires_in: 5184000 }),
+    }) as any;
+
+    const result = await service.refreshThreadsToken('old-th-tok');
+    expect(result).toEqual({ access_token: 'new-th-tok', expires_in: 5184000 });
+    const calledUrl = (global.fetch as jest.Mock).mock.calls[0][0] as string;
+    expect(calledUrl).toContain('https://graph.threads.net/refresh_access_token');
+    expect(calledUrl).toContain('grant_type=th_refresh_token');
+    expect(calledUrl).toContain('access_token=old-th-tok');
+  });
+
+  it('refreshThreadsToken throws on a non-ok response', async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: false, text: async () => 'expired' }) as any;
+    await expect(service.refreshThreadsToken('x')).rejects.toThrow(/Threads token refresh failed/);
+  });
 });
