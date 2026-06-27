@@ -139,7 +139,7 @@
 <div class="p-6 max-w-7xl mx-auto">
   <!-- Page header -->
   <div class="mb-6">
-    <a href={`/projects/${projectId}/analytics`} class="inline-flex items-center gap-1 text-sm text-ink-muted hover:text-gray-700 mb-2">
+    <a href={`/projects/${projectId}/analytics`} class="inline-flex items-center gap-1 text-sm text-ink-muted hover:text-ink mb-2">
       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
       {$_('gscDetail.back')}
     </a>
@@ -151,7 +151,7 @@
   {#if notConnected}
     <div class="bg-surface rounded-xl border border-border overflow-hidden">
       <div class="flex flex-col items-center justify-center py-14 px-5 text-center">
-        <div class="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mb-4">
+        <div class="w-16 h-16 bg-blue-500/12 rounded-2xl flex items-center justify-center mb-4">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" />
           </svg>
@@ -174,7 +174,7 @@
   {:else if error}
     <div class="bg-surface rounded-xl border border-border overflow-hidden">
       <div class="flex flex-col items-center justify-center py-14 px-5 text-center">
-        <div class="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center mb-3">
+        <div class="w-12 h-12 bg-red-500/12 rounded-xl flex items-center justify-center mb-3">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
           </svg>
@@ -182,7 +182,7 @@
         <p class="text-sm text-ink mb-3">{error}</p>
         <button
           on:click={reload}
-          class="px-4 py-1.5 text-sm font-medium bg-surface-2 hover:bg-gray-200 text-ink rounded-lg transition-colors">
+          class="px-4 py-1.5 text-sm font-medium bg-surface-2 hover:bg-border-strong text-ink rounded-lg transition-colors">
           {$_('seo.searchConsolePanel.retry')}
         </button>
       </div>
@@ -219,7 +219,7 @@
         class="px-4 py-1.5 text-sm font-medium rounded-md transition-colors duration-150
           {activeTableDim === 'query'
             ? 'bg-surface text-ink shadow-sm'
-            : 'text-ink-muted hover:text-gray-700'}">
+            : 'text-ink-muted hover:text-ink'}">
         {$_('gscDetail.tabQueries')}
       </button>
       <button
@@ -227,7 +227,7 @@
         class="px-4 py-1.5 text-sm font-medium rounded-md transition-colors duration-150
           {activeTableDim === 'page'
             ? 'bg-surface text-ink shadow-sm'
-            : 'text-ink-muted hover:text-gray-700'}">
+            : 'text-ink-muted hover:text-ink'}">
         {$_('gscDetail.tabPages')}
       </button>
     </div>

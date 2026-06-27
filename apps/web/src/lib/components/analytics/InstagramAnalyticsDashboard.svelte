@@ -295,7 +295,7 @@
   <!-- No Instagram account linked: keep a quiet inline hint -->
   <!-- self-hides; rendered nothing keeps the analytics page clean -->
 {:else if view === 'reconnect'}
-  <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 flex items-start gap-3">
+  <div class="bg-amber-500/12 border border-amber-500/30 rounded-xl p-4 mb-6 flex items-start gap-3">
     <svg class="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
       <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
     </svg>
@@ -314,7 +314,7 @@
     <!-- Header -->
     <div class="flex items-center justify-between px-5 py-4 border-b border-border">
       <div class="flex items-center gap-3">
-        <div class="w-9 h-9 bg-pink-50 rounded-lg flex items-center justify-center flex-shrink-0">
+        <div class="w-9 h-9 bg-pink-500/12 rounded-lg flex items-center justify-center flex-shrink-0">
           <svg class="w-5 h-5 text-pink-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
             <rect x="3" y="3" width="18" height="18" rx="5" />
             <circle cx="12" cy="12" r="4" />
@@ -348,7 +348,7 @@
           {#each PERIODS as p}
             <button on:click={() => changePeriod(p)} disabled={dataLoading}
               class="px-2.5 py-1 text-xs font-medium rounded-md transition-colors
-                {period === p ? 'bg-surface text-ink shadow-sm' : 'text-ink-muted hover:text-gray-700'}">
+                {period === p ? 'bg-surface text-ink shadow-sm' : 'text-ink-muted hover:text-ink'}">
               {$_(`instagram.period${p}`)}
             </button>
           {/each}
@@ -423,7 +423,7 @@
                             {/if}
                           </td>
                           <td class="px-3 py-2">
-                            <span class="inline-block px-2 py-0.5 text-[10px] font-medium rounded-full bg-pink-50 text-pink-700">{post.mediaType}</span>
+                            <span class="inline-block px-2 py-0.5 text-[10px] font-medium rounded-full bg-pink-500/12 text-pink-700">{post.mediaType}</span>
                           </td>
                           <td class="px-3 py-2 text-right text-ink font-medium">{formatNumber(post.likeCount)}</td>
                           <td class="px-3 py-2 text-right text-ink-muted">{formatNumber(post.commentsCount)}</td>

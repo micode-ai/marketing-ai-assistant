@@ -76,9 +76,9 @@
   // ── Badge maps ─────────────────────────────────────────────────────────
   const statusBadge: Record<string, string> = {
     DRAFT: 'bg-surface-2 text-ink-muted',
-    ACTIVE: 'bg-green-100 text-green-700',
-    PAUSED: 'bg-yellow-100 text-yellow-700',
-    COMPLETED: 'bg-blue-100 text-blue-700',
+    ACTIVE: 'bg-green-500/20 text-green-700',
+    PAUSED: 'bg-yellow-500/20 text-yellow-700',
+    COMPLETED: 'bg-blue-500/20 text-blue-700',
   };
 
   const statusBorderAccent: Record<string, string> = {
@@ -89,10 +89,10 @@
   };
 
   const triggerBadge: Record<string, string> = {
-    SIGNUP: 'bg-green-100 text-green-700',
+    SIGNUP: 'bg-green-500/20 text-green-700',
     MANUAL: 'bg-surface-2 text-ink-muted',
-    EVENT: 'bg-purple-100 text-purple-700',
-    DATE: 'bg-blue-100 text-blue-700',
+    EVENT: 'bg-purple-500/20 text-purple-700',
+    DATE: 'bg-blue-500/20 text-blue-700',
   };
 
   const TRIGGER_TYPES: EmailSequence['triggerType'][] = ['SIGNUP', 'MANUAL', 'EVENT', 'DATE'];
@@ -344,7 +344,7 @@
                     {$_('sequences.stepCount', { values: { count: steps.length } })}
                   </span>
                   {#if enrollments > 0}
-                    <span class="text-xs px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded">
+                    <span class="text-xs px-2 py-0.5 bg-brand-subtle/10 text-brand rounded">
                       {$_('sequences.enrollmentCount', { values: { count: enrollments } })}
                     </span>
                   {/if}
@@ -368,7 +368,7 @@
                 {#if sequence.status === 'DRAFT' || sequence.status === 'PAUSED'}
                   <button
                     on:click={() => activateSequence(sequence.id)}
-                    class="text-xs px-3 py-1.5 border border-green-300 text-green-600 rounded-lg hover:bg-green-50 transition-colors duration-150 cursor-pointer"
+                    class="text-xs px-3 py-1.5 border border-green-300 text-green-600 rounded-lg hover:bg-green-500/12 transition-colors duration-150 cursor-pointer"
                     title={$_('sequences.activate')}
                   >
                     {$_('sequences.activate')}
@@ -376,7 +376,7 @@
                 {:else if sequence.status === 'ACTIVE'}
                   <button
                     on:click={() => pauseSequence(sequence.id)}
-                    class="text-xs px-3 py-1.5 border border-yellow-300 text-yellow-600 rounded-lg hover:bg-yellow-50 transition-colors duration-150 cursor-pointer"
+                    class="text-xs px-3 py-1.5 border border-yellow-300 text-yellow-600 rounded-lg hover:bg-yellow-500/12 transition-colors duration-150 cursor-pointer"
                     title={$_('sequences.pause')}
                   >
                     {$_('sequences.pause')}
@@ -406,7 +406,7 @@
                 <!-- Delete -->
                 <button
                   on:click={() => deletingId = sequence.id}
-                  class="text-xs px-2 py-1.5 border border-red-200 text-red-500 rounded-lg hover:bg-red-50 transition-colors duration-150 cursor-pointer"
+                  class="text-xs px-2 py-1.5 border border-red-500/30 text-red-500 rounded-lg hover:bg-red-500/12 transition-colors duration-150 cursor-pointer"
                   title={$_('sequences.deleteSequence')}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -440,7 +440,7 @@
                           {step.order || i + 1}
                         </div>
                         {#if i < steps.length - 1}
-                          <div class="w-0.5 flex-1 bg-gray-200 my-1 min-h-[24px]"></div>
+                          <div class="w-0.5 flex-1 bg-surface-2 my-1 min-h-[24px]"></div>
                         {/if}
                       </div>
 
@@ -468,7 +468,7 @@
                             <button
                               on:click={() => moveStep(sequence.id, step.id, 'up')}
                               disabled={i === 0}
-                              class="p-1 rounded text-ink-subtle hover:text-gray-600 hover:bg-surface-2 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                              class="p-1 rounded text-ink-subtle hover:text-ink-muted hover:bg-surface-2 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
                               title={$_('sequences.moveUp')}
                             >
                               <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -478,7 +478,7 @@
                             <button
                               on:click={() => moveStep(sequence.id, step.id, 'down')}
                               disabled={i === steps.length - 1}
-                              class="p-1 rounded text-ink-subtle hover:text-gray-600 hover:bg-surface-2 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                              class="p-1 rounded text-ink-subtle hover:text-ink-muted hover:bg-surface-2 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
                               title={$_('sequences.moveDown')}
                             >
                               <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -487,7 +487,7 @@
                             </button>
                             <button
                               on:click={() => deleteStep(sequence.id, step.id)}
-                              class="p-1 rounded text-ink-subtle hover:text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
+                              class="p-1 rounded text-ink-subtle hover:text-red-500 hover:bg-red-500/12 transition-colors cursor-pointer"
                               title={$_('sequences.deleteStep')}
                             >
                               <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -594,8 +594,8 @@
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => addStepSequenceId = null}>
     <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-lg">
       <div class="p-6 border-b border-border flex items-center gap-2.5">
-        <div class="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center flex-shrink-0">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <div class="w-8 h-8 bg-brand-subtle/10 rounded-lg flex items-center justify-center flex-shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
           </svg>
         </div>
@@ -693,7 +693,7 @@
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => deletingId = null}>
     <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-sm">
       <div class="p-6">
-        <div class="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center mb-4">
+        <div class="w-12 h-12 bg-red-500/12 rounded-xl flex items-center justify-center mb-4">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
           </svg>

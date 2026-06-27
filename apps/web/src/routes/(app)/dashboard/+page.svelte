@@ -257,7 +257,7 @@
     <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-md">
       <div class="p-6 border-b border-border">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center">
+          <div class="w-10 h-10 bg-green-500/12 rounded-xl flex items-center justify-center">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
               <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
             </svg>
@@ -287,7 +287,7 @@
             </div>
           {/if}
           {#if importError}
-            <div class="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{importError}</div>
+            <div class="mt-4 p-3 bg-red-500/12 border border-red-500/30 rounded-lg text-sm text-red-700">{importError}</div>
           {/if}
 
         {:else if importStep === 'preview'}
@@ -319,7 +319,7 @@
           </div>
 
           {#if importError}
-            <div class="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{importError}</div>
+            <div class="mt-4 p-3 bg-red-500/12 border border-red-500/30 rounded-lg text-sm text-red-700">{importError}</div>
           {/if}
         {/if}
       </div>

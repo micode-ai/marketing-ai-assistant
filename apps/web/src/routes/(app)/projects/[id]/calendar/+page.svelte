@@ -44,14 +44,14 @@
 
   const statusBadge: Record<string, string> = {
     DRAFT: 'bg-surface-2 text-ink-muted',
-    REVIEW: 'bg-yellow-100 text-yellow-700',
-    APPROVED: 'bg-green-100 text-green-700',
-    PUBLISHED: 'bg-blue-100 text-blue-700',
-    REJECTED: 'bg-red-100 text-red-600',
+    REVIEW: 'bg-yellow-500/20 text-yellow-700',
+    APPROVED: 'bg-green-500/20 text-green-700',
+    PUBLISHED: 'bg-blue-500/20 text-blue-700',
+    REJECTED: 'bg-red-500/20 text-red-600',
   };
 
   const statusDot: Record<string, string> = {
-    DRAFT: 'bg-gray-400',
+    DRAFT: 'bg-ink-subtle',
     REVIEW: 'bg-yellow-400',
     APPROVED: 'bg-green-500',
     PUBLISHED: 'bg-blue-500',
@@ -76,14 +76,14 @@
   };
 
   const campaignColors = [
-    'bg-indigo-50',
-    'bg-emerald-50',
-    'bg-amber-50',
-    'bg-rose-50',
+    'bg-brand-subtle/10',
+    'bg-emerald-500/12',
+    'bg-amber-500/12',
+    'bg-rose-500/12',
   ];
 
   const campaignLegendColors = [
-    'bg-indigo-200',
+    'bg-brand',
     'bg-emerald-200',
     'bg-amber-200',
     'bg-rose-200',
@@ -458,7 +458,7 @@
                   title={content.title}
                 >
                   <span class="w-1.5 h-1.5 rounded-full flex-shrink-0
-                    {statusDot[content.status] || 'bg-gray-400'}"></span>
+                    {statusDot[content.status] || 'bg-ink-subtle'}"></span>
                   <span class="truncate">{content.title}</span>
                 </div>
               {/each}
@@ -582,7 +582,7 @@
             {selectedContent.type.replace('_', ' ')}
           </span>
           {#if selectedContent.platform}
-            <span class="text-xs px-2 py-0.5 bg-blue-50 text-blue-600 rounded">
+            <span class="text-xs px-2 py-0.5 bg-blue-500/12 text-blue-600 rounded">
               {selectedContent.platform}
             </span>
           {/if}
@@ -590,7 +590,7 @@
             {$_(statusLabel[selectedContent.status] || 'content.draft')}
           </span>
           {#if selectedContent.aiGenerated}
-            <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 bg-purple-50 text-purple-600 rounded">
+            <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 bg-purple-500/12 text-purple-600 rounded">
               <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
               </svg>

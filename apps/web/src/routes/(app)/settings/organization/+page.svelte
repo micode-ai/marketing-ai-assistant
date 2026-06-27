@@ -35,8 +35,8 @@
   $: planBadge = org?.plan === 'PRO'
     ? 'bg-primary-100 text-brand'
     : org?.plan === 'ENTERPRISE'
-      ? 'bg-purple-100 text-purple-700'
-      : 'bg-green-100 text-green-700';
+      ? 'bg-purple-500/20 text-purple-700'
+      : 'bg-green-500/20 text-green-700';
 
   async function saveOrg() {
     orgSaving = true;
@@ -96,10 +96,10 @@
       </h2>
 
       {#if orgSuccess}
-        <div class="bg-green-50 border border-green-200 text-green-700 rounded-lg px-3 py-2 text-sm mb-4">{orgSuccess}</div>
+        <div class="bg-green-500/12 border border-green-500/30 text-green-700 rounded-lg px-3 py-2 text-sm mb-4">{orgSuccess}</div>
       {/if}
       {#if orgError}
-        <div class="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-sm mb-4">{orgError}</div>
+        <div class="bg-red-500/12 border border-red-500/30 text-red-700 rounded-lg px-3 py-2 text-sm mb-4">{orgError}</div>
       {/if}
 
       <div class="space-y-4">
@@ -110,7 +110,7 @@
             type="text"
             bind:value={orgForm.name}
             disabled={!isAdmin}
-            class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed"
+            class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-surface-2 disabled:text-ink-muted disabled:cursor-not-allowed"
           />
         </div>
 
@@ -133,7 +133,7 @@
             bind:value={orgForm.logoUrl}
             disabled={!isAdmin}
             placeholder={$_('settings.organizationLogoPlaceholder')}
-            class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed"
+            class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-surface-2 disabled:text-ink-muted disabled:cursor-not-allowed"
           />
           {#if orgForm.logoUrl}
             <div class="mt-2">
@@ -174,10 +174,10 @@
       <p class="text-xs text-ink-muted mb-4">{$_('settings.personalProfileDesc')}</p>
 
       {#if userSuccess}
-        <div class="bg-green-50 border border-green-200 text-green-700 rounded-lg px-3 py-2 text-sm mb-4">{userSuccess}</div>
+        <div class="bg-green-500/12 border border-green-500/30 text-green-700 rounded-lg px-3 py-2 text-sm mb-4">{userSuccess}</div>
       {/if}
       {#if userError}
-        <div class="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-sm mb-4">{userError}</div>
+        <div class="bg-red-500/12 border border-red-500/30 text-red-700 rounded-lg px-3 py-2 text-sm mb-4">{userError}</div>
       {/if}
 
       <div class="space-y-4">
@@ -237,7 +237,7 @@
 
     <!-- Danger Zone -->
     {#if isAdmin}
-      <div class="bg-surface rounded-xl border border-red-200 p-5">
+      <div class="bg-surface rounded-xl border border-red-500/30 p-5">
         <h2 class="text-base font-semibold text-red-600 mb-2 flex items-center gap-2">
           <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />

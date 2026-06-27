@@ -50,7 +50,7 @@
   </div>
 
   {#if error}
-    <div class="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 mb-4 text-sm">{error}</div>
+    <div class="bg-red-500/12 border border-red-500/30 text-red-700 rounded-lg p-3 mb-4 text-sm">{error}</div>
   {/if}
 
   <div class="bg-surface rounded-xl border border-border border-t-4 border-t-primary-500 p-6">
@@ -66,7 +66,7 @@
             <button
               type="button"
               on:click={() => projectType = pt}
-              class="px-3 py-2 text-sm rounded-lg border transition-colors duration-150 cursor-pointer {projectType === pt ? 'border-primary-500 bg-brand-subtle/10 text-brand font-medium' : 'border-border text-ink-muted hover:border-gray-300 hover:bg-surface-2'}"
+              class="px-3 py-2 text-sm rounded-lg border transition-colors duration-150 cursor-pointer {projectType === pt ? 'border-primary-500 bg-brand-subtle/10 text-brand font-medium' : 'border-border text-ink-muted hover:border-border hover:bg-surface-2'}"
             >
               {$_(`projects.types.${pt}`)}
             </button>

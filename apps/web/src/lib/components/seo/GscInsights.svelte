@@ -156,7 +156,7 @@
 
 {:else if error}
   <div class="mt-6 bg-surface rounded-xl border border-border flex flex-col items-center justify-center py-10 px-5 text-center">
-    <div class="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center mb-3">
+    <div class="w-12 h-12 bg-red-500/12 rounded-xl flex items-center justify-center mb-3">
       <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
       </svg>
@@ -164,7 +164,7 @@
     <p class="text-sm text-ink mb-3">{error}</p>
     <button
       on:click={fetchInsights}
-      class="px-4 py-1.5 text-sm font-medium bg-surface-2 hover:bg-gray-200 text-ink rounded-lg transition-colors">
+      class="px-4 py-1.5 text-sm font-medium bg-surface-2 hover:bg-border-strong text-ink rounded-lg transition-colors">
       {$_('seo.searchConsolePanel.retry')}
     </button>
   </div>
@@ -309,7 +309,7 @@
 
           <!-- Gainers -->
           <div>
-            <div class="px-4 py-3 bg-green-50 border-b border-border">
+            <div class="px-4 py-3 bg-green-500/12 border-b border-border">
               <span class="text-xs font-semibold text-green-700 uppercase tracking-wide">{$_('gscDetail.gainers')}</span>
             </div>
             {#if data.moversQueries.gainers.length === 0}
@@ -350,7 +350,7 @@
 
           <!-- Losers -->
           <div>
-            <div class="px-4 py-3 bg-red-50 border-b border-border">
+            <div class="px-4 py-3 bg-red-500/12 border-b border-border">
               <span class="text-xs font-semibold text-red-700 uppercase tracking-wide">{$_('gscDetail.losers')}</span>
             </div>
             {#if data.moversQueries.losers.length === 0}

@@ -13,9 +13,9 @@
 
   const statusBadge: Record<string, string> = {
     draft: 'bg-surface-2 text-ink-muted',
-    scheduled: 'bg-yellow-100 text-yellow-700',
-    sending: 'bg-blue-100 text-blue-700',
-    sent: 'bg-green-100 text-green-700',
+    scheduled: 'bg-yellow-500/20 text-yellow-700',
+    sending: 'bg-blue-500/20 text-blue-700',
+    sent: 'bg-green-500/20 text-green-700',
   };
 
   const statusLabel: Record<string, string> = {
@@ -89,14 +89,14 @@
           <div class="flex items-center gap-1 flex-shrink-0">
             <a
               href={emailHref(item)}
-              class="text-xs px-2 py-1 text-ink-muted hover:text-gray-700 hover:bg-surface-2 rounded cursor-pointer"
+              class="text-xs px-2 py-1 text-ink-muted hover:text-ink hover:bg-surface-2 rounded cursor-pointer"
             >
               {$_('campaigns.detail.open')}
             </a>
             <button
               on:click={() => detach(item.id)}
               disabled={detaching === item.id}
-              class="text-xs px-2 py-1 text-red-500 hover:bg-red-50 rounded cursor-pointer disabled:opacity-50"
+              class="text-xs px-2 py-1 text-red-500 hover:bg-red-500/12 rounded cursor-pointer disabled:opacity-50"
             >
               {$_('campaigns.detail.detach')}
             </button>

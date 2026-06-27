@@ -229,7 +229,7 @@
     <span>{currentOrg?.name || $_('header.orgContext')}</span>
     {#if $currentProjectStore}
       <span class="text-ink-subtle">›</span>
-      <span class="text-indigo-600 dark:text-indigo-400">{$currentProjectStore.name}</span>
+      <span class="text-brand">{$currentProjectStore.name}</span>
     {/if}
     <span class="text-ink-subtle">›</span>
     <span class="text-ink">{$_('nav.orgChecklists')}</span>
@@ -246,7 +246,7 @@
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" /></svg>
         {$_('checklists.generateWithAI')}
       </button>
-      <button on:click={openCreateModal} class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors cursor-pointer">
+      <button on:click={openCreateModal} class="inline-flex items-center gap-2 px-4 py-2 bg-brand text-white text-sm font-medium rounded-lg hover:brightness-110 transition-colors cursor-pointer">
         + {$_('checklists.createManual')}
       </button>
     </div>
@@ -254,7 +254,7 @@
 
   {#if loading}
     <div class="flex justify-center py-12">
-      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-brand"></div>
     </div>
   {:else if items.length === 0}
     <div class="text-center py-12 text-ink-muted">
@@ -268,7 +268,7 @@
         <!-- svelte-ignore a11y-no-static-element-interactions -->
         <div
           on:click={() => { if (item.projectId) goto(`/projects/${item.projectId}/checklists`); }}
-          class="block bg-surface rounded-lg border border-border p-4 hover:border-indigo-300 dark:hover:border-indigo-600 hover:shadow-sm transition-all cursor-pointer">
+          class="block bg-surface rounded-lg border border-border p-4 hover:border-brand/40 hover:shadow-sm transition-all cursor-pointer">
           <div class="flex items-center justify-between">
             <div class="min-w-0 flex-1">
               <h3 class="font-medium text-ink">{item.name}</h3>
@@ -282,13 +282,13 @@
                 {@const total = item._count?.items || item.items?.length || 0}
                 {@const done = item.items?.filter((i) => i.isCompleted).length || 0}
                 <div class="flex items-center gap-1.5">
-                  <div class="w-16 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                  <div class="w-16 h-1.5 bg-surface-2 rounded-full overflow-hidden">
                     <div class="h-full bg-green-500 rounded-full" style="width: {total > 0 ? Math.round(done / total * 100) : 0}%"></div>
                   </div>
                   <span class="text-xs text-ink-subtle whitespace-nowrap">{done}/{total}</span>
                 </div>
               {/if}
-              <span class="text-xs px-2 py-1 rounded-full whitespace-nowrap {item.scope === 'ORGANIZATION' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'}">
+              <span class="text-xs px-2 py-1 rounded-full whitespace-nowrap {item.scope === 'ORGANIZATION' ? 'bg-purple-500/20 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' : 'bg-blue-500/20 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'}">
                 {item.scope === 'ORGANIZATION' ? (currentOrg?.name || 'Org') : (item.project?.name || $_('org.scopeProject'))}
               </span>
             </div>
@@ -328,8 +328,8 @@
       <textarea bind:value={createForm.description} rows="2" class="w-full bg-surface-2 border border-border rounded-lg px-3 py-2 text-ink"></textarea>
     </div>
     <div class="flex gap-3 justify-end">
-      <button on:click={() => showCreateModal = false} class="px-4 py-2 text-ink-muted hover:text-gray-700 cursor-pointer">{$_('common.cancel')}</button>
-      <button on:click={createChecklist} disabled={creating || !createForm.name.trim()} class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 cursor-pointer">
+      <button on:click={() => showCreateModal = false} class="px-4 py-2 text-ink-muted hover:text-ink cursor-pointer">{$_('common.cancel')}</button>
+      <button on:click={createChecklist} disabled={creating || !createForm.name.trim()} class="px-4 py-2 bg-brand text-white rounded-lg hover:brightness-110 disabled:opacity-50 cursor-pointer">
         {creating ? $_('common.loading') : $_('common.create')}
       </button>
     </div>
@@ -363,7 +363,7 @@
     </div>
 
     {#if aiStatus}
-      <div class="mb-4 p-3 rounded-lg {aiStatus.startsWith($_('common.error')) ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400' : 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400'} text-sm">
+      <div class="mb-4 p-3 rounded-lg {aiStatus.startsWith($_('common.error')) ? 'bg-red-500/12 dark:bg-red-900/20 text-red-600 dark:text-red-400' : 'bg-brand-subtle/10 text-brand'} text-sm">
         {#if aiGenerating}
           <div class="flex items-center gap-2">
             <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
@@ -376,8 +376,8 @@
     {/if}
 
     <div class="flex gap-3 justify-end">
-      <button on:click={() => showAIModal = false} disabled={aiGenerating} class="px-4 py-2 text-ink-muted hover:text-gray-700 cursor-pointer disabled:opacity-50">{$_('common.cancel')}</button>
-      <button on:click={generateWithAI} disabled={aiGenerating || !aiForm.projectId} class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 cursor-pointer">
+      <button on:click={() => showAIModal = false} disabled={aiGenerating} class="px-4 py-2 text-ink-muted hover:text-ink cursor-pointer disabled:opacity-50">{$_('common.cancel')}</button>
+      <button on:click={generateWithAI} disabled={aiGenerating || !aiForm.projectId} class="px-4 py-2 bg-brand text-white rounded-lg hover:brightness-110 disabled:opacity-50 cursor-pointer">
         {aiGenerating ? $_('common.loading') : $_('checklists.generateWithAI')}
       </button>
     </div>
@@ -403,11 +403,11 @@
     </div>
 
     <div class="mb-4">
-      <input type="file" accept=".md" on:change={handleFileUpload} class="block w-full text-sm text-ink-muted file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 dark:file:bg-indigo-900/30 dark:file:text-indigo-300 cursor-pointer" />
+      <input type="file" accept=".md" on:change={handleFileUpload} class="block w-full text-sm text-ink-muted file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-brand-subtle/12 file:text-brand hover:file:bg-brand-subtle/12 cursor-pointer" />
     </div>
 
     {#if importError}
-      <div class="mb-4 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm">{importError}</div>
+      <div class="mb-4 p-3 rounded-lg bg-red-500/12 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm">{importError}</div>
     {/if}
 
     {#if importParsed}
@@ -418,8 +418,8 @@
     {/if}
 
     <div class="flex gap-3 justify-end">
-      <button on:click={() => showImportModal = false} class="px-4 py-2 text-ink-muted hover:text-gray-700 cursor-pointer">{$_('common.cancel')}</button>
-      <button on:click={importChecklist} disabled={importing || !importParsed} class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 cursor-pointer">
+      <button on:click={() => showImportModal = false} class="px-4 py-2 text-ink-muted hover:text-ink cursor-pointer">{$_('common.cancel')}</button>
+      <button on:click={importChecklist} disabled={importing || !importParsed} class="px-4 py-2 bg-brand text-white rounded-lg hover:brightness-110 disabled:opacity-50 cursor-pointer">
         {importing ? $_('common.loading') : $_('checklists.importConfirm')}
       </button>
     </div>

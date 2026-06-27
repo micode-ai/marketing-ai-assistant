@@ -644,7 +644,7 @@
     </div>
 
     {#if gscSuccess}
-      <div class="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700 flex items-center gap-2">
+      <div class="mb-4 p-3 bg-green-500/12 border border-green-500/30 rounded-lg text-sm text-green-700 flex items-center gap-2">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
         </svg>
@@ -652,7 +652,7 @@
       </div>
     {/if}
     {#if gscError}
-      <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 flex items-center gap-2">
+      <div class="mb-4 p-3 bg-red-500/12 border border-red-500/30 rounded-lg text-sm text-red-700 flex items-center gap-2">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
         </svg>
@@ -682,7 +682,7 @@
           {#if gscSitesLoading}
             <div class="h-10 bg-surface-2 rounded-lg animate-pulse"></div>
           {:else if gscSites.length === 0}
-            <div class="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800">
+            <div class="p-3 bg-amber-500/12 border border-amber-500/30 rounded-lg text-xs text-amber-800">
               No verified properties found in this Google account. Add and verify your site in <a href="https://search.google.com/search-console" target="_blank" rel="noopener" class="underline">Google Search Console</a>, then reconnect.
             </div>
           {:else}
@@ -714,7 +714,7 @@
         <button
           on:click={disconnectGsc}
           disabled={gscDisconnecting}
-          class="px-4 py-2 text-red-600 border border-red-200 rounded-lg text-sm font-medium hover:bg-red-50 transition-colors duration-150 cursor-pointer disabled:opacity-50"
+          class="px-4 py-2 text-red-600 border border-red-500/30 rounded-lg text-sm font-medium hover:bg-red-500/12 transition-colors duration-150 cursor-pointer disabled:opacity-50"
         >
           {gscDisconnecting ? $_('common.loading') : $_('seo.gscConfig.disconnect')}
         </button>
@@ -723,7 +723,7 @@
       <!-- Not connected state -->
       <div class="space-y-3">
         <div class="flex items-center gap-2">
-          <div class="w-3 h-3 rounded-full bg-gray-300"></div>
+          <div class="w-3 h-3 rounded-full bg-border-strong"></div>
           <span class="text-sm text-ink-muted">{$_('common.notConnected') || 'Not connected'}</span>
         </div>
         <button
@@ -755,7 +755,7 @@
 
       <!-- Success / Error banners -->
       {#if gpSuccess}
-        <div class="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700 flex items-center gap-2">
+        <div class="mb-4 p-3 bg-green-500/12 border border-green-500/30 rounded-lg text-sm text-green-700 flex items-center gap-2">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
           </svg>
@@ -763,7 +763,7 @@
         </div>
       {/if}
       {#if gpError}
-        <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 flex items-center gap-2">
+        <div class="mb-4 p-3 bg-red-500/12 border border-red-500/30 rounded-lg text-sm text-red-700 flex items-center gap-2">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
           </svg>
@@ -875,7 +875,7 @@
             </button>
             <button
               on:click={() => { showDisconnectConfirm = true; }}
-              class="px-4 py-2 text-red-600 border border-red-200 rounded-lg text-sm font-medium hover:bg-red-50 transition-colors duration-150 cursor-pointer"
+              class="px-4 py-2 text-red-600 border border-red-500/30 rounded-lg text-sm font-medium hover:bg-red-500/12 transition-colors duration-150 cursor-pointer"
             >
               {$_('googlePlay.connection.disconnect')}
             </button>
@@ -913,7 +913,7 @@
         <!-- Not connected state -->
         <div class="space-y-4">
           <div class="flex items-center gap-2 mb-2">
-            <div class="w-3 h-3 rounded-full bg-gray-300"></div>
+            <div class="w-3 h-3 rounded-full bg-border-strong"></div>
             <span class="text-sm text-ink-muted">{$_('googlePlay.connection.disconnected')}</span>
           </div>
 

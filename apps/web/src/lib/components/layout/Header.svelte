@@ -59,7 +59,7 @@
         <!-- Logout — red hover signals destructive action -->
         <button
           on:click={logout}
-          class="p-1.5 rounded-lg text-ink-subtle hover:text-red-500 hover:bg-red-50 transition-colors duration-150 cursor-pointer"
+          class="p-1.5 rounded-lg text-ink-subtle hover:text-red-500 hover:bg-red-500/12 transition-colors duration-150 cursor-pointer"
           title={$_('auth.logout')}
           aria-label={$_('auth.logout')}
         >

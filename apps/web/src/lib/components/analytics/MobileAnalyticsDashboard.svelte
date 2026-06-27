@@ -157,7 +157,7 @@
 {#if !status?.connected}
   <!-- Not connected banner -->
   <div class="flex flex-col items-center justify-center py-20 text-center">
-    <div class="w-20 h-20 bg-green-50 rounded-2xl flex items-center justify-center mb-6">
+    <div class="w-20 h-20 bg-green-500/12 rounded-2xl flex items-center justify-center mb-6">
       <svg class="w-10 h-10 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
         <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
       </svg>
@@ -178,7 +178,7 @@
       <div class="flex items-center gap-3">
         <h1 class="text-2xl font-bold text-ink">{$_('googlePlay.title')}</h1>
         {#if syncing}
-          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 text-blue-600 rounded-full text-xs font-medium">
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-500/12 text-blue-600 rounded-full text-xs font-medium">
             <svg class="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -218,7 +218,7 @@
         {#each [7, 30, 90] as period}
           <button on:click={() => switchPeriod(period)}
             class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-150 cursor-pointer
-              {selectedPeriod === period ? 'bg-surface text-ink shadow-sm' : 'text-ink-muted hover:text-gray-700'}">
+              {selectedPeriod === period ? 'bg-surface text-ink shadow-sm' : 'text-ink-muted hover:text-ink'}">
             {$_('analytics.period' + period)}
           </button>
         {/each}
@@ -231,7 +231,7 @@
     {#each tabs as tab}
       <button on:click={() => switchTab(tab.id)}
         class="px-4 py-2.5 text-sm font-medium border-b-2 transition-colors duration-150 -mb-px cursor-pointer whitespace-nowrap
-          {activeTab === tab.id ? 'border-primary-600 text-brand' : 'border-transparent text-ink-muted hover:text-gray-700'}">
+          {activeTab === tab.id ? 'border-primary-600 text-brand' : 'border-transparent text-ink-muted hover:text-ink'}">
         {$_(tab.labelKey)}
       </button>
     {/each}
@@ -240,9 +240,9 @@
   {#if loading}
     <div class="animate-pulse space-y-6">
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {#each Array(4) as _}<div class="bg-gray-200 rounded-xl h-28"></div>{/each}
+        {#each Array(4) as _}<div class="bg-surface-2 rounded-xl h-28"></div>{/each}
       </div>
-      <div class="bg-gray-200 rounded-xl h-80"></div>
+      <div class="bg-surface-2 rounded-xl h-80"></div>
     </div>
   {:else if activeTab === 'overview'}
     {#if hasGcsBucket}
