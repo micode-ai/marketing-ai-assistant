@@ -587,7 +587,7 @@ export class SocialService {
   }
 
   private async publishToInstagram(content: any, tokens: any) {
-    const GRAPH = 'https://graph.facebook.com/v21.0';
+    const GRAPH = 'https://graph.instagram.com';
     const igUserId = tokens.igUserId;
     const token = tokens.accessToken;
     if (!igUserId) throw new Error('Instagram account not fully connected (missing igUserId)');
@@ -636,7 +636,7 @@ export class SocialService {
   }
 
   private async waitForContainer(creationId: string, token: string, maxAttempts = 20, delayMs = 3000): Promise<void> {
-    const GRAPH = 'https://graph.facebook.com/v21.0';
+    const GRAPH = 'https://graph.instagram.com';
     for (let i = 0; i < maxAttempts; i++) {
       const r = await axios.get(`${GRAPH}/${creationId}`, { params: { fields: 'status_code', access_token: token } });
       const status = r.data?.status_code;
