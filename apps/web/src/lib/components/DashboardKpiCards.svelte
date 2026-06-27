@@ -70,8 +70,8 @@
   }
 
   function trendClass(trend: string | undefined): string {
-    if (trend === 'up') return 'text-green-600';
-    if (trend === 'down') return 'text-red-600';
+    if (trend === 'up') return 'text-ok';
+    if (trend === 'down') return 'text-bad';
     return 'text-ink-subtle';
   }
 
@@ -91,10 +91,10 @@
   <!-- KPI block -->
   <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
     {#each [
-      { label: $_('dashboard.kpiTotalContent'), value: summary?.contentCountAll, icon: kpiIconContent, bg: 'bg-blue-50', fg: 'text-blue-600' },
-      { label: $_('dashboard.kpiCampaigns'), value: summary?.campaignCount, icon: kpiIconCampaign, bg: 'bg-amber-50', fg: 'text-amber-600' },
-      { label: $_('dashboard.kpiSubscribers'), value: summary?.subscriberCount, icon: kpiIconSubs, bg: 'bg-emerald-50', fg: 'text-emerald-600' },
-      { label: $_('dashboard.kpiSocialAccounts'), value: summary?.socialAccountCount, icon: kpiIconSocial, bg: 'bg-violet-50', fg: 'text-violet-600' },
+      { label: $_('dashboard.kpiTotalContent'), value: summary?.contentCountAll, icon: kpiIconContent, bg: 'bg-brand-subtle/12', fg: 'text-brand' },
+      { label: $_('dashboard.kpiCampaigns'), value: summary?.campaignCount, icon: kpiIconCampaign, bg: 'bg-warn/12', fg: 'text-warn' },
+      { label: $_('dashboard.kpiSubscribers'), value: summary?.subscriberCount, icon: kpiIconSubs, bg: 'bg-ok/12', fg: 'text-ok' },
+      { label: $_('dashboard.kpiSocialAccounts'), value: summary?.socialAccountCount, icon: kpiIconSocial, bg: 'bg-brand-subtle/12', fg: 'text-brand-subtle-fg' },
     ] as card}
       <div class="bg-surface border border-border rounded-xl p-4 flex items-center gap-3">
         <div class="w-10 h-10 {card.bg} rounded-lg flex items-center justify-center flex-shrink-0">
@@ -124,7 +124,7 @@
         {#each [{ v: 7, label: $_('analytics.period7') }, { v: 30, label: $_('analytics.period30') }, { v: 90, label: $_('analytics.period90') }] as opt}
           <button
             type="button"
-            class="px-3 py-1.5 transition-colors cursor-pointer {period === opt.v ? 'bg-brand text-white' : 'text-ink-muted hover:bg-surface-2'}"
+            class="px-3 py-1.5 transition-colors cursor-pointer {period === opt.v ? 'bg-brand text-brand-fg' : 'text-ink-muted hover:bg-surface-2'}"
             on:click={() => setPeriod(opt.v as 7 | 30 | 90)}
           >
             {opt.label}
@@ -143,7 +143,7 @@
         <div class="rounded-lg border border-border bg-surface-2/50 px-3 py-3">
           <p class="text-xs text-ink-muted truncate">{metric.label}</p>
           {#if totalsLoading}
-            <div class="h-6 w-16 bg-gray-200 rounded animate-pulse mt-1.5"></div>
+            <div class="h-6 w-16 bg-surface-2 rounded animate-pulse mt-1.5"></div>
             <div class="h-3 w-10 bg-surface-2 rounded animate-pulse mt-2"></div>
           {:else if totalsError || !totals}
             <p class="text-lg font-semibold text-ink-subtle mt-1">—</p>
