@@ -131,7 +131,7 @@ export class MetaOAuthController {
             accessToken: long.access_token,
             threadsUserId,
           },
-          scopes: ['threads_basic', 'threads_content_publish'],
+          scopes: ['threads_basic', 'threads_content_publish', 'threads_manage_insights'],
           expiresAt: long.expires_in ? new Date(Date.now() + long.expires_in * 1000) : null,
         });
 

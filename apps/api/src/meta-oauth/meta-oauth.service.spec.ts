@@ -124,6 +124,7 @@ describe('MetaOAuthService (Instagram Login)', () => {
       const decoded = decodeURIComponent(url);
       expect(decoded).toContain('threads_basic');
       expect(decoded).toContain('threads_content_publish');
+      expect(decoded).toContain('threads_manage_insights');
       expect(url).not.toContain('facebook.com');
       expect(url).not.toContain('instagram.com');
     });
