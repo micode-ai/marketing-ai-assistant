@@ -20,7 +20,7 @@ const INSTAGRAM_SCOPES = [
 const THREADS_OAUTH = 'https://threads.net/oauth';
 const THREADS_GRAPH = 'https://graph.threads.net';
 
-const THREADS_SCOPES = ['threads_basic', 'threads_content_publish'];
+const THREADS_SCOPES = ['threads_basic', 'threads_content_publish', 'threads_manage_insights'];
 
 @Injectable()
 export class MetaOAuthService {
