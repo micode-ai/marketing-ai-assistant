@@ -178,7 +178,7 @@ export class InstagramService {
 
     const agentUrl = process.env.AI_AGENT_URL || 'http://localhost:3001';
 
-    let response: Response;
+    let response: Awaited<ReturnType<typeof fetch>>;
     try {
       response = await fetch(`${agentUrl}/generate-instagram-advice`, {
         method: 'POST',

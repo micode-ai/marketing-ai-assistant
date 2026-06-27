@@ -21,7 +21,7 @@ export class InstagramAuthError extends Error {}
  * tolerating both `{ error: { ... } }` and flat shapes. Returns the raw body
  * text for non-auth failures so callers can still log it.
  */
-async function throwIfAuthError(res: Response): Promise<string> {
+async function throwIfAuthError(res: Awaited<ReturnType<typeof fetch>>): Promise<string> {
   if (res.status === 401) {
     throw new InstagramAuthError('Instagram auth failed: HTTP 401');
   }

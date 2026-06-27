@@ -13,7 +13,6 @@ import {
 } from './instagram-graph.util';
 
 const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
-const INSIGHTS_SCOPE = 'instagram_business_manage_insights';
 
 export interface SyncAccountResult {
   accountSynced: boolean;
