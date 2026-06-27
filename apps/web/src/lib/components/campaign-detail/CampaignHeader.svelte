@@ -8,17 +8,17 @@
 
   const statusBadge: Record<string, string> = {
     DRAFT: 'bg-surface-2 text-ink-muted',
-    SCHEDULED: 'bg-yellow-100 text-yellow-700',
-    ACTIVE: 'bg-green-100 text-green-700',
-    PAUSED: 'bg-orange-100 text-orange-700',
-    COMPLETED: 'bg-blue-100 text-blue-700',
+    SCHEDULED: 'bg-yellow-500/20 text-yellow-700',
+    ACTIVE: 'bg-green-500/20 text-green-700',
+    PAUSED: 'bg-orange-500/20 text-orange-700',
+    COMPLETED: 'bg-blue-500/20 text-blue-700',
   };
 
   const typeBadge: Record<string, string> = {
-    EMAIL: 'bg-indigo-100 text-indigo-700',
-    SOCIAL: 'bg-green-100 text-green-700',
-    BLOG: 'bg-purple-100 text-purple-700',
-    MULTI_CHANNEL: 'bg-orange-100 text-orange-700',
+    EMAIL: 'bg-brand-subtle/15 text-brand',
+    SOCIAL: 'bg-green-500/20 text-green-700',
+    BLOG: 'bg-purple-500/20 text-purple-700',
+    MULTI_CHANNEL: 'bg-orange-500/20 text-orange-700',
   };
 
   const statusLabel: Record<string, string> = {
@@ -80,7 +80,7 @@
       </button>
       <button
         on:click={() => dispatch('delete', campaign.id)}
-        class="text-xs px-2 py-1.5 border border-red-200 text-red-500 rounded-lg hover:bg-red-50 transition-colors duration-150 cursor-pointer"
+        class="text-xs px-2 py-1.5 border border-red-500/30 text-red-500 rounded-lg hover:bg-red-500/12 transition-colors duration-150 cursor-pointer"
         title={$_('campaigns.deleteCampaign')}
         aria-label={$_('campaigns.deleteCampaign')}
       >

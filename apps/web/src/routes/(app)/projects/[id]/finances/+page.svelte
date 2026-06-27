@@ -454,7 +454,7 @@
           <button
             on:click={() => setPeriod(mode as any)}
             class="px-3 py-1.5 text-xs font-medium rounded-md transition-colors duration-150 cursor-pointer
-              {periodMode === mode ? 'bg-surface text-ink shadow-sm' : 'text-ink-muted hover:text-gray-900'}"
+              {periodMode === mode ? 'bg-surface text-ink shadow-sm' : 'text-ink-muted hover:text-ink'}"
           >
             {label}
           </button>
@@ -499,7 +499,7 @@
       <!-- Income -->
       <div class="bg-surface rounded-xl border border-border p-5">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center flex-shrink-0">
+          <div class="w-10 h-10 bg-green-500/12 rounded-lg flex items-center justify-center flex-shrink-0">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
             </svg>
@@ -513,7 +513,7 @@
       <!-- Expenses -->
       <div class="bg-surface rounded-xl border border-border p-5">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center flex-shrink-0">
+          <div class="w-10 h-10 bg-red-500/12 rounded-lg flex items-center justify-center flex-shrink-0">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6L9 12.75l4.306-4.307a11.95 11.95 0 015.814 5.519l2.74 1.22m0 0l-5.94 2.28m5.94-2.28l-2.28-5.941" />
             </svg>
@@ -527,14 +527,14 @@
       <!-- Profit -->
       <div class="bg-surface rounded-xl border border-border p-5">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 bg-indigo-50 rounded-lg flex items-center justify-center flex-shrink-0">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <div class="w-10 h-10 bg-brand-subtle/10 rounded-lg flex items-center justify-center flex-shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
           <div>
             <p class="text-sm text-ink-muted">{$_('finances.profit')}</p>
-            <p class="text-xl font-bold {(summary?.profit || 0) >= 0 ? 'text-indigo-600' : 'text-red-600'}">{formatCurrency(summary?.profit || 0)}</p>
+            <p class="text-xl font-bold {(summary?.profit || 0) >= 0 ? 'text-brand' : 'text-red-600'}">{formatCurrency(summary?.profit || 0)}</p>
           </div>
         </div>
       </div>
@@ -576,7 +576,7 @@
           <button
             on:click={() => setFilterType(type as any)}
             class="px-3 py-1.5 text-xs font-medium rounded-md transition-colors duration-150 cursor-pointer
-              {filterType === type ? 'bg-surface text-ink shadow-sm' : 'text-ink-muted hover:text-gray-900'}"
+              {filterType === type ? 'bg-surface text-ink shadow-sm' : 'text-ink-muted hover:text-ink'}"
           >
             {label}
           </button>
@@ -637,10 +637,10 @@
             </thead>
             <tbody>
               {#each records as record}
-                <tr class="border-b border-gray-50 hover:bg-surface-2 transition-colors">
+                <tr class="border-b border-border hover:bg-surface-2 transition-colors">
                   <td class="px-4 py-3 text-ink whitespace-nowrap">{formatDate(record.date)}</td>
                   <td class="px-4 py-3">
-                    <span class="text-xs px-2 py-0.5 rounded font-medium {record.type === 'INCOME' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
+                    <span class="text-xs px-2 py-0.5 rounded font-medium {record.type === 'INCOME' ? 'bg-green-500/20 text-green-700' : 'bg-red-500/20 text-red-700'}">
                       {record.type === 'INCOME' ? $_('finances.income') : $_('finances.expense')}
                     </span>
                   </td>
@@ -667,7 +667,7 @@
                     <div class="flex items-center justify-end gap-1">
                       <button
                         on:click={() => openEditRecord(record)}
-                        class="p-1.5 text-ink-subtle hover:text-gray-600 rounded-md hover:bg-surface-2 transition-colors cursor-pointer"
+                        class="p-1.5 text-ink-subtle hover:text-ink-muted rounded-md hover:bg-surface-2 transition-colors cursor-pointer"
                         title={$_('common.edit')}
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -676,7 +676,7 @@
                       </button>
                       <button
                         on:click={() => deletingId = record.id}
-                        class="p-1.5 text-ink-subtle hover:text-red-500 rounded-md hover:bg-red-50 transition-colors cursor-pointer"
+                        class="p-1.5 text-ink-subtle hover:text-red-500 rounded-md hover:bg-red-500/12 transition-colors cursor-pointer"
                         title={$_('common.delete')}
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -746,12 +746,12 @@
             <button
               on:click={() => { recordForm.type = 'EXPENSE'; onRecordTypeChange(); }}
               class="flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors duration-150 cursor-pointer
-                {recordForm.type === 'EXPENSE' ? 'bg-surface text-red-600 shadow-sm' : 'text-ink-muted hover:text-gray-900'}"
+                {recordForm.type === 'EXPENSE' ? 'bg-surface text-red-600 shadow-sm' : 'text-ink-muted hover:text-ink'}"
             >{$_('finances.expense')}</button>
             <button
               on:click={() => { recordForm.type = 'INCOME'; onRecordTypeChange(); }}
               class="flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors duration-150 cursor-pointer
-                {recordForm.type === 'INCOME' ? 'bg-surface text-green-600 shadow-sm' : 'text-ink-muted hover:text-gray-900'}"
+                {recordForm.type === 'INCOME' ? 'bg-surface text-green-600 shadow-sm' : 'text-ink-muted hover:text-ink'}"
             >{$_('finances.income')}</button>
           </div>
         </div>
@@ -837,7 +837,7 @@
     <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-lg max-h-[80vh] overflow-y-auto">
       <div class="p-6 border-b border-border flex items-center justify-between">
         <h2 class="text-lg font-semibold text-ink">{$_('finances.categories.title')}</h2>
-        <button on:click={() => showCategoriesModal = false} class="p-1 text-ink-subtle hover:text-gray-600 cursor-pointer">
+        <button on:click={() => showCategoriesModal = false} class="p-1 text-ink-subtle hover:text-ink-muted cursor-pointer">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
@@ -945,7 +945,7 @@
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => deletingId = null}>
     <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-sm">
       <div class="p-6">
-        <div class="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center mb-4">
+        <div class="w-12 h-12 bg-red-500/12 rounded-xl flex items-center justify-center mb-4">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
           </svg>

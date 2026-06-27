@@ -227,7 +227,7 @@
 
   {:else if error}
     <div class="flex flex-col items-center justify-center py-10 px-5 text-center">
-      <div class="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center mb-3">
+      <div class="w-12 h-12 bg-red-500/12 rounded-xl flex items-center justify-center mb-3">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
         </svg>
@@ -235,7 +235,7 @@
       <p class="text-sm text-ink mb-3">{error}</p>
       <button
         on:click={fetchRows}
-        class="px-4 py-1.5 text-sm font-medium bg-surface-2 hover:bg-gray-200 text-ink rounded-lg transition-colors">
+        class="px-4 py-1.5 text-sm font-medium bg-surface-2 hover:bg-border-strong text-ink rounded-lg transition-colors">
         {$_('seo.searchConsolePanel.retry')}
       </button>
     </div>
@@ -249,7 +249,7 @@
         <thead>
           <tr class="bg-surface-2 border-b border-border">
             <th
-              class="text-left px-3 py-2.5 text-xs font-semibold text-ink-muted cursor-pointer hover:text-gray-700 select-none"
+              class="text-left px-3 py-2.5 text-xs font-semibold text-ink-muted cursor-pointer hover:text-ink select-none"
               on:click={() => toggleSort('value')}>
               {dimension === 'query'
                 ? $_('seo.searchConsolePanel.query')
@@ -257,22 +257,22 @@
               {sortIcon('value')}
             </th>
             <th
-              class="text-right px-3 py-2.5 text-xs font-semibold text-ink-muted cursor-pointer hover:text-gray-700 whitespace-nowrap select-none"
+              class="text-right px-3 py-2.5 text-xs font-semibold text-ink-muted cursor-pointer hover:text-ink whitespace-nowrap select-none"
               on:click={() => toggleSort('clicks')}>
               {$_('seo.searchConsolePanel.clicks')} {sortIcon('clicks')}
             </th>
             <th
-              class="text-right px-3 py-2.5 text-xs font-semibold text-ink-muted cursor-pointer hover:text-gray-700 whitespace-nowrap select-none"
+              class="text-right px-3 py-2.5 text-xs font-semibold text-ink-muted cursor-pointer hover:text-ink whitespace-nowrap select-none"
               on:click={() => toggleSort('impressions')}>
               {$_('seo.searchConsolePanel.impressions')} {sortIcon('impressions')}
             </th>
             <th
-              class="text-right px-3 py-2.5 text-xs font-semibold text-ink-muted cursor-pointer hover:text-gray-700 whitespace-nowrap select-none"
+              class="text-right px-3 py-2.5 text-xs font-semibold text-ink-muted cursor-pointer hover:text-ink whitespace-nowrap select-none"
               on:click={() => toggleSort('ctr')}>
               {$_('seo.searchConsolePanel.ctr')} {sortIcon('ctr')}
             </th>
             <th
-              class="text-right px-3 py-2.5 text-xs font-semibold text-ink-muted cursor-pointer hover:text-gray-700 whitespace-nowrap select-none"
+              class="text-right px-3 py-2.5 text-xs font-semibold text-ink-muted cursor-pointer hover:text-ink whitespace-nowrap select-none"
               on:click={() => toggleSort('position')}>
               {$_('seo.searchConsolePanel.position')} {sortIcon('position')}
             </th>
@@ -284,8 +284,7 @@
             {@const isExpanded = !!expanded[rowKey]}
             <!-- Main row — click to drill down -->
             <tr
-              class="border-b border-border hover:bg-blue-50 cursor-pointer transition-colors"
-              class:bg-blue-50={isExpanded}
+              class="border-b border-border hover:bg-brand-subtle/10 cursor-pointer transition-colors {isExpanded ? 'bg-brand-subtle/15' : ''}"
               on:click={() => toggleDrillDown(rowKey)}>
               <td class="px-3 py-2 max-w-[200px]">
                 <span class="text-ink truncate block" title={rowKey}>
@@ -334,7 +333,7 @@
             {#if isExpanded}
               {@const drill = expanded[rowKey]}
               <tr class="border-b border-border">
-                <td colspan="5" class="p-0 bg-blue-50">
+                <td colspan="5" class="p-0 bg-blue-500/12">
                   <div class="px-6 py-3 border-l-4 border-blue-300">
                     <p class="text-xs font-semibold text-blue-700 mb-2 uppercase tracking-wide">
                       {oppDim(dimension) === 'query'
@@ -346,7 +345,7 @@
                     {#if drill.loading}
                       <div class="space-y-1.5 animate-pulse">
                         {#each Array(3) as _}
-                          <div class="h-7 bg-blue-100 rounded"></div>
+                          <div class="h-7 bg-blue-500/20 rounded"></div>
                         {/each}
                       </div>
 
@@ -359,7 +358,7 @@
                     {:else}
                       <table class="w-full text-xs min-w-[400px]">
                         <thead>
-                          <tr class="border-b border-blue-200">
+                          <tr class="border-b border-blue-500/30">
                             <th class="text-left py-1.5 pr-3 font-semibold text-ink-muted">
                               {oppDim(dimension) === 'query'
                                 ? $_('seo.searchConsolePanel.query')
@@ -381,7 +380,7 @@
                         </thead>
                         <tbody>
                           {#each drill.rows as dr (dr.keys[0])}
-                            <tr class="border-b border-blue-100 last:border-0">
+                            <tr class="border-b border-blue-500/20 last:border-0">
                               <td class="py-1.5 pr-3 max-w-[180px]">
                                 <span class="text-ink truncate block" title={dr.keys[0]}>
                                   {formatDimValue(dr.keys[0], oppDim(dimension))}

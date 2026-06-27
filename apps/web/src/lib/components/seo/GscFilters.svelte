@@ -87,7 +87,7 @@
           class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-150
             {days === d
               ? 'bg-surface text-ink shadow-sm'
-              : 'text-ink-muted hover:text-gray-700'}">
+              : 'text-ink-muted hover:text-ink'}">
           {d}d
         </button>
       {/each}
@@ -129,7 +129,7 @@
           type="text"
           bind:value={queryContains}
           placeholder="e.g. marketing"
-          class="text-sm border border-border rounded-lg px-3 py-1.5 bg-surface text-ink placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
+          class="text-sm border border-border rounded-lg px-3 py-1.5 bg-surface text-ink placeholder-ink-subtle focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
       </div>
 
       <!-- Country -->
@@ -140,7 +140,7 @@
           bind:value={country}
           placeholder="usa"
           maxlength={3}
-          class="text-sm border border-border rounded-lg px-3 py-1.5 bg-surface text-ink placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent uppercase" />
+          class="text-sm border border-border rounded-lg px-3 py-1.5 bg-surface text-ink placeholder-ink-subtle focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent uppercase" />
       </div>
 
       <!-- Device -->
@@ -176,7 +176,7 @@
             type="text"
             bind:value={brandTerm}
             placeholder="your brand"
-            class="text-sm border border-border rounded-lg px-3 py-1.5 bg-surface text-ink placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
+            class="text-sm border border-border rounded-lg px-3 py-1.5 bg-surface text-ink placeholder-ink-subtle focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
         </div>
       {/if}
 

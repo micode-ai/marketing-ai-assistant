@@ -131,7 +131,7 @@
               class="w-full text-left px-3 py-2 rounded-lg text-sm transition-colors duration-150 cursor-pointer
                 {activeSlug === a.slug
                   ? 'bg-brand-subtle/10 text-brand font-medium'
-                  : 'text-ink-muted hover:bg-surface-2 hover:text-gray-900'}"
+                  : 'text-ink-muted hover:bg-surface-2 hover:text-ink'}"
             >
               {a.title}
             </button>
@@ -144,7 +144,7 @@
         {#if loadingArticle}
           <div class="bg-surface rounded-xl border border-border p-6">
             <div class="animate-pulse space-y-4">
-              <div class="h-6 bg-gray-200 rounded w-1/3"></div>
+              <div class="h-6 bg-surface-2 rounded w-1/3"></div>
               <div class="h-4 bg-surface-2 rounded w-full"></div>
               <div class="h-4 bg-surface-2 rounded w-5/6"></div>
               <div class="h-4 bg-surface-2 rounded w-4/6"></div>

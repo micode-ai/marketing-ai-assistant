@@ -62,9 +62,9 @@
 
   const statusBadge: Record<string, string> = {
     DRAFT: 'bg-surface-2 text-ink-muted',
-    RUNNING: 'bg-green-100 text-green-700',
-    PAUSED: 'bg-yellow-100 text-yellow-700',
-    COMPLETED: 'bg-blue-100 text-blue-700',
+    RUNNING: 'bg-green-500/20 text-green-700',
+    PAUSED: 'bg-yellow-500/20 text-yellow-700',
+    COMPLETED: 'bg-blue-500/20 text-blue-700',
   };
 
   const statusBorderAccent: Record<string, string> = {
@@ -75,9 +75,9 @@
   };
 
   const typeBadge: Record<string, string> = {
-    EMAIL_SUBJECT: 'bg-purple-100 text-purple-700',
-    CONTENT_VARIANT: 'bg-blue-100 text-blue-700',
-    LANDING_PAGE: 'bg-amber-100 text-amber-700',
+    EMAIL_SUBJECT: 'bg-purple-500/20 text-purple-700',
+    CONTENT_VARIANT: 'bg-blue-500/20 text-blue-700',
+    LANDING_PAGE: 'bg-amber-500/20 text-amber-700',
   };
 
   const statusLabel: Record<string, string> = {
@@ -278,7 +278,7 @@
                   {$_(statusLabel[experiment.status] || 'experiments.statusDraft')}
                 </span>
                 {#if experiment.winnerId}
-                  <span class="text-xs px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 font-medium flex items-center gap-1">
+                  <span class="text-xs px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-700 font-medium flex items-center gap-1">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 18.75h-9m9 0a3 3 0 0 1 3 3h-15a3 3 0 0 1 3-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 0 1-.982-3.172M9.497 14.25a7.454 7.454 0 0 0 .981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 0 0 7.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M18.75 4.236c.982.143 1.954.317 2.916.52A6.003 6.003 0 0 1 16.27 9.728M18.75 4.236V4.5c0 2.108-.966 3.99-2.48 5.228m0 0a6.023 6.023 0 0 1-2.77.853m0 0H11m3 0a6.023 6.023 0 0 0 2.77.854" />
                     </svg>
@@ -312,7 +312,7 @@
               {#if experiment.status === 'DRAFT'}
                 <button
                   on:click={() => startExperiment(experiment.id)}
-                  class="text-xs px-3 py-1.5 bg-green-50 text-green-700 border border-green-200 rounded-lg hover:bg-green-100 transition-colors duration-150 cursor-pointer"
+                  class="text-xs px-3 py-1.5 bg-green-500/12 text-green-700 border border-green-500/30 rounded-lg hover:bg-green-500/20 transition-colors duration-150 cursor-pointer"
                 >
                   {$_('experiments.start')}
                 </button>
@@ -320,13 +320,13 @@
               {#if experiment.status === 'RUNNING'}
                 <button
                   on:click={() => pauseExperiment(experiment.id)}
-                  class="text-xs px-3 py-1.5 bg-yellow-50 text-yellow-700 border border-yellow-200 rounded-lg hover:bg-yellow-100 transition-colors duration-150 cursor-pointer"
+                  class="text-xs px-3 py-1.5 bg-yellow-500/12 text-yellow-700 border border-yellow-500/30 rounded-lg hover:bg-yellow-500/20 transition-colors duration-150 cursor-pointer"
                 >
                   {$_('experiments.pause')}
                 </button>
                 <button
                   on:click={() => completeExperiment(experiment.id)}
-                  class="text-xs px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors duration-150 cursor-pointer"
+                  class="text-xs px-3 py-1.5 bg-blue-500/12 text-blue-700 border border-blue-500/30 rounded-lg hover:bg-blue-500/20 transition-colors duration-150 cursor-pointer"
                 >
                   {$_('experiments.complete')}
                 </button>
@@ -334,13 +334,13 @@
               {#if experiment.status === 'PAUSED'}
                 <button
                   on:click={() => startExperiment(experiment.id)}
-                  class="text-xs px-3 py-1.5 bg-green-50 text-green-700 border border-green-200 rounded-lg hover:bg-green-100 transition-colors duration-150 cursor-pointer"
+                  class="text-xs px-3 py-1.5 bg-green-500/12 text-green-700 border border-green-500/30 rounded-lg hover:bg-green-500/20 transition-colors duration-150 cursor-pointer"
                 >
                   {$_('experiments.resume')}
                 </button>
                 <button
                   on:click={() => completeExperiment(experiment.id)}
-                  class="text-xs px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors duration-150 cursor-pointer"
+                  class="text-xs px-3 py-1.5 bg-blue-500/12 text-blue-700 border border-blue-500/30 rounded-lg hover:bg-blue-500/20 transition-colors duration-150 cursor-pointer"
                 >
                   {$_('experiments.complete')}
                 </button>
@@ -355,7 +355,7 @@
               {/if}
               <button
                 on:click={() => deletingId = experiment.id}
-                class="text-xs px-2 py-1.5 border border-red-200 text-red-500 rounded-lg hover:bg-red-50 transition-colors duration-150 cursor-pointer"
+                class="text-xs px-2 py-1.5 border border-red-500/30 text-red-500 rounded-lg hover:bg-red-500/12 transition-colors duration-150 cursor-pointer"
                 title={$_('experiments.deleteExperiment')}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -383,12 +383,12 @@
                     {@const rate = conversionRate(variant)}
                     {@const barWidth = maxRate > 0 ? (rate / maxRate) * 100 : 0}
                     {@const isWinner = experiment.winnerId === variant.id}
-                    <tr class="{isWinner ? 'bg-emerald-50/50' : 'bg-surface'} hover:bg-surface-2/50 transition-colors">
+                    <tr class="{isWinner ? 'bg-emerald-500/12' : 'bg-surface'} hover:bg-surface-2/50 transition-colors">
                       <td class="px-4 py-3">
                         <div class="flex items-center gap-2">
                           <span class="font-medium text-ink">{variant.name}</span>
                           {#if variant.isControl}
-                            <span class="text-[10px] px-1.5 py-0.5 bg-gray-200 text-ink-muted rounded font-medium uppercase">{$_('experiments.control')}</span>
+                            <span class="text-[10px] px-1.5 py-0.5 bg-surface-2 text-ink-muted rounded font-medium uppercase">{$_('experiments.control')}</span>
                           {/if}
                           {#if isWinner}
                             <span class="text-[10px] px-1.5 py-0.5 bg-emerald-200 text-emerald-700 rounded font-medium uppercase flex items-center gap-0.5">
@@ -432,7 +432,7 @@
                   <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
                   <span class="text-yellow-700 font-medium">{$_('experiments.approaching')}</span>
                 {:else}
-                  <div class="w-2 h-2 rounded-full bg-gray-400"></div>
+                  <div class="w-2 h-2 rounded-full bg-ink-subtle"></div>
                   <span class="text-ink-muted font-medium">{$_('experiments.notSignificant')}</span>
                 {/if}
               </div>
@@ -505,7 +505,7 @@
                   class="flex-1 px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
                 {#if variant.isControl}
-                  <span class="text-[10px] px-1.5 py-0.5 bg-gray-200 text-ink-muted rounded font-medium uppercase flex-shrink-0">{$_('experiments.control')}</span>
+                  <span class="text-[10px] px-1.5 py-0.5 bg-surface-2 text-ink-muted rounded font-medium uppercase flex-shrink-0">{$_('experiments.control')}</span>
                 {/if}
                 {#if variants.length > 2}
                   <button
@@ -554,7 +554,7 @@
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => deletingId = null}>
     <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-sm">
       <div class="p-6">
-        <div class="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center mb-4">
+        <div class="w-12 h-12 bg-red-500/12 rounded-xl flex items-center justify-center mb-4">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
           </svg>
@@ -585,7 +585,7 @@
     <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
       <div class="p-6 border-b border-border flex items-center justify-between">
         <div class="flex items-center gap-2.5">
-          <div class="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
+          <div class="w-8 h-8 bg-blue-500/12 rounded-lg flex items-center justify-center flex-shrink-0">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
             </svg>
@@ -595,7 +595,7 @@
             <p class="text-sm text-ink-muted">{resultsFor.name}</p>
           </div>
         </div>
-        <button on:click={() => resultsFor = null} class="text-ink-subtle hover:text-gray-600 transition-colors cursor-pointer">
+        <button on:click={() => resultsFor = null} class="text-ink-subtle hover:text-ink-muted transition-colors cursor-pointer">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
           </svg>
@@ -605,23 +605,23 @@
       <div class="p-6 overflow-y-auto">
         {#if resultsLoading}
           <div class="space-y-4 animate-pulse">
-            <div class="bg-gray-200 rounded-lg h-20"></div>
-            <div class="bg-gray-200 rounded-lg h-40"></div>
+            <div class="bg-surface-2 rounded-lg h-20"></div>
+            <div class="bg-surface-2 rounded-lg h-40"></div>
           </div>
         {:else if resultsData}
           <!-- Statistical significance banner -->
           {#if resultsData.significance !== undefined}
-            <div class="mb-5 p-4 rounded-lg border {resultsData.significance >= 95 ? 'bg-green-50 border-green-200' : resultsData.significance >= 80 ? 'bg-yellow-50 border-yellow-200' : 'bg-surface-2 border-border'}">
+            <div class="mb-5 p-4 rounded-lg border {resultsData.significance >= 95 ? 'bg-green-500/12 border-green-500/30' : resultsData.significance >= 80 ? 'bg-yellow-500/12 border-yellow-500/30' : 'bg-surface-2 border-border'}">
               <div class="flex items-center gap-3">
                 <div class="flex-shrink-0">
                   {#if resultsData.significance >= 95}
-                    <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                    <div class="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
                       <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                       </svg>
                     </div>
                   {:else if resultsData.significance >= 80}
-                    <div class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
+                    <div class="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center">
                       <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
                       </svg>
@@ -660,12 +660,12 @@
               {@const maxRate2 = maxConversionRate(allVariants)}
               {@const barWidth = maxRate2 > 0 ? (rate / maxRate2) * 100 : 0}
               {@const isWinner = resultsData.winnerId === variant.id}
-              <div class="border rounded-lg p-4 {isWinner ? 'border-emerald-300 bg-emerald-50/50' : 'border-border'}">
+              <div class="border rounded-lg p-4 {isWinner ? 'border-emerald-300 bg-emerald-500/12' : 'border-border'}">
                 <div class="flex items-center justify-between mb-3">
                   <div class="flex items-center gap-2">
                     <span class="font-medium text-ink">{variant.name}</span>
                     {#if variant.isControl}
-                      <span class="text-[10px] px-1.5 py-0.5 bg-gray-200 text-ink-muted rounded font-medium uppercase">{$_('experiments.control')}</span>
+                      <span class="text-[10px] px-1.5 py-0.5 bg-surface-2 text-ink-muted rounded font-medium uppercase">{$_('experiments.control')}</span>
                     {/if}
                     {#if isWinner}
                       <span class="text-[10px] px-1.5 py-0.5 bg-emerald-200 text-emerald-700 rounded font-medium uppercase">{$_('experiments.winner')}</span>

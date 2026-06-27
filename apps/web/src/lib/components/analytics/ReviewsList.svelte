@@ -76,7 +76,7 @@
       <button
         on:click={() => applyFilter(null)}
         class="px-2.5 py-1 text-xs font-medium rounded-full transition-colors duration-150 cursor-pointer
-          {filterRating === null && !filterUnreplied ? 'bg-primary-100 text-brand' : 'bg-surface-2 text-ink-muted hover:bg-gray-200'}"
+          {filterRating === null && !filterUnreplied ? 'bg-primary-100 text-brand' : 'bg-surface-2 text-ink-muted hover:bg-surface-2'}"
       >
         {$_('googlePlay.reviews.allRatings')}
       </button>
@@ -84,7 +84,7 @@
         <button
           on:click={() => applyFilter(star)}
           class="px-2.5 py-1 text-xs font-medium rounded-full transition-colors duration-150 cursor-pointer flex items-center gap-0.5
-            {filterRating === star ? 'bg-yellow-100 text-yellow-700' : 'bg-surface-2 text-ink-muted hover:bg-gray-200'}"
+            {filterRating === star ? 'bg-yellow-500/20 text-yellow-700' : 'bg-surface-2 text-ink-muted hover:bg-surface-2'}"
         >
           {star}
           <svg class="w-3 h-3 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
@@ -97,7 +97,7 @@
     <button
       on:click={toggleUnreplied}
       class="px-2.5 py-1 text-xs font-medium rounded-full transition-colors duration-150 cursor-pointer
-        {filterUnreplied ? 'bg-orange-100 text-orange-700' : 'bg-surface-2 text-ink-muted hover:bg-gray-200'}"
+        {filterUnreplied ? 'bg-orange-500/20 text-orange-700' : 'bg-surface-2 text-ink-muted hover:bg-surface-2'}"
     >
       {$_('googlePlay.reviews.unreplied')}
     </button>
@@ -107,14 +107,14 @@
       <button
         on:click={() => changeSort('date')}
         class="px-2.5 py-1 text-xs font-medium rounded-full transition-colors duration-150 cursor-pointer
-          {sortBy === 'date' ? 'bg-primary-100 text-brand' : 'bg-surface-2 text-ink-muted hover:bg-gray-200'}"
+          {sortBy === 'date' ? 'bg-primary-100 text-brand' : 'bg-surface-2 text-ink-muted hover:bg-surface-2'}"
       >
         Date
       </button>
       <button
         on:click={() => changeSort('rating')}
         class="px-2.5 py-1 text-xs font-medium rounded-full transition-colors duration-150 cursor-pointer
-          {sortBy === 'rating' ? 'bg-primary-100 text-brand' : 'bg-surface-2 text-ink-muted hover:bg-gray-200'}"
+          {sortBy === 'rating' ? 'bg-primary-100 text-brand' : 'bg-surface-2 text-ink-muted hover:bg-surface-2'}"
       >
         Rating
       </button>
@@ -125,12 +125,12 @@
   {#if loading}
     <div class="space-y-4">
       {#each Array(3) as _}
-        <div class="bg-gray-200 rounded-xl h-40 animate-pulse"></div>
+        <div class="bg-surface-2 rounded-xl h-40 animate-pulse"></div>
       {/each}
     </div>
   {:else if reviews.length === 0}
     <div class="flex flex-col items-center justify-center py-16 text-center">
-      <div class="w-16 h-16 bg-yellow-50 rounded-2xl flex items-center justify-center mb-4">
+      <div class="w-16 h-16 bg-yellow-500/12 rounded-2xl flex items-center justify-center mb-4">
         <svg class="w-8 h-8 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
         </svg>
