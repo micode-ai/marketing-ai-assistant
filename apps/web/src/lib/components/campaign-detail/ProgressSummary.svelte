@@ -7,15 +7,15 @@
   };
 
   const contentColors: Record<string, string> = {
-    DRAFT: 'bg-gray-300',
+    DRAFT: 'bg-border-strong',
     APPROVED: 'bg-yellow-400',
     PUBLISHED: 'bg-green-500',
-    ARCHIVED: 'bg-gray-200',
+    ARCHIVED: 'bg-surface-2',
   };
   const contentStatuses = ['DRAFT', 'APPROVED', 'PUBLISHED', 'ARCHIVED'] as const;
 
   const emailColors: Record<string, string> = {
-    draft: 'bg-gray-300',
+    draft: 'bg-border-strong',
     scheduled: 'bg-yellow-400',
     sent: 'bg-green-500',
   };

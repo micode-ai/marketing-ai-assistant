@@ -337,18 +337,18 @@
   }
 
   function scoreColor(score: number): string {
-    if (score >= 70) return 'text-green-600 bg-green-50';
-    if (score >= 40) return 'text-yellow-600 bg-yellow-50';
-    return 'text-red-500 bg-red-50';
+    if (score >= 70) return 'text-green-600 bg-green-500/12';
+    if (score >= 40) return 'text-yellow-600 bg-yellow-500/12';
+    return 'text-red-500 bg-red-500/12';
   }
 
   const statusBadge: Record<string, string> = {
     DRAFT: 'bg-surface-2 text-ink-muted',
-    REVIEW: 'bg-yellow-100 text-yellow-700',
-    APPROVED: 'bg-green-100 text-green-700',
-    PUBLISHED: 'bg-blue-100 text-blue-700',
-    REJECTED: 'bg-red-100 text-red-600',
-    SCHEDULED: 'bg-amber-50 text-amber-700',
+    REVIEW: 'bg-yellow-500/20 text-yellow-700',
+    APPROVED: 'bg-green-500/20 text-green-700',
+    PUBLISHED: 'bg-blue-500/20 text-blue-700',
+    REJECTED: 'bg-red-500/20 text-red-600',
+    SCHEDULED: 'bg-amber-500/12 text-amber-700',
   };
 
   const statusBorderAccent: Record<string, string> = {
@@ -471,9 +471,9 @@
   }
 
   const langBadgeColor: Record<string, string> = {
-    en: 'bg-blue-100 text-blue-700',
-    pl: 'bg-red-100 text-red-700',
-    ru: 'bg-green-100 text-green-700',
+    en: 'bg-blue-500/20 text-blue-700',
+    pl: 'bg-red-500/20 text-red-700',
+    ru: 'bg-green-500/20 text-green-700',
   };
 </script>
 
@@ -504,7 +504,7 @@
   </div>
 
   {#if lastTraceUrl}
-    <div class="mb-4 flex items-center gap-3 px-4 py-3 bg-purple-50 border border-purple-200 rounded-xl text-sm">
+    <div class="mb-4 flex items-center gap-3 px-4 py-3 bg-purple-500/12 border border-purple-500/30 rounded-xl text-sm">
       <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-purple-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
       </svg>
@@ -574,7 +574,7 @@
                       <span class="text-xs px-2 py-0.5 rounded font-medium {langBadgeColor[item.language] || 'bg-surface-2 text-ink-muted'}">{(item.language || 'en').toUpperCase()}</span>
                     {/each}
                     {#if group.items[0].aiGenerated}
-                      <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 bg-purple-50 text-purple-600 rounded">
+                      <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 bg-purple-500/12 text-purple-600 rounded">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
                         </svg>
@@ -591,7 +591,7 @@
                   </svg>
                   <button
                     on:click|stopPropagation={() => deleteGroup(group.groupId)}
-                    class="text-xs px-2 py-1.5 border border-red-200 text-red-500 rounded-lg hover:bg-red-50 transition-colors duration-150 cursor-pointer"
+                    class="text-xs px-2 py-1.5 border border-red-500/30 text-red-500 rounded-lg hover:bg-red-500/12 transition-colors duration-150 cursor-pointer"
                     title={$_('content.deleteContent')}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -612,7 +612,7 @@
                           <span class="text-xs px-2 py-0.5 rounded font-bold {langBadgeColor[content.language] || 'bg-surface-2 text-ink-muted'}">{(content.language || 'en').toUpperCase()}</span>
                           <span class="text-xs px-2 py-0.5 rounded {statusBadge[content.status] || 'bg-surface-2 text-ink-muted'}">{$_(statusLabel[content.status] || 'content.draft')}</span>
                           {#if content.scheduledAt && content.status !== 'PUBLISHED'}
-                            <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">
+                            <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-amber-500/12 text-amber-700">
                               <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                               {$_('content.schedule.scheduledFor', { values: { date: new Date(content.scheduledAt).toLocaleString() } })}
                             </span>
@@ -637,7 +637,7 @@
                         {#if content.status === 'APPROVED' || content.status === 'PUBLISHED'}
                           <button
                             on:click|stopPropagation={() => openPublish(content)}
-                            class="text-xs px-3 py-1.5 border border-blue-300 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors duration-150 cursor-pointer flex items-center gap-1"
+                            class="text-xs px-3 py-1.5 border border-blue-300 text-blue-600 rounded-lg hover:bg-blue-500/12 transition-colors duration-150 cursor-pointer flex items-center gap-1"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                               <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
@@ -648,7 +648,7 @@
                         {#if content.scheduledAt && content.status !== 'PUBLISHED'}
                           <button
                             on:click|stopPropagation={() => cancelScheduled(content)}
-                            class="text-xs px-3 py-1.5 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors duration-150 cursor-pointer"
+                            class="text-xs px-3 py-1.5 border border-red-300 text-red-600 rounded-lg hover:bg-red-500/12 transition-colors duration-150 cursor-pointer"
                           >
                             {$_('content.schedule.cancelScheduled')}
                           </button>
@@ -662,7 +662,7 @@
                         </a>
                         <button
                           on:click|stopPropagation={() => deletingId = content.id}
-                          class="text-xs px-2 py-1.5 border border-red-200 text-red-500 rounded-lg hover:bg-red-50 transition-colors duration-150 cursor-pointer"
+                          class="text-xs px-2 py-1.5 border border-red-500/30 text-red-500 rounded-lg hover:bg-red-500/12 transition-colors duration-150 cursor-pointer"
                           title={$_('content.deleteContent')}
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -686,14 +686,14 @@
                   <span class="text-xs px-2 py-0.5 bg-surface-2 text-ink-muted rounded font-medium">{typeLabel[content.type] ? $_(typeLabel[content.type]) : content.type.replace(/_/g, ' ')}</span>
                   {#if content.platforms?.length}
                     {#each content.platforms as p}
-                      <span class="text-xs px-2 py-0.5 bg-blue-50 text-blue-600 rounded">{p}</span>
+                      <span class="text-xs px-2 py-0.5 bg-blue-500/12 text-blue-600 rounded">{p}</span>
                     {/each}
                   {:else if content.platform}
-                    <span class="text-xs px-2 py-0.5 bg-blue-50 text-blue-600 rounded">{content.platform}</span>
+                    <span class="text-xs px-2 py-0.5 bg-blue-500/12 text-blue-600 rounded">{content.platform}</span>
                   {/if}
                   <span class="text-xs px-2 py-0.5 rounded {statusBadge[content.status] || 'bg-surface-2 text-ink-muted'}">{$_(statusLabel[content.status] || 'content.draft')}</span>
                   {#if content.scheduledAt && content.status !== 'PUBLISHED'}
-                    <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">
+                    <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-amber-500/12 text-amber-700">
                       <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                       {$_('content.schedule.scheduledFor', { values: { date: new Date(content.scheduledAt).toLocaleString() } })}
                     </span>
@@ -702,7 +702,7 @@
                     <span class="text-xs px-2 py-0.5 rounded font-medium {langBadgeColor[content.language] || 'bg-surface-2 text-ink-muted'}">{content.language.toUpperCase()}</span>
                   {/if}
                   {#if content.aiGenerated}
-                    <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 bg-purple-50 text-purple-600 rounded">
+                    <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 bg-purple-500/12 text-purple-600 rounded">
                       <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
                       </svg>
@@ -710,7 +710,7 @@
                     </span>
                   {/if}
                   {#if content.sourceContentId}
-                    <span class="text-xs px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded">{$_('content.repurposed')}</span>
+                    <span class="text-xs px-2 py-0.5 bg-brand-subtle/10 text-brand rounded">{$_('content.repurposed')}</span>
                   {/if}
                   {#if getScore(content.id) !== null}
                     <span class="text-xs px-2 py-0.5 rounded font-medium {scoreColor(getScore(content.id))}">{$_('content.score')}: {getScore(content.id)}</span>
@@ -734,7 +734,7 @@
                 {#if content.status === 'APPROVED' || content.status === 'PUBLISHED'}
                   <button
                     on:click={() => openPublish(content)}
-                    class="text-xs px-3 py-1.5 border border-blue-300 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors duration-150 cursor-pointer flex items-center gap-1"
+                    class="text-xs px-3 py-1.5 border border-blue-300 text-blue-600 rounded-lg hover:bg-blue-500/12 transition-colors duration-150 cursor-pointer flex items-center gap-1"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
@@ -746,7 +746,7 @@
                 {#if content.scheduledAt && content.status !== 'PUBLISHED'}
                   <button
                     on:click={() => cancelScheduled(content)}
-                    class="text-xs px-3 py-1.5 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors duration-150 cursor-pointer"
+                    class="text-xs px-3 py-1.5 border border-red-300 text-red-600 rounded-lg hover:bg-red-500/12 transition-colors duration-150 cursor-pointer"
                   >
                     {$_('content.schedule.cancelScheduled')}
                   </button>
@@ -754,7 +754,7 @@
                 <!-- Repurpose button -->
                 <button
                   on:click={() => repurposingContent = content}
-                  class="text-xs px-3 py-1.5 border border-indigo-300 text-indigo-600 rounded-lg hover:bg-indigo-50 transition-colors duration-150 cursor-pointer flex items-center gap-1"
+                  class="text-xs px-3 py-1.5 border border-brand/40 text-brand rounded-lg hover:bg-brand-subtle/10 transition-colors duration-150 cursor-pointer flex items-center gap-1"
                   title={$_('content.repurpose')}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -772,7 +772,7 @@
                 <!-- Delete button -->
                 <button
                   on:click={() => deletingId = content.id}
-                  class="text-xs px-2 py-1.5 border border-red-200 text-red-500 rounded-lg hover:bg-red-50 transition-colors duration-150 cursor-pointer"
+                  class="text-xs px-2 py-1.5 border border-red-500/30 text-red-500 rounded-lg hover:bg-red-500/12 transition-colors duration-150 cursor-pointer"
                   title={$_('content.deleteContent')}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -880,7 +880,7 @@
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => editingContent = null}>
     <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-[90vw] h-[90vh] flex flex-col">
       <div class="p-6 border-b border-border flex items-center gap-2.5 flex-shrink-0">
-        <div class="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
+        <div class="w-8 h-8 bg-blue-500/12 rounded-lg flex items-center justify-center flex-shrink-0">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
           </svg>
@@ -1030,7 +1030,7 @@
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => publishingContent = null}>
     <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-md">
       <div class="p-6 border-b border-border flex items-center gap-2.5">
-        <div class="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
+        <div class="w-8 h-8 bg-blue-500/12 rounded-lg flex items-center justify-center flex-shrink-0">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
           </svg>
@@ -1045,7 +1045,7 @@
         <!-- Results view -->
         <div class="p-6 space-y-3">
           {#each publishResults as result}
-            <div class="flex items-center gap-3 p-3 rounded-xl border {result.status === 'PUBLISHED' ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}">
+            <div class="flex items-center gap-3 p-3 rounded-xl border {result.status === 'PUBLISHED' ? 'border-green-500/30 bg-green-500/12' : 'border-red-500/30 bg-red-500/12'}">
               <div class="flex-1">
                 <div class="text-sm font-medium {result.status === 'PUBLISHED' ? 'text-green-800' : 'text-red-800'}">{result.accountName} ({result.platform})</div>
                 {#if result.status === 'PUBLISHED' && result.platformPostUrl}
@@ -1054,7 +1054,7 @@
                   <div class="text-xs text-red-600">{result.error}</div>
                 {/if}
               </div>
-              <span class="text-xs px-2 py-0.5 rounded-full {result.status === 'PUBLISHED' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
+              <span class="text-xs px-2 py-0.5 rounded-full {result.status === 'PUBLISHED' ? 'bg-green-500/20 text-green-700' : 'bg-red-500/20 text-red-700'}">
                 {$_('social.status.' + result.status)}
               </span>
             </div>
@@ -1094,7 +1094,7 @@
               {#if account.profileImageUrl}
                 <img src={account.profileImageUrl} alt={account.accountName} class="w-8 h-8 rounded-full flex-shrink-0" />
               {:else}
-                <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0 text-xs font-bold text-ink-muted">
+                <div class="w-8 h-8 rounded-full bg-surface-2 flex items-center justify-center flex-shrink-0 text-xs font-bold text-ink-muted">
                   {account.accountName[0]?.toUpperCase()}
                 </div>
               {/if}
@@ -1162,7 +1162,7 @@
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => deletingId = null}>
     <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-sm">
       <div class="p-6">
-        <div class="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center mb-4">
+        <div class="w-12 h-12 bg-red-500/12 rounded-xl flex items-center justify-center mb-4">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
           </svg>
@@ -1192,8 +1192,8 @@
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => repurposingContent = null}>
     <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-md">
       <div class="p-6 border-b border-border flex items-center gap-2.5">
-        <div class="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center flex-shrink-0">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <div class="w-8 h-8 bg-brand-subtle/10 rounded-lg flex items-center justify-center flex-shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 0 0-3.7-3.7 48.678 48.678 0 0 0-7.324 0 4.006 4.006 0 0 0-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 0 0 3.7 3.7 48.656 48.656 0 0 0 7.324 0 4.006 4.006 0 0 0 3.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3-3 3" />
           </svg>
         </div>
@@ -1206,7 +1206,7 @@
         <p class="text-sm text-ink-muted">{$_('content.repurposeDesc')}</p>
         <div>
           <label for="repurpose-type" class="block text-sm font-medium text-ink mb-1.5">{$_('content.targetType')}</label>
-          <select id="repurpose-type" bind:value={repurposeTarget} class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+          <select id="repurpose-type" bind:value={repurposeTarget} class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent">
             <option value="SOCIAL_POST">{$_('content.socialPost')}</option>
             <option value="BLOG_ARTICLE">{$_('content.blogArticle')}</option>
             <option value="EMAIL">{$_('content.emailContent')}</option>
@@ -1223,7 +1223,7 @@
         <button
           on:click={repurposeContent}
           disabled={repurposeLoading}
-          class="flex-1 bg-indigo-600 text-white py-2.5 rounded-lg font-medium hover:bg-indigo-700 transition-colors duration-150 disabled:opacity-50 text-sm flex items-center justify-center gap-2 cursor-pointer"
+          class="flex-1 bg-brand text-white py-2.5 rounded-lg font-medium hover:brightness-110 transition-colors duration-150 disabled:opacity-50 text-sm flex items-center justify-center gap-2 cursor-pointer"
         >
           {#if repurposeLoading}
             <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
@@ -1248,7 +1248,7 @@
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => showCreateModal = false}>
     <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-[90vw] h-[90vh] flex flex-col">
       <div class="p-6 border-b border-border flex items-center gap-2.5 flex-shrink-0">
-        <div class="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center flex-shrink-0">
+        <div class="w-8 h-8 bg-green-500/12 rounded-lg flex items-center justify-center flex-shrink-0">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
           </svg>
@@ -1301,7 +1301,7 @@
               {#each ['en', 'pl', 'ru'] as lang}
                 <button
                   on:click={() => activeCreateLang = lang}
-                  class="px-4 py-2 text-sm font-medium border-b-2 transition-colors duration-150 cursor-pointer {activeCreateLang === lang ? 'border-primary-500 text-brand' : 'border-transparent text-ink-muted hover:text-gray-700'}"
+                  class="px-4 py-2 text-sm font-medium border-b-2 transition-colors duration-150 cursor-pointer {activeCreateLang === lang ? 'border-primary-500 text-brand' : 'border-transparent text-ink-muted hover:text-ink'}"
                 >
                   {lang.toUpperCase()}
                 </button>

@@ -76,7 +76,7 @@
                 {item.type || ''}
               </span>
               {#if item.generatedByAi}
-                <span class="text-xs px-1.5 py-0.5 bg-purple-50 text-purple-600 rounded">AI</span>
+                <span class="text-xs px-1.5 py-0.5 bg-purple-500/12 text-purple-600 rounded">AI</span>
               {/if}
               {#if item.fileUrl}
                 <span class="text-xs text-ink-subtle">{item.fileName || ''}</span>
@@ -94,21 +94,21 @@
               <a
                 href={downloadUrl(item)}
                 download={item.fileName || item.title}
-                class="text-xs px-2 py-1 text-ink-muted hover:text-gray-700 hover:bg-surface-2 rounded cursor-pointer"
+                class="text-xs px-2 py-1 text-ink-muted hover:text-ink hover:bg-surface-2 rounded cursor-pointer"
               >
                 {$_('documents.download')}
               </a>
             {/if}
             <a
               href={documentHref(item)}
-              class="text-xs px-2 py-1 text-ink-muted hover:text-gray-700 hover:bg-surface-2 rounded cursor-pointer"
+              class="text-xs px-2 py-1 text-ink-muted hover:text-ink hover:bg-surface-2 rounded cursor-pointer"
             >
               {$_('campaigns.detail.open')}
             </a>
             <button
               on:click={() => detach(item.id)}
               disabled={detaching === item.id}
-              class="text-xs px-2 py-1 text-red-500 hover:bg-red-50 rounded cursor-pointer disabled:opacity-50"
+              class="text-xs px-2 py-1 text-red-500 hover:bg-red-500/12 rounded cursor-pointer disabled:opacity-50"
             >
               {$_('campaigns.detail.detach')}
             </button>

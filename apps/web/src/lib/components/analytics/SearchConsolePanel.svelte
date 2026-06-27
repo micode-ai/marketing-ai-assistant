@@ -269,7 +269,7 @@
   <!-- Header -->
   <div class="flex items-center justify-between px-5 py-4 border-b border-border">
     <div class="flex items-center gap-3">
-      <div class="w-9 h-9 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
+      <div class="w-9 h-9 bg-blue-500/12 rounded-lg flex items-center justify-center flex-shrink-0">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" />
         </svg>
@@ -293,7 +293,7 @@
               on:click={() => changePeriod(p)}
               disabled={dataLoading}
               class="px-2.5 py-1 text-xs font-medium rounded-md transition-colors duration-150
-                {period === p ? 'bg-surface text-ink shadow-sm' : 'text-ink-muted hover:text-gray-700'}">
+                {period === p ? 'bg-surface text-ink shadow-sm' : 'text-ink-muted hover:text-ink'}">
               {$_(`seo.searchConsolePanel.period${p}d`)}
             </button>
           {/each}
@@ -306,15 +306,15 @@
   {#if integrationLoading}
     <div class="px-5 py-10 flex justify-center">
       <div class="animate-pulse flex flex-col items-center gap-3">
-        <div class="w-16 h-16 bg-gray-200 rounded-2xl"></div>
-        <div class="w-48 h-4 bg-gray-200 rounded"></div>
-        <div class="w-64 h-3 bg-gray-200 rounded"></div>
+        <div class="w-16 h-16 bg-surface-2 rounded-2xl"></div>
+        <div class="w-48 h-4 bg-surface-2 rounded"></div>
+        <div class="w-64 h-3 bg-surface-2 rounded"></div>
       </div>
     </div>
 
   {:else if !isConnected}
     <div class="flex flex-col items-center justify-center py-10 px-5 text-center">
-      <div class="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mb-4">
+      <div class="w-16 h-16 bg-blue-500/12 rounded-2xl flex items-center justify-center mb-4">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" />
         </svg>
@@ -334,7 +334,7 @@
 
   {:else if error}
     <div class="flex flex-col items-center justify-center py-10 px-5 text-center">
-      <div class="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center mb-3">
+      <div class="w-12 h-12 bg-red-500/12 rounded-xl flex items-center justify-center mb-3">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
         </svg>
@@ -342,7 +342,7 @@
       <p class="text-sm text-ink mb-3">{error}</p>
       <button
         on:click={loadSummary}
-        class="px-4 py-1.5 text-sm font-medium bg-surface-2 hover:bg-gray-200 text-ink rounded-lg transition-colors">
+        class="px-4 py-1.5 text-sm font-medium bg-surface-2 hover:bg-border-strong text-ink rounded-lg transition-colors">
         {$_('seo.searchConsolePanel.retry')}
       </button>
     </div>
@@ -417,10 +417,10 @@
                 <thead>
                   <tr class="bg-surface-2 border-b border-border">
                     <th class="text-left px-3 py-2.5 text-xs font-semibold text-ink-muted">{$_('seo.searchConsolePanel.query')}</th>
-                    <th class="text-right px-3 py-2.5 text-xs font-semibold text-ink-muted cursor-pointer hover:text-gray-700 whitespace-nowrap select-none" on:click={() => toggleQuerySort('clicks')}>{$_('seo.searchConsolePanel.clicks')} {sortIcon('clicks', querySort, querySortDir)}</th>
-                    <th class="text-right px-3 py-2.5 text-xs font-semibold text-ink-muted cursor-pointer hover:text-gray-700 whitespace-nowrap select-none" on:click={() => toggleQuerySort('impressions')}>{$_('seo.searchConsolePanel.impressions')} {sortIcon('impressions', querySort, querySortDir)}</th>
-                    <th class="text-right px-3 py-2.5 text-xs font-semibold text-ink-muted cursor-pointer hover:text-gray-700 whitespace-nowrap select-none" on:click={() => toggleQuerySort('ctr')}>{$_('seo.searchConsolePanel.ctr')} {sortIcon('ctr', querySort, querySortDir)}</th>
-                    <th class="text-right px-3 py-2.5 text-xs font-semibold text-ink-muted cursor-pointer hover:text-gray-700 whitespace-nowrap select-none" on:click={() => toggleQuerySort('position')}>{$_('seo.searchConsolePanel.position')} {sortIcon('position', querySort, querySortDir)}</th>
+                    <th class="text-right px-3 py-2.5 text-xs font-semibold text-ink-muted cursor-pointer hover:text-ink whitespace-nowrap select-none" on:click={() => toggleQuerySort('clicks')}>{$_('seo.searchConsolePanel.clicks')} {sortIcon('clicks', querySort, querySortDir)}</th>
+                    <th class="text-right px-3 py-2.5 text-xs font-semibold text-ink-muted cursor-pointer hover:text-ink whitespace-nowrap select-none" on:click={() => toggleQuerySort('impressions')}>{$_('seo.searchConsolePanel.impressions')} {sortIcon('impressions', querySort, querySortDir)}</th>
+                    <th class="text-right px-3 py-2.5 text-xs font-semibold text-ink-muted cursor-pointer hover:text-ink whitespace-nowrap select-none" on:click={() => toggleQuerySort('ctr')}>{$_('seo.searchConsolePanel.ctr')} {sortIcon('ctr', querySort, querySortDir)}</th>
+                    <th class="text-right px-3 py-2.5 text-xs font-semibold text-ink-muted cursor-pointer hover:text-ink whitespace-nowrap select-none" on:click={() => toggleQuerySort('position')}>{$_('seo.searchConsolePanel.position')} {sortIcon('position', querySort, querySortDir)}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -450,10 +450,10 @@
                 <thead>
                   <tr class="bg-surface-2 border-b border-border">
                     <th class="text-left px-3 py-2.5 text-xs font-semibold text-ink-muted">{$_('seo.searchConsolePanel.page')}</th>
-                    <th class="text-right px-3 py-2.5 text-xs font-semibold text-ink-muted cursor-pointer hover:text-gray-700 whitespace-nowrap select-none" on:click={() => togglePageSort('clicks')}>{$_('seo.searchConsolePanel.clicks')} {sortIcon('clicks', pageSort, pageSortDir)}</th>
-                    <th class="text-right px-3 py-2.5 text-xs font-semibold text-ink-muted cursor-pointer hover:text-gray-700 whitespace-nowrap select-none" on:click={() => togglePageSort('impressions')}>{$_('seo.searchConsolePanel.impressions')} {sortIcon('impressions', pageSort, pageSortDir)}</th>
-                    <th class="text-right px-3 py-2.5 text-xs font-semibold text-ink-muted cursor-pointer hover:text-gray-700 whitespace-nowrap select-none" on:click={() => togglePageSort('ctr')}>{$_('seo.searchConsolePanel.ctr')} {sortIcon('ctr', pageSort, pageSortDir)}</th>
-                    <th class="text-right px-3 py-2.5 text-xs font-semibold text-ink-muted cursor-pointer hover:text-gray-700 whitespace-nowrap select-none" on:click={() => togglePageSort('position')}>{$_('seo.searchConsolePanel.position')} {sortIcon('position', pageSort, pageSortDir)}</th>
+                    <th class="text-right px-3 py-2.5 text-xs font-semibold text-ink-muted cursor-pointer hover:text-ink whitespace-nowrap select-none" on:click={() => togglePageSort('clicks')}>{$_('seo.searchConsolePanel.clicks')} {sortIcon('clicks', pageSort, pageSortDir)}</th>
+                    <th class="text-right px-3 py-2.5 text-xs font-semibold text-ink-muted cursor-pointer hover:text-ink whitespace-nowrap select-none" on:click={() => togglePageSort('impressions')}>{$_('seo.searchConsolePanel.impressions')} {sortIcon('impressions', pageSort, pageSortDir)}</th>
+                    <th class="text-right px-3 py-2.5 text-xs font-semibold text-ink-muted cursor-pointer hover:text-ink whitespace-nowrap select-none" on:click={() => togglePageSort('ctr')}>{$_('seo.searchConsolePanel.ctr')} {sortIcon('ctr', pageSort, pageSortDir)}</th>
+                    <th class="text-right px-3 py-2.5 text-xs font-semibold text-ink-muted cursor-pointer hover:text-ink whitespace-nowrap select-none" on:click={() => togglePageSort('position')}>{$_('seo.searchConsolePanel.position')} {sortIcon('position', pageSort, pageSortDir)}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -501,7 +501,7 @@
                 {@const maxClicks = summary.byCountry[0]?.clicks || 1}
                 <div class="flex items-center gap-2">
                   <span class="text-xs text-ink-muted w-28 flex-shrink-0">{getCountryName(row.country)}</span>
-                  <div class="flex-1 bg-gray-200 rounded-full h-2">
+                  <div class="flex-1 bg-surface-2 rounded-full h-2">
                     <div
                       class="h-2 rounded-full bg-blue-400 transition-all duration-300"
                       style="width: {Math.max(2, (row.clicks / maxClicks) * 100)}%">

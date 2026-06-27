@@ -117,7 +117,7 @@
       <input
         type="text"
         bind:value={content.title}
-        class="text-2xl font-bold bg-transparent border-none focus:outline-none focus:ring-0 w-full text-ink placeholder-gray-400"
+        class="text-2xl font-bold bg-transparent border-none focus:outline-none focus:ring-0 w-full text-ink placeholder-ink-subtle"
         placeholder={$_('content.title')}
       />
       <div class="flex gap-2 flex-shrink-0">
@@ -140,7 +140,7 @@
     <!-- Language badge -->
     {#if content.language}
       <div class="mb-3">
-        <span class="text-xs px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded font-medium uppercase">{content.language}</span>
+        <span class="text-xs px-2 py-0.5 bg-brand-subtle/10 text-brand rounded font-medium uppercase">{content.language}</span>
       </div>
     {/if}
 

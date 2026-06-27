@@ -98,8 +98,8 @@
   <div class="flex justify-center gap-2 mb-8">
     {#each [1, 2, 3, 4] as s}
       <div class="flex items-center gap-2">
-        <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold {step >= s ? 'bg-brand text-white' : 'bg-gray-200 text-ink-muted'}">{s}</div>
-        {#if s < 4}<div class="w-8 h-0.5 {step > s ? 'bg-brand' : 'bg-gray-200'}"></div>{/if}
+        <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold {step >= s ? 'bg-brand text-white' : 'bg-surface-2 text-ink-muted'}">{s}</div>
+        {#if s < 4}<div class="w-8 h-0.5 {step > s ? 'bg-brand' : 'bg-surface-2'}"></div>{/if}
       </div>
     {/each}
   </div>
@@ -121,7 +121,7 @@
               <button
                 type="button"
                 on:click={() => projectType = pt}
-                class="px-3 py-2 text-sm rounded-lg border transition-colors duration-150 cursor-pointer {projectType === pt ? 'border-primary-500 bg-brand-subtle/10 text-brand font-medium' : 'border-border text-ink-muted hover:border-gray-300 hover:bg-surface-2'}"
+                class="px-3 py-2 text-sm rounded-lg border transition-colors duration-150 cursor-pointer {projectType === pt ? 'border-primary-500 bg-brand-subtle/10 text-brand font-medium' : 'border-border text-ink-muted hover:border-border hover:bg-surface-2'}"
               >
                 {$_(`projects.types.${pt}`)}
               </button>
@@ -150,7 +150,7 @@
         </div>
       </div>
       <div class="mt-6 flex items-center justify-between">
-        <button on:click={() => goto('/dashboard')} class="text-sm text-ink-subtle hover:text-gray-600 transition-colors duration-150 cursor-pointer">
+        <button on:click={() => goto('/dashboard')} class="text-sm text-ink-subtle hover:text-ink-muted transition-colors duration-150 cursor-pointer">
           {$_('onboarding.skip')}
         </button>
         <button on:click={nextStep} disabled={!projectName} class="bg-brand text-white px-6 py-2.5 rounded-lg font-medium hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150 text-sm cursor-pointer">
@@ -184,7 +184,7 @@
         </div>
       </div>
       <div class="mt-6 flex items-center justify-between">
-        <button on:click={prevStep} class="text-sm text-ink-muted hover:text-gray-700 transition-colors duration-150 cursor-pointer flex items-center gap-1">
+        <button on:click={prevStep} class="text-sm text-ink-muted hover:text-ink transition-colors duration-150 cursor-pointer flex items-center gap-1">
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
           {$_('common.back')}
         </button>
@@ -213,7 +213,7 @@
         {/each}
       </div>
       <div class="mt-6 flex items-center justify-between">
-        <button on:click={prevStep} class="text-sm text-ink-muted hover:text-gray-700 transition-colors duration-150 cursor-pointer flex items-center gap-1">
+        <button on:click={prevStep} class="text-sm text-ink-muted hover:text-ink transition-colors duration-150 cursor-pointer flex items-center gap-1">
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
           {$_('common.back')}
         </button>
@@ -227,7 +227,7 @@
     <!-- Step 4: Success -->
     {#if step === 4}
       <div class="text-center">
-        <div class="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <div class="w-14 h-14 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
           <svg class="w-7 h-7 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
           </svg>
@@ -236,19 +236,19 @@
         <p class="text-sm text-ink-muted mb-5">{$_('onboarding.planReady')}</p>
         <div class="bg-surface-2 rounded-xl p-4 text-left space-y-2.5 mb-6">
           <div class="flex items-start gap-2.5">
-            <div class="w-5 h-5 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+            <div class="w-5 h-5 bg-green-500/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
               <svg class="w-3 h-3 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
             </div>
             <p class="text-sm text-ink">{$_('onboarding.planReadyAudience')}</p>
           </div>
           <div class="flex items-start gap-2.5">
-            <div class="w-5 h-5 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+            <div class="w-5 h-5 bg-green-500/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
               <svg class="w-3 h-3 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
             </div>
             <p class="text-sm text-ink">{$_('onboarding.planReadyPlan')}</p>
           </div>
           <div class="flex items-start gap-2.5">
-            <div class="w-5 h-5 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+            <div class="w-5 h-5 bg-green-500/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
               <svg class="w-3 h-3 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
             </div>
             <p class="text-sm text-ink">{$_('onboarding.planReadyGoals', { values: { goals: selectedGoals.join(', ') } })}</p>

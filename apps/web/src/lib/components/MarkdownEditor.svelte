@@ -109,6 +109,6 @@
 
 <style>
   .toolbar-btn {
-    @apply px-2 py-1 text-sm rounded hover:bg-gray-200 text-ink;
+    @apply px-2 py-1 text-sm rounded hover:bg-surface-2 text-ink;
   }
 </style>

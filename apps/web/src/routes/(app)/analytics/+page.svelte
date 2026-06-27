@@ -66,7 +66,7 @@
 
     {#if loading}
       <div class="flex justify-center py-12">
-        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-brand"></div>
       </div>
     {:else if items.length === 0}
       <div class="text-center py-12 text-ink-muted">
@@ -75,7 +75,7 @@
     {:else}
       <div class="space-y-3">
         {#each items as item}
-          <a href="/projects/{item.projectId}/analytics" class="block bg-surface rounded-lg border border-border p-4 hover:border-indigo-300 hover:shadow-sm transition-all cursor-pointer">
+          <a href="/projects/{item.projectId}/analytics" class="block bg-surface rounded-lg border border-border p-4 hover:border-brand/40 hover:shadow-sm transition-all cursor-pointer">
             <div class="flex items-center justify-between">
               <div>
                 <h3 class="font-medium text-ink">{item.name || item.title || 'Analytics'}</h3>
