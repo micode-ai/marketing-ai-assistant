@@ -855,6 +855,13 @@
       "connected": "Instagram connected successfully",
       "error": "Could not connect Instagram. Please try again.",
       "noAccount": "No Instagram Business account is linked to your Facebook Page."
+    },
+    "threads": {
+      "connect": "Connect Threads",
+      "description": "Connect a Threads account to publish text posts and threads.",
+      "connected": "Threads connected successfully",
+      "error": "Could not connect Threads. Please try again.",
+      "noAccount": "No Threads account is linked to this profile."
     }
   },
   "analytics": {
