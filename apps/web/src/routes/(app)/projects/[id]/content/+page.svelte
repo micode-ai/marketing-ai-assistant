@@ -61,6 +61,7 @@
     { value: 'LINKEDIN', label: 'LinkedIn' },
     { value: 'FACEBOOK', label: 'Facebook' },
     { value: 'INSTAGRAM', label: 'Instagram' },
+    { value: 'THREADS', label: 'Threads' },
     { value: 'GOOGLE', label: 'Google' },
     { value: 'TELEGRAM', label: 'Telegram' },
   ];
