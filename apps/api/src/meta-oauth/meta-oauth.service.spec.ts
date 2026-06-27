@@ -37,6 +37,7 @@ describe('MetaOAuthService (Instagram Login)', () => {
     const decoded = decodeURIComponent(url);
     expect(decoded).toContain('instagram_business_basic');
     expect(decoded).toContain('instagram_business_content_publish');
+    expect(decoded).toContain('instagram_business_manage_insights');
     // must NOT use the deprecated Facebook-Login flow
     expect(url).not.toContain('facebook.com');
   });

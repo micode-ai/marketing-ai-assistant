@@ -106,7 +106,7 @@ export class MetaOAuthController {
           accessToken: long.access_token,
           igUserId: ig.igUserId,
         },
-        scopes: ['instagram_business_basic', 'instagram_business_content_publish'],
+        scopes: ['instagram_business_basic', 'instagram_business_content_publish', 'instagram_business_manage_insights'],
         expiresAt: long.expires_in ? new Date(Date.now() + long.expires_in * 1000) : null,
       });
 
