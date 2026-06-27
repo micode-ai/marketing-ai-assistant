@@ -81,6 +81,38 @@ export class MetaOAuthService {
     return res.json() as Promise<{ access_token: string; expires_in: number }>;
   }
 
+  /**
+   * Refresh a long-lived Instagram token (extends another ~60 days).
+   * The token must be at least 24h old and not yet expired. No client_secret needed.
+   */
+  async refreshInstagramToken(
+    longLivedToken: string,
+  ): Promise<{ access_token: string; expires_in: number }> {
+    const params = new URLSearchParams({
+      grant_type: 'ig_refresh_token',
+      access_token: longLivedToken,
+    });
+    const res = await fetch(`${IG_GRAPH}/refresh_access_token?${params}`);
+    if (!res.ok) throw new Error(`Instagram token refresh failed: ${await res.text()}`);
+    return res.json() as Promise<{ access_token: string; expires_in: number }>;
+  }
+
+  /**
+   * Refresh a long-lived Threads token (extends another ~60 days).
+   * The token must be at least 24h old and not yet expired. No client_secret needed.
+   */
+  async refreshThreadsToken(
+    longLivedToken: string,
+  ): Promise<{ access_token: string; expires_in: number }> {
+    const params = new URLSearchParams({
+      grant_type: 'th_refresh_token',
+      access_token: longLivedToken,
+    });
+    const res = await fetch(`${THREADS_GRAPH}/refresh_access_token?${params}`);
+    if (!res.ok) throw new Error(`Threads token refresh failed: ${await res.text()}`);
+    return res.json() as Promise<{ access_token: string; expires_in: number }>;
+  }
+
   /** Fetch the connected Instagram account profile. Returns null if the profile is incomplete. */
   async getInstagramUser(
     accessToken: string,
