@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import * as crypto from 'crypto';
-import { BadRequestException, ForbiddenException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { MetaOAuthController } from './meta-oauth.controller';
 import { MetaOAuthService } from './meta-oauth.service';
@@ -27,10 +27,10 @@ describe('MetaOAuthController', () => {
         {
           provide: MetaOAuthService,
           useValue: {
-            getInstagramAuthUrl: jest.fn().mockReturnValue('https://fb.com/oauth?test=1'),
+            getInstagramAuthUrl: jest.fn().mockReturnValue('https://api.instagram.com/oauth/authorize?test=1'),
             exchangeCode: jest.fn(),
             getLongLivedToken: jest.fn(),
-            discoverInstagramAccount: jest.fn(),
+            getInstagramUser: jest.fn(),
           },
         },
         {
@@ -47,6 +47,8 @@ describe('MetaOAuthController', () => {
                 API_URL: 'http://localhost:3000',
                 WEB_URL: 'http://localhost:5173',
                 ENCRYPTION_KEY: TEST_ENCRYPTION_KEY,
+                INSTAGRAM_APP_ID: 'ig-app-123',
+                INSTAGRAM_APP_SECRET: 'ig-secret-123',
               };
               return map[key];
             }),
@@ -85,6 +87,16 @@ describe('MetaOAuthController', () => {
 
     it('throws BadRequestException for unsupported platform', () => {
       expect(() => controller.getAuthUrl(mockUser('OWNER'), 'FACEBOOK')).toThrow(BadRequestException);
+    });
+
+    it('throws ServiceUnavailableException when Instagram app credentials are not configured', () => {
+      const cfg = { get: jest.fn((k: string) => (k === 'ENCRYPTION_KEY' ? TEST_ENCRYPTION_KEY : undefined)) };
+      const ctrl = new MetaOAuthController(
+        { getInstagramAuthUrl: jest.fn() } as any,
+        { upsertOAuthAccount: jest.fn() } as any,
+        cfg as any,
+      );
+      expect(() => ctrl.getAuthUrl(mockUser('OWNER'), 'INSTAGRAM')).toThrow(ServiceUnavailableException);
     });
 
     it('throws BadRequestException when organizationId is passed for an org the user is not a member of', () => {
@@ -175,17 +187,15 @@ describe('MetaOAuthController', () => {
       const ctrl = controller as any;
       const validState: string = ctrl.signState({ organizationId: 'org-1', platform: 'INSTAGRAM' });
 
-      (metaService.exchangeCode as jest.Mock).mockResolvedValue({ access_token: 'short-token' });
+      (metaService.exchangeCode as jest.Mock).mockResolvedValue({ access_token: 'short-token', user_id: 'ig-123' });
       (metaService.getLongLivedToken as jest.Mock).mockResolvedValue({
         access_token: 'long-token',
         expires_in: 3600,
       });
-      (metaService.discoverInstagramAccount as jest.Mock).mockResolvedValue({
+      (metaService.getInstagramUser as jest.Mock).mockResolvedValue({
         igUserId: 'ig-123',
         username: 'testuser',
         profilePictureUrl: 'https://example.com/pic.jpg',
-        pageId: 'page-123',
-        pageAccessToken: 'page-token',
       });
 
       const res = mockRes();

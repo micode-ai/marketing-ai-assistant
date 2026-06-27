@@ -2,17 +2,22 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { MetaOAuthService } from './meta-oauth.service';
 
-describe('MetaOAuthService', () => {
+describe('MetaOAuthService (Instagram Login)', () => {
   let service: MetaOAuthService;
   const config = {
-    get: jest.fn((k: string) => ({ FACEBOOK_APP_ID: 'app123', FACEBOOK_APP_SECRET: 'secret123' } as Record<string, string>)[k]),
+    get: jest.fn(
+      (k: string) =>
+        ({ INSTAGRAM_APP_ID: 'ig-app-123', INSTAGRAM_APP_SECRET: 'ig-secret-123' } as Record<string, string>)[k],
+    ),
   } as any;
 
+  const originalFetch = global.fetch;
+
   beforeEach(async () => {
-    jest.resetAllMocks();
-    // Restore default credential values after each reset
+    jest.clearAllMocks();
     config.get.mockImplementation(
-      (k: string) => ({ FACEBOOK_APP_ID: 'app123', FACEBOOK_APP_SECRET: 'secret123' } as Record<string, string>)[k],
+      (k: string) =>
+        ({ INSTAGRAM_APP_ID: 'ig-app-123', INSTAGRAM_APP_SECRET: 'ig-secret-123' } as Record<string, string>)[k],
     );
     const mod: TestingModule = await Test.createTestingModule({
       providers: [MetaOAuthService, { provide: ConfigService, useValue: config }],
@@ -21,127 +26,82 @@ describe('MetaOAuthService', () => {
   });
 
   afterEach(() => {
-    // Restore global.fetch so mocks do not leak between tests
-    (global as any).fetch = undefined;
+    global.fetch = originalFetch;
   });
 
-  // ── getInstagramAuthUrl ──────────────────────────────────────────────────────
-
-  it('builds an authorization URL with IG scopes and state', () => {
+  it('builds an Instagram Login authorization URL with instagram_business scopes and state', () => {
     const url = service.getInstagramAuthUrl('https://api.test/api/meta/callback', 'STATE');
-    expect(url).toContain('https://www.facebook.com/v21.0/dialog/oauth');
-    expect(url).toContain('client_id=app123');
+    expect(url).toContain('https://api.instagram.com/oauth/authorize');
+    expect(url).toContain('client_id=ig-app-123');
     expect(url).toContain('state=STATE');
-    expect(decodeURIComponent(url)).toContain('instagram_content_publish');
-    expect(decodeURIComponent(url)).toContain('instagram_basic');
+    const decoded = decodeURIComponent(url);
+    expect(decoded).toContain('instagram_business_basic');
+    expect(decoded).toContain('instagram_business_content_publish');
+    // must NOT use the deprecated Facebook-Login flow
+    expect(url).not.toContain('facebook.com');
   });
 
-  // ── exchangeCode ─────────────────────────────────────────────────────────────
-
-  it('exchangeCode: happy path returns access_token and expires_in', async () => {
+  it('exchangeCode POSTs to api.instagram.com and returns access_token + user_id (stringified)', async () => {
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
-      json: async () => ({ access_token: 'short-tok', expires_in: 3600 }),
+      json: async () => ({ access_token: 'short-tok', user_id: 178414 }),
     }) as any;
 
-    const result = await service.exchangeCode('auth-code', 'https://api.test/callback');
-    expect(result).toEqual({ access_token: 'short-tok', expires_in: 3600 });
-    expect(global.fetch).toHaveBeenCalledTimes(1);
-    const calledUrl = (global.fetch as jest.Mock).mock.calls[0][0] as string;
-    expect(calledUrl).toContain('client_id=app123');
-    expect(calledUrl).toContain('client_secret=secret123');
+    const result = await service.exchangeCode('the-code', 'https://api.test/api/meta/callback');
+    expect(result).toEqual({ access_token: 'short-tok', user_id: '178414' });
+    const [calledUrl, init] = (global.fetch as jest.Mock).mock.calls[0];
+    expect(calledUrl).toBe('https://api.instagram.com/oauth/access_token');
+    expect(init.method).toBe('POST');
+    expect(init.body.toString()).toContain('grant_type=authorization_code');
   });
 
-  it('exchangeCode: non-ok response throws with body text', async () => {
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: false,
-      text: async () => 'invalid_client',
-    }) as any;
-
-    await expect(service.exchangeCode('bad-code', 'https://api.test/callback')).rejects.toThrow(
-      'invalid_client',
-    );
+  it('exchangeCode throws on a non-ok response', async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: false, text: async () => 'bad code' }) as any;
+    await expect(service.exchangeCode('c', 'r')).rejects.toThrow(/Instagram code exchange failed/);
   });
 
-  it('exchangeCode: throws when FACEBOOK_APP_ID is missing', async () => {
-    config.get.mockImplementation((k: string) =>
-      k === 'FACEBOOK_APP_SECRET' ? 'secret123' : undefined,
-    );
-
-    await expect(service.exchangeCode('code', 'https://api.test/callback')).rejects.toThrow(
-      /FACEBOOK_APP_ID not configured/,
-    );
+  it('exchangeCode throws when INSTAGRAM_APP_ID is missing', async () => {
+    config.get.mockImplementation((k: string) => (k === 'INSTAGRAM_APP_SECRET' ? 's' : undefined));
+    await expect(service.exchangeCode('c', 'r')).rejects.toThrow(/INSTAGRAM_APP_ID not configured/);
   });
 
-  // ── getLongLivedToken ────────────────────────────────────────────────────────
-
-  it('getLongLivedToken: happy path returns access_token and expires_in', async () => {
+  it('getLongLivedToken GETs graph.instagram.com with ig_exchange_token', async () => {
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
-      json: async () => ({ access_token: 'long-tok', expires_in: 5183944 }),
+      json: async () => ({ access_token: 'long-tok', expires_in: 5184000 }),
     }) as any;
 
     const result = await service.getLongLivedToken('short-tok');
-    expect(result).toEqual({ access_token: 'long-tok', expires_in: 5183944 });
+    expect(result).toEqual({ access_token: 'long-tok', expires_in: 5184000 });
     const calledUrl = (global.fetch as jest.Mock).mock.calls[0][0] as string;
-    expect(calledUrl).toContain('grant_type=fb_exchange_token');
-    expect(calledUrl).toContain('client_id=app123');
+    expect(calledUrl).toContain('https://graph.instagram.com/access_token');
+    expect(calledUrl).toContain('grant_type=ig_exchange_token');
   });
 
-  it('getLongLivedToken: non-ok response throws with body text', async () => {
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: false,
-      text: async () => 'token_expired',
-    }) as any;
-
-    await expect(service.getLongLivedToken('bad-tok')).rejects.toThrow('token_expired');
+  it('getLongLivedToken throws on a non-ok response', async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: false, text: async () => 'err' }) as any;
+    await expect(service.getLongLivedToken('x')).rejects.toThrow(/Instagram long-lived token exchange failed/);
   });
 
-  it('getLongLivedToken: throws when FACEBOOK_APP_ID is missing', async () => {
-    config.get.mockImplementation((k: string) =>
-      k === 'FACEBOOK_APP_SECRET' ? 'secret123' : undefined,
-    );
-
-    await expect(service.getLongLivedToken('tok')).rejects.toThrow(
-      /FACEBOOK_APP_ID not configured/,
-    );
-  });
-
-  // ── discoverInstagramAccount ─────────────────────────────────────────────────
-
-  it('discovers the first page that has a linked Instagram business account', async () => {
+  it('getInstagramUser returns the profile from graph.instagram.com/me', async () => {
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
-      json: async () => ({
-        data: [
-          { id: 'pageNoIg', name: 'No IG', access_token: 'pt0' },
-          { id: 'page1', name: 'Brand', access_token: 'pt1', instagram_business_account: { id: 'ig1', username: 'brand', profile_picture_url: 'http://x/p.jpg' } },
-        ],
-      }),
+      json: async () => ({ user_id: '178414', username: 'brand', profile_picture_url: 'http://x/p.jpg' }),
     }) as any;
 
-    const result = await service.discoverInstagramAccount('user-tok');
-    expect(result).toEqual({
-      igUserId: 'ig1', username: 'brand', profilePictureUrl: 'http://x/p.jpg',
-      pageId: 'page1', pageAccessToken: 'pt1',
-    });
+    const result = await service.getInstagramUser('long-tok');
+    expect(result).toEqual({ igUserId: '178414', username: 'brand', profilePictureUrl: 'http://x/p.jpg' });
+    const calledUrl = (global.fetch as jest.Mock).mock.calls[0][0] as string;
+    expect(calledUrl).toContain('https://graph.instagram.com/me');
   });
 
-  it('returns null when no page has an Instagram business account', async () => {
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: true, json: async () => ({ data: [{ id: 'p', name: 'x', access_token: 't' }] }),
-    }) as any;
-    expect(await service.discoverInstagramAccount('user-tok')).toBeNull();
+  it('getInstagramUser returns null when username is missing', async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ user_id: '1' }) }) as any;
+    expect(await service.getInstagramUser('t')).toBeNull();
   });
 
-  it('discoverInstagramAccount: non-ok response throws with body text', async () => {
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: false,
-      text: async () => 'invalid_token',
-    }) as any;
-
-    await expect(service.discoverInstagramAccount('bad-tok')).rejects.toThrow(
-      /Meta \/me\/accounts failed: invalid_token/,
-    );
+  it('getInstagramUser throws on a non-ok response', async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: false, text: async () => 'bad token' }) as any;
+    await expect(service.getInstagramUser('t')).rejects.toThrow(/Instagram \/me failed/);
   });
 });
