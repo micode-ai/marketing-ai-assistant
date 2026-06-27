@@ -234,6 +234,84 @@ describe('SocialService.publishToInstagram', () => {
   });
 });
 
+describe('SocialService.publishToThreads', () => {
+  let service: SocialService;
+  const prisma = { socialAccount: { update: jest.fn().mockResolvedValue({}) } } as any;
+  const config = { get: jest.fn().mockReturnValue('https://app.example.com') } as any;
+  const notifier = { report: jest.fn().mockResolvedValue(undefined) } as any;
+
+  beforeEach(async () => {
+    jest.clearAllMocks();
+    const mod: TestingModule = await Test.createTestingModule({
+      providers: [
+        SocialService,
+        { provide: PrismaService, useValue: prisma },
+        { provide: ConfigService, useValue: config },
+        { provide: CronFailureNotifier, useValue: notifier },
+      ],
+    }).compile();
+    service = mod.get(SocialService);
+    jest.spyOn(SocialService.prototype as any, 'decryptTokens')
+      .mockReturnValue({ accessToken: 'th-tok', threadsUserId: 'th1' });
+  });
+
+  it('publishes a text-only post: creates a TEXT container then publishes it', async () => {
+    mockedAxios.post
+      .mockResolvedValueOnce({ data: { id: 'container1' } })  // /threads
+      .mockResolvedValueOnce({ data: { id: 'post1' } });      // /threads_publish
+    mockedAxios.get.mockResolvedValueOnce({ data: { permalink: 'https://threads.net/t/abc' } });
+
+    const result = await (service as any).publishToAccount(
+      { id: 'c1', body: 'just some thoughts', mediaUrls: [] },
+      { id: 'a1', organizationId: 'o1', platform: 'THREADS', encryptedTokens: '{}', status: 'ACTIVE' },
+    );
+
+    expect(result.status).toBe('PUBLISHED');
+    expect(result.platformPostId).toBe('post1');
+    expect(result.platformPostUrl).toBe('https://threads.net/t/abc');
+    const createCall = mockedAxios.post.mock.calls[0];
+    expect(createCall[0]).toContain('/th1/threads');
+    expect(createCall[1]).toMatchObject({ media_type: 'TEXT', text: 'just some thoughts' });
+    const publishCall = mockedAxios.post.mock.calls[1];
+    expect(publishCall[0]).toContain('/th1/threads_publish');
+    expect(publishCall[1]).toEqual({ creation_id: 'container1' });
+  });
+
+  it('publishes a single image post: IMAGE container with absolute image_url then publishes', async () => {
+    mockedAxios.post
+      .mockResolvedValueOnce({ data: { id: 'container1' } })  // /threads
+      .mockResolvedValueOnce({ data: { id: 'post1' } });      // /threads_publish
+    mockedAxios.get.mockResolvedValueOnce({ data: { permalink: 'https://threads.net/t/img' } });
+
+    const result = await (service as any).publishToAccount(
+      { id: 'c1', body: 'Look ![x](/uploads/images/x.png)', mediaUrls: [] },
+      { id: 'a1', organizationId: 'o1', platform: 'THREADS', encryptedTokens: '{}', status: 'ACTIVE' },
+    );
+
+    expect(result.status).toBe('PUBLISHED');
+    expect(result.platformPostId).toBe('post1');
+    const createCall = mockedAxios.post.mock.calls[0];
+    expect(createCall[0]).toContain('/th1/threads');
+    expect(createCall[1]).toMatchObject({ media_type: 'IMAGE', image_url: 'https://app.example.com/uploads/images/x.png' });
+  });
+
+  it('flips Threads account to REAUTH_REQUIRED and reports THREADS_TOKEN_EXPIRED on OAuthException', async () => {
+    const err: any = new Error('bad token');
+    err.response = { status: 400, data: { error: { code: 190, type: 'OAuthException', message: 'expired' } } };
+    mockedAxios.post.mockRejectedValue(err);
+
+    const result = await (service as any).publishToAccount(
+      { id: 'c1', body: 'hello threads', mediaUrls: [] },
+      { id: 'a1', organizationId: 'o1', platform: 'THREADS', accountName: 'brand', accountId: 'th1', encryptedTokens: '{}', status: 'ACTIVE' },
+    );
+    expect(result.status).toBe('FAILED');
+    expect(prisma.socialAccount.update).toHaveBeenCalledWith({ where: { id: 'a1' }, data: { status: 'REAUTH_REQUIRED' } });
+    expect(notifier.report).toHaveBeenCalledWith(
+      expect.objectContaining({ errorCode: 'THREADS_TOKEN_EXPIRED', resourceId: 'a1' }),
+    );
+  });
+});
+
 describe('SocialService.cancelPublication', () => {
   let service: SocialService;
   const prisma = {

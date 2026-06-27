@@ -31,6 +31,10 @@ describe('MetaOAuthController', () => {
             exchangeCode: jest.fn(),
             getLongLivedToken: jest.fn(),
             getInstagramUser: jest.fn(),
+            getThreadsAuthUrl: jest.fn().mockReturnValue('https://threads.net/oauth/authorize?test=1'),
+            exchangeThreadsCode: jest.fn(),
+            getThreadsLongLivedToken: jest.fn(),
+            getThreadsUser: jest.fn(),
           },
         },
         {
@@ -49,6 +53,8 @@ describe('MetaOAuthController', () => {
                 ENCRYPTION_KEY: TEST_ENCRYPTION_KEY,
                 INSTAGRAM_APP_ID: 'ig-app-123',
                 INSTAGRAM_APP_SECRET: 'ig-secret-123',
+                THREADS_APP_ID: 'th-app-123',
+                THREADS_APP_SECRET: 'th-secret-123',
               };
               return map[key];
             }),
@@ -113,6 +119,23 @@ describe('MetaOAuthController', () => {
         ],
       };
       expect(() => controller.getAuthUrl(user, 'INSTAGRAM', 'org-2')).toThrow(ForbiddenException);
+    });
+
+    it('returns { url } for THREADS for OWNER', () => {
+      const result = controller.getAuthUrl(mockUser('OWNER'), 'THREADS');
+      expect(result).toHaveProperty('url');
+      expect(metaService.getThreadsAuthUrl).toHaveBeenCalled();
+      expect(metaService.getInstagramAuthUrl).not.toHaveBeenCalled();
+    });
+
+    it('throws ServiceUnavailableException when Threads app credentials are not configured', () => {
+      const cfg = { get: jest.fn((k: string) => (k === 'ENCRYPTION_KEY' ? TEST_ENCRYPTION_KEY : undefined)) };
+      const ctrl = new MetaOAuthController(
+        { getThreadsAuthUrl: jest.fn() } as any,
+        { upsertOAuthAccount: jest.fn() } as any,
+        cfg as any,
+      );
+      expect(() => ctrl.getAuthUrl(mockUser('OWNER'), 'THREADS')).toThrow(ServiceUnavailableException);
     });
   });
 
@@ -207,6 +230,42 @@ describe('MetaOAuthController', () => {
       );
       expect(res.redirect).toHaveBeenCalledWith(
         expect.stringContaining('instagram=connected'),
+      );
+    });
+
+    it('THREADS happy path: upserts a THREADS account and redirects to threads=connected', async () => {
+      const ctrl = controller as any;
+      const validState: string = ctrl.signState({ organizationId: 'org-1', platform: 'THREADS' });
+
+      (metaService.exchangeThreadsCode as jest.Mock).mockResolvedValue({
+        access_token: 'short-token',
+        user_id: 'th-123',
+      });
+      (metaService.getThreadsLongLivedToken as jest.Mock).mockResolvedValue({
+        access_token: 'long-token',
+        expires_in: 5184000,
+      });
+      (metaService.getThreadsUser as jest.Mock).mockResolvedValue({
+        threadsUserId: 'th-123',
+        username: 'threadsuser',
+        profilePictureUrl: 'https://example.com/pic.jpg',
+      });
+
+      const res = mockRes();
+      await controller.callback('auth-code', validState, res as any);
+
+      expect(socialService.upsertOAuthAccount).toHaveBeenCalledWith(
+        'org-1',
+        expect.objectContaining({
+          platform: 'THREADS',
+          accountId: 'th-123',
+          accountName: 'threadsuser',
+          tokens: expect.objectContaining({ accessToken: 'long-token', threadsUserId: 'th-123' }),
+        }),
+      );
+      expect(metaService.getInstagramUser).not.toHaveBeenCalled();
+      expect(res.redirect).toHaveBeenCalledWith(
+        expect.stringContaining('threads=connected'),
       );
     });
   });

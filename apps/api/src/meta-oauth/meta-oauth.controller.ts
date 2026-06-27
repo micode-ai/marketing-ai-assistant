@@ -71,7 +71,20 @@ export class MetaOAuthController {
       throw new ForbiddenException('Only OWNER or ADMIN can connect social accounts');
     }
     const orgId = membership.organizationId;
-    if (platform !== 'INSTAGRAM') throw new BadRequestException('Unsupported platform');
+    if (platform !== 'INSTAGRAM' && platform !== 'THREADS') {
+      throw new BadRequestException('Unsupported platform');
+    }
+
+    if (platform === 'THREADS') {
+      if (!this.config.get('THREADS_APP_ID') || !this.config.get('THREADS_APP_SECRET')) {
+        throw new ServiceUnavailableException(
+          'Threads integration is not configured on this server yet. An administrator must set THREADS_APP_ID and THREADS_APP_SECRET.',
+        );
+      }
+      const state = this.signState({ organizationId: orgId, platform });
+      return { url: this.metaService.getThreadsAuthUrl(this.redirectUri(), state) };
+    }
+
     if (!this.config.get('INSTAGRAM_APP_ID') || !this.config.get('INSTAGRAM_APP_SECRET')) {
       throw new ServiceUnavailableException(
         'Instagram integration is not configured on this server yet. An administrator must set INSTAGRAM_APP_ID and INSTAGRAM_APP_SECRET.',
@@ -85,13 +98,38 @@ export class MetaOAuthController {
   @Public()
   async callback(@Query('code') code: string, @Query('state') state: string, @Res() res: Response) {
     const webUrl = (this.config.get('WEB_URL') || 'http://localhost:5173').replace(/\/$/, '');
-    const fail = (reason: string) => res.redirect(`${webUrl}/settings/integrations?instagram=error&reason=${reason}`);
 
     const parsed = this.verifyState(state);
+    const queryKey = parsed?.platform === 'THREADS' ? 'threads' : 'instagram';
+    const fail = (reason: string) =>
+      res.redirect(`${webUrl}/settings/integrations?${queryKey}=error&reason=${reason}`);
+
     if (!parsed) return fail('bad_state');
     if (!code) return fail('no_code');
 
     try {
+      if (parsed.platform === 'THREADS') {
+        const short = await this.metaService.exchangeThreadsCode(code, this.redirectUri());
+        const long = await this.metaService.getThreadsLongLivedToken(short.access_token);
+        const user = await this.metaService.getThreadsUser(long.access_token);
+        if (!user) return fail('no_threads_account');
+
+        await this.socialService.upsertOAuthAccount(parsed.organizationId, {
+          platform: 'THREADS',
+          accountId: user.threadsUserId,
+          accountName: user.username,
+          profileImageUrl: user.profilePictureUrl,
+          tokens: {
+            accessToken: long.access_token,
+            threadsUserId: user.threadsUserId,
+          },
+          scopes: ['threads_basic', 'threads_content_publish'],
+          expiresAt: long.expires_in ? new Date(Date.now() + long.expires_in * 1000) : null,
+        });
+
+        return res.redirect(`${webUrl}/settings/integrations?threads=connected`);
+      }
+
       const short = await this.metaService.exchangeCode(code, this.redirectUri());
       const long = await this.metaService.getLongLivedToken(short.access_token);
       const ig = await this.metaService.getInstagramUser(long.access_token);

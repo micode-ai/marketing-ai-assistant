@@ -835,6 +835,13 @@
       "connected": "Instagram połączony pomyślnie",
       "error": "Nie udało się połączyć Instagrama. Spróbuj ponownie.",
       "noAccount": "Żadne konto Instagram Business nie jest połączone z Twoją stroną na Facebooku."
+    },
+    "threads": {
+      "connect": "Połącz Threads",
+      "description": "Połącz konto Threads, aby publikować posty tekstowe i wątki.",
+      "connected": "Threads połączony pomyślnie",
+      "error": "Nie udało się połączyć Threads. Spróbuj ponownie.",
+      "noAccount": "Żadne konto Threads nie jest połączone z tym profilem."
     }
   },
   "analytics": {

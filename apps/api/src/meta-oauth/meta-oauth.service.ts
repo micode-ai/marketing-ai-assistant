@@ -15,6 +15,13 @@ const INSTAGRAM_SCOPES = [
   'instagram_business_manage_insights',
 ];
 
+// Threads API. OAuth authorize via threads.net, Graph calls via graph.threads.net.
+// Uses the Threads app ID/secret (distinct from both the Facebook and Instagram credentials).
+const THREADS_OAUTH = 'https://threads.net/oauth';
+const THREADS_GRAPH = 'https://graph.threads.net';
+
+const THREADS_SCOPES = ['threads_basic', 'threads_content_publish'];
+
 @Injectable()
 export class MetaOAuthService {
   private readonly logger = new Logger(MetaOAuthService.name);
@@ -90,5 +97,78 @@ export class MetaOAuthService {
     const igUserId = String(data.user_id ?? data.id ?? '');
     if (!igUserId || !data.username) return null;
     return { igUserId, username: data.username, profilePictureUrl: data.profile_picture_url };
+  }
+
+  // ─── Threads ───────────────────────────────────────────────────────────────
+
+  private threadsCreds(): { clientId: string; clientSecret: string } {
+    const clientId = this.config.get<string>('THREADS_APP_ID');
+    const clientSecret = this.config.get<string>('THREADS_APP_SECRET');
+    if (!clientId) throw new Error('THREADS_APP_ID not configured');
+    if (!clientSecret) throw new Error('THREADS_APP_SECRET not configured');
+    return { clientId, clientSecret };
+  }
+
+  getThreadsAuthUrl(redirectUri: string, state: string): string {
+    const { clientId } = this.threadsCreds();
+    const params = new URLSearchParams({
+      client_id: clientId,
+      redirect_uri: redirectUri,
+      response_type: 'code',
+      scope: THREADS_SCOPES.join(','),
+      state,
+    });
+    return `${THREADS_OAUTH}/authorize?${params}`;
+  }
+
+  /** Exchange the auth code for a short-lived token. Returns the token + Threads user id. */
+  async exchangeThreadsCode(code: string, redirectUri: string): Promise<{ access_token: string; user_id: string }> {
+    const { clientId, clientSecret } = this.threadsCreds();
+    const body = new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+      grant_type: 'authorization_code',
+      redirect_uri: redirectUri,
+      code,
+    });
+    const res = await fetch(`${THREADS_GRAPH}/oauth/access_token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body,
+    });
+    if (!res.ok) throw new Error(`Threads code exchange failed: ${await res.text()}`);
+    const data = (await res.json()) as { access_token: string; user_id?: number | string };
+    return { access_token: data.access_token, user_id: String(data.user_id ?? '') };
+  }
+
+  /** Exchange a short-lived token for a long-lived (60-day) token. */
+  async getThreadsLongLivedToken(shortLivedToken: string): Promise<{ access_token: string; expires_in: number }> {
+    const { clientSecret } = this.threadsCreds();
+    const params = new URLSearchParams({
+      grant_type: 'th_exchange_token',
+      client_secret: clientSecret,
+      access_token: shortLivedToken,
+    });
+    const res = await fetch(`${THREADS_GRAPH}/access_token?${params}`);
+    if (!res.ok) throw new Error(`Threads long-lived token exchange failed: ${await res.text()}`);
+    return res.json() as Promise<{ access_token: string; expires_in: number }>;
+  }
+
+  /** Fetch the connected Threads account profile. Returns null if the profile is incomplete. */
+  async getThreadsUser(
+    accessToken: string,
+  ): Promise<{ threadsUserId: string; username: string; profilePictureUrl?: string } | null> {
+    const params = new URLSearchParams({
+      fields: 'id,username,threads_profile_picture_url',
+      access_token: accessToken,
+    });
+    const res = await fetch(`${THREADS_GRAPH}/me?${params}`);
+    if (!res.ok) throw new Error(`Threads /me failed: ${await res.text()}`);
+    const data = (await res.json()) as {
+      id?: string; username?: string; threads_profile_picture_url?: string;
+    };
+    const threadsUserId = String(data.id ?? '');
+    if (!threadsUserId || !data.username) return null;
+    return { threadsUserId, username: data.username, profilePictureUrl: data.threads_profile_picture_url };
   }
 }
