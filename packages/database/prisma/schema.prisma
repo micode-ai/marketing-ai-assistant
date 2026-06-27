@@ -865,8 +865,10 @@ model SocialAccount {
   organization Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   publications      ContentPublication[]
   projects          ProjectSocialAccount[]
-  instagramMetrics  InstagramAccountMetrics[]
-  instagramMedia    InstagramMedia[]
+  instagramMetrics      InstagramAccountMetrics[]
+  instagramMedia        InstagramMedia[]
+  threadsAccountMetrics ThreadsAccountMetrics[]
+  threadsMedia          ThreadsMedia[]
 
   @@unique([organizationId, platform, accountId])
   @@index([organizationId])
@@ -1424,4 +1426,51 @@ model InstagramMedia {
   @@unique([socialAccountId, igMediaId])
   @@index([socialAccountId])
   @@map("instagram_media")
+}
+
+// =============================================================================
+// Threads Analytics
+// =============================================================================
+
+model ThreadsAccountMetrics {
+  id              String   @id @default(cuid())
+  socialAccountId String
+  date            DateTime @db.Date
+  followersCount  Int?
+  views           Int?
+  likes           Int?
+  replies         Int?
+  reposts         Int?
+  quotes          Int?
+  createdAt       DateTime @default(now())
+
+  socialAccount SocialAccount @relation(fields: [socialAccountId], references: [id], onDelete: Cascade)
+
+  @@unique([socialAccountId, date])
+  @@index([socialAccountId])
+  @@map("threads_account_metrics")
+}
+
+model ThreadsMedia {
+  id              String   @id @default(cuid())
+  socialAccountId String
+  threadsMediaId  String
+  mediaType       String
+  text            String?  @db.Text
+  permalink       String?
+  timestamp       DateTime
+  views           Int?
+  likes           Int?
+  replies         Int?
+  reposts         Int?
+  quotes          Int?
+  shares          Int?
+  engagementRate  Float?
+  lastSyncedAt    DateTime
+
+  socialAccount SocialAccount @relation(fields: [socialAccountId], references: [id], onDelete: Cascade)
+
+  @@unique([socialAccountId, threadsMediaId])
+  @@index([socialAccountId])
+  @@map("threads_media")
 }
