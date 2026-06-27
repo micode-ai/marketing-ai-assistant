@@ -359,7 +359,7 @@
     {#if dataLoading && metrics.account.length === 0}
       <div class="p-5 space-y-6 animate-pulse">
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {#each Array(3) as _}<div class="bg-gray-100 rounded-xl h-24"></div>{/each}
+          {#each Array(3) as _skeleton}<div class="bg-gray-100 rounded-xl h-24"></div>{/each}
         </div>
         <div class="bg-gray-100 rounded-xl h-64"></div>
       </div>
