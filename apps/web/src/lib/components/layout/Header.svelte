@@ -23,7 +23,7 @@
 <header class="h-14 bg-surface border-b border-border flex items-center justify-between px-4 flex-shrink-0">
   <button
     on:click={() => sidebarOpen = !sidebarOpen}
-    class="p-2 rounded-lg text-ink-subtle hover:text-gray-700 hover:bg-surface-2 transition-colors duration-150 cursor-pointer"
+    class="p-2 rounded-lg text-ink-subtle hover:text-ink hover:bg-surface-2 transition-colors duration-150 cursor-pointer"
     title="Toggle sidebar"
     aria-label="Toggle sidebar"
   >
@@ -41,7 +41,7 @@
         <button
           on:click={() => setLocale(loc.code)}
           class="px-2.5 py-1 text-xs rounded-md font-medium transition-all duration-150 cursor-pointer
-            {$locale?.startsWith(loc.code) ? 'bg-surface text-ink shadow-sm' : 'text-ink-muted hover:text-gray-700'}"
+            {$locale?.startsWith(loc.code) ? 'bg-surface text-brand shadow-sm' : 'text-ink-muted hover:text-ink'}"
         >
           {loc.label}
         </button>
@@ -52,7 +52,7 @@
     {#if $currentUser}
       <div class="hidden md:flex items-center gap-2.5 pl-3 border-l border-border">
         <!-- Gradient avatar matching project card avatars -->
-        <div class="w-7 h-7 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center text-white font-semibold text-xs flex-shrink-0 select-none">
+        <div class="w-7 h-7 bg-gradient-to-br from-iris-400 to-iris-600 rounded-full flex items-center justify-center text-white font-semibold text-xs flex-shrink-0 select-none">
           {$currentUser.name?.charAt(0).toUpperCase() || 'U'}
         </div>
         <span class="text-sm text-ink font-medium hidden sm:block max-w-[8rem] truncate">{$currentUser.name}</span>
