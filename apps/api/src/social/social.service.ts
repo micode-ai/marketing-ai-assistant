@@ -244,7 +244,7 @@ export class SocialService {
       return { status: 'FAILED', error: 'Account requires reauthentication' };
     }
     try {
-      const supported = ['LINKEDIN', 'TWITTER', 'FACEBOOK', 'TELEGRAM', 'INSTAGRAM'];
+      const supported = ['LINKEDIN', 'TWITTER', 'FACEBOOK', 'TELEGRAM', 'INSTAGRAM', 'THREADS'];
       if (!supported.includes(account.platform)) {
         throw new Error(`Publishing to ${account.platform} is not yet supported`);
       }
@@ -254,6 +254,7 @@ export class SocialService {
       else if (account.platform === 'TWITTER')   result = await this.publishToTwitter(content, tokens);
       else if (account.platform === 'FACEBOOK')  result = await this.publishToFacebook(content, tokens);
       else if (account.platform === 'INSTAGRAM') result = await this.publishToInstagram(content, tokens);
+      else if (account.platform === 'THREADS')   result = await this.publishToThreads(content, tokens);
       else                                       result = await this.publishToTelegram(content, tokens);
       return { status: 'PUBLISHED', platformPostId: result.postId, platformPostUrl: result.postUrl };
     } catch (err: any) {
@@ -262,7 +263,7 @@ export class SocialService {
 
       const metaCode = data?.error?.code;
       const isMetaTokenExpired =
-        ['FACEBOOK', 'INSTAGRAM'].includes(account.platform) &&
+        ['FACEBOOK', 'INSTAGRAM', 'THREADS'].includes(account.platform) &&
         (metaCode === 190 || data?.error?.type === 'OAuthException');
 
       if (isMetaTokenExpired) {
@@ -281,7 +282,12 @@ export class SocialService {
           resourceType: 'SocialAccount',
           resourceId: account.id,
           resourceLabel: `${account.platform}: ${account.accountName || account.accountId}`,
-          errorCode: account.platform === 'INSTAGRAM' ? 'IG_TOKEN_EXPIRED' : 'FB_TOKEN_EXPIRED',
+          errorCode:
+            account.platform === 'INSTAGRAM'
+              ? 'IG_TOKEN_EXPIRED'
+              : account.platform === 'THREADS'
+                ? 'THREADS_TOKEN_EXPIRED'
+                : 'FB_TOKEN_EXPIRED',
           error,
           actionUrl: `${webUrl}/settings/integrations`,
         });
@@ -645,6 +651,62 @@ export class SocialService {
       await new Promise((res) => setTimeout(res, delayMs));
     }
     throw new Error('Instagram media processing timed out');
+  }
+
+  private async publishToThreads(content: any, tokens: any) {
+    const GRAPH = 'https://graph.threads.net';
+    const userId = tokens.threadsUserId;
+    const token = tokens.accessToken;
+    if (!userId) throw new Error('Threads account not fully connected (missing threadsUserId)');
+
+    const { images, videos } = resolvePublishMedia(content, this.publicUrl);
+    const text = stripMarkdown(content.body || '').slice(0, 500);
+    const params = { access_token: token };
+
+    let createParams: Record<string, any>;
+    let isVideo = false;
+    if (videos.length > 0) {
+      createParams = { media_type: 'VIDEO', video_url: videos[0], text };
+      isVideo = true;
+    } else if (images.length > 0) {
+      createParams = { media_type: 'IMAGE', image_url: images[0], text };
+    } else {
+      // Threads allows text-only posts (unlike Instagram)
+      if (!text) throw new Error('Threads post requires text or media');
+      createParams = { media_type: 'TEXT', text };
+    }
+
+    const create = await axios.post(`${GRAPH}/${userId}/threads`, createParams, { params });
+    const creationId: string = create.data.id;
+
+    if (isVideo) {
+      await this.waitForThreadsContainer(creationId, token);
+    }
+
+    const publish = await axios.post(`${GRAPH}/${userId}/threads_publish`,
+      { creation_id: creationId }, { params });
+    const postId: string = publish.data?.id || '';
+
+    let postUrl = '';
+    try {
+      const info = await axios.get(`${GRAPH}/${postId}`, { params: { fields: 'permalink', access_token: token } });
+      postUrl = info.data?.permalink || '';
+    } catch {
+      // permalink is best-effort
+    }
+    return { postId, postUrl };
+  }
+
+  private async waitForThreadsContainer(creationId: string, token: string, maxAttempts = 20, delayMs = 3000): Promise<void> {
+    const GRAPH = 'https://graph.threads.net';
+    for (let i = 0; i < maxAttempts; i++) {
+      const r = await axios.get(`${GRAPH}/${creationId}`, { params: { fields: 'status', access_token: token } });
+      const status = r.data?.status;
+      if (status === 'FINISHED') return;
+      if (status === 'ERROR' || status === 'EXPIRED') throw new Error(`Threads media processing ${status}`);
+      await new Promise((res) => setTimeout(res, delayMs));
+    }
+    throw new Error('Threads media processing timed out');
   }
 
   private async publishToTelegram(content: any, tokens: any) {
