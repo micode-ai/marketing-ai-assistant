@@ -6,7 +6,8 @@ export type CronName =
   | 'google-play-sync'
   | 'gsc-sync'
   | 'instagram-sync'
-  | 'meta-token-refresh';
+  | 'meta-token-refresh'
+  | 'threads-sync';
 
 export interface CronFailureEmailInput {
   language: string;
@@ -44,6 +45,7 @@ const STRINGS: Record<'en' | 'pl' | 'ru', Strings> = {
       'gsc-sync': 'GSC rank sync',
       'instagram-sync': 'Instagram analytics sync',
       'meta-token-refresh': 'Meta token refresh',
+      'threads-sync': 'Threads analytics sync',
     },
     resourceLabel: 'Resource',
     errorLabel: 'Error',
@@ -64,6 +66,7 @@ const STRINGS: Record<'en' | 'pl' | 'ru', Strings> = {
       'gsc-sync': 'Synchronizacja pozycji z GSC',
       'instagram-sync': 'Synchronizacja analityki Instagram',
       'meta-token-refresh': 'Odświeżanie tokenów Meta',
+      'threads-sync': 'Synchronizacja analityki Threads',
     },
     resourceLabel: 'Zasób',
     errorLabel: 'Błąd',
@@ -84,6 +87,7 @@ const STRINGS: Record<'en' | 'pl' | 'ru', Strings> = {
       'gsc-sync': 'Синхронизация позиций из GSC',
       'instagram-sync': 'Синхронизация аналитики Instagram',
       'meta-token-refresh': 'Обновление токенов Meta',
+      'threads-sync': 'Синхронизация аналитики Threads',
     },
     resourceLabel: 'Ресурс',
     errorLabel: 'Ошибка',
