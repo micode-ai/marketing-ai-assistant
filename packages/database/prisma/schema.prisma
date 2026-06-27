@@ -863,8 +863,10 @@ model SocialAccount {
   language        String?
 
   organization Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  publications ContentPublication[]
-  projects     ProjectSocialAccount[]
+  publications      ContentPublication[]
+  projects          ProjectSocialAccount[]
+  instagramMetrics  InstagramAccountMetrics[]
+  instagramMedia    InstagramMedia[]
 
   @@unique([organizationId, platform, accountId])
   @@index([organizationId])
@@ -1376,4 +1378,50 @@ model CronFailureNotification {
   @@unique([organizationId, signature])
   @@index([organizationId])
   @@map("cron_failure_notifications")
+}
+
+// =============================================================================
+// Instagram Analytics
+// =============================================================================
+
+model InstagramAccountMetrics {
+  id                String   @id @default(cuid())
+  socialAccountId   String
+  date              DateTime @db.Date
+  followersCount    Int?
+  reach             Int?
+  views             Int?
+  accountsEngaged   Int?
+  totalInteractions Int?
+  createdAt         DateTime @default(now())
+
+  socialAccount SocialAccount @relation(fields: [socialAccountId], references: [id], onDelete: Cascade)
+
+  @@unique([socialAccountId, date])
+  @@index([socialAccountId])
+  @@map("instagram_account_metrics")
+}
+
+model InstagramMedia {
+  id              String   @id @default(cuid())
+  socialAccountId String
+  igMediaId       String
+  mediaType       String
+  caption         String?  @db.Text
+  permalink       String?
+  timestamp       DateTime
+  likeCount       Int?
+  commentsCount   Int?
+  reach           Int?
+  saved           Int?
+  shares          Int?
+  views           Int?
+  engagementRate  Float?
+  lastSyncedAt    DateTime
+
+  socialAccount SocialAccount @relation(fields: [socialAccountId], references: [id], onDelete: Cascade)
+
+  @@unique([socialAccountId, igMediaId])
+  @@index([socialAccountId])
+  @@map("instagram_media")
 }

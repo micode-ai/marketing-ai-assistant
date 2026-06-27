@@ -6,6 +6,7 @@
   import SectionHint from '$lib/components/SectionHint.svelte';
   import MobileAnalyticsDashboard from '$lib/components/analytics/MobileAnalyticsDashboard.svelte';
   import SearchConsolePanel from '$lib/components/analytics/SearchConsolePanel.svelte';
+  import InstagramAnalyticsDashboard from '$lib/components/analytics/InstagramAnalyticsDashboard.svelte';
   import { currentProjectStore, projectsStore } from '$lib/stores/projects';
 
   $: projectId = $page.params['id'];
@@ -372,6 +373,9 @@
 
   <!-- Google Search Console Performance Panel -->
   <SearchConsolePanel projectId={projectId ?? ''} />
+
+  <!-- Instagram Analytics (self-hides when no IG account is linked) -->
+  <InstagramAnalyticsDashboard projectId={projectId ?? ''} />
 
   <!-- Tabs -->
   <div class="flex border-b border-gray-200 mb-6">
