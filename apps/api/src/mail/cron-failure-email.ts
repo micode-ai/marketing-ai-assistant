@@ -4,7 +4,8 @@ export type CronName =
   | 'analytics'
   | 'email-sequences'
   | 'google-play-sync'
-  | 'gsc-sync';
+  | 'gsc-sync'
+  | 'instagram-sync';
 
 export interface CronFailureEmailInput {
   language: string;
@@ -40,6 +41,7 @@ const STRINGS: Record<'en' | 'pl' | 'ru', Strings> = {
       'email-sequences': 'Email sequence sender',
       'google-play-sync': 'Google Play sync',
       'gsc-sync': 'GSC rank sync',
+      'instagram-sync': 'Instagram analytics sync',
     },
     resourceLabel: 'Resource',
     errorLabel: 'Error',
@@ -58,6 +60,7 @@ const STRINGS: Record<'en' | 'pl' | 'ru', Strings> = {
       'email-sequences': 'Sekwencje emailowe',
       'google-play-sync': 'Synchronizacja Google Play',
       'gsc-sync': 'Synchronizacja pozycji z GSC',
+      'instagram-sync': 'Synchronizacja analityki Instagram',
     },
     resourceLabel: 'Zasób',
     errorLabel: 'Błąd',
@@ -76,6 +79,7 @@ const STRINGS: Record<'en' | 'pl' | 'ru', Strings> = {
       'email-sequences': 'Отправка email-последовательностей',
       'google-play-sync': 'Синхронизация Google Play',
       'gsc-sync': 'Синхронизация позиций из GSC',
+      'instagram-sync': 'Синхронизация аналитики Instagram',
     },
     resourceLabel: 'Ресурс',
     errorLabel: 'Ошибка',
