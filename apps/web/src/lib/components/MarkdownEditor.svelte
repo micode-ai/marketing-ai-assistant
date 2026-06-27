@@ -70,9 +70,9 @@
   function handleDragOver(e: DragEvent) { e.preventDefault(); }
 </script>
 
-<div class="markdown-editor border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden flex flex-col h-full">
+<div class="markdown-editor border border-border rounded-lg overflow-hidden flex flex-col h-full">
   <!-- Toolbar -->
-  <div class="flex items-center gap-1 px-2 py-1 bg-gray-50 dark:bg-gray-700 border-b border-gray-300 dark:border-gray-600 flex-shrink-0">
+  <div class="flex items-center gap-1 px-2 py-1 bg-surface-2 border-b border-border flex-shrink-0">
     <button type="button" on:click={bold} class="toolbar-btn" title="Bold"><b>B</b></button>
     <button type="button" on:click={italic} class="toolbar-btn" title="Italic"><i>I</i></button>
     <button type="button" on:click={h1} class="toolbar-btn" title="H1">H1</button>
@@ -87,18 +87,18 @@
   <!-- Split view -->
   <div class="flex flex-1 min-h-[300px]">
     <!-- Editor -->
-    <div class="w-1/2 border-r border-gray-300 dark:border-gray-600 flex"
+    <div class="w-1/2 border-r border-border flex"
          on:drop={handleDrop} on:dragover={handleDragOver} role="textbox" tabindex="-1">
       <textarea
         bind:this={textarea}
         bind:value
         {placeholder}
-        class="w-full h-full p-3 resize-none bg-white dark:bg-gray-800 text-sm font-mono focus:outline-none"
+        class="w-full h-full p-3 resize-none bg-surface text-sm font-mono focus:outline-none"
       />
     </div>
 
     <!-- Preview -->
-    <div class="w-1/2 p-3 prose dark:prose-invert prose-sm max-w-none overflow-y-auto bg-gray-50 dark:bg-gray-900">
+    <div class="w-1/2 p-3 prose dark:prose-invert prose-sm max-w-none overflow-y-auto bg-surface-2">
       {@html html}
     </div>
   </div>
@@ -109,6 +109,6 @@
 
 <style>
   .toolbar-btn {
-    @apply px-2 py-1 text-sm rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300;
+    @apply px-2 py-1 text-sm rounded hover:bg-gray-200 text-ink;
   }
 </style>

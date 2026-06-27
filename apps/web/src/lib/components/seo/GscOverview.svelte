@@ -124,7 +124,7 @@
   // Delta badge: positive delta is green (good), negative is red (bad).
   // For position, the sign is inverted: lower position = better.
   function deltaClass(delta: number, invertGood = false): string {
-    if (delta === 0) return 'bg-gray-100 text-gray-500';
+    if (delta === 0) return 'bg-surface-2 text-ink-muted';
     const good = invertGood ? delta < 0 : delta > 0;
     return good ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700';
   }
@@ -141,9 +141,9 @@
   <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
 
     <!-- Clicks -->
-    <div class="bg-white border border-gray-200 rounded-xl p-4 border-t-4 border-t-blue-400">
-      <div class="text-xs text-gray-500 mb-1">{$_('seo.searchConsolePanel.totalClicks')}</div>
-      <div class="text-2xl font-bold text-gray-900">{totals ? formatNumber(totals.clicks ?? 0) : '—'}</div>
+    <div class="bg-surface border border-border rounded-xl p-4 border-t-4 border-t-blue-400">
+      <div class="text-xs text-ink-muted mb-1">{$_('seo.searchConsolePanel.totalClicks')}</div>
+      <div class="text-2xl font-bold text-ink">{totals ? formatNumber(totals.clicks ?? 0) : '—'}</div>
       {#if clicksDelta !== null}
         <span class="inline-block mt-1 text-xs font-medium px-1.5 py-0.5 rounded {deltaClass(clicksDelta)}">
           {formatDelta(clicksDelta)}
@@ -152,9 +152,9 @@
     </div>
 
     <!-- Impressions -->
-    <div class="bg-white border border-gray-200 rounded-xl p-4 border-t-4 border-t-purple-400">
-      <div class="text-xs text-gray-500 mb-1">{$_('seo.searchConsolePanel.totalImpressions')}</div>
-      <div class="text-2xl font-bold text-gray-900">{totals ? formatNumber(totals.impressions ?? 0) : '—'}</div>
+    <div class="bg-surface border border-border rounded-xl p-4 border-t-4 border-t-purple-400">
+      <div class="text-xs text-ink-muted mb-1">{$_('seo.searchConsolePanel.totalImpressions')}</div>
+      <div class="text-2xl font-bold text-ink">{totals ? formatNumber(totals.impressions ?? 0) : '—'}</div>
       {#if impressionsDelta !== null}
         <span class="inline-block mt-1 text-xs font-medium px-1.5 py-0.5 rounded {deltaClass(impressionsDelta)}">
           {formatDelta(impressionsDelta)}
@@ -163,9 +163,9 @@
     </div>
 
     <!-- CTR -->
-    <div class="bg-white border border-gray-200 rounded-xl p-4 border-t-4 border-t-green-400">
-      <div class="text-xs text-gray-500 mb-1">{$_('seo.searchConsolePanel.avgCtr')}</div>
-      <div class="text-2xl font-bold text-gray-900">{totals ? formatCtr(totals.ctr ?? 0) : '—'}</div>
+    <div class="bg-surface border border-border rounded-xl p-4 border-t-4 border-t-green-400">
+      <div class="text-xs text-ink-muted mb-1">{$_('seo.searchConsolePanel.avgCtr')}</div>
+      <div class="text-2xl font-bold text-ink">{totals ? formatCtr(totals.ctr ?? 0) : '—'}</div>
       {#if ctrDelta !== null}
         <span class="inline-block mt-1 text-xs font-medium px-1.5 py-0.5 rounded {deltaClass(ctrDelta)}">
           {formatDelta(ctrDelta * 100)}%
@@ -174,9 +174,9 @@
     </div>
 
     <!-- Average position (lower = better → invert delta color) -->
-    <div class="bg-white border border-gray-200 rounded-xl p-4 border-t-4 border-t-amber-400">
-      <div class="text-xs text-gray-500 mb-1">{$_('seo.searchConsolePanel.avgPosition')}</div>
-      <div class="text-2xl font-bold text-gray-900">{totals ? formatPosition(totals.position ?? 0) : '—'}</div>
+    <div class="bg-surface border border-border rounded-xl p-4 border-t-4 border-t-amber-400">
+      <div class="text-xs text-ink-muted mb-1">{$_('seo.searchConsolePanel.avgPosition')}</div>
+      <div class="text-2xl font-bold text-ink">{totals ? formatPosition(totals.position ?? 0) : '—'}</div>
       {#if positionDelta !== null}
         <span class="inline-block mt-1 text-xs font-medium px-1.5 py-0.5 rounded {deltaClass(positionDelta, true)}">
           {formatDelta(positionDelta)}
@@ -187,8 +187,8 @@
 
   <!-- Clicks + Impressions line chart -->
   {#if byDate.length > 0}
-    <div class="bg-white border border-gray-200 rounded-xl p-5">
-      <h3 class="text-sm font-semibold text-gray-700 mb-4">{$_('seo.searchConsolePanel.clicks')} &amp; {$_('seo.searchConsolePanel.impressions')}</h3>
+    <div class="bg-surface border border-border rounded-xl p-5">
+      <h3 class="text-sm font-semibold text-ink mb-4">{$_('seo.searchConsolePanel.clicks')} &amp; {$_('seo.searchConsolePanel.impressions')}</h3>
       <div class="relative" style="height: 220px;">
         <canvas bind:this={lineCanvas} style="width: 100%; height: 100%;"></canvas>
       </div>

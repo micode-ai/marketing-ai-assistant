@@ -43,7 +43,7 @@
   const CONTENT_TYPES = ['SOCIAL_POST', 'BLOG_ARTICLE', 'EMAIL', 'NEWSLETTER', 'AD_COPY', 'LANDING_PAGE'];
 
   const statusBadge: Record<string, string> = {
-    DRAFT: 'bg-gray-100 text-gray-600',
+    DRAFT: 'bg-surface-2 text-ink-muted',
     REVIEW: 'bg-yellow-100 text-yellow-700',
     APPROVED: 'bg-green-100 text-green-700',
     PUBLISHED: 'bg-blue-100 text-blue-700',
@@ -312,25 +312,25 @@
   <SectionHint sectionKey="calendar" titleKey="hints.calendar.title" descKey="hints.calendar.desc" />
   <!-- Header -->
   <div class="flex items-center justify-between mb-5">
-    <h1 class="text-2xl font-bold text-gray-900">{$_('calendar.title')}</h1>
+    <h1 class="text-2xl font-bold text-ink">{$_('calendar.title')}</h1>
     <div class="flex items-center gap-2">
       <!-- View toggle (desktop only) -->
-      <div class="hidden md:flex items-center border border-gray-300 rounded-lg overflow-hidden">
+      <div class="hidden md:flex items-center border border-border rounded-lg overflow-hidden">
         <button on:click={() => viewMode = 'month'}
           class="text-xs px-3 py-1.5 transition-colors duration-150 cursor-pointer
-            {viewMode === 'month' ? 'bg-primary-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}">
+            {viewMode === 'month' ? 'bg-brand text-white' : 'bg-surface text-ink-muted hover:bg-surface-2'}">
           {$_('calendar.monthView')}
         </button>
         <button on:click={() => { viewMode = 'week'; currentWeekStart = getWeekStart(new Date(currentYear, currentMonth, 1)); }}
           class="text-xs px-3 py-1.5 transition-colors duration-150 cursor-pointer
-            {viewMode === 'week' ? 'bg-primary-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}">
+            {viewMode === 'week' ? 'bg-brand text-white' : 'bg-surface text-ink-muted hover:bg-surface-2'}">
           {$_('calendar.weekView')}
         </button>
       </div>
       <!-- Today button -->
       <button on:click={goToToday}
-        class="text-xs px-3 py-1.5 border border-gray-300 rounded-lg bg-white hover:bg-gray-50
-               transition-colors duration-150 cursor-pointer font-medium text-gray-700">
+        class="text-xs px-3 py-1.5 border border-border rounded-lg bg-surface hover:bg-surface-2
+               transition-colors duration-150 cursor-pointer font-medium text-ink">
         {$_('calendar.today')}
       </button>
     </div>
@@ -341,17 +341,17 @@
     <!-- Month/week navigation -->
     <div class="flex items-center gap-2">
       <button on:click={() => viewMode === 'week' ? prevWeek() : prevMonth()}
-        class="p-1.5 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors duration-150 cursor-pointer">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        class="p-1.5 rounded-lg border border-border hover:bg-surface-2 transition-colors duration-150 cursor-pointer">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-ink-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
         </svg>
       </button>
-      <h2 class="text-lg font-semibold text-gray-900 min-w-[180px] text-center capitalize">
+      <h2 class="text-lg font-semibold text-ink min-w-[180px] text-center capitalize">
         {formatMonthYear(currentYear, currentMonth)}
       </h2>
       <button on:click={() => viewMode === 'week' ? nextWeek() : nextMonth()}
-        class="p-1.5 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors duration-150 cursor-pointer">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        class="p-1.5 rounded-lg border border-border hover:bg-surface-2 transition-colors duration-150 cursor-pointer">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-ink-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
         </svg>
       </button>
@@ -360,7 +360,7 @@
     <!-- Filters -->
     <div class="flex items-center gap-2">
       <select bind:value={filterStatus}
-        class="text-xs px-2 py-1.5 border border-gray-300 rounded-lg bg-white cursor-pointer
+        class="text-xs px-2 py-1.5 border border-border rounded-lg bg-surface cursor-pointer
                focus:outline-none focus:ring-2 focus:ring-primary-500">
         <option value="">{$_('calendar.allStatuses')}</option>
         {#each STATUSES as s}
@@ -368,7 +368,7 @@
         {/each}
       </select>
       <select bind:value={filterType}
-        class="text-xs px-2 py-1.5 border border-gray-300 rounded-lg bg-white cursor-pointer
+        class="text-xs px-2 py-1.5 border border-border rounded-lg bg-surface cursor-pointer
                focus:outline-none focus:ring-2 focus:ring-primary-500">
         <option value="">{$_('calendar.allTypes')}</option>
         {#each CONTENT_TYPES as t}
@@ -380,7 +380,7 @@
 
   <!-- Campaign legend -->
   {#if activeCampaigns.length > 0}
-    <div class="flex flex-wrap items-center gap-3 mb-3 text-xs text-gray-500">
+    <div class="flex flex-wrap items-center gap-3 mb-3 text-xs text-ink-muted">
       {#each activeCampaigns as campaign, idx}
         <span class="flex items-center gap-1.5">
           <span class="w-3 h-3 rounded {campaignLegendColors[idx % campaignLegendColors.length]}"></span>
@@ -392,20 +392,20 @@
 
   {#if loading}
     <!-- Loading skeleton -->
-    <div class="bg-white rounded-xl border border-gray-200 p-4 flex-1 min-h-0">
+    <div class="bg-surface rounded-xl border border-border p-4 flex-1 min-h-0">
       <div class="grid grid-cols-7 gap-px h-full">
         {#each Array(42) as _}
-          <div class="bg-gray-50 rounded animate-pulse"></div>
+          <div class="bg-surface-2 rounded animate-pulse"></div>
         {/each}
       </div>
     </div>
   {:else if viewMode === 'month'}
     <!-- Month view -->
-    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden flex-1 min-h-0 flex flex-col">
+    <div class="bg-surface rounded-xl border border-border overflow-hidden flex-1 min-h-0 flex flex-col">
       <!-- Day-of-week header -->
-      <div class="grid grid-cols-7 border-b border-gray-200 bg-gray-50/50 flex-shrink-0">
+      <div class="grid grid-cols-7 border-b border-border bg-surface-2/50 flex-shrink-0">
         {#each ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as dayKey}
-          <div class="py-2.5 text-center text-xs font-medium text-gray-500 uppercase tracking-wide">
+          <div class="py-2.5 text-center text-xs font-medium text-ink-muted uppercase tracking-wide">
             {$_(`calendar.${dayKey}`)}
           </div>
         {/each}
@@ -424,8 +424,8 @@
           <!-- svelte-ignore a11y-click-events-have-key-events -->
           <!-- svelte-ignore a11y-no-static-element-interactions -->
           <div
-            class="min-h-[100px] p-1.5 border-b border-r border-gray-100 cursor-pointer
-                   hover:bg-gray-50/50 transition-colors duration-100
+            class="min-h-[100px] p-1.5 border-b border-r border-border cursor-pointer
+                   hover:bg-surface-2/50 transition-colors duration-100
                    flex flex-col overflow-hidden
                    {dayInfo.isCurrentMonth ? '' : 'opacity-40'}
                    {campBg}"
@@ -434,11 +434,11 @@
             <!-- Day number -->
             <div class="flex items-start justify-between mb-1 flex-shrink-0">
               {#if todayHighlight}
-                <span class="bg-primary-600 text-white text-xs font-semibold w-6 h-6 rounded-full flex items-center justify-center">
+                <span class="bg-brand text-white text-xs font-semibold w-6 h-6 rounded-full flex items-center justify-center">
                   {dayInfo.day}
                 </span>
               {:else}
-                <span class="text-xs font-medium text-gray-700 w-6 h-6 flex items-center justify-center">
+                <span class="text-xs font-medium text-ink w-6 h-6 flex items-center justify-center">
                   {dayInfo.day}
                 </span>
               {/if}
@@ -453,7 +453,7 @@
                   class="flex items-center gap-1 px-1.5 py-0.5 rounded
                          text-[10px] leading-tight truncate cursor-pointer
                          hover:opacity-80 transition-opacity duration-100
-                         {statusBadge[content.status] || 'bg-gray-100 text-gray-600'}"
+                         {statusBadge[content.status] || 'bg-surface-2 text-ink-muted'}"
                   on:click|stopPropagation={() => onContentClick(content)}
                   title={content.title}
                 >
@@ -477,31 +477,31 @@
         {@const dayContents = contentByDate[dateKey] || []}
         {@const todayHighlight = isSameDay(weekDay, today)}
 
-        <div class="bg-white rounded-xl border border-gray-200
+        <div class="bg-surface rounded-xl border border-border
           {todayHighlight ? 'border-primary-300 ring-1 ring-primary-100' : ''} p-3">
 
           <div class="flex items-center justify-between mb-2">
             <div class="flex items-center gap-2">
               <span class="text-sm font-semibold
-                {todayHighlight ? 'text-primary-600' : 'text-gray-900'}">
+                {todayHighlight ? 'text-brand' : 'text-ink'}">
                 {weekDay.toLocaleDateString(undefined, {
                   weekday: 'short', day: 'numeric', month: 'short'
                 })}
               </span>
               {#if todayHighlight}
-                <span class="text-[10px] px-1.5 py-0.5 bg-primary-100 text-primary-700
+                <span class="text-[10px] px-1.5 py-0.5 bg-primary-100 text-brand
                   rounded-full font-medium">
                   {todayLabel}
                 </span>
               {/if}
             </div>
-            <span class="text-xs text-gray-400">{dayContents.length}</span>
+            <span class="text-xs text-ink-subtle">{dayContents.length}</span>
           </div>
 
           {#if dayContents.length === 0}
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <!-- svelte-ignore a11y-no-static-element-interactions -->
-            <div class="text-xs text-gray-400 py-2 text-center cursor-pointer hover:text-primary-500 transition-colors duration-150"
+            <div class="text-xs text-ink-subtle py-2 text-center cursor-pointer hover:text-primary-500 transition-colors duration-150"
               on:click={() => onDayClick({
                 day: weekDay.getDate(),
                 month: weekDay.getMonth(),
@@ -514,14 +514,14 @@
               {#each dayContents as content (content.id)}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <!-- svelte-ignore a11y-no-static-element-interactions -->
-                <div class="flex items-center gap-2 p-2 rounded-lg border border-gray-100
-                  cursor-pointer hover:bg-gray-50 transition-colors duration-150"
+                <div class="flex items-center gap-2 p-2 rounded-lg border border-border
+                  cursor-pointer hover:bg-surface-2 transition-colors duration-150"
                   on:click={() => onContentClick(content)}>
                   <span class="w-2 h-2 rounded-full flex-shrink-0
                     {statusDot[content.status]}"></span>
                   <div class="flex-1 min-w-0">
-                    <div class="text-sm font-medium text-gray-900 truncate">{content.title}</div>
-                    <div class="text-xs text-gray-500">{content.type.replace('_', ' ')}</div>
+                    <div class="text-sm font-medium text-ink truncate">{content.title}</div>
+                    <div class="text-xs text-ink-muted">{content.type.replace('_', ' ')}</div>
                   </div>
                   <span class="text-[10px] px-1.5 py-0.5 rounded
                     {statusBadge[content.status]}">
@@ -539,15 +539,15 @@
   <!-- Empty state (when no content at all and not loading) -->
   {#if !loading && contents.length === 0}
     <div class="flex flex-col items-center justify-center py-16 text-center">
-      <div class="w-20 h-20 bg-primary-50 rounded-2xl flex items-center justify-center mb-6">
+      <div class="w-20 h-20 bg-brand-subtle/10 rounded-2xl flex items-center justify-center mb-6">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
         </svg>
       </div>
-      <h2 class="text-xl font-semibold text-gray-900 mb-2">{$_('calendar.noContent')}</h2>
-      <p class="text-gray-500 mb-6">{$_('calendar.noContentDesc')}</p>
+      <h2 class="text-xl font-semibold text-ink mb-2">{$_('calendar.noContent')}</h2>
+      <p class="text-ink-muted mb-6">{$_('calendar.noContentDesc')}</p>
       <a href="/projects/{projectId}/content"
-        class="bg-primary-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-primary-700
+        class="bg-brand text-white px-6 py-3 rounded-xl font-medium hover:brightness-110
                transition-colors duration-150 inline-flex items-center gap-2">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
@@ -563,13 +563,13 @@
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div class="fixed inset-0 bg-black/50 flex justify-end z-50" on:click|self={() => selectedContent = null}>
-    <div class="bg-white h-full w-full max-w-md shadow-2xl overflow-y-auto">
+    <div class="bg-surface h-full w-full max-w-md shadow-2xl overflow-y-auto">
       <!-- Header -->
-      <div class="p-6 border-b border-gray-100 flex items-center justify-between">
-        <h2 class="text-lg font-semibold text-gray-900">{$_('calendar.contentDetails')}</h2>
+      <div class="p-6 border-b border-border flex items-center justify-between">
+        <h2 class="text-lg font-semibold text-ink">{$_('calendar.contentDetails')}</h2>
         <button on:click={() => selectedContent = null}
-          class="p-1.5 rounded-lg hover:bg-gray-100 transition-colors duration-150 cursor-pointer">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          class="p-1.5 rounded-lg hover:bg-surface-2 transition-colors duration-150 cursor-pointer">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-ink-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
           </svg>
         </button>
@@ -578,7 +578,7 @@
       <div class="p-6 space-y-5">
         <!-- Badges -->
         <div class="flex flex-wrap items-center gap-1.5">
-          <span class="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded font-medium">
+          <span class="text-xs px-2 py-0.5 bg-surface-2 text-ink-muted rounded font-medium">
             {selectedContent.type.replace('_', ' ')}
           </span>
           {#if selectedContent.platform}
@@ -586,7 +586,7 @@
               {selectedContent.platform}
             </span>
           {/if}
-          <span class="text-xs px-2 py-0.5 rounded {statusBadge[selectedContent.status] || 'bg-gray-100 text-gray-600'}">
+          <span class="text-xs px-2 py-0.5 rounded {statusBadge[selectedContent.status] || 'bg-surface-2 text-ink-muted'}">
             {$_(statusLabel[selectedContent.status] || 'content.draft')}
           </span>
           {#if selectedContent.aiGenerated}
@@ -600,21 +600,21 @@
         </div>
 
         <!-- Title -->
-        <h3 class="text-xl font-semibold text-gray-900">{selectedContent.title}</h3>
+        <h3 class="text-xl font-semibold text-ink">{selectedContent.title}</h3>
 
         <!-- Body preview -->
-        <div class="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap line-clamp-[10]">
+        <div class="text-sm text-ink-muted leading-relaxed whitespace-pre-wrap line-clamp-[10]">
           {selectedContent.body}
         </div>
 
         <!-- Schedule & campaign info -->
-        <div class="border-t border-gray-100 pt-4 space-y-3">
+        <div class="border-t border-border pt-4 space-y-3">
           <div class="flex items-center gap-2 text-sm">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-ink-subtle flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
             </svg>
             {#if selectedContent.scheduledAt}
-              <span class="text-gray-600">
+              <span class="text-ink-muted">
                 {$_('calendar.scheduledFor', {
                   values: {
                     date: new Date(selectedContent.scheduledAt)
@@ -623,24 +623,24 @@
                 })}
               </span>
             {:else}
-              <span class="text-gray-400 italic">{$_('calendar.unscheduled')}</span>
+              <span class="text-ink-subtle italic">{$_('calendar.unscheduled')}</span>
             {/if}
           </div>
           {#if selectedContent.campaign}
             <div class="flex items-center gap-2 text-sm">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-ink-subtle flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M10.34 15.84c-.688-.06-1.386-.09-2.09-.09H7.5a4.5 4.5 0 1 1 0-9h.75c.704 0 1.402-.03 2.09-.09m0 9.18c.253.962.584 1.892.985 2.783.247.55.06 1.21-.463 1.511l-.657.38c-.551.318-1.26.117-1.527-.461a20.845 20.845 0 0 1-1.44-4.282m3.102.069a18.03 18.03 0 0 1-.59-4.59c0-1.586.205-3.124.59-4.59m0 9.18a23.848 23.848 0 0 1 8.835 2.535M10.34 6.66a23.847 23.847 0 0 0 8.835-2.535m0 0A23.74 23.74 0 0 0 18.795 3m.38 1.125a23.91 23.91 0 0 1 1.014 5.395m-1.014 8.855c-.118.38-.245.754-.38 1.125m.38-1.125a23.91 23.91 0 0 0 1.014-5.395m0-3.46c.495.413.811 1.035.811 1.73 0 .695-.316 1.317-.811 1.73m0-3.46a24.347 24.347 0 0 1 0 3.46" />
               </svg>
-              <span class="text-gray-500">{$_('calendar.campaign')}:</span>
-              <span class="font-medium text-gray-700">{selectedContent.campaign.name}</span>
+              <span class="text-ink-muted">{$_('calendar.campaign')}:</span>
+              <span class="font-medium text-ink">{selectedContent.campaign.name}</span>
             </div>
           {/if}
           {#if selectedContent.createdAt}
             <div class="flex items-center gap-2 text-sm">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-ink-subtle flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
               </svg>
-              <span class="text-gray-500">
+              <span class="text-ink-muted">
                 {$_('calendar.createdOn', {
                   values: {
                     date: new Date(selectedContent.createdAt)
@@ -653,14 +653,14 @@
         </div>
 
         <!-- Actions -->
-        <div class="border-t border-gray-100 pt-4 flex gap-2">
+        <div class="border-t border-border pt-4 flex gap-2">
           <a href="/projects/{projectId}/content"
-            class="flex-1 text-center bg-primary-600 text-white py-2.5 rounded-lg text-sm
-                   font-medium hover:bg-primary-700 transition-colors duration-150">
+            class="flex-1 text-center bg-brand text-white py-2.5 rounded-lg text-sm
+                   font-medium hover:brightness-110 transition-colors duration-150">
             {$_('calendar.viewDetails')}
           </a>
           <button on:click={() => selectedContent = null}
-            class="px-5 py-2.5 border border-gray-300 rounded-lg text-sm hover:bg-gray-50
+            class="px-5 py-2.5 border border-border rounded-lg text-sm hover:bg-surface-2
                    transition-colors duration-150 cursor-pointer">
             {$_('common.close')}
           </button>
@@ -675,16 +675,16 @@
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => schedulingDate = null}>
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-      <div class="p-6 border-b border-gray-100 flex items-center gap-2.5">
-        <div class="w-8 h-8 bg-primary-50 rounded-lg flex items-center justify-center flex-shrink-0">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+    <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-md">
+      <div class="p-6 border-b border-border flex items-center gap-2.5">
+        <div class="w-8 h-8 bg-brand-subtle/10 rounded-lg flex items-center justify-center flex-shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
           </svg>
         </div>
         <div>
-          <h2 class="text-lg font-semibold text-gray-900">{$_('calendar.scheduleContent')}</h2>
-          <p class="text-xs text-gray-500">
+          <h2 class="text-lg font-semibold text-ink">{$_('calendar.scheduleContent')}</h2>
+          <p class="text-xs text-ink-muted">
             {new Date(schedulingDate + 'T12:00:00').toLocaleDateString(undefined, {
               weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
             })}
@@ -692,10 +692,10 @@
         </div>
       </div>
       <div class="p-6">
-        <p class="text-sm text-gray-600 mb-3">{$_('calendar.selectContent')}</p>
+        <p class="text-sm text-ink-muted mb-3">{$_('calendar.selectContent')}</p>
         {#if unscheduledContents.length === 0}
           <div class="text-center py-8">
-            <p class="text-sm text-gray-400">{$_('calendar.noUnscheduled')}</p>
+            <p class="text-sm text-ink-subtle">{$_('calendar.noUnscheduled')}</p>
           </div>
         {:else}
           <div class="space-y-2 max-h-[300px] overflow-y-auto">
@@ -704,14 +704,14 @@
                 on:click={() => scheduleContentOnDate(content.id)}
                 disabled={scheduling}
                 class="w-full text-left flex items-center gap-3 p-3 rounded-xl border
-                       border-gray-200 hover:border-primary-300 hover:bg-primary-50/50
+                       border-border hover:border-primary-300 hover:bg-brand-subtle/10
                        transition-colors duration-150 cursor-pointer disabled:opacity-50"
               >
                 <span class="w-2 h-2 rounded-full flex-shrink-0
                   {statusDot[content.status]}"></span>
                 <div class="flex-1 min-w-0">
-                  <div class="text-sm font-medium text-gray-900 truncate">{content.title}</div>
-                  <div class="text-xs text-gray-500">{content.type.replace('_', ' ')}</div>
+                  <div class="text-sm font-medium text-ink truncate">{content.title}</div>
+                  <div class="text-xs text-ink-muted">{content.type.replace('_', ' ')}</div>
                 </div>
                 <span class="text-[10px] px-1.5 py-0.5 rounded
                   {statusBadge[content.status]}">
@@ -722,9 +722,9 @@
           </div>
         {/if}
       </div>
-      <div class="p-6 border-t border-gray-100">
+      <div class="p-6 border-t border-border">
         <button on:click={() => schedulingDate = null}
-          class="w-full py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50
+          class="w-full py-2.5 border border-border rounded-lg hover:bg-surface-2
                  transition-colors duration-150 text-sm cursor-pointer">
           {$_('common.cancel')}
         </button>

@@ -343,7 +343,7 @@
   }
 
   const statusBadge: Record<string, string> = {
-    DRAFT: 'bg-gray-100 text-gray-600',
+    DRAFT: 'bg-surface-2 text-ink-muted',
     REVIEW: 'bg-yellow-100 text-yellow-700',
     APPROVED: 'bg-green-100 text-green-700',
     PUBLISHED: 'bg-blue-100 text-blue-700',
@@ -480,11 +480,11 @@
 <div class="p-4 sm:p-6">
   <SectionHint sectionKey="content" titleKey="hints.content.title" descKey="hints.content.desc" />
   <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
-    <h1 class="text-2xl font-bold text-gray-900">{$_('content.title')}</h1>
+    <h1 class="text-2xl font-bold text-ink">{$_('content.title')}</h1>
     <div class="flex items-center gap-2">
       <button
         on:click={() => showCreateModal = true}
-        class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors duration-150 flex items-center gap-2 cursor-pointer"
+        class="bg-surface border border-border text-ink px-4 py-2 rounded-lg text-sm font-medium hover:bg-surface-2 transition-colors duration-150 flex items-center gap-2 cursor-pointer"
       >
         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -493,7 +493,7 @@
       </button>
       <button
         on:click={() => showModal = true}
-        class="bg-primary-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors duration-150 flex items-center gap-2 cursor-pointer"
+        class="bg-brand text-white px-4 py-2 rounded-lg text-sm font-medium hover:brightness-110 transition-colors duration-150 flex items-center gap-2 cursor-pointer"
       >
         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
@@ -531,21 +531,21 @@
   {#if loading}
     <div class="space-y-3">
       {#each Array(4) as _}
-        <div class="bg-white rounded-xl border border-gray-200 p-4 animate-pulse h-20"></div>
+        <div class="bg-surface rounded-xl border border-border p-4 animate-pulse h-20"></div>
       {/each}
     </div>
   {:else if contents.length === 0}
     <div class="flex flex-col items-center justify-center py-20 text-center">
-      <div class="w-20 h-20 bg-primary-50 rounded-2xl flex items-center justify-center mb-6">
+      <div class="w-20 h-20 bg-brand-subtle/10 rounded-2xl flex items-center justify-center mb-6">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
           <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
         </svg>
       </div>
-      <h2 class="text-xl font-semibold text-gray-900 mb-2">{$_('content.empty')}</h2>
-      <p class="text-gray-500 mb-6">{$_('content.emptyDesc')}</p>
+      <h2 class="text-xl font-semibold text-ink mb-2">{$_('content.empty')}</h2>
+      <p class="text-ink-muted mb-6">{$_('content.emptyDesc')}</p>
       <button
         on:click={() => showModal = true}
-        class="bg-primary-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-primary-700 transition-colors duration-150 flex items-center gap-2 cursor-pointer"
+        class="bg-brand text-white px-6 py-3 rounded-xl font-medium hover:brightness-110 transition-colors duration-150 flex items-center gap-2 cursor-pointer"
       >
         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
@@ -560,18 +560,18 @@
           <!-- Grouped content -->
           <!-- svelte-ignore a11y-click-events-have-key-events -->
           <!-- svelte-ignore a11y-no-static-element-interactions -->
-          <div class="bg-white rounded-xl border border-gray-200 border-l-4 {statusBorderAccent[group.items[0].status] || 'border-l-gray-300'} overflow-hidden">
+          <div class="bg-surface rounded-xl border border-border border-l-4 {statusBorderAccent[group.items[0].status] || 'border-l-gray-300'} overflow-hidden">
             <div
-              class="p-5 cursor-pointer hover:bg-gray-50 transition-colors duration-150"
+              class="p-5 cursor-pointer hover:bg-surface-2 transition-colors duration-150"
               on:click={() => toggleGroup(group.groupId)}
             >
               <div class="flex flex-col sm:flex-row items-start justify-between gap-3 sm:gap-4">
                 <div class="flex-1 min-w-0">
                   <div class="flex flex-wrap items-center gap-1.5 mb-2">
-                    <span class="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded font-medium">{typeLabel[group.items[0].type] ? $_(typeLabel[group.items[0].type]) : group.items[0].type.replace(/_/g, ' ')}</span>
-                    <span class="text-xs px-2 py-0.5 rounded {statusBadge[group.items[0].status] || 'bg-gray-100 text-gray-600'}">{$_(statusLabel[group.items[0].status] || 'content.draft')}</span>
+                    <span class="text-xs px-2 py-0.5 bg-surface-2 text-ink-muted rounded font-medium">{typeLabel[group.items[0].type] ? $_(typeLabel[group.items[0].type]) : group.items[0].type.replace(/_/g, ' ')}</span>
+                    <span class="text-xs px-2 py-0.5 rounded {statusBadge[group.items[0].status] || 'bg-surface-2 text-ink-muted'}">{$_(statusLabel[group.items[0].status] || 'content.draft')}</span>
                     {#each group.items as item}
-                      <span class="text-xs px-2 py-0.5 rounded font-medium {langBadgeColor[item.language] || 'bg-gray-100 text-gray-600'}">{(item.language || 'en').toUpperCase()}</span>
+                      <span class="text-xs px-2 py-0.5 rounded font-medium {langBadgeColor[item.language] || 'bg-surface-2 text-ink-muted'}">{(item.language || 'en').toUpperCase()}</span>
                     {/each}
                     {#if group.items[0].aiGenerated}
                       <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 bg-purple-50 text-purple-600 rounded">
@@ -582,11 +582,11 @@
                       </span>
                     {/if}
                   </div>
-                  <h3 class="font-medium text-gray-900 truncate">{group.items[0].title}</h3>
-                  <p class="text-sm text-gray-500 mt-1 line-clamp-2">{group.items[0].body}</p>
+                  <h3 class="font-medium text-ink truncate">{group.items[0].title}</h3>
+                  <p class="text-sm text-ink-muted mt-1 line-clamp-2">{group.items[0].body}</p>
                 </div>
                 <div class="flex items-center gap-2 flex-shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-400 transition-transform duration-200 {expandedGroups.has(group.groupId) ? 'rotate-180' : ''}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-ink-subtle transition-transform duration-200 {expandedGroups.has(group.groupId) ? 'rotate-180' : ''}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                   </svg>
                   <button
@@ -603,14 +603,14 @@
             </div>
 
             {#if expandedGroups.has(group.groupId)}
-              <div class="border-t border-gray-200">
+              <div class="border-t border-border">
                 {#each group.items as content}
-                  <div class="p-5 border-b border-gray-100 last:border-b-0 bg-gray-50/50">
+                  <div class="p-5 border-b border-border last:border-b-0 bg-surface-2/50">
                     <div class="flex flex-col sm:flex-row items-start justify-between gap-3 sm:gap-4">
                       <div class="flex-1 min-w-0">
                         <div class="flex flex-wrap items-center gap-1.5 mb-2">
-                          <span class="text-xs px-2 py-0.5 rounded font-bold {langBadgeColor[content.language] || 'bg-gray-100 text-gray-600'}">{(content.language || 'en').toUpperCase()}</span>
-                          <span class="text-xs px-2 py-0.5 rounded {statusBadge[content.status] || 'bg-gray-100 text-gray-600'}">{$_(statusLabel[content.status] || 'content.draft')}</span>
+                          <span class="text-xs px-2 py-0.5 rounded font-bold {langBadgeColor[content.language] || 'bg-surface-2 text-ink-muted'}">{(content.language || 'en').toUpperCase()}</span>
+                          <span class="text-xs px-2 py-0.5 rounded {statusBadge[content.status] || 'bg-surface-2 text-ink-muted'}">{$_(statusLabel[content.status] || 'content.draft')}</span>
                           {#if content.scheduledAt && content.status !== 'PUBLISHED'}
                             <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">
                               <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -621,14 +621,14 @@
                             <span class="text-xs px-2 py-0.5 rounded font-medium {scoreColor(getScore(content.id))}">{$_('content.score')}: {getScore(content.id)}</span>
                           {/if}
                         </div>
-                        <h3 class="font-medium text-gray-900 truncate">{content.title}</h3>
-                        <p class="text-sm text-gray-500 mt-1 line-clamp-2">{content.body}</p>
+                        <h3 class="font-medium text-ink truncate">{content.title}</h3>
+                        <p class="text-sm text-ink-muted mt-1 line-clamp-2">{content.body}</p>
                       </div>
                       <div class="flex items-center gap-2 flex-shrink-0 flex-wrap">
                         <select
                           value={content.status}
                           on:change={e => updateStatus(content.id, (e.target as HTMLSelectElement).value)}
-                          class="text-xs px-2 py-1.5 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 transition-colors duration-150 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-500"
+                          class="text-xs px-2 py-1.5 border border-border rounded-lg bg-surface hover:bg-surface-2 transition-colors duration-150 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-500"
                         >
                           {#each STATUSES as s}
                             <option value={s}>{$_(statusLabel[s])}</option>
@@ -656,7 +656,7 @@
                         <a
                           on:click|stopPropagation
                           href="/projects/{projectId}/content/{content.id}/edit"
-                          class="text-xs px-3 py-1.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 cursor-pointer"
+                          class="text-xs px-3 py-1.5 border border-border rounded-lg hover:bg-surface-2 transition-colors duration-150 cursor-pointer"
                         >
                           {$_('common.edit')}
                         </a>
@@ -679,11 +679,11 @@
         {:else}
           <!-- Single content item -->
           {@const content = group.items[0]}
-          <div class="bg-white rounded-xl border border-gray-200 border-l-4 {statusBorderAccent[content.status] || 'border-l-gray-300'} p-5 hover:shadow-sm transition-shadow duration-150">
+          <div class="bg-surface rounded-xl border border-border border-l-4 {statusBorderAccent[content.status] || 'border-l-gray-300'} p-5 hover:shadow-sm transition-shadow duration-150">
             <div class="flex flex-col sm:flex-row items-start justify-between gap-3 sm:gap-4">
               <div class="flex-1 min-w-0">
                 <div class="flex flex-wrap items-center gap-1.5 mb-2">
-                  <span class="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded font-medium">{typeLabel[content.type] ? $_(typeLabel[content.type]) : content.type.replace(/_/g, ' ')}</span>
+                  <span class="text-xs px-2 py-0.5 bg-surface-2 text-ink-muted rounded font-medium">{typeLabel[content.type] ? $_(typeLabel[content.type]) : content.type.replace(/_/g, ' ')}</span>
                   {#if content.platforms?.length}
                     {#each content.platforms as p}
                       <span class="text-xs px-2 py-0.5 bg-blue-50 text-blue-600 rounded">{p}</span>
@@ -691,7 +691,7 @@
                   {:else if content.platform}
                     <span class="text-xs px-2 py-0.5 bg-blue-50 text-blue-600 rounded">{content.platform}</span>
                   {/if}
-                  <span class="text-xs px-2 py-0.5 rounded {statusBadge[content.status] || 'bg-gray-100 text-gray-600'}">{$_(statusLabel[content.status] || 'content.draft')}</span>
+                  <span class="text-xs px-2 py-0.5 rounded {statusBadge[content.status] || 'bg-surface-2 text-ink-muted'}">{$_(statusLabel[content.status] || 'content.draft')}</span>
                   {#if content.scheduledAt && content.status !== 'PUBLISHED'}
                     <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">
                       <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -699,7 +699,7 @@
                     </span>
                   {/if}
                   {#if content.language}
-                    <span class="text-xs px-2 py-0.5 rounded font-medium {langBadgeColor[content.language] || 'bg-gray-100 text-gray-600'}">{content.language.toUpperCase()}</span>
+                    <span class="text-xs px-2 py-0.5 rounded font-medium {langBadgeColor[content.language] || 'bg-surface-2 text-ink-muted'}">{content.language.toUpperCase()}</span>
                   {/if}
                   {#if content.aiGenerated}
                     <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 bg-purple-50 text-purple-600 rounded">
@@ -716,15 +716,15 @@
                     <span class="text-xs px-2 py-0.5 rounded font-medium {scoreColor(getScore(content.id))}">{$_('content.score')}: {getScore(content.id)}</span>
                   {/if}
                 </div>
-                <h3 class="font-medium text-gray-900 truncate">{content.title}</h3>
-                <p class="text-sm text-gray-500 mt-1 line-clamp-2">{content.body}</p>
+                <h3 class="font-medium text-ink truncate">{content.title}</h3>
+                <p class="text-sm text-ink-muted mt-1 line-clamp-2">{content.body}</p>
               </div>
               <div class="flex items-center gap-2 flex-shrink-0 flex-wrap">
                 <!-- Status dropdown -->
                 <select
                   value={content.status}
                   on:change={e => updateStatus(content.id, (e.target as HTMLSelectElement).value)}
-                  class="text-xs px-2 py-1.5 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 transition-colors duration-150 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  class="text-xs px-2 py-1.5 border border-border rounded-lg bg-surface hover:bg-surface-2 transition-colors duration-150 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-500"
                 >
                   {#each STATUSES as s}
                     <option value={s}>{$_(statusLabel[s])}</option>
@@ -765,7 +765,7 @@
                 <!-- Edit button -->
                 <a
                   href="/projects/{projectId}/content/{content.id}/edit"
-                  class="text-xs px-3 py-1.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 cursor-pointer"
+                  class="text-xs px-3 py-1.5 border border-border rounded-lg hover:bg-surface-2 transition-colors duration-150 cursor-pointer"
                 >
                   {$_('common.edit')}
                 </a>
@@ -793,19 +793,19 @@
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => showModal = false}>
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-      <div class="p-6 border-b border-gray-100 flex items-center gap-2.5">
-        <div class="w-8 h-8 bg-primary-50 rounded-lg flex items-center justify-center flex-shrink-0">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+    <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-md">
+      <div class="p-6 border-b border-border flex items-center gap-2.5">
+        <div class="w-8 h-8 bg-brand-subtle/10 rounded-lg flex items-center justify-center flex-shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
           </svg>
         </div>
-        <h2 class="text-lg font-semibold text-gray-900">{$_('content.generate')}</h2>
+        <h2 class="text-lg font-semibold text-ink">{$_('content.generate')}</h2>
       </div>
       <div class="p-6 space-y-4">
         <div>
-          <label for="content-type" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('content.type')}</label>
-          <select id="content-type" bind:value={form.type} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+          <label for="content-type" class="block text-sm font-medium text-ink mb-1.5">{$_('content.type')}</label>
+          <select id="content-type" bind:value={form.type} class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
             <option value="SOCIAL_POST">{$_('content.socialPost')}</option>
             <option value="BLOG_ARTICLE">{$_('content.blogArticle')}</option>
             <option value="EMAIL">{$_('content.emailContent')}</option>
@@ -818,13 +818,13 @@
           </select>
         </div>
         <div>
-          <label for="content-topic" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('content.topic')}</label>
-          <input id="content-topic" type="text" bind:value={form.topic} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" placeholder={$_('content.topicPlaceholder')} />
+          <label for="content-topic" class="block text-sm font-medium text-ink mb-1.5">{$_('content.topic')}</label>
+          <input id="content-topic" type="text" bind:value={form.topic} class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" placeholder={$_('content.topicPlaceholder')} />
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label for="content-tone" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('content.tone')}</label>
-            <select id="content-tone" bind:value={form.tone} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+            <label for="content-tone" class="block text-sm font-medium text-ink mb-1.5">{$_('content.tone')}</label>
+            <select id="content-tone" bind:value={form.tone} class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
               <option value="professional">{$_('content.tones.professional')}</option>
               <option value="casual">{$_('content.tones.casual')}</option>
               <option value="inspiring">{$_('content.tones.inspiring')}</option>
@@ -833,8 +833,8 @@
             </select>
           </div>
           <div>
-            <label for="content-length" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('content.length')}</label>
-            <select id="content-length" bind:value={form.length} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+            <label for="content-length" class="block text-sm font-medium text-ink mb-1.5">{$_('content.length')}</label>
+            <select id="content-length" bind:value={form.length} class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
               <option value="short">{$_('content.lengths.short')}</option>
               <option value="medium">{$_('content.lengths.medium')}</option>
               <option value="long">{$_('content.lengths.long')}</option>
@@ -842,15 +842,15 @@
           </div>
         </div>
         <label class="flex items-center gap-2 mt-3">
-          <input type="checkbox" bind:checked={generateAllLanguages} class="rounded border-gray-300 text-primary-600 focus:ring-primary-500" />
-          <span class="text-sm text-gray-700">{$_('content.generateAllLanguages')}</span>
+          <input type="checkbox" bind:checked={generateAllLanguages} class="rounded border-border text-brand focus:ring-primary-500" />
+          <span class="text-sm text-ink">{$_('content.generateAllLanguages')}</span>
         </label>
       </div>
-      <div class="p-6 border-t border-gray-100 flex gap-3">
+      <div class="p-6 border-t border-border flex gap-3">
         <button
           on:click={generateContent}
           disabled={generating}
-          class="flex-1 bg-primary-600 text-white py-2.5 rounded-lg font-medium hover:bg-primary-700 transition-colors duration-150 disabled:opacity-50 text-sm flex items-center justify-center gap-2 cursor-pointer"
+          class="flex-1 bg-brand text-white py-2.5 rounded-lg font-medium hover:brightness-110 transition-colors duration-150 disabled:opacity-50 text-sm flex items-center justify-center gap-2 cursor-pointer"
         >
           {#if generating}
             <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
@@ -865,7 +865,7 @@
             {$_('content.generate')}
           {/if}
         </button>
-        <button on:click={() => showModal = false} class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 text-sm cursor-pointer">
+        <button on:click={() => showModal = false} class="px-5 py-2.5 border border-border rounded-lg hover:bg-surface-2 transition-colors duration-150 text-sm cursor-pointer">
           {$_('common.cancel')}
         </button>
       </div>
@@ -878,25 +878,25 @@
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => editingContent = null}>
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-[90vw] h-[90vh] flex flex-col">
-      <div class="p-6 border-b border-gray-100 flex items-center gap-2.5 flex-shrink-0">
+    <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-[90vw] h-[90vh] flex flex-col">
+      <div class="p-6 border-b border-border flex items-center gap-2.5 flex-shrink-0">
         <div class="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
           </svg>
         </div>
-        <h2 class="text-lg font-semibold text-gray-900">{$_('content.editContent')}</h2>
+        <h2 class="text-lg font-semibold text-ink">{$_('content.editContent')}</h2>
         {#if editingContent.language}
-          <span class="text-xs px-2 py-0.5 rounded font-medium {langBadgeColor[editingContent.language] || 'bg-gray-100 text-gray-600'}">{editingContent.language.toUpperCase()}</span>
+          <span class="text-xs px-2 py-0.5 rounded font-medium {langBadgeColor[editingContent.language] || 'bg-surface-2 text-ink-muted'}">{editingContent.language.toUpperCase()}</span>
         {/if}
       </div>
       <div class="p-6 space-y-4 flex-1 flex flex-col overflow-y-auto">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1.5">{$_('content.topic')}</label>
-          <input type="text" bind:value={editForm.title} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
+          <label class="block text-sm font-medium text-ink mb-1.5">{$_('content.topic')}</label>
+          <input type="text" bind:value={editForm.title} class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
         </div>
         <div class="flex-1 flex flex-col min-h-[400px]">
-          <label class="block text-sm font-medium text-gray-700 mb-1.5 flex-shrink-0">{$_('content.type')}</label>
+          <label class="block text-sm font-medium text-ink mb-1.5 flex-shrink-0">{$_('content.type')}</label>
           <div class="flex-1 min-h-0">
             <MarkdownEditor
               bind:value={editForm.body}
@@ -908,10 +908,10 @@
         <!-- Attached images -->
         {#if editForm.mediaUrls.length > 0}
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1.5">{$_('content.attachedImages')}</label>
+            <label class="block text-sm font-medium text-ink mb-1.5">{$_('content.attachedImages')}</label>
             <div class="flex flex-wrap gap-2">
               {#each editForm.mediaUrls as url, i}
-                <div class="relative group w-20 h-20 rounded-lg overflow-hidden border border-gray-200">
+                <div class="relative group w-20 h-20 rounded-lg overflow-hidden border border-border">
                   <img src={url} alt="Attached" class="w-full h-full object-cover" />
                   <button
                     on:click={() => removeImage(i)}
@@ -929,13 +929,13 @@
 
         <!-- Generate image with DALL-E -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1.5">{$_('content.generateImage')}</label>
+          <label class="block text-sm font-medium text-ink mb-1.5">{$_('content.generateImage')}</label>
           <div class="flex gap-2">
             <input
               type="text"
               bind:value={imagePrompt}
               placeholder={$_('content.imagePromptPlaceholder')}
-              class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              class="flex-1 px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
             <button
               on:click={() => generateImage(imagePrompt)}
@@ -960,7 +960,7 @@
         <!-- Schedule block (hidden when content is PUBLISHED) -->
         {#if editingContent.status !== 'PUBLISHED'}
           <div class="border-t pt-4 mt-4">
-            <label class="flex items-center gap-2 text-sm font-medium text-gray-700">
+            <label class="flex items-center gap-2 text-sm font-medium text-ink">
               <input type="checkbox" bind:checked={scheduleEnabled} />
               {$_('content.schedule.scheduleForLater')}
             </label>
@@ -968,17 +968,17 @@
             {#if scheduleEnabled}
               <div class="mt-3 space-y-3">
                 <div>
-                  <label class="block text-xs font-medium text-gray-600 mb-1">{$_('content.schedule.scheduledAt')}</label>
+                  <label class="block text-xs font-medium text-ink-muted mb-1">{$_('content.schedule.scheduledAt')}</label>
                   <input type="datetime-local" bind:value={scheduleAt}
                          class="w-full border rounded-lg px-3 py-2 text-sm" />
                 </div>
 
                 <div>
-                  <label class="block text-xs font-medium text-gray-600 mb-1">{$_('content.schedule.selectAccounts')}</label>
+                  <label class="block text-xs font-medium text-ink-muted mb-1">{$_('content.schedule.selectAccounts')}</label>
                   {#if projectAccounts.length === 0}
-                    <p class="text-xs text-gray-500">{$_('content.schedule.noProjectAccounts')}</p>
+                    <p class="text-xs text-ink-muted">{$_('content.schedule.noProjectAccounts')}</p>
                   {:else}
-                    <p class="text-xs text-gray-500 mb-1">{$_('content.schedule.languageRoutingHint')}</p>
+                    <p class="text-xs text-ink-muted mb-1">{$_('content.schedule.languageRoutingHint')}</p>
                     <div class="space-y-1 max-h-40 overflow-y-auto border rounded-lg p-2">
                       {#each projectAccounts as acc}
                         <label class="flex items-center gap-2 text-sm">
@@ -989,8 +989,8 @@
                                    else scheduleAccountIds = scheduleAccountIds.filter(id => id !== acc.id);
                                  }} />
                           <span class="font-medium">{acc.platform}</span>
-                          <span class="text-gray-500 truncate">{acc.accountName}</span>
-                          {#if acc.language}<span class="text-xs px-1.5 py-0.5 bg-gray-100 rounded">{acc.language.toUpperCase()}</span>{/if}
+                          <span class="text-ink-muted truncate">{acc.accountName}</span>
+                          {#if acc.language}<span class="text-xs px-1.5 py-0.5 bg-surface-2 rounded">{acc.language.toUpperCase()}</span>{/if}
                         </label>
                       {/each}
                     </div>
@@ -1001,14 +1001,14 @@
           </div>
         {/if}
       </div>
-      <div class="p-6 border-t border-gray-100 flex gap-3 justify-end flex-shrink-0">
-        <button on:click={() => editingContent = null} class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 text-sm cursor-pointer">
+      <div class="p-6 border-t border-border flex gap-3 justify-end flex-shrink-0">
+        <button on:click={() => editingContent = null} class="px-5 py-2.5 border border-border rounded-lg hover:bg-surface-2 transition-colors duration-150 text-sm cursor-pointer">
           {$_('common.cancel')}
         </button>
         <button
           on:click={saveEdit}
           disabled={editSaving}
-          class="px-6 bg-primary-600 text-white py-2.5 rounded-lg font-medium hover:bg-primary-700 transition-colors duration-150 disabled:opacity-50 text-sm flex items-center justify-center gap-2 cursor-pointer"
+          class="px-6 bg-brand text-white py-2.5 rounded-lg font-medium hover:brightness-110 transition-colors duration-150 disabled:opacity-50 text-sm flex items-center justify-center gap-2 cursor-pointer"
         >
           {#if editSaving}
             <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
@@ -1028,16 +1028,16 @@
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => publishingContent = null}>
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-      <div class="p-6 border-b border-gray-100 flex items-center gap-2.5">
+    <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-md">
+      <div class="p-6 border-b border-border flex items-center gap-2.5">
         <div class="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
           </svg>
         </div>
         <div>
-          <h2 class="text-lg font-semibold text-gray-900">{$_('social.publishTo')}</h2>
-          <p class="text-xs text-gray-500">{publishingContent.title}</p>
+          <h2 class="text-lg font-semibold text-ink">{$_('social.publishTo')}</h2>
+          <p class="text-xs text-ink-muted">{publishingContent.title}</p>
         </div>
       </div>
 
@@ -1060,50 +1060,50 @@
             </div>
           {/each}
         </div>
-        <div class="p-6 border-t border-gray-100">
-          <button on:click={() => publishingContent = null} class="w-full py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 text-sm cursor-pointer">
+        <div class="p-6 border-t border-border">
+          <button on:click={() => publishingContent = null} class="w-full py-2.5 border border-border rounded-lg hover:bg-surface-2 transition-colors duration-150 text-sm cursor-pointer">
             {$_('common.close')}
           </button>
         </div>
       {:else if socialAccounts.length === 0}
         <!-- No accounts connected -->
         <div class="p-8 text-center">
-          <div class="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <div class="w-14 h-14 bg-surface-2 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-ink-subtle" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
               <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
             </svg>
           </div>
-          <p class="text-sm font-medium text-gray-700 mb-1">{$_('social.noProjectAccounts')}</p>
-          <p class="text-xs text-gray-500 mb-4">{$_('social.noProjectAccountsDesc')}</p>
-          <a href="/projects/{projectId}/settings" class="inline-block text-sm px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors duration-150">
+          <p class="text-sm font-medium text-ink mb-1">{$_('social.noProjectAccounts')}</p>
+          <p class="text-xs text-ink-muted mb-4">{$_('social.noProjectAccountsDesc')}</p>
+          <a href="/projects/{projectId}/settings" class="inline-block text-sm px-4 py-2 bg-brand text-white rounded-lg hover:brightness-110 transition-colors duration-150">
             {$_('social.goToProjectSettings')}
           </a>
         </div>
       {:else}
         <!-- Account selection -->
         <div class="p-6 space-y-2">
-          <p class="text-sm text-gray-600 mb-3">{$_('social.publishToDesc')}</p>
+          <p class="text-sm text-ink-muted mb-3">{$_('social.publishToDesc')}</p>
           {#each socialAccounts as account}
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <!-- svelte-ignore a11y-no-static-element-interactions -->
             <div
-              class="flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors duration-150 {selectedAccountIds.includes(account.id) ? 'border-primary-400 bg-primary-50' : 'border-gray-200 hover:bg-gray-50'}"
+              class="flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors duration-150 {selectedAccountIds.includes(account.id) ? 'border-primary-400 bg-brand-subtle/10' : 'border-border hover:bg-surface-2'}"
               on:click={() => toggleAccount(account.id)}
             >
-              <input type="checkbox" checked={selectedAccountIds.includes(account.id)} class="w-4 h-4 text-primary-600 rounded border-gray-300 cursor-pointer" readonly />
+              <input type="checkbox" checked={selectedAccountIds.includes(account.id)} class="w-4 h-4 text-brand rounded border-border cursor-pointer" readonly />
               {#if account.profileImageUrl}
                 <img src={account.profileImageUrl} alt={account.accountName} class="w-8 h-8 rounded-full flex-shrink-0" />
               {:else}
-                <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0 text-xs font-bold text-gray-500">
+                <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0 text-xs font-bold text-ink-muted">
                   {account.accountName[0]?.toUpperCase()}
                 </div>
               {/if}
               <div class="flex-1 min-w-0">
-                <div class="text-sm font-medium text-gray-900 truncate" title={account.accountName}>{account.accountName}</div>
-                <div class="text-xs text-gray-500 flex items-center gap-1.5 flex-wrap">
+                <div class="text-sm font-medium text-ink truncate" title={account.accountName}>{account.accountName}</div>
+                <div class="text-xs text-ink-muted flex items-center gap-1.5 flex-wrap">
                   <span>{account.platform}{account.language ? ` - ${account.language.toUpperCase()}` : ''}</span>
                   {#if account.accountId}
-                    <span class="text-gray-300">·</span>
+                    <span class="text-ink-subtle">·</span>
                     <span class="font-mono truncate" title={account.accountId}>{account.accountId}</span>
                   {/if}
                 </div>
@@ -1116,7 +1116,7 @@
                   <select
                     value={accountLanguageMap[account.id] || account.language || publishingContent.language || 'en'}
                     on:change={(e) => { accountLanguageMap[account.id] = (e.target as HTMLSelectElement).value; accountLanguageMap = accountLanguageMap; }}
-                    class="text-xs px-2 py-1 border border-gray-300 rounded-lg bg-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    class="text-xs px-2 py-1 border border-border rounded-lg bg-surface cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-500"
                   >
                     {#each groupSiblings as sibling}
                       <option value={sibling.language}>{(sibling.language || 'en').toUpperCase()}</option>
@@ -1127,7 +1127,7 @@
             </div>
           {/each}
         </div>
-        <div class="p-6 border-t border-gray-100 flex gap-3">
+        <div class="p-6 border-t border-border flex gap-3">
           <button
             on:click={publishContent}
             disabled={publishLoading || selectedAccountIds.length === 0}
@@ -1146,7 +1146,7 @@
               {$_('social.publish')} ({selectedAccountIds.length})
             {/if}
           </button>
-          <button on:click={() => publishingContent = null} class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 text-sm cursor-pointer">
+          <button on:click={() => publishingContent = null} class="px-5 py-2.5 border border-border rounded-lg hover:bg-surface-2 transition-colors duration-150 text-sm cursor-pointer">
             {$_('common.cancel')}
           </button>
         </div>
@@ -1160,15 +1160,15 @@
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => deletingId = null}>
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
+    <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-sm">
       <div class="p-6">
         <div class="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center mb-4">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
           </svg>
         </div>
-        <h2 class="text-lg font-semibold text-gray-900 mb-2">{$_('content.deleteContent')}</h2>
-        <p class="text-sm text-gray-500 mb-6">{$_('content.confirmDelete')}</p>
+        <h2 class="text-lg font-semibold text-ink mb-2">{$_('content.deleteContent')}</h2>
+        <p class="text-sm text-ink-muted mb-6">{$_('content.confirmDelete')}</p>
         <div class="flex gap-3">
           <button
             on:click={() => deleteContent(deletingId!)}
@@ -1176,7 +1176,7 @@
           >
             {$_('common.delete')}
           </button>
-          <button on:click={() => deletingId = null} class="flex-1 px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 text-sm cursor-pointer">
+          <button on:click={() => deletingId = null} class="flex-1 px-5 py-2.5 border border-border rounded-lg hover:bg-surface-2 transition-colors duration-150 text-sm cursor-pointer">
             {$_('common.cancel')}
           </button>
         </div>
@@ -1190,23 +1190,23 @@
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => repurposingContent = null}>
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-      <div class="p-6 border-b border-gray-100 flex items-center gap-2.5">
+    <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-md">
+      <div class="p-6 border-b border-border flex items-center gap-2.5">
         <div class="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center flex-shrink-0">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 0 0-3.7-3.7 48.678 48.678 0 0 0-7.324 0 4.006 4.006 0 0 0-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 0 0 3.7 3.7 48.656 48.656 0 0 0 7.324 0 4.006 4.006 0 0 0 3.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3-3 3" />
           </svg>
         </div>
         <div>
-          <h2 class="text-lg font-semibold text-gray-900">{$_('content.repurpose')}</h2>
-          <p class="text-xs text-gray-500 truncate max-w-[300px]">{repurposingContent.title}</p>
+          <h2 class="text-lg font-semibold text-ink">{$_('content.repurpose')}</h2>
+          <p class="text-xs text-ink-muted truncate max-w-[300px]">{repurposingContent.title}</p>
         </div>
       </div>
       <div class="p-6 space-y-4">
-        <p class="text-sm text-gray-600">{$_('content.repurposeDesc')}</p>
+        <p class="text-sm text-ink-muted">{$_('content.repurposeDesc')}</p>
         <div>
-          <label for="repurpose-type" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('content.targetType')}</label>
-          <select id="repurpose-type" bind:value={repurposeTarget} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+          <label for="repurpose-type" class="block text-sm font-medium text-ink mb-1.5">{$_('content.targetType')}</label>
+          <select id="repurpose-type" bind:value={repurposeTarget} class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
             <option value="SOCIAL_POST">{$_('content.socialPost')}</option>
             <option value="BLOG_ARTICLE">{$_('content.blogArticle')}</option>
             <option value="EMAIL">{$_('content.emailContent')}</option>
@@ -1219,7 +1219,7 @@
           </select>
         </div>
       </div>
-      <div class="p-6 border-t border-gray-100 flex gap-3">
+      <div class="p-6 border-t border-border flex gap-3">
         <button
           on:click={repurposeContent}
           disabled={repurposeLoading}
@@ -1233,7 +1233,7 @@
           {/if}
           {$_('content.repurpose')}
         </button>
-        <button on:click={() => repurposingContent = null} class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 text-sm cursor-pointer">
+        <button on:click={() => repurposingContent = null} class="px-5 py-2.5 border border-border rounded-lg hover:bg-surface-2 transition-colors duration-150 text-sm cursor-pointer">
           {$_('common.cancel')}
         </button>
       </div>
@@ -1246,23 +1246,23 @@
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => showCreateModal = false}>
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-[90vw] h-[90vh] flex flex-col">
-      <div class="p-6 border-b border-gray-100 flex items-center gap-2.5 flex-shrink-0">
+    <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-[90vw] h-[90vh] flex flex-col">
+      <div class="p-6 border-b border-border flex items-center gap-2.5 flex-shrink-0">
         <div class="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center flex-shrink-0">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
           </svg>
         </div>
-        <h2 class="text-lg font-semibold text-gray-900">{$_('content.createContent')}</h2>
+        <h2 class="text-lg font-semibold text-ink">{$_('content.createContent')}</h2>
       </div>
       <div class="p-6 space-y-4 flex-1 flex flex-col overflow-y-auto">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1.5">{$_('content.topic')}</label>
-          <input type="text" bind:value={createForm.title} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" placeholder={$_('content.topicPlaceholder')} />
+          <label class="block text-sm font-medium text-ink mb-1.5">{$_('content.topic')}</label>
+          <input type="text" bind:value={createForm.title} class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" placeholder={$_('content.topicPlaceholder')} />
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1.5">{$_('content.type')}</label>
-          <select bind:value={createForm.type} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+          <label class="block text-sm font-medium text-ink mb-1.5">{$_('content.type')}</label>
+          <select bind:value={createForm.type} class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
             <option value="SOCIAL_POST">{$_('content.socialPost')}</option>
             <option value="BLOG_ARTICLE">{$_('content.blogArticle')}</option>
             <option value="EMAIL">{$_('content.emailContent')}</option>
@@ -1275,13 +1275,13 @@
           </select>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1.5">{$_('content.platform')}</label>
+          <label class="block text-sm font-medium text-ink mb-1.5">{$_('content.platform')}</label>
           <div class="flex flex-wrap gap-2">
             {#each PLATFORM_OPTIONS as opt}
               <button
                 type="button"
                 on:click={() => toggleCreatePlatform(opt.value)}
-                class="px-3 py-1.5 rounded-lg border text-sm cursor-pointer transition-colors duration-150 {createPlatforms.includes(opt.value) ? 'bg-primary-50 border-primary-500 text-primary-700' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'}"
+                class="px-3 py-1.5 rounded-lg border text-sm cursor-pointer transition-colors duration-150 {createPlatforms.includes(opt.value) ? 'bg-brand-subtle/10 border-primary-500 text-brand' : 'bg-surface border-border text-ink hover:bg-surface-2'}"
               >
                 {opt.label}
               </button>
@@ -1290,18 +1290,18 @@
         </div>
 
         <label class="flex items-center gap-2">
-          <input type="checkbox" bind:checked={createAllLanguages} class="rounded border-gray-300 text-primary-600 focus:ring-primary-500" />
-          <span class="text-sm text-gray-700">{$_('content.createAllLanguages')}</span>
+          <input type="checkbox" bind:checked={createAllLanguages} class="rounded border-border text-brand focus:ring-primary-500" />
+          <span class="text-sm text-ink">{$_('content.createAllLanguages')}</span>
         </label>
 
         {#if createAllLanguages}
           <!-- Language tabs -->
           <div class="flex-1 flex flex-col min-h-[400px]">
-            <div class="flex border-b border-gray-200 mb-3 flex-shrink-0">
+            <div class="flex border-b border-border mb-3 flex-shrink-0">
               {#each ['en', 'pl', 'ru'] as lang}
                 <button
                   on:click={() => activeCreateLang = lang}
-                  class="px-4 py-2 text-sm font-medium border-b-2 transition-colors duration-150 cursor-pointer {activeCreateLang === lang ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700'}"
+                  class="px-4 py-2 text-sm font-medium border-b-2 transition-colors duration-150 cursor-pointer {activeCreateLang === lang ? 'border-primary-500 text-brand' : 'border-transparent text-ink-muted hover:text-gray-700'}"
                 >
                   {lang.toUpperCase()}
                 </button>
@@ -1315,7 +1315,7 @@
           </div>
         {:else}
           <div class="flex-1 flex flex-col min-h-[400px]">
-            <label class="block text-sm font-medium text-gray-700 mb-1.5 flex-shrink-0">{$_('content.type')}</label>
+            <label class="block text-sm font-medium text-ink mb-1.5 flex-shrink-0">{$_('content.type')}</label>
             <div class="flex-1 min-h-0">
               <MarkdownEditor bind:value={createForm.body} placeholder={$_('content.bodyPlaceholder')} />
             </div>
@@ -1323,7 +1323,7 @@
         {/if}
 
         <div class="border-t pt-4 mt-4">
-          <label class="flex items-center gap-2 text-sm font-medium text-gray-700">
+          <label class="flex items-center gap-2 text-sm font-medium text-ink">
             <input type="checkbox" bind:checked={scheduleEnabled} />
             {$_('content.schedule.scheduleForLater')}
           </label>
@@ -1331,17 +1331,17 @@
           {#if scheduleEnabled}
             <div class="mt-3 space-y-3">
               <div>
-                <label class="block text-xs font-medium text-gray-600 mb-1">{$_('content.schedule.scheduledAt')}</label>
+                <label class="block text-xs font-medium text-ink-muted mb-1">{$_('content.schedule.scheduledAt')}</label>
                 <input type="datetime-local" bind:value={scheduleAt}
                        class="w-full border rounded-lg px-3 py-2 text-sm" />
               </div>
 
               <div>
-                <label class="block text-xs font-medium text-gray-600 mb-1">{$_('content.schedule.selectAccounts')}</label>
+                <label class="block text-xs font-medium text-ink-muted mb-1">{$_('content.schedule.selectAccounts')}</label>
                 {#if projectAccounts.length === 0}
-                  <p class="text-xs text-gray-500">{$_('content.schedule.noProjectAccounts')}</p>
+                  <p class="text-xs text-ink-muted">{$_('content.schedule.noProjectAccounts')}</p>
                 {:else}
-                  <p class="text-xs text-gray-500 mb-1">{$_('content.schedule.languageRoutingHint')}</p>
+                  <p class="text-xs text-ink-muted mb-1">{$_('content.schedule.languageRoutingHint')}</p>
                   <div class="space-y-1 max-h-40 overflow-y-auto border rounded-lg p-2">
                     {#each projectAccounts as acc}
                       <label class="flex items-center gap-2 text-sm">
@@ -1352,8 +1352,8 @@
                                  else scheduleAccountIds = scheduleAccountIds.filter(id => id !== acc.id);
                                }} />
                         <span class="font-medium">{acc.platform}</span>
-                        <span class="text-gray-500 truncate">{acc.accountName}</span>
-                        {#if acc.language}<span class="text-xs px-1.5 py-0.5 bg-gray-100 rounded">{acc.language.toUpperCase()}</span>{/if}
+                        <span class="text-ink-muted truncate">{acc.accountName}</span>
+                        {#if acc.language}<span class="text-xs px-1.5 py-0.5 bg-surface-2 rounded">{acc.language.toUpperCase()}</span>{/if}
                       </label>
                     {/each}
                   </div>
@@ -1363,14 +1363,14 @@
           {/if}
         </div>
       </div>
-      <div class="p-6 border-t border-gray-100 flex gap-3 justify-end flex-shrink-0">
-        <button on:click={() => showCreateModal = false} class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 text-sm cursor-pointer">
+      <div class="p-6 border-t border-border flex gap-3 justify-end flex-shrink-0">
+        <button on:click={() => showCreateModal = false} class="px-5 py-2.5 border border-border rounded-lg hover:bg-surface-2 transition-colors duration-150 text-sm cursor-pointer">
           {$_('common.cancel')}
         </button>
         <button
           on:click={createContent}
           disabled={createSaving || !createForm.title.trim()}
-          class="px-6 bg-primary-600 text-white py-2.5 rounded-lg font-medium hover:bg-primary-700 transition-colors duration-150 disabled:opacity-50 text-sm flex items-center justify-center gap-2 cursor-pointer"
+          class="px-6 bg-brand text-white py-2.5 rounded-lg font-medium hover:brightness-110 transition-colors duration-150 disabled:opacity-50 text-sm flex items-center justify-center gap-2 cursor-pointer"
         >
           {#if createSaving}
             <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">

@@ -72,7 +72,7 @@
   function trendClass(trend: string | undefined): string {
     if (trend === 'up') return 'text-green-600';
     if (trend === 'down') return 'text-red-600';
-    return 'text-gray-400';
+    return 'text-ink-subtle';
   }
 
   function trendArrow(trend: string | undefined): string {
@@ -96,20 +96,20 @@
       { label: $_('dashboard.kpiSubscribers'), value: summary?.subscriberCount, icon: kpiIconSubs, bg: 'bg-emerald-50', fg: 'text-emerald-600' },
       { label: $_('dashboard.kpiSocialAccounts'), value: summary?.socialAccountCount, icon: kpiIconSocial, bg: 'bg-violet-50', fg: 'text-violet-600' },
     ] as card}
-      <div class="bg-white border border-gray-200 rounded-xl p-4 flex items-center gap-3">
+      <div class="bg-surface border border-border rounded-xl p-4 flex items-center gap-3">
         <div class="w-10 h-10 {card.bg} rounded-lg flex items-center justify-center flex-shrink-0">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 {card.fg}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
             <path stroke-linecap="round" stroke-linejoin="round" d={card.icon} />
           </svg>
         </div>
         <div class="min-w-0">
-          <p class="text-xs text-gray-500 truncate">{card.label}</p>
+          <p class="text-xs text-ink-muted truncate">{card.label}</p>
           {#if summaryLoading}
-            <div class="h-6 w-14 bg-gray-100 rounded animate-pulse mt-1"></div>
+            <div class="h-6 w-14 bg-surface-2 rounded animate-pulse mt-1"></div>
           {:else if summaryError}
-            <p class="text-base font-semibold text-gray-300">—</p>
+            <p class="text-base font-semibold text-ink-subtle">—</p>
           {:else}
-            <p class="text-xl font-bold text-gray-900">{formatNumber(card.value ?? 0)}</p>
+            <p class="text-xl font-bold text-ink">{formatNumber(card.value ?? 0)}</p>
           {/if}
         </div>
       </div>
@@ -117,14 +117,14 @@
   </div>
 
   <!-- Activity block -->
-  <div class="bg-white border border-gray-200 rounded-xl p-4">
+  <div class="bg-surface border border-border rounded-xl p-4">
     <div class="flex items-center justify-between flex-wrap gap-2 mb-4">
-      <h2 class="text-sm font-semibold text-gray-700">{$_('dashboard.activityTitle')}</h2>
-      <div class="inline-flex items-center border border-gray-200 rounded-lg overflow-hidden text-xs">
+      <h2 class="text-sm font-semibold text-ink">{$_('dashboard.activityTitle')}</h2>
+      <div class="inline-flex items-center border border-border rounded-lg overflow-hidden text-xs">
         {#each [{ v: 7, label: $_('analytics.period7') }, { v: 30, label: $_('analytics.period30') }, { v: 90, label: $_('analytics.period90') }] as opt}
           <button
             type="button"
-            class="px-3 py-1.5 transition-colors cursor-pointer {period === opt.v ? 'bg-primary-600 text-white' : 'text-gray-600 hover:bg-gray-50'}"
+            class="px-3 py-1.5 transition-colors cursor-pointer {period === opt.v ? 'bg-brand text-white' : 'text-ink-muted hover:bg-surface-2'}"
             on:click={() => setPeriod(opt.v as 7 | 30 | 90)}
           >
             {opt.label}
@@ -140,23 +140,23 @@
         { key: 'conversions', label: $_('analytics.conversions') },
         { key: 'emailOpens', label: $_('analytics.emailOpens') },
       ] as metric}
-        <div class="rounded-lg border border-gray-100 bg-gray-50/50 px-3 py-3">
-          <p class="text-xs text-gray-500 truncate">{metric.label}</p>
+        <div class="rounded-lg border border-border bg-surface-2/50 px-3 py-3">
+          <p class="text-xs text-ink-muted truncate">{metric.label}</p>
           {#if totalsLoading}
             <div class="h-6 w-16 bg-gray-200 rounded animate-pulse mt-1.5"></div>
-            <div class="h-3 w-10 bg-gray-100 rounded animate-pulse mt-2"></div>
+            <div class="h-3 w-10 bg-surface-2 rounded animate-pulse mt-2"></div>
           {:else if totalsError || !totals}
-            <p class="text-lg font-semibold text-gray-300 mt-1">—</p>
+            <p class="text-lg font-semibold text-ink-subtle mt-1">—</p>
           {:else}
-            <p class="text-lg font-bold text-gray-900 mt-1">{formatNumber(totals.total[metric.key] ?? 0)}</p>
+            <p class="text-lg font-bold text-ink mt-1">{formatNumber(totals.total[metric.key] ?? 0)}</p>
             <p class="text-xs mt-1 flex items-center gap-1 {trendClass(totals.trend[metric.key])}">
               <span>{trendArrow(totals.trend[metric.key])}</span>
               {#if (totals.change[metric.key] ?? 0) !== 0}
                 <span>{Math.abs(totals.change[metric.key] ?? 0)}%</span>
               {:else}
-                <span class="text-gray-400">{$_('analytics.noChange')}</span>
+                <span class="text-ink-subtle">{$_('analytics.noChange')}</span>
               {/if}
-              <span class="text-gray-400 ml-1 truncate">{$_('analytics.vsLastPeriod')}</span>
+              <span class="text-ink-subtle ml-1 truncate">{$_('analytics.vsLastPeriod')}</span>
             </p>
           {/if}
         </div>

@@ -34,11 +34,11 @@
 </script>
 
 {#if visible}
-  <div class="bg-white rounded-xl border border-gray-200 p-5">
-    <div class="flex items-center justify-between text-xs text-gray-500 mb-2">
+  <div class="bg-surface rounded-xl border border-border p-5">
+    <div class="flex items-center justify-between text-xs text-ink-muted mb-2">
       <span>{startDate ? formatDate(startDate) : '—'}</span>
       {#if state === 'notStarted'}
-        <span class="font-medium text-gray-600">{$_('campaigns.detail.notStarted')}</span>
+        <span class="font-medium text-ink-muted">{$_('campaigns.detail.notStarted')}</span>
       {:else if state === 'completed'}
         <span class="font-medium text-blue-600">{$_('campaigns.detail.completed')}</span>
       {:else if state === 'inRange'}
@@ -49,14 +49,14 @@
       {/if}
       <span>{endDate ? formatDate(endDate) : '—'}</span>
     </div>
-    <div class="relative h-2 bg-gray-100 rounded-full overflow-hidden">
+    <div class="relative h-2 bg-surface-2 rounded-full overflow-hidden">
       <div
         class="absolute inset-y-0 left-0 bg-indigo-500 transition-all"
         style="width: {percent}%"
       ></div>
       {#if state === 'inRange'}
         <div
-          class="absolute top-1/2 w-3 h-3 -mt-1.5 -ml-1.5 rounded-full bg-white border-2 border-indigo-600 shadow"
+          class="absolute top-1/2 w-3 h-3 -mt-1.5 -ml-1.5 rounded-full bg-surface border-2 border-indigo-600 shadow"
           style="left: {percent}%"
         ></div>
       {/if}

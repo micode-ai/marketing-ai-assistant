@@ -72,11 +72,11 @@
   <!-- Filters -->
   <div class="flex flex-wrap items-center gap-3 mb-5">
     <div class="flex items-center gap-1.5">
-      <span class="text-xs font-medium text-gray-500">{$_('googlePlay.reviews.filterByRating')}:</span>
+      <span class="text-xs font-medium text-ink-muted">{$_('googlePlay.reviews.filterByRating')}:</span>
       <button
         on:click={() => applyFilter(null)}
         class="px-2.5 py-1 text-xs font-medium rounded-full transition-colors duration-150 cursor-pointer
-          {filterRating === null && !filterUnreplied ? 'bg-primary-100 text-primary-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}"
+          {filterRating === null && !filterUnreplied ? 'bg-primary-100 text-brand' : 'bg-surface-2 text-ink-muted hover:bg-gray-200'}"
       >
         {$_('googlePlay.reviews.allRatings')}
       </button>
@@ -84,7 +84,7 @@
         <button
           on:click={() => applyFilter(star)}
           class="px-2.5 py-1 text-xs font-medium rounded-full transition-colors duration-150 cursor-pointer flex items-center gap-0.5
-            {filterRating === star ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}"
+            {filterRating === star ? 'bg-yellow-100 text-yellow-700' : 'bg-surface-2 text-ink-muted hover:bg-gray-200'}"
         >
           {star}
           <svg class="w-3 h-3 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
@@ -97,24 +97,24 @@
     <button
       on:click={toggleUnreplied}
       class="px-2.5 py-1 text-xs font-medium rounded-full transition-colors duration-150 cursor-pointer
-        {filterUnreplied ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}"
+        {filterUnreplied ? 'bg-orange-100 text-orange-700' : 'bg-surface-2 text-ink-muted hover:bg-gray-200'}"
     >
       {$_('googlePlay.reviews.unreplied')}
     </button>
 
     <div class="ml-auto flex items-center gap-1.5">
-      <span class="text-xs text-gray-500">Sort:</span>
+      <span class="text-xs text-ink-muted">Sort:</span>
       <button
         on:click={() => changeSort('date')}
         class="px-2.5 py-1 text-xs font-medium rounded-full transition-colors duration-150 cursor-pointer
-          {sortBy === 'date' ? 'bg-primary-100 text-primary-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}"
+          {sortBy === 'date' ? 'bg-primary-100 text-brand' : 'bg-surface-2 text-ink-muted hover:bg-gray-200'}"
       >
         Date
       </button>
       <button
         on:click={() => changeSort('rating')}
         class="px-2.5 py-1 text-xs font-medium rounded-full transition-colors duration-150 cursor-pointer
-          {sortBy === 'rating' ? 'bg-primary-100 text-primary-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}"
+          {sortBy === 'rating' ? 'bg-primary-100 text-brand' : 'bg-surface-2 text-ink-muted hover:bg-gray-200'}"
       >
         Rating
       </button>
@@ -135,7 +135,7 @@
           <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
         </svg>
       </div>
-      <h2 class="text-lg font-semibold text-gray-900 mb-2">{$_('googlePlay.reviews.noReviews')}</h2>
+      <h2 class="text-lg font-semibold text-ink mb-2">{$_('googlePlay.reviews.noReviews')}</h2>
     </div>
   {:else}
     <div class="space-y-4">
@@ -150,17 +150,17 @@
         <button
           on:click={() => goToPage(currentPage - 1)}
           disabled={currentPage <= 1}
-          class="px-3 py-1.5 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+          class="px-3 py-1.5 text-sm text-ink-muted border border-border rounded-lg hover:bg-surface-2 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
         >
           Previous
         </button>
-        <span class="text-sm text-gray-500">
+        <span class="text-sm text-ink-muted">
           {currentPage} / {totalPages}
         </span>
         <button
           on:click={() => goToPage(currentPage + 1)}
           disabled={currentPage >= totalPages}
-          class="px-3 py-1.5 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+          class="px-3 py-1.5 text-sm text-ink-muted border border-border rounded-lg hover:bg-surface-2 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
         >
           Next
         </button>

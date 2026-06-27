@@ -178,8 +178,8 @@
   <!-- Header -->
   <div class="flex items-center justify-between mb-6">
     <div>
-      <h1 class="text-2xl font-bold text-gray-900">{$_('webhooks.title')}</h1>
-      <p class="text-sm text-gray-500 mt-1">{$_('webhooks.subtitle')}</p>
+      <h1 class="text-2xl font-bold text-ink">{$_('webhooks.title')}</h1>
+      <p class="text-sm text-ink-muted mt-1">{$_('webhooks.subtitle')}</p>
     </div>
     <button
       on:click={openAddModal}
@@ -203,14 +203,14 @@
   {#if loading}
     <div class="space-y-3">
       {#each Array(3) as _}
-        <div class="bg-white rounded-xl border border-gray-200 p-5 animate-pulse">
+        <div class="bg-surface rounded-xl border border-border p-5 animate-pulse">
           <div class="flex items-center gap-4">
             <div class="flex-1 space-y-2">
               <div class="h-4 bg-gray-200 rounded w-2/3"></div>
-              <div class="h-3 bg-gray-100 rounded w-1/3"></div>
+              <div class="h-3 bg-surface-2 rounded w-1/3"></div>
               <div class="flex gap-2 mt-2">
-                <div class="h-5 bg-gray-100 rounded-full w-24"></div>
-                <div class="h-5 bg-gray-100 rounded-full w-20"></div>
+                <div class="h-5 bg-surface-2 rounded-full w-24"></div>
+                <div class="h-5 bg-surface-2 rounded-full w-20"></div>
               </div>
             </div>
             <div class="h-6 w-10 bg-gray-200 rounded-full"></div>
@@ -221,15 +221,15 @@
 
   <!-- Empty state -->
   {:else if webhooks.length === 0}
-    <div class="text-center py-16 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+    <div class="text-center py-16 bg-surface-2 rounded-xl border border-dashed border-border">
       <div class="w-12 h-12 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-3">
         <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
             d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
         </svg>
       </div>
-      <p class="text-gray-700 font-medium text-sm">{$_('webhooks.empty')}</p>
-      <p class="text-gray-400 text-xs mt-1 mb-4">{$_('webhooks.emptyDesc')}</p>
+      <p class="text-ink font-medium text-sm">{$_('webhooks.empty')}</p>
+      <p class="text-ink-subtle text-xs mt-1 mb-4">{$_('webhooks.emptyDesc')}</p>
       <button
         on:click={openAddModal}
         class="bg-indigo-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors cursor-pointer"
@@ -242,7 +242,7 @@
   {:else}
     <div class="space-y-3">
       {#each webhooks as webhook (webhook.id)}
-        <div class="bg-white rounded-xl border border-gray-200 p-5">
+        <div class="bg-surface rounded-xl border border-border p-5">
           <div class="flex items-start gap-4">
             <!-- Icon -->
             <div class="w-10 h-10 bg-indigo-50 rounded-lg flex items-center justify-center shrink-0 mt-0.5">
@@ -256,18 +256,18 @@
             <div class="flex-1 min-w-0">
               <!-- URL + status -->
               <div class="flex items-center gap-2 flex-wrap">
-                <span class="font-medium text-gray-900 text-sm truncate max-w-md">{webhook.url}</span>
+                <span class="font-medium text-ink text-sm truncate max-w-md">{webhook.url}</span>
                 {#if webhook.isActive}
                   <span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full font-medium">{$_('webhooks.active')}</span>
                 {:else}
-                  <span class="text-xs px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full font-medium">{$_('webhooks.inactive')}</span>
+                  <span class="text-xs px-2 py-0.5 bg-surface-2 text-ink-muted rounded-full font-medium">{$_('webhooks.inactive')}</span>
                 {/if}
               </div>
 
               <!-- Events -->
               <div class="flex items-center gap-1.5 mt-2 flex-wrap">
                 {#each webhook.events as event}
-                  <span class="text-xs px-2 py-0.5 rounded-full font-medium {eventColors[event] ?? 'bg-gray-100 text-gray-600'}">
+                  <span class="text-xs px-2 py-0.5 rounded-full font-medium {eventColors[event] ?? 'bg-surface-2 text-ink-muted'}">
                     {$_(`webhooks.events.${event}`)}
                   </span>
                 {/each}
@@ -275,13 +275,13 @@
 
               <!-- Secret -->
               <div class="flex items-center gap-2 mt-2.5">
-                <span class="text-xs text-gray-400">{$_('webhooks.secret')}:</span>
-                <code class="text-xs font-mono text-gray-600 bg-gray-50 px-2 py-0.5 rounded">
+                <span class="text-xs text-ink-subtle">{$_('webhooks.secret')}:</span>
+                <code class="text-xs font-mono text-ink-muted bg-surface-2 px-2 py-0.5 rounded">
                   {visibleSecrets[webhook.id] ? webhook.secret : maskSecret(webhook.secret)}
                 </code>
                 <button
                   on:click={() => toggleSecretVisibility(webhook.id)}
-                  class="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+                  class="text-ink-subtle hover:text-gray-600 transition-colors cursor-pointer"
                   title={visibleSecrets[webhook.id] ? $_('webhooks.hideSecret') : $_('webhooks.showSecret')}
                 >
                   {#if visibleSecrets[webhook.id]}
@@ -300,7 +300,7 @@
                 </button>
                 <button
                   on:click={() => copySecret(webhook.secret, webhook.id)}
-                  class="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+                  class="text-ink-subtle hover:text-gray-600 transition-colors cursor-pointer"
                   title={$_('webhooks.copySecret')}
                 >
                   {#if copiedId === webhook.id}
@@ -318,7 +318,7 @@
 
               <!-- Last triggered -->
               <div class="mt-2">
-                <span class="text-xs text-gray-400">
+                <span class="text-xs text-ink-subtle">
                   {$_('webhooks.lastTriggered')}: {formatDate(webhook.lastTriggeredAt)}
                 </span>
               </div>
@@ -333,14 +333,14 @@
                 title={webhook.isActive ? $_('webhooks.deactivate') : $_('webhooks.activate')}
               >
                 <span
-                  class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow-sm {webhook.isActive ? 'translate-x-6' : 'translate-x-1'}"
+                  class="inline-block h-4 w-4 transform rounded-full bg-surface transition-transform shadow-sm {webhook.isActive ? 'translate-x-6' : 'translate-x-1'}"
                 ></span>
               </button>
 
               <!-- Edit -->
               <button
                 on:click={() => openEditModal(webhook)}
-                class="text-xs text-gray-600 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer whitespace-nowrap"
+                class="text-xs text-ink-muted border border-border px-3 py-1.5 rounded-lg hover:bg-surface-2 transition-colors cursor-pointer whitespace-nowrap"
               >
                 {$_('common.edit')}
               </button>
@@ -370,15 +370,15 @@
     on:click|self={() => (showModal = false)}
     on:keydown={(e) => e.key === 'Escape' && (showModal = false)}
   >
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+    <div class="bg-surface rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
       <div class="p-6">
         <div class="flex items-center justify-between mb-5">
-          <h2 class="text-lg font-semibold text-gray-900">
+          <h2 class="text-lg font-semibold text-ink">
             {editingId ? $_('webhooks.editWebhook') : $_('webhooks.addWebhook')}
           </h2>
           <button
             on:click={() => (showModal = false)}
-            class="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+            class="text-ink-subtle hover:text-gray-600 transition-colors cursor-pointer"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -393,34 +393,34 @@
         <form on:submit|preventDefault={saveWebhook} class="space-y-4">
           <!-- URL -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">{$_('webhooks.endpointUrl')} *</label>
+            <label class="block text-sm font-medium text-ink mb-1">{$_('webhooks.endpointUrl')} *</label>
             <input
               type="url"
               bind:value={form.url}
               required
               placeholder="https://example.com/webhook"
-              class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              class="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
-            <p class="text-xs text-gray-400 mt-1">{$_('webhooks.urlHint')}</p>
+            <p class="text-xs text-ink-subtle mt-1">{$_('webhooks.urlHint')}</p>
           </div>
 
           <!-- Events -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">{$_('webhooks.selectEvents')} *</label>
+            <label class="block text-sm font-medium text-ink mb-2">{$_('webhooks.selectEvents')} *</label>
             <div class="space-y-2">
               {#each AVAILABLE_EVENTS as event}
-                <label class="flex items-center gap-3 p-2.5 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer">
+                <label class="flex items-center gap-3 p-2.5 rounded-lg border border-border hover:bg-surface-2 transition-colors cursor-pointer">
                   <input
                     type="checkbox"
                     checked={form.events.includes(event)}
                     on:change={() => toggleEvent(event)}
-                    class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                    class="w-4 h-4 rounded border-border text-indigo-600 focus:ring-indigo-500"
                   />
                   <div class="flex-1">
-                    <span class="text-sm text-gray-800 font-medium">{$_(`webhooks.events.${event}`)}</span>
-                    <p class="text-xs text-gray-400">{$_(`webhooks.eventDescs.${event}`)}</p>
+                    <span class="text-sm text-ink font-medium">{$_(`webhooks.events.${event}`)}</span>
+                    <p class="text-xs text-ink-subtle">{$_(`webhooks.eventDescs.${event}`)}</p>
                   </div>
-                  <span class="text-xs px-2 py-0.5 rounded-full {eventColors[event] ?? 'bg-gray-100 text-gray-600'}">
+                  <span class="text-xs px-2 py-0.5 rounded-full {eventColors[event] ?? 'bg-surface-2 text-ink-muted'}">
                     {event}
                   </span>
                 </label>
@@ -432,7 +432,7 @@
             <button
               type="button"
               on:click={() => (showModal = false)}
-              class="flex-1 border border-gray-200 text-gray-700 text-sm font-medium py-2.5 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer"
+              class="flex-1 border border-border text-ink text-sm font-medium py-2.5 rounded-xl hover:bg-surface-2 transition-colors cursor-pointer"
             >
               {$_('common.cancel')}
             </button>
@@ -455,15 +455,15 @@
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => (deletingId = null)}>
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+    <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-sm p-6">
       <div class="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center mb-4">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round"
             d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
         </svg>
       </div>
-      <h2 class="text-lg font-semibold text-gray-900 mb-1">{$_('webhooks.deleteConfirm')}</h2>
-      <p class="text-sm text-gray-500 mb-6">{$_('webhooks.deleteDesc')}</p>
+      <h2 class="text-lg font-semibold text-ink mb-1">{$_('webhooks.deleteConfirm')}</h2>
+      <p class="text-sm text-ink-muted mb-6">{$_('webhooks.deleteDesc')}</p>
       <div class="flex gap-3">
         <button
           on:click={() => deleteWebhook(deletingId)}
@@ -473,7 +473,7 @@
         </button>
         <button
           on:click={() => (deletingId = null)}
-          class="flex-1 px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 text-sm cursor-pointer"
+          class="flex-1 px-5 py-2.5 border border-border rounded-lg hover:bg-surface-2 transition-colors duration-150 text-sm cursor-pointer"
         >
           {$_('common.cancel')}
         </button>

@@ -50,42 +50,42 @@
   }
 </script>
 
-<div class="bg-white rounded-xl border border-gray-200 p-5">
+<div class="bg-surface rounded-xl border border-border p-5">
   <div class="flex items-center justify-between mb-4">
-    <h2 class="text-base font-semibold text-gray-900">
+    <h2 class="text-base font-semibold text-ink">
       {$_('campaigns.detail.documentsSection')}
-      <span class="ml-1 text-sm font-normal text-gray-500">({campaign.documents?.length ?? 0})</span>
+      <span class="ml-1 text-sm font-normal text-ink-muted">({campaign.documents?.length ?? 0})</span>
     </h2>
     <button
       on:click={() => (showAttach = true)}
-      class="text-xs px-3 py-1.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors cursor-pointer"
+      class="text-xs px-3 py-1.5 bg-brand text-white rounded-lg hover:brightness-110 transition-colors cursor-pointer"
     >
       + {$_('campaigns.detail.attachDocuments')}
     </button>
   </div>
 
   {#if !campaign.documents || campaign.documents.length === 0}
-    <p class="text-sm text-gray-500 py-6 text-center">{$_('campaigns.detail.emptyDocuments')}</p>
+    <p class="text-sm text-ink-muted py-6 text-center">{$_('campaigns.detail.emptyDocuments')}</p>
   {:else}
-    <ul class="divide-y divide-gray-100">
+    <ul class="divide-y divide-border">
       {#each campaign.documents as item}
         <li class="py-3 flex items-center justify-between gap-3">
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2 mb-0.5">
-              <span class="text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-600 font-medium">
+              <span class="text-xs px-2 py-0.5 rounded bg-surface-2 text-ink-muted font-medium">
                 {item.type || ''}
               </span>
               {#if item.generatedByAi}
                 <span class="text-xs px-1.5 py-0.5 bg-purple-50 text-purple-600 rounded">AI</span>
               {/if}
               {#if item.fileUrl}
-                <span class="text-xs text-gray-400">{item.fileName || ''}</span>
+                <span class="text-xs text-ink-subtle">{item.fileName || ''}</span>
                 {#if item.fileSize}
-                  <span class="text-xs text-gray-400">· {formatFileSize(item.fileSize)}</span>
+                  <span class="text-xs text-ink-subtle">· {formatFileSize(item.fileSize)}</span>
                 {/if}
               {/if}
             </div>
-            <a href={documentHref(item)} class="text-sm text-gray-900 hover:text-primary-600 truncate block">
+            <a href={documentHref(item)} class="text-sm text-ink hover:text-primary-600 truncate block">
               {item.title}
             </a>
           </div>
@@ -94,14 +94,14 @@
               <a
                 href={downloadUrl(item)}
                 download={item.fileName || item.title}
-                class="text-xs px-2 py-1 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded cursor-pointer"
+                class="text-xs px-2 py-1 text-ink-muted hover:text-gray-700 hover:bg-surface-2 rounded cursor-pointer"
               >
                 {$_('documents.download')}
               </a>
             {/if}
             <a
               href={documentHref(item)}
-              class="text-xs px-2 py-1 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded cursor-pointer"
+              class="text-xs px-2 py-1 text-ink-muted hover:text-gray-700 hover:bg-surface-2 rounded cursor-pointer"
             >
               {$_('campaigns.detail.open')}
             </a>

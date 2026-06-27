@@ -193,7 +193,7 @@
 
   /** Returns Tailwind colour class for a delta. lowerIsBetter inverts green/red. */
   function deltaClass(delta: number, lowerIsBetter = false): string {
-    if (Math.abs(delta) < 0.0001) return 'text-gray-400';
+    if (Math.abs(delta) < 0.0001) return 'text-ink-subtle';
     const positive = lowerIsBetter ? delta < 0 : delta > 0;
     return positive ? 'text-green-600' : 'text-red-500';
   }
@@ -215,13 +215,13 @@
   }
 </script>
 
-<div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+<div class="bg-surface rounded-xl border border-border overflow-hidden">
   {#if loading}
     <!-- Skeleton loader -->
     <div class="p-5 space-y-2 animate-pulse">
-      <div class="h-9 bg-gray-100 rounded-lg mb-3"></div>
+      <div class="h-9 bg-surface-2 rounded-lg mb-3"></div>
       {#each Array(5) as _}
-        <div class="h-11 bg-gray-100 rounded-lg"></div>
+        <div class="h-11 bg-surface-2 rounded-lg"></div>
       {/each}
     </div>
 
@@ -232,24 +232,24 @@
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
         </svg>
       </div>
-      <p class="text-sm text-gray-700 mb-3">{error}</p>
+      <p class="text-sm text-ink mb-3">{error}</p>
       <button
         on:click={fetchRows}
-        class="px-4 py-1.5 text-sm font-medium bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors">
+        class="px-4 py-1.5 text-sm font-medium bg-surface-2 hover:bg-gray-200 text-ink rounded-lg transition-colors">
         {$_('seo.searchConsolePanel.retry')}
       </button>
     </div>
 
   {:else if rows.length === 0}
-    <div class="text-sm text-gray-400 py-10 text-center">{$_('gscDetail.noData')}</div>
+    <div class="text-sm text-ink-subtle py-10 text-center">{$_('gscDetail.noData')}</div>
 
   {:else}
     <div class="overflow-x-auto">
       <table class="w-full text-sm min-w-[520px]">
         <thead>
-          <tr class="bg-gray-50 border-b border-gray-200">
+          <tr class="bg-surface-2 border-b border-border">
             <th
-              class="text-left px-3 py-2.5 text-xs font-semibold text-gray-500 cursor-pointer hover:text-gray-700 select-none"
+              class="text-left px-3 py-2.5 text-xs font-semibold text-ink-muted cursor-pointer hover:text-gray-700 select-none"
               on:click={() => toggleSort('value')}>
               {dimension === 'query'
                 ? $_('seo.searchConsolePanel.query')
@@ -257,22 +257,22 @@
               {sortIcon('value')}
             </th>
             <th
-              class="text-right px-3 py-2.5 text-xs font-semibold text-gray-500 cursor-pointer hover:text-gray-700 whitespace-nowrap select-none"
+              class="text-right px-3 py-2.5 text-xs font-semibold text-ink-muted cursor-pointer hover:text-gray-700 whitespace-nowrap select-none"
               on:click={() => toggleSort('clicks')}>
               {$_('seo.searchConsolePanel.clicks')} {sortIcon('clicks')}
             </th>
             <th
-              class="text-right px-3 py-2.5 text-xs font-semibold text-gray-500 cursor-pointer hover:text-gray-700 whitespace-nowrap select-none"
+              class="text-right px-3 py-2.5 text-xs font-semibold text-ink-muted cursor-pointer hover:text-gray-700 whitespace-nowrap select-none"
               on:click={() => toggleSort('impressions')}>
               {$_('seo.searchConsolePanel.impressions')} {sortIcon('impressions')}
             </th>
             <th
-              class="text-right px-3 py-2.5 text-xs font-semibold text-gray-500 cursor-pointer hover:text-gray-700 whitespace-nowrap select-none"
+              class="text-right px-3 py-2.5 text-xs font-semibold text-ink-muted cursor-pointer hover:text-gray-700 whitespace-nowrap select-none"
               on:click={() => toggleSort('ctr')}>
               {$_('seo.searchConsolePanel.ctr')} {sortIcon('ctr')}
             </th>
             <th
-              class="text-right px-3 py-2.5 text-xs font-semibold text-gray-500 cursor-pointer hover:text-gray-700 whitespace-nowrap select-none"
+              class="text-right px-3 py-2.5 text-xs font-semibold text-ink-muted cursor-pointer hover:text-gray-700 whitespace-nowrap select-none"
               on:click={() => toggleSort('position')}>
               {$_('seo.searchConsolePanel.position')} {sortIcon('position')}
             </th>
@@ -284,18 +284,18 @@
             {@const isExpanded = !!expanded[rowKey]}
             <!-- Main row — click to drill down -->
             <tr
-              class="border-b border-gray-100 hover:bg-blue-50 cursor-pointer transition-colors"
+              class="border-b border-border hover:bg-blue-50 cursor-pointer transition-colors"
               class:bg-blue-50={isExpanded}
               on:click={() => toggleDrillDown(rowKey)}>
               <td class="px-3 py-2 max-w-[200px]">
-                <span class="text-gray-800 truncate block" title={rowKey}>
+                <span class="text-ink truncate block" title={rowKey}>
                   {formatDimValue(rowKey, dimension)}
                 </span>
               </td>
 
               <!-- Clicks -->
               <td class="px-3 py-2 text-right">
-                <span class="text-gray-700 font-medium">{formatNumber(row.clicks)}</span>
+                <span class="text-ink font-medium">{formatNumber(row.clicks)}</span>
                 {#if compare && row.prevClicks != null}
                   {@const d = row.clicks - row.prevClicks}
                   <br /><span class="text-xs {deltaClass(d)}">{fmtIntDelta(d)}</span>
@@ -304,7 +304,7 @@
 
               <!-- Impressions -->
               <td class="px-3 py-2 text-right">
-                <span class="text-gray-600">{formatNumber(row.impressions)}</span>
+                <span class="text-ink-muted">{formatNumber(row.impressions)}</span>
                 {#if compare && row.prevImpressions != null}
                   {@const d = row.impressions - row.prevImpressions}
                   <br /><span class="text-xs {deltaClass(d)}">{fmtIntDelta(d)}</span>
@@ -313,7 +313,7 @@
 
               <!-- CTR -->
               <td class="px-3 py-2 text-right">
-                <span class="text-gray-600">{formatCtr(row.ctr)}</span>
+                <span class="text-ink-muted">{formatCtr(row.ctr)}</span>
                 {#if compare && row.prevCtr != null}
                   {@const d = row.ctr - row.prevCtr}
                   <br /><span class="text-xs {deltaClass(d)}">{fmtCtrDelta(d)}</span>
@@ -322,7 +322,7 @@
 
               <!-- Position (lower = better) -->
               <td class="px-3 py-2 text-right">
-                <span class="text-gray-600">{formatPosition(row.position)}</span>
+                <span class="text-ink-muted">{formatPosition(row.position)}</span>
                 {#if compare && row.prevPosition != null}
                   {@const d = row.position - row.prevPosition}
                   <br /><span class="text-xs {deltaClass(d, true)}">{fmtPosDelta(d)}</span>
@@ -333,7 +333,7 @@
             <!-- Drill-down sub-row -->
             {#if isExpanded}
               {@const drill = expanded[rowKey]}
-              <tr class="border-b border-gray-100">
+              <tr class="border-b border-border">
                 <td colspan="5" class="p-0 bg-blue-50">
                   <div class="px-6 py-3 border-l-4 border-blue-300">
                     <p class="text-xs font-semibold text-blue-700 mb-2 uppercase tracking-wide">
@@ -354,27 +354,27 @@
                       <p class="text-xs text-red-500">{drill.error}</p>
 
                     {:else if drill.rows.length === 0}
-                      <p class="text-xs text-gray-400">{$_('gscDetail.noData')}</p>
+                      <p class="text-xs text-ink-subtle">{$_('gscDetail.noData')}</p>
 
                     {:else}
                       <table class="w-full text-xs min-w-[400px]">
                         <thead>
                           <tr class="border-b border-blue-200">
-                            <th class="text-left py-1.5 pr-3 font-semibold text-gray-500">
+                            <th class="text-left py-1.5 pr-3 font-semibold text-ink-muted">
                               {oppDim(dimension) === 'query'
                                 ? $_('seo.searchConsolePanel.query')
                                 : $_('seo.searchConsolePanel.page')}
                             </th>
-                            <th class="text-right py-1.5 px-2 font-semibold text-gray-500 whitespace-nowrap">
+                            <th class="text-right py-1.5 px-2 font-semibold text-ink-muted whitespace-nowrap">
                               {$_('seo.searchConsolePanel.clicks')}
                             </th>
-                            <th class="text-right py-1.5 px-2 font-semibold text-gray-500 whitespace-nowrap">
+                            <th class="text-right py-1.5 px-2 font-semibold text-ink-muted whitespace-nowrap">
                               {$_('seo.searchConsolePanel.impressions')}
                             </th>
-                            <th class="text-right py-1.5 px-2 font-semibold text-gray-500 whitespace-nowrap">
+                            <th class="text-right py-1.5 px-2 font-semibold text-ink-muted whitespace-nowrap">
                               {$_('seo.searchConsolePanel.ctr')}
                             </th>
-                            <th class="text-right py-1.5 pl-2 font-semibold text-gray-500 whitespace-nowrap">
+                            <th class="text-right py-1.5 pl-2 font-semibold text-ink-muted whitespace-nowrap">
                               {$_('seo.searchConsolePanel.position')}
                             </th>
                           </tr>
@@ -383,14 +383,14 @@
                           {#each drill.rows as dr (dr.keys[0])}
                             <tr class="border-b border-blue-100 last:border-0">
                               <td class="py-1.5 pr-3 max-w-[180px]">
-                                <span class="text-gray-700 truncate block" title={dr.keys[0]}>
+                                <span class="text-ink truncate block" title={dr.keys[0]}>
                                   {formatDimValue(dr.keys[0], oppDim(dimension))}
                                 </span>
                               </td>
-                              <td class="py-1.5 px-2 text-right text-gray-700 font-medium">{formatNumber(dr.clicks)}</td>
-                              <td class="py-1.5 px-2 text-right text-gray-600">{formatNumber(dr.impressions)}</td>
-                              <td class="py-1.5 px-2 text-right text-gray-600">{formatCtr(dr.ctr)}</td>
-                              <td class="py-1.5 pl-2 text-right text-gray-600">{formatPosition(dr.position)}</td>
+                              <td class="py-1.5 px-2 text-right text-ink font-medium">{formatNumber(dr.clicks)}</td>
+                              <td class="py-1.5 px-2 text-right text-ink-muted">{formatNumber(dr.impressions)}</td>
+                              <td class="py-1.5 px-2 text-right text-ink-muted">{formatCtr(dr.ctr)}</td>
+                              <td class="py-1.5 pl-2 text-right text-ink-muted">{formatPosition(dr.position)}</td>
                             </tr>
                           {/each}
                         </tbody>
@@ -406,18 +406,18 @@
     </div>
 
     <!-- Pagination -->
-    <div class="flex items-center justify-between px-4 py-3 border-t border-gray-100">
+    <div class="flex items-center justify-between px-4 py-3 border-t border-border">
       <button
         on:click={goToPrevPage}
         disabled={currentPage === 0 || loading}
         class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors
           {currentPage === 0 || loading
-            ? 'text-gray-300 cursor-not-allowed'
-            : 'text-gray-600 hover:bg-gray-100'}">
+            ? 'text-ink-subtle cursor-not-allowed'
+            : 'text-ink-muted hover:bg-surface-2'}">
         ← {$_('common.previous')}
       </button>
 
-      <span class="text-xs text-gray-400">
+      <span class="text-xs text-ink-subtle">
         {currentPage + 1} / {hasMore ? '…' : currentPage + 1}
       </span>
 
@@ -426,8 +426,8 @@
         disabled={!hasMore || loading}
         class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors
           {!hasMore || loading
-            ? 'text-gray-300 cursor-not-allowed'
-            : 'text-gray-600 hover:bg-gray-100'}">
+            ? 'text-ink-subtle cursor-not-allowed'
+            : 'text-ink-muted hover:bg-surface-2'}">
         {$_('common.next')} →
       </button>
     </div>

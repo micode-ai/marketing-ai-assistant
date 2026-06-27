@@ -86,14 +86,14 @@
             <button
               on:click={() => accept(inv)}
               disabled={processing[inv.id]}
-              class="inline-flex items-center bg-primary-600 text-white text-xs font-medium px-3 py-1.5 rounded-lg hover:bg-primary-700 transition-colors duration-150 disabled:opacity-50 cursor-pointer"
+              class="inline-flex items-center bg-brand text-white text-xs font-medium px-3 py-1.5 rounded-lg hover:brightness-110 transition-colors duration-150 disabled:opacity-50 cursor-pointer"
             >
               {$_('invitations.accept')}
             </button>
             <button
               on:click={() => decline(inv)}
               disabled={processing[inv.id]}
-              class="inline-flex items-center border border-gray-300 text-gray-700 text-xs font-medium px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors duration-150 disabled:opacity-50 cursor-pointer"
+              class="inline-flex items-center border border-border text-ink text-xs font-medium px-3 py-1.5 rounded-lg hover:bg-surface-2 transition-colors duration-150 disabled:opacity-50 cursor-pointer"
             >
               {$_('invitations.decline')}
             </button>

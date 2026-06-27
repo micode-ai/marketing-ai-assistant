@@ -61,7 +61,7 @@
   const EXPERIMENT_STATUSES = ['DRAFT', 'RUNNING', 'PAUSED', 'COMPLETED'];
 
   const statusBadge: Record<string, string> = {
-    DRAFT: 'bg-gray-100 text-gray-600',
+    DRAFT: 'bg-surface-2 text-ink-muted',
     RUNNING: 'bg-green-100 text-green-700',
     PAUSED: 'bg-yellow-100 text-yellow-700',
     COMPLETED: 'bg-blue-100 text-blue-700',
@@ -222,12 +222,12 @@
   <SectionHint sectionKey="experiments" titleKey="hints.experiments.title" descKey="hints.experiments.desc" />
   <div class="flex items-center justify-between mb-6">
     <div>
-      <h1 class="text-2xl font-bold text-gray-900">{$_('experiments.title')}</h1>
-      <p class="text-sm text-gray-500 mt-1">{$_('experiments.subtitle')}</p>
+      <h1 class="text-2xl font-bold text-ink">{$_('experiments.title')}</h1>
+      <p class="text-sm text-ink-muted mt-1">{$_('experiments.subtitle')}</p>
     </div>
     <button
       on:click={() => showCreateModal = true}
-      class="bg-primary-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors duration-150 flex items-center gap-2 cursor-pointer"
+      class="bg-brand text-white px-4 py-2 rounded-lg text-sm font-medium hover:brightness-110 transition-colors duration-150 flex items-center gap-2 cursor-pointer"
     >
       <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -239,21 +239,21 @@
   {#if loading}
     <div class="space-y-4">
       {#each Array(3) as _}
-        <div class="bg-white rounded-xl border border-gray-200 p-5 animate-pulse h-40"></div>
+        <div class="bg-surface rounded-xl border border-border p-5 animate-pulse h-40"></div>
       {/each}
     </div>
   {:else if experiments.length === 0}
     <div class="flex flex-col items-center justify-center py-20 text-center">
-      <div class="w-20 h-20 bg-primary-50 rounded-2xl flex items-center justify-center mb-6">
+      <div class="w-20 h-20 bg-brand-subtle/10 rounded-2xl flex items-center justify-center mb-6">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
         </svg>
       </div>
-      <h2 class="text-xl font-semibold text-gray-900 mb-2">{$_('experiments.empty')}</h2>
-      <p class="text-gray-500 mb-6">{$_('experiments.emptyDesc')}</p>
+      <h2 class="text-xl font-semibold text-ink mb-2">{$_('experiments.empty')}</h2>
+      <p class="text-ink-muted mb-6">{$_('experiments.emptyDesc')}</p>
       <button
         on:click={() => showCreateModal = true}
-        class="bg-primary-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-primary-700 transition-colors duration-150 flex items-center gap-2 cursor-pointer"
+        class="bg-brand text-white px-6 py-3 rounded-xl font-medium hover:brightness-110 transition-colors duration-150 flex items-center gap-2 cursor-pointer"
       >
         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -266,15 +266,15 @@
       {#each experiments as experiment}
         {@const expVariants = experiment.variants || []}
         {@const maxRate = maxConversionRate(expVariants)}
-        <div class="bg-white rounded-xl border border-gray-200 border-l-4 {statusBorderAccent[experiment.status] || 'border-l-gray-300'} p-5 hover:shadow-sm transition-shadow duration-150">
+        <div class="bg-surface rounded-xl border border-border border-l-4 {statusBorderAccent[experiment.status] || 'border-l-gray-300'} p-5 hover:shadow-sm transition-shadow duration-150">
           <!-- Header row -->
           <div class="flex items-start justify-between gap-4 mb-4">
             <div class="flex-1 min-w-0">
               <div class="flex flex-wrap items-center gap-1.5 mb-2">
-                <span class="text-xs px-2 py-0.5 rounded font-medium {typeBadge[experiment.type] || 'bg-gray-100 text-gray-600'}">
+                <span class="text-xs px-2 py-0.5 rounded font-medium {typeBadge[experiment.type] || 'bg-surface-2 text-ink-muted'}">
                   {$_(typeLabel[experiment.type] || 'experiments.typeEmailSubject')}
                 </span>
-                <span class="text-xs px-2 py-0.5 rounded {statusBadge[experiment.status] || 'bg-gray-100 text-gray-600'}">
+                <span class="text-xs px-2 py-0.5 rounded {statusBadge[experiment.status] || 'bg-surface-2 text-ink-muted'}">
                   {$_(statusLabel[experiment.status] || 'experiments.statusDraft')}
                 </span>
                 {#if experiment.winnerId}
@@ -286,8 +286,8 @@
                   </span>
                 {/if}
               </div>
-              <h3 class="font-medium text-gray-900">{experiment.name}</h3>
-              <div class="flex flex-wrap items-center gap-3 mt-1.5 text-xs text-gray-500">
+              <h3 class="font-medium text-ink">{experiment.name}</h3>
+              <div class="flex flex-wrap items-center gap-3 mt-1.5 text-xs text-ink-muted">
                 {#if experiment.startDate || experiment.endDate}
                   <span class="flex items-center gap-1">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -348,7 +348,7 @@
               {#if experiment.status === 'RUNNING' || experiment.status === 'COMPLETED'}
                 <button
                   on:click={() => viewResults(experiment)}
-                  class="text-xs px-3 py-1.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 cursor-pointer"
+                  class="text-xs px-3 py-1.5 border border-border rounded-lg hover:bg-surface-2 transition-colors duration-150 cursor-pointer"
                 >
                   {$_('experiments.viewResults')}
                 </button>
@@ -367,10 +367,10 @@
 
           <!-- Variants table -->
           {#if expVariants.length > 0}
-            <div class="border border-gray-100 rounded-lg overflow-hidden">
+            <div class="border border-border rounded-lg overflow-hidden">
               <table class="w-full text-sm">
                 <thead>
-                  <tr class="bg-gray-50 text-left text-xs text-gray-500 uppercase tracking-wider">
+                  <tr class="bg-surface-2 text-left text-xs text-ink-muted uppercase tracking-wider">
                     <th class="px-4 py-2.5 font-medium">{$_('experiments.variant')}</th>
                     <th class="px-4 py-2.5 font-medium text-right">{$_('experiments.impressions')}</th>
                     <th class="px-4 py-2.5 font-medium text-right">{$_('experiments.clicks')}</th>
@@ -378,17 +378,17 @@
                     <th class="px-4 py-2.5 font-medium">{$_('experiments.conversionRate')}</th>
                   </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100">
+                <tbody class="divide-y divide-border">
                   {#each expVariants as variant}
                     {@const rate = conversionRate(variant)}
                     {@const barWidth = maxRate > 0 ? (rate / maxRate) * 100 : 0}
                     {@const isWinner = experiment.winnerId === variant.id}
-                    <tr class="{isWinner ? 'bg-emerald-50/50' : 'bg-white'} hover:bg-gray-50/50 transition-colors">
+                    <tr class="{isWinner ? 'bg-emerald-50/50' : 'bg-surface'} hover:bg-surface-2/50 transition-colors">
                       <td class="px-4 py-3">
                         <div class="flex items-center gap-2">
-                          <span class="font-medium text-gray-900">{variant.name}</span>
+                          <span class="font-medium text-ink">{variant.name}</span>
                           {#if variant.isControl}
-                            <span class="text-[10px] px-1.5 py-0.5 bg-gray-200 text-gray-600 rounded font-medium uppercase">{$_('experiments.control')}</span>
+                            <span class="text-[10px] px-1.5 py-0.5 bg-gray-200 text-ink-muted rounded font-medium uppercase">{$_('experiments.control')}</span>
                           {/if}
                           {#if isWinner}
                             <span class="text-[10px] px-1.5 py-0.5 bg-emerald-200 text-emerald-700 rounded font-medium uppercase flex items-center gap-0.5">
@@ -400,18 +400,18 @@
                           {/if}
                         </div>
                       </td>
-                      <td class="px-4 py-3 text-right text-gray-700 tabular-nums">{formatNumber(variant.impressions || 0)}</td>
-                      <td class="px-4 py-3 text-right text-gray-700 tabular-nums">{formatNumber(variant.clicks || 0)}</td>
-                      <td class="px-4 py-3 text-right text-gray-700 tabular-nums">{formatNumber(variant.conversions || 0)}</td>
+                      <td class="px-4 py-3 text-right text-ink tabular-nums">{formatNumber(variant.impressions || 0)}</td>
+                      <td class="px-4 py-3 text-right text-ink tabular-nums">{formatNumber(variant.clicks || 0)}</td>
+                      <td class="px-4 py-3 text-right text-ink tabular-nums">{formatNumber(variant.conversions || 0)}</td>
                       <td class="px-4 py-3">
                         <div class="flex items-center gap-2.5">
-                          <div class="flex-1 bg-gray-100 rounded-full h-2 min-w-[60px]">
+                          <div class="flex-1 bg-surface-2 rounded-full h-2 min-w-[60px]">
                             <div
                               class="h-2 rounded-full transition-all duration-500 {isWinner ? 'bg-emerald-500' : 'bg-primary-500'}"
                               style="width: {barWidth}%"
                             ></div>
                           </div>
-                          <span class="text-xs font-medium text-gray-700 tabular-nums w-12 text-right">{rate.toFixed(1)}%</span>
+                          <span class="text-xs font-medium text-ink tabular-nums w-12 text-right">{rate.toFixed(1)}%</span>
                         </div>
                       </td>
                     </tr>
@@ -433,11 +433,11 @@
                   <span class="text-yellow-700 font-medium">{$_('experiments.approaching')}</span>
                 {:else}
                   <div class="w-2 h-2 rounded-full bg-gray-400"></div>
-                  <span class="text-gray-500 font-medium">{$_('experiments.notSignificant')}</span>
+                  <span class="text-ink-muted font-medium">{$_('experiments.notSignificant')}</span>
                 {/if}
               </div>
-              <span class="text-gray-400">|</span>
-              <span class="text-gray-500">{$_('experiments.confidence', { values: { value: experiment.significance.toFixed(1) } })}</span>
+              <span class="text-ink-subtle">|</span>
+              <span class="text-ink-muted">{$_('experiments.confidence', { values: { value: experiment.significance.toFixed(1) } })}</span>
             </div>
           {/if}
         </div>
@@ -451,23 +451,23 @@
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => showCreateModal = false}>
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-      <div class="p-6 border-b border-gray-100 flex items-center gap-2.5">
-        <div class="w-8 h-8 bg-primary-50 rounded-lg flex items-center justify-center flex-shrink-0">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+    <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-md">
+      <div class="p-6 border-b border-border flex items-center gap-2.5">
+        <div class="w-8 h-8 bg-brand-subtle/10 rounded-lg flex items-center justify-center flex-shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
           </svg>
         </div>
-        <h2 class="text-lg font-semibold text-gray-900">{$_('experiments.create')}</h2>
+        <h2 class="text-lg font-semibold text-ink">{$_('experiments.create')}</h2>
       </div>
       <div class="p-6 space-y-4">
         <div>
-          <label for="exp-name" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('experiments.name')} *</label>
-          <input id="exp-name" type="text" bind:value={createForm.name} placeholder={$_('experiments.namePlaceholder')} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
+          <label for="exp-name" class="block text-sm font-medium text-ink mb-1.5">{$_('experiments.name')} *</label>
+          <input id="exp-name" type="text" bind:value={createForm.name} placeholder={$_('experiments.namePlaceholder')} class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
         </div>
         <div>
-          <label for="exp-type" class="block text-sm font-medium text-gray-700 mb-1.5">{$_('experiments.type')}</label>
-          <select id="exp-type" bind:value={createForm.type} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+          <label for="exp-type" class="block text-sm font-medium text-ink mb-1.5">{$_('experiments.type')}</label>
+          <select id="exp-type" bind:value={createForm.type} class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
             {#each EXPERIMENT_TYPES as t}
               <option value={t}>{$_(typeLabel[t])}</option>
             {/each}
@@ -477,10 +477,10 @@
         <!-- Variants -->
         <div>
           <div class="flex items-center justify-between mb-2">
-            <label class="block text-sm font-medium text-gray-700">{$_('experiments.variants')} *</label>
+            <label class="block text-sm font-medium text-ink">{$_('experiments.variants')} *</label>
             <button
               on:click={addVariant}
-              class="text-xs text-primary-600 hover:text-primary-700 font-medium cursor-pointer"
+              class="text-xs text-brand hover:text-primary-700 font-medium cursor-pointer"
             >
               + {$_('experiments.addVariant')}
             </button>
@@ -491,26 +491,26 @@
                 <button
                   type="button"
                   on:click={() => setControl(i)}
-                  class="w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all cursor-pointer {variant.isControl ? 'border-primary-600 bg-primary-600' : 'border-gray-300 hover:border-primary-400'}"
+                  class="w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all cursor-pointer {variant.isControl ? 'border-primary-600 bg-brand' : 'border-border hover:border-primary-400'}"
                   title={$_('experiments.setAsControl')}
                 >
                   {#if variant.isControl}
-                    <div class="w-2 h-2 rounded-full bg-white"></div>
+                    <div class="w-2 h-2 rounded-full bg-surface"></div>
                   {/if}
                 </button>
                 <input
                   type="text"
                   bind:value={variant.name}
                   placeholder={variant.isControl ? $_('experiments.controlPlaceholder') : $_('experiments.variantPlaceholder', { values: { index: i } })}
-                  class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  class="flex-1 px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
                 {#if variant.isControl}
-                  <span class="text-[10px] px-1.5 py-0.5 bg-gray-200 text-gray-600 rounded font-medium uppercase flex-shrink-0">{$_('experiments.control')}</span>
+                  <span class="text-[10px] px-1.5 py-0.5 bg-gray-200 text-ink-muted rounded font-medium uppercase flex-shrink-0">{$_('experiments.control')}</span>
                 {/if}
                 {#if variants.length > 2}
                   <button
                     on:click={() => removeVariant(i)}
-                    class="text-gray-400 hover:text-red-500 transition-colors cursor-pointer flex-shrink-0"
+                    class="text-ink-subtle hover:text-red-500 transition-colors cursor-pointer flex-shrink-0"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
@@ -520,14 +520,14 @@
               </div>
             {/each}
           </div>
-          <p class="text-xs text-gray-400 mt-1.5">{$_('experiments.controlHint')}</p>
+          <p class="text-xs text-ink-subtle mt-1.5">{$_('experiments.controlHint')}</p>
         </div>
       </div>
-      <div class="p-6 border-t border-gray-100 flex gap-3">
+      <div class="p-6 border-t border-border flex gap-3">
         <button
           on:click={createExperiment}
           disabled={creating || !createForm.name.trim() || variants.filter(v => v.name.trim()).length < 2}
-          class="flex-1 bg-primary-600 text-white py-2.5 rounded-lg font-medium hover:bg-primary-700 transition-colors duration-150 disabled:opacity-50 text-sm flex items-center justify-center gap-2 cursor-pointer"
+          class="flex-1 bg-brand text-white py-2.5 rounded-lg font-medium hover:brightness-110 transition-colors duration-150 disabled:opacity-50 text-sm flex items-center justify-center gap-2 cursor-pointer"
         >
           {#if creating}
             <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
@@ -539,7 +539,7 @@
             {$_('experiments.create')}
           {/if}
         </button>
-        <button on:click={() => showCreateModal = false} class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 text-sm cursor-pointer">
+        <button on:click={() => showCreateModal = false} class="px-5 py-2.5 border border-border rounded-lg hover:bg-surface-2 transition-colors duration-150 text-sm cursor-pointer">
           {$_('common.cancel')}
         </button>
       </div>
@@ -552,15 +552,15 @@
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => deletingId = null}>
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
+    <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-sm">
       <div class="p-6">
         <div class="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center mb-4">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
           </svg>
         </div>
-        <h2 class="text-lg font-semibold text-gray-900 mb-2">{$_('experiments.deleteExperiment')}</h2>
-        <p class="text-sm text-gray-500 mb-6">{$_('experiments.confirmDelete')}</p>
+        <h2 class="text-lg font-semibold text-ink mb-2">{$_('experiments.deleteExperiment')}</h2>
+        <p class="text-sm text-ink-muted mb-6">{$_('experiments.confirmDelete')}</p>
         <div class="flex gap-3">
           <button
             on:click={() => deleteExperiment(deletingId)}
@@ -568,7 +568,7 @@
           >
             {$_('common.delete')}
           </button>
-          <button on:click={() => deletingId = null} class="flex-1 px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 text-sm cursor-pointer">
+          <button on:click={() => deletingId = null} class="flex-1 px-5 py-2.5 border border-border rounded-lg hover:bg-surface-2 transition-colors duration-150 text-sm cursor-pointer">
             {$_('common.cancel')}
           </button>
         </div>
@@ -582,8 +582,8 @@
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => resultsFor = null}>
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
-      <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+    <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
+      <div class="p-6 border-b border-border flex items-center justify-between">
         <div class="flex items-center gap-2.5">
           <div class="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -591,11 +591,11 @@
             </svg>
           </div>
           <div>
-            <h2 class="text-lg font-semibold text-gray-900">{$_('experiments.results')}</h2>
-            <p class="text-sm text-gray-500">{resultsFor.name}</p>
+            <h2 class="text-lg font-semibold text-ink">{$_('experiments.results')}</h2>
+            <p class="text-sm text-ink-muted">{resultsFor.name}</p>
           </div>
         </div>
-        <button on:click={() => resultsFor = null} class="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer">
+        <button on:click={() => resultsFor = null} class="text-ink-subtle hover:text-gray-600 transition-colors cursor-pointer">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
           </svg>
@@ -611,7 +611,7 @@
         {:else if resultsData}
           <!-- Statistical significance banner -->
           {#if resultsData.significance !== undefined}
-            <div class="mb-5 p-4 rounded-lg border {resultsData.significance >= 95 ? 'bg-green-50 border-green-200' : resultsData.significance >= 80 ? 'bg-yellow-50 border-yellow-200' : 'bg-gray-50 border-gray-200'}">
+            <div class="mb-5 p-4 rounded-lg border {resultsData.significance >= 95 ? 'bg-green-50 border-green-200' : resultsData.significance >= 80 ? 'bg-yellow-50 border-yellow-200' : 'bg-surface-2 border-border'}">
               <div class="flex items-center gap-3">
                 <div class="flex-shrink-0">
                   {#if resultsData.significance >= 95}
@@ -627,15 +627,15 @@
                       </svg>
                     </div>
                   {:else}
-                    <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <div class="w-10 h-10 bg-surface-2 rounded-lg flex items-center justify-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-ink-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                       </svg>
                     </div>
                   {/if}
                 </div>
                 <div>
-                  <p class="text-sm font-medium {resultsData.significance >= 95 ? 'text-green-800' : resultsData.significance >= 80 ? 'text-yellow-800' : 'text-gray-700'}">
+                  <p class="text-sm font-medium {resultsData.significance >= 95 ? 'text-green-800' : resultsData.significance >= 80 ? 'text-yellow-800' : 'text-ink'}">
                     {#if resultsData.significance >= 95}
                       {$_('experiments.significantResult')}
                     {:else if resultsData.significance >= 80}
@@ -644,7 +644,7 @@
                       {$_('experiments.notSignificantResult')}
                     {/if}
                   </p>
-                  <p class="text-xs mt-0.5 {resultsData.significance >= 95 ? 'text-green-600' : resultsData.significance >= 80 ? 'text-yellow-600' : 'text-gray-500'}">
+                  <p class="text-xs mt-0.5 {resultsData.significance >= 95 ? 'text-green-600' : resultsData.significance >= 80 ? 'text-yellow-600' : 'text-ink-muted'}">
                     {$_('experiments.confidence', { values: { value: resultsData.significance.toFixed(1) } })}
                   </p>
                 </div>
@@ -660,20 +660,20 @@
               {@const maxRate2 = maxConversionRate(allVariants)}
               {@const barWidth = maxRate2 > 0 ? (rate / maxRate2) * 100 : 0}
               {@const isWinner = resultsData.winnerId === variant.id}
-              <div class="border rounded-lg p-4 {isWinner ? 'border-emerald-300 bg-emerald-50/50' : 'border-gray-200'}">
+              <div class="border rounded-lg p-4 {isWinner ? 'border-emerald-300 bg-emerald-50/50' : 'border-border'}">
                 <div class="flex items-center justify-between mb-3">
                   <div class="flex items-center gap-2">
-                    <span class="font-medium text-gray-900">{variant.name}</span>
+                    <span class="font-medium text-ink">{variant.name}</span>
                     {#if variant.isControl}
-                      <span class="text-[10px] px-1.5 py-0.5 bg-gray-200 text-gray-600 rounded font-medium uppercase">{$_('experiments.control')}</span>
+                      <span class="text-[10px] px-1.5 py-0.5 bg-gray-200 text-ink-muted rounded font-medium uppercase">{$_('experiments.control')}</span>
                     {/if}
                     {#if isWinner}
                       <span class="text-[10px] px-1.5 py-0.5 bg-emerald-200 text-emerald-700 rounded font-medium uppercase">{$_('experiments.winner')}</span>
                     {/if}
                   </div>
-                  <span class="text-lg font-bold {isWinner ? 'text-emerald-700' : 'text-gray-900'}">{rate.toFixed(2)}%</span>
+                  <span class="text-lg font-bold {isWinner ? 'text-emerald-700' : 'text-ink'}">{rate.toFixed(2)}%</span>
                 </div>
-                <div class="bg-gray-100 rounded-full h-3 mb-3">
+                <div class="bg-surface-2 rounded-full h-3 mb-3">
                   <div
                     class="h-3 rounded-full transition-all duration-700 {isWinner ? 'bg-emerald-500' : 'bg-primary-500'}"
                     style="width: {barWidth}%"
@@ -681,16 +681,16 @@
                 </div>
                 <div class="grid grid-cols-3 gap-4 text-center">
                   <div>
-                    <div class="text-lg font-semibold text-gray-900">{formatNumber(variant.impressions || 0)}</div>
-                    <div class="text-xs text-gray-500">{$_('experiments.impressions')}</div>
+                    <div class="text-lg font-semibold text-ink">{formatNumber(variant.impressions || 0)}</div>
+                    <div class="text-xs text-ink-muted">{$_('experiments.impressions')}</div>
                   </div>
                   <div>
-                    <div class="text-lg font-semibold text-gray-900">{formatNumber(variant.clicks || 0)}</div>
-                    <div class="text-xs text-gray-500">{$_('experiments.clicks')}</div>
+                    <div class="text-lg font-semibold text-ink">{formatNumber(variant.clicks || 0)}</div>
+                    <div class="text-xs text-ink-muted">{$_('experiments.clicks')}</div>
                   </div>
                   <div>
-                    <div class="text-lg font-semibold text-gray-900">{formatNumber(variant.conversions || 0)}</div>
-                    <div class="text-xs text-gray-500">{$_('experiments.conversions')}</div>
+                    <div class="text-lg font-semibold text-ink">{formatNumber(variant.conversions || 0)}</div>
+                    <div class="text-xs text-ink-muted">{$_('experiments.conversions')}</div>
                   </div>
                 </div>
               </div>
@@ -699,8 +699,8 @@
         {/if}
       </div>
 
-      <div class="p-6 border-t border-gray-100">
-        <button on:click={() => resultsFor = null} class="w-full px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 text-sm cursor-pointer">
+      <div class="p-6 border-t border-border">
+        <button on:click={() => resultsFor = null} class="w-full px-5 py-2.5 border border-border rounded-lg hover:bg-surface-2 transition-colors duration-150 text-sm cursor-pointer">
           {$_('common.close')}
         </button>
       </div>

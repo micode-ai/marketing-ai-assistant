@@ -177,7 +177,7 @@
 
 <!-- Sidebar: uses inline style width transition for smooth slide animation -->
 <aside
-  class="bg-white border-r border-gray-200 flex flex-col h-full overflow-hidden flex-shrink-0 transition-[width,transform] duration-200 ease-in-out
+  class="bg-surface border-r border-border flex flex-col h-full overflow-hidden flex-shrink-0 transition-[width,transform] duration-200 ease-in-out
     {isMobile ? 'fixed inset-y-0 left-0 z-40 w-64' : ''}"
   style={isMobile ? `transform: translateX(${open ? '0' : '-100%'});` : `width: ${open ? '16rem' : '0'};`}
   aria-hidden={!open}
@@ -185,7 +185,7 @@
   <!-- Inner wrapper prevents content from reflowing during width transition -->
   <div class="w-64 flex flex-col h-full overflow-y-auto custom-scroll">
     <!-- Logo -->
-    <div class="p-5 border-b border-gray-100 flex-shrink-0">
+    <div class="p-5 border-b border-border flex-shrink-0">
       <a href="/dashboard" class="flex items-center gap-2.5 group cursor-pointer">
         <!-- SparklesIcon badge — more distinctive than plain "M" letter -->
         <div class="w-8 h-8 bg-gradient-to-br from-primary-500 to-primary-700 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm group-hover:shadow-primary-200 transition-shadow duration-200">
@@ -194,44 +194,44 @@
           </svg>
         </div>
         <div>
-          <div class="font-bold text-gray-900 text-sm leading-none" style="font-family: 'Space Grotesk', sans-serif;">Marketing AI</div>
-          <div class="text-xs text-gray-400 mt-0.5">Assistant</div>
+          <div class="font-bold text-ink text-sm leading-none" style="font-family: 'Space Grotesk', sans-serif;">Marketing AI</div>
+          <div class="text-xs text-ink-subtle mt-0.5">Assistant</div>
         </div>
       </a>
     </div>
 
     <!-- Organization switcher -->
     {#if hasMultipleOrgs}
-      <div class="px-4 py-3 border-b border-gray-100 relative">
+      <div class="px-4 py-3 border-b border-border relative">
         <button
           on:click|stopPropagation={() => (showOrgDropdown = !showOrgDropdown)}
-          class="w-full flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-50 transition-colors duration-150 cursor-pointer"
+          class="w-full flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg hover:bg-surface-2 transition-colors duration-150 cursor-pointer"
         >
           <div class="flex items-center gap-2 min-w-0">
-            <div class="w-6 h-6 rounded bg-primary-100 flex items-center justify-center text-primary-700 text-xs font-bold flex-shrink-0">
+            <div class="w-6 h-6 rounded bg-primary-100 flex items-center justify-center text-brand text-xs font-bold flex-shrink-0">
               {(currentOrg?.name || '?').charAt(0).toUpperCase()}
             </div>
-            <span class="text-sm font-medium text-gray-700 truncate">{currentOrg?.name || ''}</span>
+            <span class="text-sm font-medium text-ink truncate">{currentOrg?.name || ''}</span>
           </div>
-          <svg class="w-4 h-4 text-gray-400 flex-shrink-0 transition-transform duration-150 {showOrgDropdown ? 'rotate-180' : ''}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <svg class="w-4 h-4 text-ink-subtle flex-shrink-0 transition-transform duration-150 {showOrgDropdown ? 'rotate-180' : ''}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
           </svg>
         </button>
         {#if showOrgDropdown}
-          <div class="absolute left-3 right-3 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 py-1">
+          <div class="absolute left-3 right-3 mt-1 bg-surface border border-border rounded-lg shadow-lg z-50 py-1">
             {#each memberships as m}
-              <div class="flex items-center hover:bg-gray-50 transition-colors duration-150">
+              <div class="flex items-center hover:bg-surface-2 transition-colors duration-150">
                 <button
                   on:click={() => switchOrg(m.organization.id)}
                   class="flex-1 text-left px-3 py-2 text-sm flex items-center gap-2 cursor-pointer
-                    {m.organization.id === $organizationIdStore ? 'text-primary-700 font-medium' : 'text-gray-600'}"
+                    {m.organization.id === $organizationIdStore ? 'text-brand font-medium' : 'text-ink-muted'}"
                 >
-                  <div class="w-5 h-5 rounded bg-primary-100 flex items-center justify-center text-primary-700 text-[10px] font-bold flex-shrink-0">
+                  <div class="w-5 h-5 rounded bg-primary-100 flex items-center justify-center text-brand text-[10px] font-bold flex-shrink-0">
                     {(m.organization.name || '?').charAt(0).toUpperCase()}
                   </div>
                   <span class="truncate">{m.organization.name}</span>
                   {#if m.organization.id === $organizationIdStore}
-                    <svg class="w-4 h-4 text-primary-600 ml-auto flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <svg class="w-4 h-4 text-brand ml-auto flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                     </svg>
                   {/if}
@@ -257,7 +257,7 @@
     <nav class="p-3 flex-1 space-y-6">
       <!-- Main navigation -->
       <div>
-        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-widest px-3 mb-2">Navigation</p>
+        <p class="text-[10px] font-semibold text-ink-subtle uppercase tracking-widest px-3 mb-2">Navigation</p>
         <ul class="space-y-0.5">
           {#each mainLinks as link}
             <li>
@@ -265,8 +265,8 @@
                 href={link.href}
                 class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-150 cursor-pointer
                   {isActive(link.href, currentPath)
-                    ? 'bg-primary-50 text-primary-700 border-l-2 border-primary-600'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 border-l-2 border-transparent'}"
+                    ? 'bg-brand-subtle/10 text-brand border-l-2 border-primary-600'
+                    : 'text-ink-muted hover:bg-surface-2 hover:text-gray-900 border-l-2 border-transparent'}"
               >
                 {@html icons[link.iconKey]}
                 <span>{$_(link.labelKey)}</span>
@@ -278,7 +278,7 @@
 
       <!-- Marketing -->
       <div>
-        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-widest px-3 mb-2">{$_('nav.marketing')}</p>
+        <p class="text-[10px] font-semibold text-ink-subtle uppercase tracking-widest px-3 mb-2">{$_('nav.marketing')}</p>
         <ul class="space-y-0.5">
           <!-- Overview — only when project selected -->
           {#if $currentProjectStore}
@@ -288,8 +288,8 @@
                 href={overviewHref}
                 class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-150 cursor-pointer
                   {currentPath === overviewHref || currentPath.startsWith(overviewHref)
-                    ? 'bg-primary-50 text-primary-700 border-l-2 border-primary-600'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 border-l-2 border-transparent'}"
+                    ? 'bg-brand-subtle/10 text-brand border-l-2 border-primary-600'
+                    : 'text-ink-muted hover:bg-surface-2 hover:text-gray-900 border-l-2 border-transparent'}"
               >
                 {@html icons['chartbar']}
                 <span>{$_('projects.overview')}</span>
@@ -303,8 +303,8 @@
                 href={link.href}
                 class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-150 cursor-pointer
                   {isActive(link.href, currentPath)
-                    ? 'bg-primary-50 text-primary-700 border-l-2 border-primary-600'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 border-l-2 border-transparent'}"
+                    ? 'bg-brand-subtle/10 text-brand border-l-2 border-primary-600'
+                    : 'text-ink-muted hover:bg-surface-2 hover:text-gray-900 border-l-2 border-transparent'}"
               >
                 {@html icons[link.iconKey]}
                 <span>{$_(link.labelKey)}</span>
@@ -316,7 +316,7 @@
           <li>
             <button
               on:click={toggleAdvanced}
-              class="w-full flex items-center justify-between px-3 py-2 text-xs font-medium text-gray-400 hover:text-gray-600 cursor-pointer transition-colors duration-150 mt-1"
+              class="w-full flex items-center justify-between px-3 py-2 text-xs font-medium text-ink-subtle hover:text-gray-600 cursor-pointer transition-colors duration-150 mt-1"
             >
               <span>{showAdvanced ? $_('nav.hideAdvanced') : $_('nav.showAdvanced')}</span>
               <svg
@@ -335,8 +335,8 @@
                   href={link.href}
                   class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-150 cursor-pointer
                     {isActive(link.href, currentPath)
-                      ? 'bg-primary-50 text-primary-700 border-l-2 border-primary-600'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 border-l-2 border-transparent'}"
+                      ? 'bg-brand-subtle/10 text-brand border-l-2 border-primary-600'
+                      : 'text-ink-muted hover:bg-surface-2 hover:text-gray-900 border-l-2 border-transparent'}"
                 >
                   {@html icons[link.iconKey]}
                   <span>{$_(link.labelKey)}</span>
@@ -349,7 +349,7 @@
 
       <!-- Settings -->
       <div>
-        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-widest px-3 mb-2">{$_('common.settings')}</p>
+        <p class="text-[10px] font-semibold text-ink-subtle uppercase tracking-widest px-3 mb-2">{$_('common.settings')}</p>
         <ul class="space-y-0.5">
           {#each settingsLinks as link}
             <li>
@@ -357,8 +357,8 @@
                 href={link.href}
                 class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-150 cursor-pointer
                   {isActive(link.href, currentPath)
-                    ? 'bg-primary-50 text-primary-700 border-l-2 border-primary-600'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 border-l-2 border-transparent'}"
+                    ? 'bg-brand-subtle/10 text-brand border-l-2 border-primary-600'
+                    : 'text-ink-muted hover:bg-surface-2 hover:text-gray-900 border-l-2 border-transparent'}"
               >
                 {@html icons[link.iconKey]}
                 <span>{$_(link.labelKey)}</span>
@@ -370,20 +370,20 @@
 
       <!-- User profile + logout -->
       {#if $currentUser}
-        <div class="px-3 py-2 border-t border-gray-200 dark:border-gray-700">
+        <div class="px-3 py-2 border-t border-border">
           <div class="flex items-center gap-2.5 px-3 py-2">
             <div class="w-8 h-8 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center text-white font-semibold text-xs flex-shrink-0 select-none">
               {$currentUser.name?.charAt(0).toUpperCase() || 'U'}
             </div>
             <div class="flex-1 min-w-0">
-              <div class="text-sm font-medium text-gray-900 truncate">{$currentUser.name}</div>
+              <div class="text-sm font-medium text-ink truncate">{$currentUser.name}</div>
               {#if $currentUser.email}
-                <div class="text-xs text-gray-400 truncate">{$currentUser.email}</div>
+                <div class="text-xs text-ink-subtle truncate">{$currentUser.email}</div>
               {/if}
             </div>
             <button
               on:click={logout}
-              class="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors duration-150 cursor-pointer flex-shrink-0"
+              class="p-1.5 rounded-lg text-ink-subtle hover:text-red-500 hover:bg-red-50 transition-colors duration-150 cursor-pointer flex-shrink-0"
               title={$_('auth.logout')}
               aria-label={$_('auth.logout')}
             >
@@ -396,10 +396,10 @@
       {/if}
 
       <!-- Theme Toggle + Help -->
-      <div class="px-3 py-2 border-t border-gray-200 dark:border-gray-700">
+      <div class="px-3 py-2 border-t border-border">
         <button
           on:click={toggleTheme}
-          class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors duration-150 w-full text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white cursor-pointer"
+          class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors duration-150 w-full text-ink-muted hover:bg-surface-2 hover:text-gray-900 cursor-pointer"
         >
           {#if isDark}
             <svg class="w-[18px] h-[18px] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" /></svg>
@@ -411,7 +411,7 @@
         </button>
         <a href="/help"
           class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors duration-150
-            {$page.url.pathname.startsWith('/help') ? 'bg-primary-50 text-primary-700 font-medium' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white'}">
+            {$page.url.pathname.startsWith('/help') ? 'bg-brand-subtle/10 text-brand font-medium' : 'text-ink-muted hover:bg-surface-2 hover:text-gray-900'}">
           {@html icons.questionmark}
           <span>{$_('nav.help')}</span>
         </a>
@@ -425,15 +425,15 @@
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => (leavingOrg = null)}>
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+    <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-sm p-6">
       <div class="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center mb-4">
         <svg class="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
         </svg>
       </div>
-      <h2 class="text-lg font-semibold text-gray-900 mb-1">{$_('settings.leaveTeamConfirm')}</h2>
-      <p class="text-sm text-gray-500 mb-1 font-medium">{leavingOrg.organization?.name}</p>
-      <p class="text-sm text-gray-500 mb-6">{$_('settings.leaveTeamDesc')}</p>
+      <h2 class="text-lg font-semibold text-ink mb-1">{$_('settings.leaveTeamConfirm')}</h2>
+      <p class="text-sm text-ink-muted mb-1 font-medium">{leavingOrg.organization?.name}</p>
+      <p class="text-sm text-ink-muted mb-6">{$_('settings.leaveTeamDesc')}</p>
       <div class="flex gap-3">
         <button
           on:click={leaveOrg}
@@ -443,7 +443,7 @@
         </button>
         <button
           on:click={() => (leavingOrg = null)}
-          class="flex-1 border border-gray-300 rounded-lg text-sm py-2.5 font-medium hover:bg-gray-50 transition-colors duration-150 cursor-pointer"
+          class="flex-1 border border-border rounded-lg text-sm py-2.5 font-medium hover:bg-surface-2 transition-colors duration-150 cursor-pointer"
         >
           {$_('common.cancel')}
         </button>
