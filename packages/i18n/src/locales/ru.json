@@ -68,7 +68,14 @@
     "orgCalendar": "Календарь",
     "orgFinances": "Финансы",
     "darkMode": "Тёмная тема",
-    "lightMode": "Светлая тема"
+    "lightMode": "Светлая тема",
+    "allProjects": "Все проекты",
+    "organization": "Организация",
+    "project": "Проект",
+    "workspace": "Рабочее пространство",
+    "rollups": "Все проекты · сводка",
+    "thisProject": "Этот проект",
+    "switchProject": "Сменить проект"
   },
   "header": {
     "orgContext": "Организация",

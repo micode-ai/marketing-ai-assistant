@@ -68,7 +68,14 @@
     "orgCalendar": "Kalendarz",
     "orgFinances": "Finanse",
     "darkMode": "Tryb ciemny",
-    "lightMode": "Tryb jasny"
+    "lightMode": "Tryb jasny",
+    "allProjects": "Wszystkie projekty",
+    "organization": "Organizacja",
+    "project": "Projekt",
+    "workspace": "Obszar roboczy",
+    "rollups": "Wszystkie projekty · zestawienia",
+    "thisProject": "Ten projekt",
+    "switchProject": "Zmień projekt"
   },
   "header": {
     "orgContext": "Organizacja",
