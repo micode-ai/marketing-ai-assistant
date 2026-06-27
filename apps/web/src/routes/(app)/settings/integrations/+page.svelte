@@ -286,7 +286,7 @@
 
   const platformColor: Record<string, string> = {
     LINKEDIN: 'text-[#0077B5] bg-[#0077B5]/10',
-    TWITTER: 'text-gray-900 bg-gray-100',
+    TWITTER: 'text-ink bg-surface-2',
     FACEBOOK: 'text-[#1877F2] bg-[#1877F2]/10',
     TELEGRAM: 'text-[#26A5E4] bg-[#26A5E4]/10',
     INSTAGRAM: 'text-[#E1306C] bg-[#E1306C]/10',
@@ -296,27 +296,27 @@
 
 <div class="p-4 sm:p-6 max-w-4xl">
   <div class="mb-6">
-    <h1 class="text-2xl font-bold text-gray-900">{$_('social.title')}</h1>
-    <p class="text-gray-500 text-sm mt-1">{$_('social.subtitle')}</p>
+    <h1 class="text-2xl font-bold text-ink">{$_('social.title')}</h1>
+    <p class="text-ink-muted text-sm mt-1">{$_('social.subtitle')}</p>
   </div>
 
   {#if loading}
     <div class="space-y-3">
       {#each Array(4) as _}
-        <div class="bg-white rounded-xl border border-gray-200 p-5 animate-pulse h-20"></div>
+        <div class="bg-surface rounded-xl border border-border p-5 animate-pulse h-20"></div>
       {/each}
     </div>
   {:else}
     <!-- LinkedIn -->
-    <div class="bg-white rounded-xl border border-gray-200 p-5 mb-3">
+    <div class="bg-surface rounded-xl border border-border p-5 mb-3">
       <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-lg {platformColor['LINKEDIN']} flex items-center justify-center flex-shrink-0">
             {@html platformIcon['LINKEDIN']}
           </div>
           <div>
-            <div class="font-medium text-gray-900">{$_('social.linkedin')}</div>
-            <div class="text-xs text-gray-500">{$_('social.linkedinDesc')}</div>
+            <div class="font-medium text-ink">{$_('social.linkedin')}</div>
+            <div class="text-xs text-ink-muted">{$_('social.linkedinDesc')}</div>
           </div>
         </div>
         <div class="flex flex-col gap-2">
@@ -325,12 +325,12 @@
               {#if account.profileImageUrl}
                 <img src={account.profileImageUrl} alt={account.accountName} class="w-7 h-7 rounded-full" />
               {/if}
-              <span class="text-sm text-gray-700 font-medium">{account.accountName}</span>
+              <span class="text-sm text-ink font-medium">{account.accountName}</span>
               <span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full">{$_('social.connected')}</span>
               <select
                 bind:value={account.language}
                 on:change={() => updateAccountLanguage(account)}
-                class="text-sm border border-gray-300 rounded px-2 py-1 bg-white"
+                class="text-sm border border-border rounded px-2 py-1 bg-surface"
               >
                 <option value="">{$_('social.noLanguage')}</option>
                 <option value="en">English</option>
@@ -350,15 +350,15 @@
     </div>
 
     <!-- Twitter / X -->
-    <div class="bg-white rounded-xl border border-gray-200 p-5 mb-3">
+    <div class="bg-surface rounded-xl border border-border p-5 mb-3">
       <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-lg {platformColor['TWITTER']} flex items-center justify-center flex-shrink-0">
             {@html platformIcon['TWITTER']}
           </div>
           <div>
-            <div class="font-medium text-gray-900">{$_('social.twitter')}</div>
-            <div class="text-xs text-gray-500">{$_('social.twitterDesc')}</div>
+            <div class="font-medium text-ink">{$_('social.twitter')}</div>
+            <div class="text-xs text-ink-muted">{$_('social.twitterDesc')}</div>
           </div>
         </div>
         <div class="flex flex-col gap-2">
@@ -367,12 +367,12 @@
               {#if account.profileImageUrl}
                 <img src={account.profileImageUrl} alt={account.accountName} class="w-7 h-7 rounded-full" />
               {/if}
-              <span class="text-sm text-gray-700 font-medium">@{account.accountName}</span>
+              <span class="text-sm text-ink font-medium">@{account.accountName}</span>
               <span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full">{$_('social.connected')}</span>
               <select
                 bind:value={account.language}
                 on:change={() => updateAccountLanguage(account)}
-                class="text-sm border border-gray-300 rounded px-2 py-1 bg-white"
+                class="text-sm border border-border rounded px-2 py-1 bg-surface"
               >
                 <option value="">{$_('social.noLanguage')}</option>
                 <option value="en">English</option>
@@ -392,19 +392,19 @@
     </div>
 
     <!-- Facebook -->
-    <div class="bg-white rounded-xl border border-gray-200 p-5 mb-3">
+    <div class="bg-surface rounded-xl border border-border p-5 mb-3">
       <div class="flex items-center gap-3 mb-3">
         <div class="w-10 h-10 rounded-lg {platformColor['FACEBOOK']} flex items-center justify-center flex-shrink-0">
           {@html platformIcon['FACEBOOK']}
         </div>
         <div>
-          <div class="font-medium text-gray-900">{$_('social.facebook')}</div>
-          <div class="text-xs text-gray-500">{$_('social.facebookDesc')}</div>
+          <div class="font-medium text-ink">{$_('social.facebook')}</div>
+          <div class="text-xs text-ink-muted">{$_('social.facebookDesc')}</div>
         </div>
       </div>
       <div class="flex flex-col gap-2">
         {#each accounts.filter(a => a.platform === 'FACEBOOK') as account}
-          <div class="flex flex-col gap-2 p-2.5 rounded-lg border {account.status === 'REAUTH_REQUIRED' ? 'border-orange-300 bg-orange-50' : 'border-gray-100 bg-gray-50/50'}">
+          <div class="flex flex-col gap-2 p-2.5 rounded-lg border {account.status === 'REAUTH_REQUIRED' ? 'border-orange-300 bg-orange-50' : 'border-border bg-surface-2/50'}">
             <div class="flex flex-wrap items-center justify-between gap-2">
               <div class="flex items-center gap-2 min-w-0">
                 {#if account.profileImageUrl}
@@ -412,31 +412,31 @@
                 {/if}
                 <div class="flex flex-col min-w-0">
                   <div class="flex items-center gap-2">
-                    <span class="text-sm text-gray-800 font-medium truncate" title={account.accountName}>{account.accountName}</span>
+                    <span class="text-sm text-ink font-medium truncate" title={account.accountName}>{account.accountName}</span>
                     {#if account.status === 'REAUTH_REQUIRED'}
                       <span class="text-xs px-2 py-0.5 bg-orange-100 text-orange-700 rounded-full flex-shrink-0">{$_('social.reauthRequired.badge')}</span>
                     {:else}
                       <span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full flex-shrink-0">{$_('social.connected')}</span>
                     {/if}
                   </div>
-                  <span class="text-xs text-gray-500 font-mono truncate" title={account.accountId}>{account.accountId}</span>
+                  <span class="text-xs text-ink-muted font-mono truncate" title={account.accountId}>{account.accountId}</span>
                 </div>
               </div>
               <div class="flex items-center gap-2 flex-shrink-0">
                 <select
                   bind:value={account.language}
                   on:change={() => updateAccountLanguage(account)}
-                  class="text-sm border border-gray-300 rounded px-2 py-1 bg-white"
+                  class="text-sm border border-border rounded px-2 py-1 bg-surface"
                 >
                   <option value="">{$_('social.noLanguage')}</option>
                   <option value="en">English</option>
                   <option value="pl">Polski</option>
                   <option value="ru">Русский</option>
                 </select>
-                <button on:click={() => openEditFacebook(account)} class="text-xs px-3 py-1.5 border {account.status === 'REAUTH_REQUIRED' ? 'border-orange-400 text-orange-700 bg-orange-100 hover:bg-orange-200 font-medium' : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50'} rounded-lg transition-colors duration-150 cursor-pointer">
+                <button on:click={() => openEditFacebook(account)} class="text-xs px-3 py-1.5 border {account.status === 'REAUTH_REQUIRED' ? 'border-orange-400 text-orange-700 bg-orange-100 hover:bg-orange-200 font-medium' : 'border-border text-ink bg-surface hover:bg-surface-2'} rounded-lg transition-colors duration-150 cursor-pointer">
                   {account.status === 'REAUTH_REQUIRED' ? $_('social.reauthRequired.cta') : $_('common.edit')}
                 </button>
-                <button on:click={() => disconnectingId = account.id} class="text-xs px-3 py-1.5 border border-red-200 text-red-500 rounded-lg hover:bg-red-50 transition-colors duration-150 cursor-pointer bg-white">
+                <button on:click={() => disconnectingId = account.id} class="text-xs px-3 py-1.5 border border-red-200 text-red-500 rounded-lg hover:bg-red-50 transition-colors duration-150 cursor-pointer bg-surface">
                   {$_('social.disconnect')}
                 </button>
               </div>
@@ -453,43 +453,43 @@
     </div>
 
     <!-- Instagram -->
-    <div class="bg-white rounded-xl border border-gray-200 p-5 mb-3">
+    <div class="bg-surface rounded-xl border border-border p-5 mb-3">
       <div class="flex items-center gap-3 mb-3">
         <div class="w-10 h-10 rounded-lg {platformColor['INSTAGRAM']} flex items-center justify-center flex-shrink-0">
           {@html platformIcon['INSTAGRAM']}
         </div>
         <div>
-          <div class="font-medium text-gray-900">Instagram</div>
-          <div class="text-xs text-gray-500">{$_('social.instagram.description')}</div>
+          <div class="font-medium text-ink">Instagram</div>
+          <div class="text-xs text-ink-muted">{$_('social.instagram.description')}</div>
         </div>
       </div>
       <div class="flex flex-col gap-2">
         {#each accounts.filter(a => a.platform === 'INSTAGRAM') as account}
-          <div class="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-lg border border-gray-100 bg-gray-50/50">
+          <div class="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-lg border border-border bg-surface-2/50">
             <div class="flex items-center gap-2 min-w-0">
               {#if account.profileImageUrl}
                 <img src={account.profileImageUrl} alt={account.accountName} class="w-7 h-7 rounded-full flex-shrink-0" />
               {/if}
               <div class="flex flex-col min-w-0">
                 <div class="flex items-center gap-2">
-                  <span class="text-sm text-gray-800 font-medium truncate" title={account.accountName}>{account.accountName}</span>
+                  <span class="text-sm text-ink font-medium truncate" title={account.accountName}>{account.accountName}</span>
                   <span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full flex-shrink-0">{$_('social.connected')}</span>
                 </div>
-                <span class="text-xs text-gray-500 font-mono truncate" title={account.accountId}>{account.accountId}</span>
+                <span class="text-xs text-ink-muted font-mono truncate" title={account.accountId}>{account.accountId}</span>
               </div>
             </div>
             <div class="flex items-center gap-2 flex-shrink-0">
               <select
                 bind:value={account.language}
                 on:change={() => updateAccountLanguage(account)}
-                class="text-sm border border-gray-300 rounded px-2 py-1 bg-white"
+                class="text-sm border border-border rounded px-2 py-1 bg-surface"
               >
                 <option value="">{$_('social.noLanguage')}</option>
                 <option value="en">English</option>
                 <option value="pl">Polski</option>
                 <option value="ru">Русский</option>
               </select>
-              <button on:click={() => disconnectingId = account.id} class="text-xs px-3 py-1.5 border border-red-200 text-red-500 rounded-lg hover:bg-red-50 transition-colors duration-150 cursor-pointer bg-white">
+              <button on:click={() => disconnectingId = account.id} class="text-xs px-3 py-1.5 border border-red-200 text-red-500 rounded-lg hover:bg-red-50 transition-colors duration-150 cursor-pointer bg-surface">
                 {$_('social.disconnect')}
               </button>
             </div>
@@ -502,43 +502,43 @@
     </div>
 
     <!-- Threads -->
-    <div class="bg-white rounded-xl border border-gray-200 p-5 mb-3">
+    <div class="bg-surface rounded-xl border border-border p-5 mb-3">
       <div class="flex items-center gap-3 mb-3">
         <div class="w-10 h-10 rounded-lg {platformColor['THREADS']} flex items-center justify-center flex-shrink-0">
           {@html platformIcon['THREADS']}
         </div>
         <div>
-          <div class="font-medium text-gray-900">Threads</div>
-          <div class="text-xs text-gray-500">{$_('social.threads.description')}</div>
+          <div class="font-medium text-ink">Threads</div>
+          <div class="text-xs text-ink-muted">{$_('social.threads.description')}</div>
         </div>
       </div>
       <div class="flex flex-col gap-2">
         {#each accounts.filter(a => a.platform === 'THREADS') as account}
-          <div class="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-lg border border-gray-100 bg-gray-50/50">
+          <div class="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-lg border border-border bg-surface-2/50">
             <div class="flex items-center gap-2 min-w-0">
               {#if account.profileImageUrl}
                 <img src={account.profileImageUrl} alt={account.accountName} class="w-7 h-7 rounded-full flex-shrink-0" />
               {/if}
               <div class="flex flex-col min-w-0">
                 <div class="flex items-center gap-2">
-                  <span class="text-sm text-gray-800 font-medium truncate" title={account.accountName}>{account.accountName}</span>
+                  <span class="text-sm text-ink font-medium truncate" title={account.accountName}>{account.accountName}</span>
                   <span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full flex-shrink-0">{$_('social.connected')}</span>
                 </div>
-                <span class="text-xs text-gray-500 font-mono truncate" title={account.accountId}>{account.accountId}</span>
+                <span class="text-xs text-ink-muted font-mono truncate" title={account.accountId}>{account.accountId}</span>
               </div>
             </div>
             <div class="flex items-center gap-2 flex-shrink-0">
               <select
                 bind:value={account.language}
                 on:change={() => updateAccountLanguage(account)}
-                class="text-sm border border-gray-300 rounded px-2 py-1 bg-white"
+                class="text-sm border border-border rounded px-2 py-1 bg-surface"
               >
                 <option value="">{$_('social.noLanguage')}</option>
                 <option value="en">English</option>
                 <option value="pl">Polski</option>
                 <option value="ru">Русский</option>
               </select>
-              <button on:click={() => disconnectingId = account.id} class="text-xs px-3 py-1.5 border border-red-200 text-red-500 rounded-lg hover:bg-red-50 transition-colors duration-150 cursor-pointer bg-white">
+              <button on:click={() => disconnectingId = account.id} class="text-xs px-3 py-1.5 border border-red-200 text-red-500 rounded-lg hover:bg-red-50 transition-colors duration-150 cursor-pointer bg-surface">
                 {$_('social.disconnect')}
               </button>
             </div>
@@ -551,46 +551,46 @@
     </div>
 
     <!-- Telegram -->
-    <div class="bg-white rounded-xl border border-gray-200 p-5 mb-3">
+    <div class="bg-surface rounded-xl border border-border p-5 mb-3">
       <div class="flex items-center gap-3 mb-3">
         <div class="w-10 h-10 rounded-lg {platformColor['TELEGRAM']} flex items-center justify-center flex-shrink-0">
           {@html platformIcon['TELEGRAM']}
         </div>
         <div>
-          <div class="font-medium text-gray-900">{$_('social.telegram')}</div>
-          <div class="text-xs text-gray-500">{$_('social.telegramDesc')}</div>
+          <div class="font-medium text-ink">{$_('social.telegram')}</div>
+          <div class="text-xs text-ink-muted">{$_('social.telegramDesc')}</div>
         </div>
       </div>
       <div class="flex flex-col gap-2">
         {#each accounts.filter(a => a.platform === 'TELEGRAM') as account}
-          <div class="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-lg border border-gray-100 bg-gray-50/50">
+          <div class="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-lg border border-border bg-surface-2/50">
             <div class="flex items-center gap-2 min-w-0">
               {#if account.profileImageUrl}
                 <img src={account.profileImageUrl} alt={account.accountName} class="w-7 h-7 rounded-full flex-shrink-0" />
               {/if}
               <div class="flex flex-col min-w-0">
                 <div class="flex items-center gap-2">
-                  <span class="text-sm text-gray-800 font-medium truncate" title={account.accountName}>{account.accountName}</span>
+                  <span class="text-sm text-ink font-medium truncate" title={account.accountName}>{account.accountName}</span>
                   <span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full flex-shrink-0">{$_('social.connected')}</span>
                 </div>
-                <span class="text-xs text-gray-500 font-mono truncate" title={account.accountId}>{account.accountId}</span>
+                <span class="text-xs text-ink-muted font-mono truncate" title={account.accountId}>{account.accountId}</span>
               </div>
             </div>
             <div class="flex items-center gap-2 flex-shrink-0">
               <select
                 bind:value={account.language}
                 on:change={() => updateAccountLanguage(account)}
-                class="text-sm border border-gray-300 rounded px-2 py-1 bg-white"
+                class="text-sm border border-border rounded px-2 py-1 bg-surface"
               >
                 <option value="">{$_('social.noLanguage')}</option>
                 <option value="en">English</option>
                 <option value="pl">Polski</option>
                 <option value="ru">Русский</option>
               </select>
-              <button on:click={() => openEditTelegram(account)} class="text-xs px-3 py-1.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-150 cursor-pointer bg-white">
+              <button on:click={() => openEditTelegram(account)} class="text-xs px-3 py-1.5 border border-border text-ink rounded-lg hover:bg-surface-2 transition-colors duration-150 cursor-pointer bg-surface">
                 {$_('common.edit')}
               </button>
-              <button on:click={() => disconnectingId = account.id} class="text-xs px-3 py-1.5 border border-red-200 text-red-500 rounded-lg hover:bg-red-50 transition-colors duration-150 cursor-pointer bg-white">
+              <button on:click={() => disconnectingId = account.id} class="text-xs px-3 py-1.5 border border-red-200 text-red-500 rounded-lg hover:bg-red-50 transition-colors duration-150 cursor-pointer bg-surface">
                 {$_('social.disconnect')}
               </button>
             </div>
@@ -609,29 +609,29 @@
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => showLinkedInModal = false}>
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-      <div class="p-6 border-b border-gray-100">
+    <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-md">
+      <div class="p-6 border-b border-border">
         <div class="flex items-center gap-2.5 mb-1">
           <div class="w-8 h-8 bg-[#0077B5]/10 rounded-lg flex items-center justify-center flex-shrink-0 text-[#0077B5]">
             {@html platformIcon['LINKEDIN']}
           </div>
-          <h2 class="text-lg font-semibold text-gray-900">{$_('social.linkedinManualTitle')}</h2>
+          <h2 class="text-lg font-semibold text-ink">{$_('social.linkedinManualTitle')}</h2>
         </div>
-        <p class="text-sm text-gray-500 ml-10">{$_('social.linkedinManualDesc')}</p>
+        <p class="text-sm text-ink-muted ml-10">{$_('social.linkedinManualDesc')}</p>
       </div>
       <div class="p-6 space-y-3">
         <div>
-          <label class="block text-xs font-medium text-gray-700 mb-1">{$_('social.accountName')}</label>
-          <input type="text" bind:value={linkedInForm.accountName} placeholder="John Doe" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
+          <label class="block text-xs font-medium text-ink mb-1">{$_('social.accountName')}</label>
+          <input type="text" bind:value={linkedInForm.accountName} placeholder="John Doe" class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
         </div>
         <div>
-          <label class="block text-xs font-medium text-gray-700 mb-1">{$_('social.linkedinPersonUrn')} <span class="text-gray-400 font-normal">(Person ID)</span></label>
-          <input type="text" bind:value={linkedInForm.accountId} placeholder="ABC123xyz" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary-500" />
-          <p class="text-xs text-gray-400 mt-1">{$_('social.linkedinPersonUrnHint')}</p>
+          <label class="block text-xs font-medium text-ink mb-1">{$_('social.linkedinPersonUrn')} <span class="text-ink-subtle font-normal">(Person ID)</span></label>
+          <input type="text" bind:value={linkedInForm.accountId} placeholder="ABC123xyz" class="w-full px-3 py-2 border border-border rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary-500" />
+          <p class="text-xs text-ink-subtle mt-1">{$_('social.linkedinPersonUrnHint')}</p>
         </div>
         <div>
-          <label class="block text-xs font-medium text-gray-700 mb-1">{$_('social.accessToken')}</label>
-          <input type="password" bind:value={linkedInForm.accessToken} placeholder="AQV..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary-500" />
+          <label class="block text-xs font-medium text-ink mb-1">{$_('social.accessToken')}</label>
+          <input type="password" bind:value={linkedInForm.accessToken} placeholder="AQV..." class="w-full px-3 py-2 border border-border rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary-500" />
           <p class="text-xs text-amber-600 mt-1.5 flex items-start gap-1">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
@@ -640,8 +640,8 @@
           </p>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">{$_('social.accountLanguage')}</label>
-          <select bind:value={linkedInForm.language} class="w-full border border-gray-300 rounded-lg px-3 py-2">
+          <label class="block text-sm font-medium text-ink mb-1">{$_('social.accountLanguage')}</label>
+          <select bind:value={linkedInForm.language} class="w-full border border-border rounded-lg px-3 py-2">
             <option value="">{$_('social.noLanguage')}</option>
             <option value="en">English</option>
             <option value="pl">Polski</option>
@@ -649,7 +649,7 @@
           </select>
         </div>
       </div>
-      <div class="p-6 border-t border-gray-100 flex gap-3">
+      <div class="p-6 border-t border-border flex gap-3">
         <button
           on:click={connectLinkedIn}
           disabled={linkedInSaving || !linkedInForm.accountName || !linkedInForm.accountId || !linkedInForm.accessToken}
@@ -657,7 +657,7 @@
         >
           {linkedInSaving ? $_('common.loading') : $_('social.connect')}
         </button>
-        <button on:click={() => showLinkedInModal = false} class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 text-sm cursor-pointer">
+        <button on:click={() => showLinkedInModal = false} class="px-5 py-2.5 border border-border rounded-lg hover:bg-surface-2 transition-colors duration-150 text-sm cursor-pointer">
           {$_('common.cancel')}
         </button>
       </div>
@@ -670,46 +670,46 @@
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => showTwitterModal = false}>
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-      <div class="p-6 border-b border-gray-100">
+    <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-md">
+      <div class="p-6 border-b border-border">
         <div class="flex items-center gap-2.5 mb-1">
-          <div class="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+          <div class="w-8 h-8 bg-surface-2 rounded-lg flex items-center justify-center flex-shrink-0">
             {@html platformIcon['TWITTER']}
           </div>
-          <h2 class="text-lg font-semibold text-gray-900">{$_('social.twitterManualTitle')}</h2>
+          <h2 class="text-lg font-semibold text-ink">{$_('social.twitterManualTitle')}</h2>
         </div>
-        <p class="text-sm text-gray-500 ml-10">{$_('social.twitterManualDesc')}</p>
+        <p class="text-sm text-ink-muted ml-10">{$_('social.twitterManualDesc')}</p>
       </div>
       <div class="p-6 space-y-3">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label class="block text-xs font-medium text-gray-700 mb-1">{$_('social.accountName')}</label>
-            <input type="text" bind:value={twitterForm.accountName} placeholder="@username" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
+            <label class="block text-xs font-medium text-ink mb-1">{$_('social.accountName')}</label>
+            <input type="text" bind:value={twitterForm.accountName} placeholder="@username" class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
           </div>
           <div>
-            <label class="block text-xs font-medium text-gray-700 mb-1">{$_('social.accountId')}</label>
-            <input type="text" bind:value={twitterForm.accountId} placeholder="123456789" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
+            <label class="block text-xs font-medium text-ink mb-1">{$_('social.accountId')}</label>
+            <input type="text" bind:value={twitterForm.accountId} placeholder="123456789" class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
           </div>
         </div>
         <div>
-          <label class="block text-xs font-medium text-gray-700 mb-1">{$_('social.appKey')}</label>
-          <input type="password" bind:value={twitterForm.appKey} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
+          <label class="block text-xs font-medium text-ink mb-1">{$_('social.appKey')}</label>
+          <input type="password" bind:value={twitterForm.appKey} class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
         </div>
         <div>
-          <label class="block text-xs font-medium text-gray-700 mb-1">{$_('social.appSecret')}</label>
-          <input type="password" bind:value={twitterForm.appSecret} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
+          <label class="block text-xs font-medium text-ink mb-1">{$_('social.appSecret')}</label>
+          <input type="password" bind:value={twitterForm.appSecret} class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
         </div>
         <div>
-          <label class="block text-xs font-medium text-gray-700 mb-1">{$_('social.accessToken')}</label>
-          <input type="password" bind:value={twitterForm.accessToken} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
+          <label class="block text-xs font-medium text-ink mb-1">{$_('social.accessToken')}</label>
+          <input type="password" bind:value={twitterForm.accessToken} class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
         </div>
         <div>
-          <label class="block text-xs font-medium text-gray-700 mb-1">{$_('social.accessSecret')}</label>
-          <input type="password" bind:value={twitterForm.accessSecret} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
+          <label class="block text-xs font-medium text-ink mb-1">{$_('social.accessSecret')}</label>
+          <input type="password" bind:value={twitterForm.accessSecret} class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">{$_('social.accountLanguage')}</label>
-          <select bind:value={twitterForm.language} class="w-full border border-gray-300 rounded-lg px-3 py-2">
+          <label class="block text-sm font-medium text-ink mb-1">{$_('social.accountLanguage')}</label>
+          <select bind:value={twitterForm.language} class="w-full border border-border rounded-lg px-3 py-2">
             <option value="">{$_('social.noLanguage')}</option>
             <option value="en">English</option>
             <option value="pl">Polski</option>
@@ -717,7 +717,7 @@
           </select>
         </div>
       </div>
-      <div class="p-6 border-t border-gray-100 flex gap-3">
+      <div class="p-6 border-t border-border flex gap-3">
         <button
           on:click={connectTwitter}
           disabled={twitterSaving || !twitterForm.accountName || !twitterForm.accountId || !twitterForm.appKey || !twitterForm.appSecret || !twitterForm.accessToken || !twitterForm.accessSecret}
@@ -725,7 +725,7 @@
         >
           {twitterSaving ? $_('common.loading') : $_('social.connect')}
         </button>
-        <button on:click={() => showTwitterModal = false} class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 text-sm cursor-pointer">
+        <button on:click={() => showTwitterModal = false} class="px-5 py-2.5 border border-border rounded-lg hover:bg-surface-2 transition-colors duration-150 text-sm cursor-pointer">
           {$_('common.cancel')}
         </button>
       </div>
@@ -738,32 +738,32 @@
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={closeFacebookModal}>
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-      <div class="p-6 border-b border-gray-100">
+    <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-md">
+      <div class="p-6 border-b border-border">
         <div class="flex items-center gap-2.5 mb-1">
           <div class="w-8 h-8 bg-[#1877F2]/10 rounded-lg flex items-center justify-center flex-shrink-0 text-[#1877F2]">
             {@html platformIcon['FACEBOOK']}
           </div>
-          <h2 class="text-lg font-semibold text-gray-900">{$_('social.facebookManualTitle')}</h2>
+          <h2 class="text-lg font-semibold text-ink">{$_('social.facebookManualTitle')}</h2>
         </div>
-        <p class="text-sm text-gray-500 ml-10">{$_('social.facebookManualDesc')}</p>
+        <p class="text-sm text-ink-muted ml-10">{$_('social.facebookManualDesc')}</p>
       </div>
       <div class="p-6 space-y-3">
         <div>
-          <label class="block text-xs font-medium text-gray-700 mb-1">{$_('social.facebookPageName')}</label>
-          <input type="text" bind:value={facebookForm.accountName} placeholder="My Business Page" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
+          <label class="block text-xs font-medium text-ink mb-1">{$_('social.facebookPageName')}</label>
+          <input type="text" bind:value={facebookForm.accountName} placeholder="My Business Page" class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
         </div>
         <div>
-          <label class="block text-xs font-medium text-gray-700 mb-1">{$_('social.facebookPageId')}</label>
-          <input type="text" bind:value={facebookForm.pageId} placeholder="123456789012345" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary-500" />
-          <p class="text-xs text-gray-400 mt-1">{$_('social.facebookPageIdHint')}</p>
+          <label class="block text-xs font-medium text-ink mb-1">{$_('social.facebookPageId')}</label>
+          <input type="text" bind:value={facebookForm.pageId} placeholder="123456789012345" class="w-full px-3 py-2 border border-border rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary-500" />
+          <p class="text-xs text-ink-subtle mt-1">{$_('social.facebookPageIdHint')}</p>
         </div>
         <div>
-          <label class="block text-xs font-medium text-gray-700 mb-1">
+          <label class="block text-xs font-medium text-ink mb-1">
             {$_('social.facebookPageToken')}
-            {#if editingFacebookId}<span class="text-gray-400 font-normal">({$_('social.leaveBlankToKeep')})</span>{/if}
+            {#if editingFacebookId}<span class="text-ink-subtle font-normal">({$_('social.leaveBlankToKeep')})</span>{/if}
           </label>
-          <input type="password" bind:value={facebookForm.accessToken} placeholder="EAABsbC..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary-500" />
+          <input type="password" bind:value={facebookForm.accessToken} placeholder="EAABsbC..." class="w-full px-3 py-2 border border-border rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary-500" />
           <p class="text-xs text-amber-600 mt-1.5 flex items-start gap-1">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
@@ -772,8 +772,8 @@
           </p>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">{$_('social.accountLanguage')}</label>
-          <select bind:value={facebookForm.language} class="w-full border border-gray-300 rounded-lg px-3 py-2">
+          <label class="block text-sm font-medium text-ink mb-1">{$_('social.accountLanguage')}</label>
+          <select bind:value={facebookForm.language} class="w-full border border-border rounded-lg px-3 py-2">
             <option value="">{$_('social.noLanguage')}</option>
             <option value="en">English</option>
             <option value="pl">Polski</option>
@@ -781,7 +781,7 @@
           </select>
         </div>
       </div>
-      <div class="p-6 border-t border-gray-100 flex gap-3">
+      <div class="p-6 border-t border-border flex gap-3">
         <button
           on:click={connectFacebook}
           disabled={facebookSaving || !facebookForm.accountName || !facebookForm.pageId || (!editingFacebookId && !facebookForm.accessToken)}
@@ -789,7 +789,7 @@
         >
           {facebookSaving ? $_('common.loading') : (editingFacebookId ? $_('common.save') : $_('social.connect'))}
         </button>
-        <button on:click={closeFacebookModal} class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 text-sm cursor-pointer">
+        <button on:click={closeFacebookModal} class="px-5 py-2.5 border border-border rounded-lg hover:bg-surface-2 transition-colors duration-150 text-sm cursor-pointer">
           {$_('common.cancel')}
         </button>
       </div>
@@ -802,31 +802,31 @@
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={closeTelegramModal}>
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-      <div class="p-6 border-b border-gray-100">
+    <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-md">
+      <div class="p-6 border-b border-border">
         <div class="flex items-center gap-2.5 mb-1">
           <div class="w-8 h-8 rounded-lg {platformColor['TELEGRAM']} flex items-center justify-center flex-shrink-0">
             {@html platformIcon['TELEGRAM']}
           </div>
-          <h2 class="text-lg font-semibold text-gray-900">{$_('social.telegramManualTitle')}</h2>
+          <h2 class="text-lg font-semibold text-ink">{$_('social.telegramManualTitle')}</h2>
         </div>
-        <p class="text-sm text-gray-500 ml-10">{$_('social.telegramManualDesc')}</p>
+        <p class="text-sm text-ink-muted ml-10">{$_('social.telegramManualDesc')}</p>
       </div>
       <div class="p-6 space-y-3">
         <div>
-          <label class="block text-xs font-medium text-gray-700 mb-1">{$_('social.accountName')} <span class="text-gray-400 font-normal">(optional)</span></label>
-          <input type="text" bind:value={telegramForm.accountName} placeholder="My Marketing Channel" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
+          <label class="block text-xs font-medium text-ink mb-1">{$_('social.accountName')} <span class="text-ink-subtle font-normal">(optional)</span></label>
+          <input type="text" bind:value={telegramForm.accountName} placeholder="My Marketing Channel" class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
         </div>
         <div>
-          <label class="block text-xs font-medium text-gray-700 mb-1">
+          <label class="block text-xs font-medium text-ink mb-1">
             {$_('social.botToken')}
-            {#if editingTelegramId}<span class="text-gray-400 font-normal">({$_('social.leaveBlankToKeep')})</span>{/if}
+            {#if editingTelegramId}<span class="text-ink-subtle font-normal">({$_('social.leaveBlankToKeep')})</span>{/if}
           </label>
-          <input type="password" bind:value={telegramForm.botToken} placeholder="1234567890:ABCdefGHIjklMNOpqrstUVwxyz" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary-500" />
+          <input type="password" bind:value={telegramForm.botToken} placeholder="1234567890:ABCdefGHIjklMNOpqrstUVwxyz" class="w-full px-3 py-2 border border-border rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary-500" />
         </div>
         <div>
-          <label class="block text-xs font-medium text-gray-700 mb-1">{$_('social.chatId')}</label>
-          <input type="text" bind:value={telegramForm.chatId} placeholder={$_('social.chatIdPlaceholder')} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
+          <label class="block text-xs font-medium text-ink mb-1">{$_('social.chatId')}</label>
+          <input type="text" bind:value={telegramForm.chatId} placeholder={$_('social.chatIdPlaceholder')} class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
           <p class="text-xs text-amber-600 mt-1.5 flex items-start gap-1">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
@@ -835,8 +835,8 @@
           </p>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">{$_('social.accountLanguage')}</label>
-          <select bind:value={telegramForm.language} class="w-full border border-gray-300 rounded-lg px-3 py-2">
+          <label class="block text-sm font-medium text-ink mb-1">{$_('social.accountLanguage')}</label>
+          <select bind:value={telegramForm.language} class="w-full border border-border rounded-lg px-3 py-2">
             <option value="">{$_('social.noLanguage')}</option>
             <option value="en">English</option>
             <option value="pl">Polski</option>
@@ -844,7 +844,7 @@
           </select>
         </div>
       </div>
-      <div class="p-6 border-t border-gray-100 flex gap-3">
+      <div class="p-6 border-t border-border flex gap-3">
         <button
           on:click={connectTelegram}
           disabled={telegramSaving || !telegramForm.chatId || (!editingTelegramId && !telegramForm.botToken)}
@@ -852,7 +852,7 @@
         >
           {telegramSaving ? $_('common.loading') : (editingTelegramId ? $_('common.save') : $_('social.connect'))}
         </button>
-        <button on:click={closeTelegramModal} class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 text-sm cursor-pointer">
+        <button on:click={closeTelegramModal} class="px-5 py-2.5 border border-border rounded-lg hover:bg-surface-2 transition-colors duration-150 text-sm cursor-pointer">
           {$_('common.cancel')}
         </button>
       </div>
@@ -865,14 +865,14 @@
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => disconnectingId = null}>
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+    <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-sm p-6">
       <div class="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center mb-4">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M13.181 8.68a4.503 4.503 0 0 1 1.903 6.405m-9.768-3.782L3 6.757l4.416-1.596m6.784 9.645L10.632 18l-4.416-1.596m9.963-3.782a4.503 4.503 0 0 1-8.271-1.15" />
         </svg>
       </div>
-      <h2 class="text-lg font-semibold text-gray-900 mb-1">{$_('social.disconnectConfirm')}</h2>
-      <p class="text-sm text-gray-500 mb-6">{$_('social.disconnectDesc')}</p>
+      <h2 class="text-lg font-semibold text-ink mb-1">{$_('social.disconnectConfirm')}</h2>
+      <p class="text-sm text-ink-muted mb-6">{$_('social.disconnectDesc')}</p>
       <div class="flex gap-3">
         <button
           on:click={() => disconnectAccount(disconnectingId!)}
@@ -880,7 +880,7 @@
         >
           {$_('social.disconnect')}
         </button>
-        <button on:click={() => disconnectingId = null} class="flex-1 px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 text-sm cursor-pointer">
+        <button on:click={() => disconnectingId = null} class="flex-1 px-5 py-2.5 border border-border rounded-lg hover:bg-surface-2 transition-colors duration-150 text-sm cursor-pointer">
           {$_('common.cancel')}
         </button>
       </div>

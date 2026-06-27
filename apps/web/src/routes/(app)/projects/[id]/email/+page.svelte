@@ -290,12 +290,12 @@
   const statusColors: Record<string, string> = {
     sent: 'bg-green-100 text-green-700',
     sending: 'bg-yellow-100 text-yellow-700',
-    draft: 'bg-gray-100 text-gray-600',
+    draft: 'bg-surface-2 text-ink-muted',
   };
 
   const subStatusColors: Record<string, string> = {
     ACTIVE: 'bg-green-100 text-green-700',
-    UNSUBSCRIBED: 'bg-gray-100 text-gray-500',
+    UNSUBSCRIBED: 'bg-surface-2 text-ink-muted',
     BOUNCED: 'bg-red-100 text-red-700',
   };
 </script>
@@ -305,7 +305,7 @@
   <!-- Header -->
   <div class="flex items-center justify-between mb-6">
     <div>
-      <h1 class="text-2xl font-bold text-gray-900">{$_('email.title')}</h1>
+      <h1 class="text-2xl font-bold text-ink">{$_('email.title')}</h1>
     </div>
     {#if activeTab === 'lists'}
       <button
@@ -332,16 +332,16 @@
   </div>
 
   <!-- Tabs -->
-  <div class="flex gap-1 mb-6 bg-gray-100 p-1 rounded-xl w-fit">
+  <div class="flex gap-1 mb-6 bg-surface-2 p-1 rounded-xl w-fit">
     <button
       on:click={() => (activeTab = 'lists')}
-      class="px-4 py-2 text-sm font-medium rounded-lg transition-colors {activeTab === 'lists' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}"
+      class="px-4 py-2 text-sm font-medium rounded-lg transition-colors {activeTab === 'lists' ? 'bg-surface text-ink shadow-sm' : 'text-ink-muted hover:text-gray-700'}"
     >
       {$_('email.tabLists')}
     </button>
     <button
       on:click={() => (activeTab = 'campaigns')}
-      class="px-4 py-2 text-sm font-medium rounded-lg transition-colors {activeTab === 'campaigns' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}"
+      class="px-4 py-2 text-sm font-medium rounded-lg transition-colors {activeTab === 'campaigns' ? 'bg-surface text-ink shadow-sm' : 'text-ink-muted hover:text-gray-700'}"
     >
       {$_('email.tabCampaigns')}
     </button>
@@ -358,14 +358,14 @@
         <div class="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
       </div>
     {:else if lists.length === 0}
-      <div class="text-center py-16 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+      <div class="text-center py-16 bg-surface-2 rounded-xl border border-dashed border-border">
         <div class="w-12 h-12 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-3">
           <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
         </div>
-        <p class="text-gray-700 font-medium text-sm">{$_('email.noLists')}</p>
+        <p class="text-ink font-medium text-sm">{$_('email.noLists')}</p>
         <button
           on:click={() => (showCreateListModal = true)}
           class="mt-3 bg-indigo-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
@@ -376,17 +376,17 @@
     {:else}
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {#each lists as list (list.id)}
-          <div class="bg-white border border-gray-200 rounded-xl p-5 flex flex-col gap-3 hover:border-indigo-200 transition-colors">
+          <div class="bg-surface border border-border rounded-xl p-5 flex flex-col gap-3 hover:border-indigo-200 transition-colors">
             <div class="flex items-start justify-between gap-2">
               <div class="min-w-0">
-                <h3 class="font-semibold text-gray-900 text-sm truncate">{list.name}</h3>
+                <h3 class="font-semibold text-ink text-sm truncate">{list.name}</h3>
                 {#if list.description}
-                  <p class="text-xs text-gray-400 mt-0.5 line-clamp-2">{list.description}</p>
+                  <p class="text-xs text-ink-subtle mt-0.5 line-clamp-2">{list.description}</p>
                 {/if}
               </div>
               <button
                 on:click={() => deleteList(list)}
-                class="text-gray-300 hover:text-red-500 transition-colors shrink-0"
+                class="text-ink-subtle hover:text-red-500 transition-colors shrink-0"
                 title={$_('email.deleteList')}
               >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -402,10 +402,10 @@
                   d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
               <span class="text-sm font-medium">{list.subscriberCount}</span>
-              <span class="text-xs text-gray-400">{$_('email.subscribers').toLowerCase()}</span>
+              <span class="text-xs text-ink-subtle">{$_('email.subscribers').toLowerCase()}</span>
             </div>
 
-            <div class="text-xs text-gray-400">{formatDate(list.createdAt)}</div>
+            <div class="text-xs text-ink-subtle">{formatDate(list.createdAt)}</div>
 
             <button
               on:click={() => openSubscribers(list)}
@@ -430,14 +430,14 @@
         <div class="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
       </div>
     {:else if campaigns.length === 0}
-      <div class="text-center py-16 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+      <div class="text-center py-16 bg-surface-2 rounded-xl border border-dashed border-border">
         <div class="w-12 h-12 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-3">
           <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
           </svg>
         </div>
-        <p class="text-gray-700 font-medium text-sm">{$_('email.noCampaigns')}</p>
+        <p class="text-ink font-medium text-sm">{$_('email.noCampaigns')}</p>
         <button
           on:click={openSendModal}
           class="mt-3 bg-indigo-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
@@ -448,20 +448,20 @@
     {:else}
       <div class="space-y-3">
         {#each campaigns as campaign (campaign.id)}
-          <div class="bg-white border border-gray-200 rounded-xl p-5">
+          <div class="bg-surface border border-border rounded-xl p-5">
             <div class="flex items-start justify-between gap-3 mb-3">
               <div class="min-w-0">
-                <h3 class="font-semibold text-gray-900 text-sm">{campaign.subject}</h3>
+                <h3 class="font-semibold text-ink text-sm">{campaign.subject}</h3>
                 {#if campaign.previewText}
-                  <p class="text-xs text-gray-400 mt-0.5">{campaign.previewText}</p>
+                  <p class="text-xs text-ink-subtle mt-0.5">{campaign.previewText}</p>
                 {/if}
               </div>
-              <span class="text-xs px-2.5 py-1 rounded-full font-medium shrink-0 {statusColors[campaign.status] ?? 'bg-gray-100 text-gray-600'}">
+              <span class="text-xs px-2.5 py-1 rounded-full font-medium shrink-0 {statusColors[campaign.status] ?? 'bg-surface-2 text-ink-muted'}">
                 {campaign.status}
               </span>
             </div>
 
-            <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500 mb-3">
+            <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-ink-muted mb-3">
               {#if campaign.list}
                 <span class="flex items-center gap-1">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -488,26 +488,26 @@
             </div>
 
             {#if campaign.stats && campaign.stats.sent > 0}
-              <div class="flex flex-wrap gap-4 pt-3 border-t border-gray-100">
+              <div class="flex flex-wrap gap-4 pt-3 border-t border-border">
                 <div class="text-center">
-                  <div class="text-sm font-bold text-gray-900">{campaign.stats.sent}</div>
-                  <div class="text-xs text-gray-400">{$_('email.sent')}</div>
+                  <div class="text-sm font-bold text-ink">{campaign.stats.sent}</div>
+                  <div class="text-xs text-ink-subtle">{$_('email.sent')}</div>
                 </div>
                 <div class="text-center">
-                  <div class="text-sm font-bold text-gray-900">{pct(campaign.stats.opens, campaign.stats.sent)}</div>
-                  <div class="text-xs text-gray-400">{$_('email.openRate')}</div>
+                  <div class="text-sm font-bold text-ink">{pct(campaign.stats.opens, campaign.stats.sent)}</div>
+                  <div class="text-xs text-ink-subtle">{$_('email.openRate')}</div>
                 </div>
                 <div class="text-center">
-                  <div class="text-sm font-bold text-gray-900">{pct(campaign.stats.clicks, campaign.stats.sent)}</div>
-                  <div class="text-xs text-gray-400">{$_('email.clickRate')}</div>
+                  <div class="text-sm font-bold text-ink">{pct(campaign.stats.clicks, campaign.stats.sent)}</div>
+                  <div class="text-xs text-ink-subtle">{$_('email.clickRate')}</div>
                 </div>
                 <div class="text-center">
-                  <div class="text-sm font-bold text-gray-900">{campaign.stats.bounces}</div>
-                  <div class="text-xs text-gray-400">{$_('email.bounces')}</div>
+                  <div class="text-sm font-bold text-ink">{campaign.stats.bounces}</div>
+                  <div class="text-xs text-ink-subtle">{$_('email.bounces')}</div>
                 </div>
                 <div class="text-center">
-                  <div class="text-sm font-bold text-gray-900">{campaign.stats.unsubscribes}</div>
-                  <div class="text-xs text-gray-400">{$_('email.unsubscribes')}</div>
+                  <div class="text-sm font-bold text-ink">{campaign.stats.unsubscribes}</div>
+                  <div class="text-xs text-ink-subtle">{$_('email.unsubscribes')}</div>
                 </div>
               </div>
             {/if}
@@ -528,11 +528,11 @@
     on:click|self={() => (showCreateListModal = false)}
     on:keydown={(e) => e.key === 'Escape' && (showCreateListModal = false)}
   >
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm">
+    <div class="bg-surface rounded-2xl shadow-xl w-full max-w-sm">
       <div class="p-6">
         <div class="flex items-center justify-between mb-5">
-          <h2 class="text-lg font-semibold text-gray-900">{$_('email.createListTitle')}</h2>
-          <button on:click={() => (showCreateListModal = false)} class="text-gray-400 hover:text-gray-600 transition-colors">
+          <h2 class="text-lg font-semibold text-ink">{$_('email.createListTitle')}</h2>
+          <button on:click={() => (showCreateListModal = false)} class="text-ink-subtle hover:text-gray-600 transition-colors">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -545,31 +545,31 @@
 
         <form on:submit|preventDefault={createList} class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">{$_('email.listName')} *</label>
+            <label class="block text-sm font-medium text-ink mb-1">{$_('email.listName')} *</label>
             <input
               type="text"
               bind:value={newListName}
               required
               placeholder={$_('email.placeholderListName')}
-              class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              class="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              {$_('common.description')} <span class="text-gray-400 font-normal">({$_('common.optional')})</span>
+            <label class="block text-sm font-medium text-ink mb-1">
+              {$_('common.description')} <span class="text-ink-subtle font-normal">({$_('common.optional')})</span>
             </label>
             <input
               type="text"
               bind:value={newListDesc}
               placeholder={$_('email.placeholderListDesc')}
-              class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              class="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
           <div class="flex gap-3 pt-1">
             <button
               type="button"
               on:click={() => (showCreateListModal = false)}
-              class="flex-1 border border-gray-200 text-gray-700 text-sm font-medium py-2.5 rounded-xl hover:bg-gray-50 transition-colors"
+              class="flex-1 border border-border text-ink text-sm font-medium py-2.5 rounded-xl hover:bg-surface-2 transition-colors"
             >
               {$_('common.cancel')}
             </button>
@@ -597,14 +597,14 @@
     on:click|self={() => (selectedList = null)}
     on:keydown={(e) => e.key === 'Escape' && (selectedList = null)}
   >
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[85vh] flex flex-col">
-      <div class="p-6 border-b border-gray-100 shrink-0">
+    <div class="bg-surface rounded-2xl shadow-xl w-full max-w-2xl max-h-[85vh] flex flex-col">
+      <div class="p-6 border-b border-border shrink-0">
         <div class="flex items-center justify-between">
           <div>
-            <h2 class="text-lg font-semibold text-gray-900">{selectedList.name}</h2>
-            <p class="text-sm text-gray-400 mt-0.5">{$_('email.subscribers')}</p>
+            <h2 class="text-lg font-semibold text-ink">{selectedList.name}</h2>
+            <p class="text-sm text-ink-subtle mt-0.5">{$_('email.subscribers')}</p>
           </div>
-          <button on:click={() => (selectedList = null)} class="text-gray-400 hover:text-gray-600 transition-colors">
+          <button on:click={() => (selectedList = null)} class="text-ink-subtle hover:text-gray-600 transition-colors">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -618,13 +618,13 @@
             bind:value={newSubEmail}
             required
             placeholder={$_('email.subscriberEmail')}
-            class="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            class="flex-1 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
           <input
             type="text"
             bind:value={newSubName}
             placeholder={$_('email.subscriberName')}
-            class="w-36 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            class="w-36 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
           <button
             type="submit"
@@ -648,33 +648,33 @@
         {:else if subscribersError}
           <div class="px-6 py-4 text-sm text-red-600">{subscribersError}</div>
         {:else if subscribers.length === 0}
-          <div class="text-center py-10 text-gray-400 text-sm">{$_('email.noSubscribers')}</div>
+          <div class="text-center py-10 text-ink-subtle text-sm">{$_('email.noSubscribers')}</div>
         {:else}
           <table class="w-full text-sm">
-            <thead class="bg-gray-50 sticky top-0">
+            <thead class="bg-surface-2 sticky top-0">
               <tr>
-                <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">{$_('email.subscriberEmail')}</th>
-                <th class="text-left px-3 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">{$_('email.subscriberName')}</th>
-                <th class="text-left px-3 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">{$_('common.status')}</th>
-                <th class="text-left px-3 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">{$_('common.date')}</th>
+                <th class="text-left px-6 py-3 text-xs font-medium text-ink-muted uppercase tracking-wide">{$_('email.subscriberEmail')}</th>
+                <th class="text-left px-3 py-3 text-xs font-medium text-ink-muted uppercase tracking-wide">{$_('email.subscriberName')}</th>
+                <th class="text-left px-3 py-3 text-xs font-medium text-ink-muted uppercase tracking-wide">{$_('common.status')}</th>
+                <th class="text-left px-3 py-3 text-xs font-medium text-ink-muted uppercase tracking-wide">{$_('common.date')}</th>
                 <th class="px-3 py-3"></th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-50">
               {#each subscribers as sub (sub.id)}
-                <tr class="hover:bg-gray-50 transition-colors">
-                  <td class="px-6 py-3 text-gray-900 font-medium">{sub.email}</td>
-                  <td class="px-3 py-3 text-gray-500">{sub.name ?? '—'}</td>
+                <tr class="hover:bg-surface-2 transition-colors">
+                  <td class="px-6 py-3 text-ink font-medium">{sub.email}</td>
+                  <td class="px-3 py-3 text-ink-muted">{sub.name ?? '—'}</td>
                   <td class="px-3 py-3">
-                    <span class="text-xs px-2 py-0.5 rounded-full font-medium {subStatusColors[sub.status] ?? 'bg-gray-100 text-gray-600'}">
+                    <span class="text-xs px-2 py-0.5 rounded-full font-medium {subStatusColors[sub.status] ?? 'bg-surface-2 text-ink-muted'}">
                       {$_(`email.${sub.status.toLowerCase()}`) || sub.status}
                     </span>
                   </td>
-                  <td class="px-3 py-3 text-gray-400 text-xs">{formatDate(sub.subscribedAt)}</td>
+                  <td class="px-3 py-3 text-ink-subtle text-xs">{formatDate(sub.subscribedAt)}</td>
                   <td class="px-3 py-3">
                     <button
                       on:click={() => removeSubscriber(sub)}
-                      class="text-gray-300 hover:text-red-500 transition-colors"
+                      class="text-ink-subtle hover:text-red-500 transition-colors"
                       title={$_('email.removeSubscriber')}
                     >
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -703,11 +703,11 @@
     on:click|self={() => (showSendModal = false)}
     on:keydown={(e) => e.key === 'Escape' && (showSendModal = false)}
   >
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+    <div class="bg-surface rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
       <div class="p-6">
         <div class="flex items-center justify-between mb-5">
-          <h2 class="text-lg font-semibold text-gray-900">{$_('email.sendCampaignTitle')}</h2>
-          <button on:click={() => (showSendModal = false)} class="text-gray-400 hover:text-gray-600 transition-colors">
+          <h2 class="text-lg font-semibold text-ink">{$_('email.sendCampaignTitle')}</h2>
+          <button on:click={() => (showSendModal = false)} class="text-ink-subtle hover:text-gray-600 transition-colors">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -729,7 +729,7 @@
           </div>
         {:else if emailAccounts.length === 0}
           <div class="text-center py-8">
-            <p class="text-gray-500 text-sm mb-3">{$_('email.noAccounts')}</p>
+            <p class="text-ink-muted text-sm mb-3">{$_('email.noAccounts')}</p>
             <a
               href="/settings/email-accounts"
               class="text-indigo-600 text-sm font-medium hover:underline"
@@ -740,11 +740,11 @@
         {:else}
           <form on:submit|preventDefault={sendCampaign} class="space-y-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">{$_('email.selectAccount')} *</label>
+              <label class="block text-sm font-medium text-ink mb-1">{$_('email.selectAccount')} *</label>
               <select
                 bind:value={campaignForm.emailAccountId}
                 required
-                class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                class="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="">— {$_('email.selectAccount')} —</option>
                 {#each emailAccounts as acc}
@@ -754,11 +754,11 @@
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">{$_('email.selectList')} *</label>
+              <label class="block text-sm font-medium text-ink mb-1">{$_('email.selectList')} *</label>
               <select
                 bind:value={campaignForm.listId}
                 required
-                class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                class="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="">— {$_('email.selectList')} —</option>
                 {#each lists as l}
@@ -768,31 +768,31 @@
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">{$_('email.subject')} *</label>
+              <label class="block text-sm font-medium text-ink mb-1">{$_('email.subject')} *</label>
               <input
                 type="text"
                 bind:value={campaignForm.subject}
                 required
                 placeholder={$_('email.placeholderSubject')}
-                class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                class="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">
-                {$_('email.previewText')} <span class="text-gray-400 font-normal">({$_('common.optional')})</span>
+              <label class="block text-sm font-medium text-ink mb-1">
+                {$_('email.previewText')} <span class="text-ink-subtle font-normal">({$_('common.optional')})</span>
               </label>
               <input
                 type="text"
                 bind:value={campaignForm.previewText}
                 placeholder={$_('email.placeholderPreviewText')}
-                class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                class="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">{$_('email.htmlContent')} *</label>
-              <p class="text-xs text-gray-400 mb-1.5">
+              <label class="block text-sm font-medium text-ink mb-1">{$_('email.htmlContent')} *</label>
+              <p class="text-xs text-ink-subtle mb-1.5">
                 {$_('email.placeholderHint')}
               </p>
               <textarea
@@ -800,7 +800,7 @@
                 required
                 rows="8"
                 placeholder={$_('email.placeholderHtml')}
-                class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-y"
+                class="w-full border border-border rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-y"
               ></textarea>
             </div>
 
@@ -808,7 +808,7 @@
               <button
                 type="button"
                 on:click={() => (showSendModal = false)}
-                class="flex-1 border border-gray-200 text-gray-700 text-sm font-medium py-2.5 rounded-xl hover:bg-gray-50 transition-colors"
+                class="flex-1 border border-border text-ink text-sm font-medium py-2.5 rounded-xl hover:bg-surface-2 transition-colors"
               >
                 {$_('common.cancel')}
               </button>

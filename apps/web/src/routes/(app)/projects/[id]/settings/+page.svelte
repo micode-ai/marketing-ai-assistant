@@ -117,7 +117,7 @@
 
   const platformColor: Record<string, string> = {
     LINKEDIN: 'text-[#0077B5] bg-[#0077B5]/10',
-    TWITTER: 'text-gray-900 bg-gray-100',
+    TWITTER: 'text-ink bg-surface-2',
     FACEBOOK: 'text-[#1877F2] bg-[#1877F2]/10',
     TELEGRAM: 'text-[#26A5E4] bg-[#26A5E4]/10',
     INSTAGRAM: 'text-[#E1306C] bg-[#E1306C]/10',
@@ -485,24 +485,24 @@
 
 <div class="p-6 max-w-2xl">
   <div class="mb-6">
-    <h1 class="text-2xl font-bold text-gray-900">{$_('projects.settings')}</h1>
+    <h1 class="text-2xl font-bold text-ink">{$_('projects.settings')}</h1>
   </div>
 
   <!-- Base Currency section -->
-  <div class="bg-white rounded-xl border border-gray-200 p-5 mb-6">
+  <div class="bg-surface rounded-xl border border-border p-5 mb-6">
     <div class="mb-4">
-      <h2 class="text-base font-semibold text-gray-900">{$_('projects.baseCurrency')}</h2>
+      <h2 class="text-base font-semibold text-ink">{$_('projects.baseCurrency')}</h2>
     </div>
     <select
       bind:value={baseCurrency}
       on:change={saveBaseCurrency}
-      class="w-full max-w-xs px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+      class="w-full max-w-xs px-3 py-2 bg-surface border border-border rounded-lg text-ink text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
     >
       {#each currencies as c}
         <option value={c}>{c}</option>
       {/each}
     </select>
-    <p class="text-sm text-gray-500 mt-2">{$_('projects.baseCurrencyWarning')}</p>
+    <p class="text-sm text-ink-muted mt-2">{$_('projects.baseCurrencyWarning')}</p>
     {#if currencySaved}
       <span class="text-sm text-green-600 flex items-center gap-1 mt-2">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -514,25 +514,25 @@
   </div>
 
   <!-- Social Networks section -->
-  <div class="bg-white rounded-xl border border-gray-200 p-5">
+  <div class="bg-surface rounded-xl border border-border p-5">
     <div class="mb-4">
-      <h2 class="text-base font-semibold text-gray-900">{$_('projects.socialNetworks')}</h2>
-      <p class="text-sm text-gray-500 mt-0.5">{$_('projects.socialNetworksDesc')}</p>
+      <h2 class="text-base font-semibold text-ink">{$_('projects.socialNetworks')}</h2>
+      <p class="text-sm text-ink-muted mt-0.5">{$_('projects.socialNetworksDesc')}</p>
     </div>
 
     {#if loading}
       <div class="space-y-2">
         {#each Array(3) as _}
-          <div class="h-12 bg-gray-100 rounded-lg animate-pulse"></div>
+          <div class="h-12 bg-surface-2 rounded-lg animate-pulse"></div>
         {/each}
       </div>
     {:else if allAccounts.length === 0}
-      <div class="text-center py-8 text-gray-500">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 mx-auto mb-3 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+      <div class="text-center py-8 text-ink-muted">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 mx-auto mb-3 text-ink-subtle" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
         </svg>
-        <p class="text-sm font-medium text-gray-600 mb-1">{$_('projects.noOrgAccounts')}</p>
-        <a href="/settings/integrations" class="text-sm text-primary-600 hover:underline">{$_('projects.noOrgAccountsLink')}</a>
+        <p class="text-sm font-medium text-ink-muted mb-1">{$_('projects.noOrgAccounts')}</p>
+        <a href="/settings/integrations" class="text-sm text-brand hover:underline">{$_('projects.noOrgAccountsLink')}</a>
       </div>
     {:else}
       <div class="space-y-2 mb-4">
@@ -540,30 +540,30 @@
           <!-- svelte-ignore a11y-click-events-have-key-events -->
           <!-- svelte-ignore a11y-no-static-element-interactions -->
           <div
-            class="flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors duration-150 {enabledIds.has(account.id) ? 'border-primary-400 bg-primary-50' : 'border-gray-200 hover:bg-gray-50'}"
+            class="flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors duration-150 {enabledIds.has(account.id) ? 'border-primary-400 bg-brand-subtle/10' : 'border-border hover:bg-surface-2'}"
             on:click={() => toggle(account.id)}
           >
             <input
               type="checkbox"
               checked={enabledIds.has(account.id)}
-              class="w-4 h-4 text-primary-600 rounded border-gray-300 cursor-pointer flex-shrink-0"
+              class="w-4 h-4 text-brand rounded border-border cursor-pointer flex-shrink-0"
               readonly
             />
-            <div class="w-8 h-8 rounded-lg {platformColor[account.platform] || 'bg-gray-100 text-gray-500'} flex items-center justify-center flex-shrink-0">
+            <div class="w-8 h-8 rounded-lg {platformColor[account.platform] || 'bg-surface-2 text-ink-muted'} flex items-center justify-center flex-shrink-0">
               {@html platformIcon[account.platform] || ''}
             </div>
             <div class="flex-1 min-w-0">
-              <div class="text-sm font-medium text-gray-900 truncate" title={account.accountName}>{account.accountName}</div>
-              <div class="text-xs text-gray-500 flex items-center gap-1.5">
+              <div class="text-sm font-medium text-ink truncate" title={account.accountName}>{account.accountName}</div>
+              <div class="text-xs text-ink-muted flex items-center gap-1.5">
                 <span>{account.platform}</span>
                 {#if account.accountId}
-                  <span class="text-gray-300">·</span>
+                  <span class="text-ink-subtle">·</span>
                   <span class="font-mono truncate" title={account.accountId}>{account.accountId}</span>
                 {/if}
               </div>
             </div>
             {#if enabledIds.has(account.id)}
-              <span class="text-xs px-2 py-0.5 bg-primary-100 text-primary-700 rounded-full flex-shrink-0">{$_('social.connected')}</span>
+              <span class="text-xs px-2 py-0.5 bg-primary-100 text-brand rounded-full flex-shrink-0">{$_('social.connected')}</span>
             {/if}
           </div>
         {/each}
@@ -573,7 +573,7 @@
         <button
           on:click={save}
           disabled={saving}
-          class="px-5 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors duration-150 disabled:opacity-50 cursor-pointer"
+          class="px-5 py-2 bg-brand text-white rounded-lg text-sm font-medium hover:brightness-110 transition-colors duration-150 disabled:opacity-50 cursor-pointer"
         >
           {saving ? $_('common.loading') : $_('common.save')}
         </button>
@@ -590,20 +590,20 @@
   </div>
 
   <!-- Website Tracking section -->
-  <div class="bg-white rounded-xl border border-gray-200 p-5 mt-6">
+  <div class="bg-surface rounded-xl border border-border p-5 mt-6">
     <div class="mb-4">
-      <h2 class="text-base font-semibold text-gray-900">{$_('tracking.title')}</h2>
-      <p class="text-sm text-gray-500 mt-0.5">{$_('tracking.description')}</p>
+      <h2 class="text-base font-semibold text-ink">{$_('tracking.title')}</h2>
+      <p class="text-sm text-ink-muted mt-0.5">{$_('tracking.description')}</p>
     </div>
 
     {#if trackingInfo}
       <div class="mb-4">
-        <label class="block text-xs font-medium text-gray-600 mb-1">{$_('tracking.trackingId')}</label>
-        <code class="text-sm bg-gray-50 px-3 py-1.5 rounded border border-gray-200 font-mono inline-block">{trackingInfo.trackingId}</code>
+        <label class="block text-xs font-medium text-ink-muted mb-1">{$_('tracking.trackingId')}</label>
+        <code class="text-sm bg-surface-2 px-3 py-1.5 rounded border border-border font-mono inline-block">{trackingInfo.trackingId}</code>
       </div>
 
       <div class="mb-4">
-        <label class="block text-xs font-medium text-gray-600 mb-1">{$_('tracking.snippet')}</label>
+        <label class="block text-xs font-medium text-ink-muted mb-1">{$_('tracking.snippet')}</label>
         <pre class="text-xs bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto max-h-48 whitespace-pre-wrap">&lt;!-- Marketing AI Tracking --&gt;
 &lt;script src="{trackingInfo.snippetUrl}"&gt;&lt;/script&gt;</pre>
       </div>
@@ -611,36 +611,36 @@
       <div class="flex items-center gap-3 mb-5">
         <button
           on:click={copySnippet}
-          class="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors duration-150 cursor-pointer flex items-center gap-1.5"
+          class="px-4 py-2 bg-brand text-white rounded-lg text-sm font-medium hover:brightness-110 transition-colors duration-150 cursor-pointer flex items-center gap-1.5"
         >
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
           </svg>
           {snippetCopied ? $_('common.copied') : $_('tracking.copySnippet')}
         </button>
-        <p class="text-xs text-gray-500">{$_('tracking.copyHint')}</p>
+        <p class="text-xs text-ink-muted">{$_('tracking.copyHint')}</p>
       </div>
 
-      <div class="border-t border-gray-100 pt-4 space-y-3">
+      <div class="border-t border-border pt-4 space-y-3">
         <div>
-          <h3 class="text-xs font-semibold text-gray-700">{$_('tracking.customEvents')}</h3>
-          <code class="text-xs text-gray-500 font-mono">mktai('event', 'button_click', &#123;label: 'signup'&#125;)</code>
+          <h3 class="text-xs font-semibold text-ink">{$_('tracking.customEvents')}</h3>
+          <code class="text-xs text-ink-muted font-mono">mktai('event', 'button_click', &#123;label: 'signup'&#125;)</code>
         </div>
         <div>
-          <h3 class="text-xs font-semibold text-gray-700">{$_('tracking.conversions')}</h3>
-          <code class="text-xs text-gray-500 font-mono">mktai('conversion', 'purchase', &#123;value: 99&#125;)</code>
+          <h3 class="text-xs font-semibold text-ink">{$_('tracking.conversions')}</h3>
+          <code class="text-xs text-ink-muted font-mono">mktai('conversion', 'purchase', &#123;value: 99&#125;)</code>
         </div>
       </div>
     {:else if !loading}
-      <div class="text-sm text-gray-500">{$_('common.loading')}</div>
+      <div class="text-sm text-ink-muted">{$_('common.loading')}</div>
     {/if}
   </div>
 
   <!-- Google Search Console section -->
-  <div class="bg-white rounded-xl border border-gray-200 p-5 mt-6">
+  <div class="bg-surface rounded-xl border border-border p-5 mt-6">
     <div class="mb-4">
-      <h2 class="text-base font-semibold text-gray-900">{$_('seo.gscConfig.title')}</h2>
-      <p class="text-sm text-gray-500 mt-0.5">{$_('seo.gscConfig.description')}</p>
+      <h2 class="text-base font-semibold text-ink">{$_('seo.gscConfig.title')}</h2>
+      <p class="text-sm text-ink-muted mt-0.5">{$_('seo.gscConfig.description')}</p>
     </div>
 
     {#if gscSuccess}
@@ -663,7 +663,7 @@
     {#if gscLoading}
       <div class="space-y-2">
         {#each Array(2) as _}
-          <div class="h-10 bg-gray-100 rounded-lg animate-pulse"></div>
+          <div class="h-10 bg-surface-2 rounded-lg animate-pulse"></div>
         {/each}
       </div>
     {:else if gscConfig?.accessToken}
@@ -671,16 +671,16 @@
       <div class="space-y-4">
         <div class="flex items-center gap-2">
           <div class="w-3 h-3 rounded-full bg-green-500"></div>
-          <span class="text-sm font-medium text-gray-900">{$_('seo.gscConfig.connected')}</span>
+          <span class="text-sm font-medium text-ink">{$_('seo.gscConfig.connected')}</span>
         </div>
 
         <div>
-          <label class="block text-xs font-medium text-gray-600 mb-1.5">
+          <label class="block text-xs font-medium text-ink-muted mb-1.5">
             {$_('seo.gscConfig.siteUrl')}
-            <span class="font-normal text-gray-400 ml-1">— {$_('seo.gscConfig.siteUrlHelper')}</span>
+            <span class="font-normal text-ink-subtle ml-1">— {$_('seo.gscConfig.siteUrlHelper')}</span>
           </label>
           {#if gscSitesLoading}
-            <div class="h-10 bg-gray-100 rounded-lg animate-pulse"></div>
+            <div class="h-10 bg-surface-2 rounded-lg animate-pulse"></div>
           {:else if gscSites.length === 0}
             <div class="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800">
               No verified properties found in this Google account. Add and verify your site in <a href="https://search.google.com/search-console" target="_blank" rel="noopener" class="underline">Google Search Console</a>, then reconnect.
@@ -689,7 +689,7 @@
             <div class="flex gap-2">
               <select
                 bind:value={gscSiteUrl}
-                class="flex-1 px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                class="flex-1 px-3 py-1.5 text-sm border border-border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
               >
                 {#each gscSites as site}
                   <option value={site.siteUrl}>{site.siteUrl}</option>
@@ -704,7 +704,7 @@
               </button>
             </div>
             {#if projectWebsite}
-              <p class="text-xs text-gray-500 mt-1.5">
+              <p class="text-xs text-ink-muted mt-1.5">
                 Project website: <span class="font-medium">{projectWebsite}</span> — pre-selected the matching property if available.
               </p>
             {/if}
@@ -724,11 +724,11 @@
       <div class="space-y-3">
         <div class="flex items-center gap-2">
           <div class="w-3 h-3 rounded-full bg-gray-300"></div>
-          <span class="text-sm text-gray-500">{$_('common.notConnected') || 'Not connected'}</span>
+          <span class="text-sm text-ink-muted">{$_('common.notConnected') || 'Not connected'}</span>
         </div>
         <button
           on:click={connectGsc}
-          class="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors duration-150 cursor-pointer flex items-center gap-2"
+          class="px-4 py-2 bg-brand text-white rounded-lg text-sm font-medium hover:brightness-110 transition-colors duration-150 cursor-pointer flex items-center gap-2"
         >
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -738,7 +738,7 @@
           </svg>
           {$_('seo.gscConfig.connect')}
         </button>
-        <p class="text-xs text-gray-400">
+        <p class="text-xs text-ink-subtle">
           Pick the property verified in Search Console for this project. The app will pull rank positions from yesterday's GSC data.
         </p>
       </div>
@@ -747,10 +747,10 @@
 
   <!-- Google Play Console section (mobile apps only) -->
   {#if isMobileApp}
-    <div class="bg-white rounded-xl border border-gray-200 p-5 mt-6">
+    <div class="bg-surface rounded-xl border border-border p-5 mt-6">
       <div class="mb-4">
-        <h2 class="text-base font-semibold text-gray-900">{$_('googlePlay.connection.title')}</h2>
-        <p class="text-sm text-gray-500 mt-0.5">{$_('googlePlay.connection.description')}</p>
+        <h2 class="text-base font-semibold text-ink">{$_('googlePlay.connection.title')}</h2>
+        <p class="text-sm text-ink-muted mt-0.5">{$_('googlePlay.connection.description')}</p>
       </div>
 
       <!-- Success / Error banners -->
@@ -774,7 +774,7 @@
       {#if gpLoading}
         <div class="space-y-2">
           {#each Array(2) as _}
-            <div class="h-10 bg-gray-100 rounded-lg animate-pulse"></div>
+            <div class="h-10 bg-surface-2 rounded-lg animate-pulse"></div>
           {/each}
         </div>
       {:else if gpStatus?.connected}
@@ -782,28 +782,28 @@
         <div class="space-y-4">
           <div class="flex items-center gap-3">
             <div class="w-3 h-3 rounded-full {gpStatus.status === 'OK' ? 'bg-green-500' : gpStatus.status === 'ERROR' ? 'bg-red-500' : 'bg-yellow-500'}"></div>
-            <span class="text-sm font-medium text-gray-900">
+            <span class="text-sm font-medium text-ink">
               {#if gpStatus.status === 'OK'}{$_('googlePlay.connection.status.ok')}
               {:else if gpStatus.status === 'ERROR'}{$_('googlePlay.connection.status.error')}
               {:else}{$_('googlePlay.connection.status.syncing')}
               {/if}
             </span>
             {#if gpStatus.authMethod}
-              <span class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{gpStatus.authMethod === 'oauth2' ? 'OAuth' : 'Service Account'}</span>
+              <span class="text-xs bg-surface-2 text-ink-muted px-2 py-0.5 rounded-full">{gpStatus.authMethod === 'oauth2' ? 'OAuth' : 'Service Account'}</span>
             {/if}
           </div>
 
           <div>
-            <span class="text-xs font-medium text-gray-500">{$_('googlePlay.connection.packageName')}</span>
+            <span class="text-xs font-medium text-ink-muted">{$_('googlePlay.connection.packageName')}</span>
             {#if gpStatus.packageName}
-              <code class="ml-2 text-sm bg-gray-50 px-2 py-0.5 rounded border border-gray-200 font-mono">{gpStatus.packageName}</code>
+              <code class="ml-2 text-sm bg-surface-2 px-2 py-0.5 rounded border border-border font-mono">{gpStatus.packageName}</code>
             {:else}
               <div class="flex gap-2 mt-1">
                 <input
                   type="text"
                   bind:value={gpPackageName}
                   placeholder={$_('googlePlay.connection.enterPackageName')}
-                  class="flex-1 px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 font-mono"
+                  class="flex-1 px-3 py-1.5 text-sm border border-border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 font-mono"
                 />
                 <button
                   on:click={savePackageName}
@@ -816,7 +816,7 @@
             {/if}
           </div>
 
-          <div class="text-xs text-gray-500">
+          <div class="text-xs text-ink-muted">
             {$_('googlePlay.connection.lastSync', { values: { time: formatLastSync(gpStatus.lastSyncAt) } })}
           </div>
 
@@ -827,17 +827,17 @@
           {/if}
 
           <!-- Cloud Storage Bucket URI -->
-          <div class="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
-            <label class="block text-xs font-medium text-gray-600 mb-1.5">
+          <div class="mt-3 p-3 bg-surface-2 rounded-lg border border-border">
+            <label class="block text-xs font-medium text-ink-muted mb-1.5">
               Cloud Storage URI
-              <span class="font-normal text-gray-400">(Google Play Console → Download reports → Copy Cloud Storage URI)</span>
+              <span class="font-normal text-ink-subtle">(Google Play Console → Download reports → Copy Cloud Storage URI)</span>
             </label>
             <div class="flex gap-2">
               <input
                 type="text"
                 bind:value={gpBucketUri}
                 placeholder="gs://pubsite_prod_rev_XXXXXXXXXXXX"
-                class="flex-1 px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 font-mono"
+                class="flex-1 px-3 py-1.5 text-sm border border-border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 font-mono"
               />
               <button
                 on:click={saveBucketUri}
@@ -851,14 +851,14 @@
                 {/if}
               </button>
             </div>
-            <p class="text-xs text-gray-400 mt-1.5">Required for install counts, ratings distribution, and store listing performance data.</p>
+            <p class="text-xs text-ink-subtle mt-1.5">Required for install counts, ratings distribution, and store listing performance data.</p>
           </div>
 
           <div class="flex items-center gap-3">
             <button
               on:click={syncNow}
               disabled={gpSyncing}
-              class="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors duration-150 disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
+              class="px-4 py-2 bg-brand text-white rounded-lg text-sm font-medium hover:brightness-110 transition-colors duration-150 disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
             >
               {#if gpSyncing}
                 <svg class="animate-spin w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -887,13 +887,13 @@
           <!-- svelte-ignore a11y-click-events-have-key-events -->
           <!-- svelte-ignore a11y-no-static-element-interactions -->
           <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50" on:click|self={() => { showDisconnectConfirm = false; }}>
-            <div class="bg-white rounded-xl shadow-xl p-6 max-w-sm mx-4">
-              <h3 class="text-lg font-semibold text-gray-900 mb-2">{$_('googlePlay.connection.disconnect')}</h3>
-              <p class="text-sm text-gray-600 mb-5">{$_('googlePlay.connection.disconnectConfirm')}</p>
+            <div class="bg-surface rounded-xl shadow-xl p-6 max-w-sm mx-4">
+              <h3 class="text-lg font-semibold text-ink mb-2">{$_('googlePlay.connection.disconnect')}</h3>
+              <p class="text-sm text-ink-muted mb-5">{$_('googlePlay.connection.disconnectConfirm')}</p>
               <div class="flex items-center gap-3 justify-end">
                 <button
                   on:click={() => { showDisconnectConfirm = false; }}
-                  class="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
+                  class="px-4 py-2 text-sm text-ink-muted border border-border rounded-lg hover:bg-surface-2 cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -914,13 +914,13 @@
         <div class="space-y-4">
           <div class="flex items-center gap-2 mb-2">
             <div class="w-3 h-3 rounded-full bg-gray-300"></div>
-            <span class="text-sm text-gray-500">{$_('googlePlay.connection.disconnected')}</span>
+            <span class="text-sm text-ink-muted">{$_('googlePlay.connection.disconnected')}</span>
           </div>
 
           <div class="flex flex-wrap gap-3">
             <button
               on:click={connectOAuth}
-              class="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors duration-150 cursor-pointer flex items-center gap-2"
+              class="px-4 py-2 bg-brand text-white rounded-lg text-sm font-medium hover:brightness-110 transition-colors duration-150 cursor-pointer flex items-center gap-2"
             >
               <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -932,36 +932,36 @@
             </button>
             <button
               on:click={() => { gpShowServiceAccountForm = !gpShowServiceAccountForm; }}
-              class="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors duration-150 cursor-pointer"
+              class="px-4 py-2 text-ink border border-border rounded-lg text-sm font-medium hover:bg-surface-2 transition-colors duration-150 cursor-pointer"
             >
               {$_('googlePlay.connection.connectServiceAccount')}
             </button>
           </div>
 
           {#if gpShowServiceAccountForm}
-            <div class="border border-gray-200 rounded-lg p-4 space-y-3 mt-3">
+            <div class="border border-border rounded-lg p-4 space-y-3 mt-3">
               <div>
-                <label class="block text-xs font-medium text-gray-600 mb-1">{$_('googlePlay.connection.uploadJson')}</label>
+                <label class="block text-xs font-medium text-ink-muted mb-1">{$_('googlePlay.connection.uploadJson')}</label>
                 <input
                   type="file"
                   accept=".json"
                   on:change={handleFileSelect}
-                  class="block w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 file:cursor-pointer cursor-pointer"
+                  class="block w-full text-sm text-ink-muted file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-brand-subtle/10 file:text-primary-700 hover:file:bg-primary-100 file:cursor-pointer cursor-pointer"
                 />
               </div>
               <div>
-                <label class="block text-xs font-medium text-gray-600 mb-1">{$_('googlePlay.connection.packageName')}</label>
+                <label class="block text-xs font-medium text-ink-muted mb-1">{$_('googlePlay.connection.packageName')}</label>
                 <input
                   type="text"
                   bind:value={gpPackageName}
                   placeholder={$_('googlePlay.connection.enterPackageName')}
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
               </div>
               <button
                 on:click={connectServiceAccount}
                 disabled={gpConnecting || !gpServiceAccountFile || !gpPackageName.trim()}
-                class="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors duration-150 disabled:opacity-50 cursor-pointer"
+                class="px-4 py-2 bg-brand text-white rounded-lg text-sm font-medium hover:brightness-110 transition-colors duration-150 disabled:opacity-50 cursor-pointer"
               >
                 {gpConnecting ? $_('common.loading') : $_('googlePlay.connection.connectServiceAccount')}
               </button>

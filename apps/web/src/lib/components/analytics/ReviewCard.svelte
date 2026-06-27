@@ -48,16 +48,16 @@
   }
 </script>
 
-<div class="bg-white rounded-xl border border-gray-200 p-5">
+<div class="bg-surface rounded-xl border border-border p-5">
   <!-- Header: author + rating -->
   <div class="flex items-start justify-between mb-3">
     <div class="flex items-center gap-3">
-      <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 font-bold text-sm flex-shrink-0">
+      <div class="w-10 h-10 bg-surface-2 rounded-full flex items-center justify-center text-ink-muted font-bold text-sm flex-shrink-0">
         {(review.authorName || '?').charAt(0).toUpperCase()}
       </div>
       <div>
-        <div class="text-sm font-medium text-gray-900">{review.authorName || $_('googlePlay.reviews.anonymous')}</div>
-        <div class="text-xs text-gray-500">{formatDate(review.reviewCreatedAt)}</div>
+        <div class="text-sm font-medium text-ink">{review.authorName || $_('googlePlay.reviews.anonymous')}</div>
+        <div class="text-xs text-ink-muted">{formatDate(review.reviewCreatedAt)}</div>
       </div>
     </div>
     <div class="flex items-center gap-0.5">
@@ -70,40 +70,40 @@
   </div>
 
   <!-- Review text -->
-  <p class="text-sm text-gray-700 mb-3 whitespace-pre-wrap">{review.text}</p>
+  <p class="text-sm text-ink mb-3 whitespace-pre-wrap">{review.text}</p>
 
   <!-- Metadata badges -->
   {#if review.metadata}
     {@const meta = review.metadata}
     <div class="flex flex-wrap gap-2 mb-3">
       {#if meta['device']}
-        <span class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{meta['device']}</span>
+        <span class="text-xs bg-surface-2 text-ink-muted px-2 py-0.5 rounded-full">{meta['device']}</span>
       {/if}
       {#if meta['appVersionName']}
-        <span class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">v{meta['appVersionName']}</span>
+        <span class="text-xs bg-surface-2 text-ink-muted px-2 py-0.5 rounded-full">v{meta['appVersionName']}</span>
       {/if}
       {#if meta['androidOsVersion']}
-        <span class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">Android {meta['androidOsVersion']}</span>
+        <span class="text-xs bg-surface-2 text-ink-muted px-2 py-0.5 rounded-full">Android {meta['androidOsVersion']}</span>
       {/if}
       {#if review.language}
-        <span class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{review.language}</span>
+        <span class="text-xs bg-surface-2 text-ink-muted px-2 py-0.5 rounded-full">{review.language}</span>
       {/if}
     </div>
   {/if}
 
   <!-- Existing reply -->
   {#if review.isReplied && review.replyText && !showReplyBox}
-    <div class="bg-gray-50 rounded-lg p-3 border border-gray-100 mb-3">
+    <div class="bg-surface-2 rounded-lg p-3 border border-border mb-3">
       <div class="flex items-center gap-1.5 mb-1">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-ink-subtle" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
         </svg>
-        <span class="text-xs font-medium text-gray-500">Developer reply</span>
+        <span class="text-xs font-medium text-ink-muted">Developer reply</span>
         {#if review.replyCreatedAt}
-          <span class="text-xs text-gray-400">- {formatDate(review.replyCreatedAt)}</span>
+          <span class="text-xs text-ink-subtle">- {formatDate(review.replyCreatedAt)}</span>
         {/if}
       </div>
-      <p class="text-sm text-gray-600 whitespace-pre-wrap">{review.replyText}</p>
+      <p class="text-sm text-ink-muted whitespace-pre-wrap">{review.replyText}</p>
     </div>
   {/if}
 
@@ -121,7 +121,7 @@
       <button
         on:click={generateAiReply}
         disabled={generating}
-        class="px-3 py-1.5 text-sm font-medium text-primary-600 border border-primary-200 rounded-lg hover:bg-primary-50 transition-colors duration-150 disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
+        class="px-3 py-1.5 text-sm font-medium text-brand border border-primary-200 rounded-lg hover:bg-brand-subtle/10 transition-colors duration-150 disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
       >
         {#if generating}
           <svg class="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24">
@@ -142,21 +142,21 @@
         <textarea
           bind:value={replyText}
           rows="3"
-          class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-y"
+          class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-y"
           placeholder="Type your reply..."
         ></textarea>
         <div class="flex items-center gap-2">
           <button
             on:click={sendReply}
             disabled={sending || !replyText || !replyText.trim()}
-            class="px-4 py-1.5 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors duration-150 disabled:opacity-50 cursor-pointer"
+            class="px-4 py-1.5 bg-brand text-white rounded-lg text-sm font-medium hover:brightness-110 transition-colors duration-150 disabled:opacity-50 cursor-pointer"
           >
             {sending ? $_('googlePlay.reviews.sending') : $_('googlePlay.reviews.sendReply')}
           </button>
           <button
             on:click={generateAiReply}
             disabled={generating}
-            class="px-3 py-1.5 text-sm font-medium text-primary-600 border border-primary-200 rounded-lg hover:bg-primary-50 transition-colors duration-150 disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
+            class="px-3 py-1.5 text-sm font-medium text-brand border border-primary-200 rounded-lg hover:bg-brand-subtle/10 transition-colors duration-150 disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
           >
             {#if generating}
               <svg class="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24">
@@ -170,7 +170,7 @@
           </button>
           <button
             on:click={() => { showReplyBox = false; replyText = ''; }}
-            class="px-3 py-1.5 text-sm text-gray-500 hover:text-gray-700 cursor-pointer"
+            class="px-3 py-1.5 text-sm text-ink-muted hover:text-gray-700 cursor-pointer"
           >
             {$_('common.cancel')}
           </button>

@@ -160,8 +160,8 @@
 
 <div class="p-4 sm:p-6">
   <div class="mb-6">
-    <h1 class="text-2xl font-bold text-gray-900">{$_('nav.templates')}</h1>
-    <p class="text-gray-500 mt-1 text-sm">{$_('templates.subtitle')}</p>
+    <h1 class="text-2xl font-bold text-ink">{$_('nav.templates')}</h1>
+    <p class="text-ink-muted mt-1 text-sm">{$_('templates.subtitle')}</p>
   </div>
 
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -169,18 +169,18 @@
       <button
         on:click={() => useTemplate(t)}
         disabled={creating}
-        class="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md hover:border-primary-200 transition-all duration-200 cursor-pointer group flex flex-col text-left disabled:opacity-50 disabled:cursor-wait"
+        class="bg-surface rounded-xl border border-border p-5 hover:shadow-md hover:border-primary-200 transition-all duration-200 cursor-pointer group flex flex-col text-left disabled:opacity-50 disabled:cursor-wait"
       >
         <div class="w-11 h-11 {t.color} rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-200">
           {@html t.icon}
         </div>
-        <h3 class="font-semibold text-gray-900 group-hover:text-primary-700 transition-colors duration-150">{$_(t.nameKey)}</h3>
-        <p class="text-xs text-gray-500 mt-1 mb-3 flex-1">{$_(t.descKey)}</p>
+        <h3 class="font-semibold text-ink group-hover:text-primary-700 transition-colors duration-150">{$_(t.nameKey)}</h3>
+        <p class="text-xs text-ink-muted mt-1 mb-3 flex-1">{$_(t.descKey)}</p>
         <div class="flex items-center justify-between">
           <span class="text-xs px-2 py-1 rounded-full {t.type === 'checklist' ? 'bg-green-50 text-green-700' : 'bg-blue-50 text-blue-700'}">
             {$_('templates.' + t.type)}
           </span>
-          <svg class="w-4 h-4 text-gray-300 group-hover:text-primary-500 group-hover:translate-x-0.5 transition-all duration-150" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <svg class="w-4 h-4 text-ink-subtle group-hover:text-primary-500 group-hover:translate-x-0.5 transition-all duration-150" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
           </svg>
         </div>
@@ -192,29 +192,29 @@
 <!-- Project picker modal -->
 {#if showProjectPicker}
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" on:click|self={() => { showProjectPicker = false; pendingTemplate = null; }} on:keydown={(e) => e.key === 'Escape' && (showProjectPicker = false, pendingTemplate = null)} role="dialog" tabindex="-1">
-    <div class="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full mx-4">
-      <h3 class="text-base font-semibold text-gray-900 mb-1">{$_('templates.pickProject')}</h3>
-      <p class="text-sm text-gray-500 mb-4">{$_('templates.pickProjectDesc')}</p>
+    <div class="bg-surface rounded-2xl shadow-xl p-6 max-w-sm w-full mx-4">
+      <h3 class="text-base font-semibold text-ink mb-1">{$_('templates.pickProject')}</h3>
+      <p class="text-sm text-ink-muted mb-4">{$_('templates.pickProjectDesc')}</p>
       <div class="flex flex-col gap-2 max-h-64 overflow-y-auto">
         {#each $projectsStore as project}
           <button
             on:click={() => pickProject(project.id)}
-            class="flex items-center gap-3 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl hover:border-primary-300 hover:bg-primary-50 transition-colors duration-150 text-left cursor-pointer group"
+            class="flex items-center gap-3 px-4 py-3 bg-surface-2 border border-border rounded-xl hover:border-primary-300 hover:bg-brand-subtle/10 transition-colors duration-150 text-left cursor-pointer group"
           >
-            <div class="w-9 h-9 bg-primary-100 rounded-lg flex items-center justify-center flex-shrink-0 text-primary-700 font-bold text-sm">
+            <div class="w-9 h-9 bg-primary-100 rounded-lg flex items-center justify-center flex-shrink-0 text-brand font-bold text-sm">
               {project.name.charAt(0)}
             </div>
             <div class="min-w-0">
-              <p class="text-sm font-medium text-gray-900 truncate">{project.name}</p>
+              <p class="text-sm font-medium text-ink truncate">{project.name}</p>
               {#if project.industry}
-                <p class="text-xs text-gray-400 truncate">{project.industry}</p>
+                <p class="text-xs text-ink-subtle truncate">{project.industry}</p>
               {/if}
             </div>
           </button>
         {/each}
       </div>
       <button on:click={() => { showProjectPicker = false; pendingTemplate = null; }}
-        class="mt-4 w-full px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer">
+        class="mt-4 w-full px-4 py-2 text-sm font-medium text-ink bg-surface-2 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer">
         {$_('aiChat.deleteChat.cancel')}
       </button>
     </div>
@@ -224,20 +224,20 @@
 <!-- AI Generation overlay -->
 {#if creating}
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-    <div class="bg-white rounded-2xl shadow-xl p-8 max-w-sm w-full mx-4 text-center">
+    <div class="bg-surface rounded-2xl shadow-xl p-8 max-w-sm w-full mx-4 text-center">
       <div class="w-16 h-16 bg-primary-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-primary-600 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-brand animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z" />
         </svg>
       </div>
-      <h3 class="text-lg font-semibold text-gray-900 mb-2">{$_('templates.generating')}</h3>
-      <p class="text-sm text-gray-500 mb-4">{generatingMessage}</p>
+      <h3 class="text-lg font-semibold text-ink mb-2">{$_('templates.generating')}</h3>
+      <p class="text-sm text-ink-muted mb-4">{generatingMessage}</p>
       <div class="flex justify-center gap-1">
         <div class="w-2 h-2 bg-primary-400 rounded-full animate-bounce" style="animation-delay:0ms"></div>
         <div class="w-2 h-2 bg-primary-400 rounded-full animate-bounce" style="animation-delay:150ms"></div>
         <div class="w-2 h-2 bg-primary-400 rounded-full animate-bounce" style="animation-delay:300ms"></div>
       </div>
-      <p class="text-xs text-gray-400 mt-4">{$_('templates.generatingHint')}</p>
+      <p class="text-xs text-ink-subtle mt-4">{$_('templates.generatingHint')}</p>
     </div>
   </div>
 {/if}

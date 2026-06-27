@@ -143,7 +143,7 @@
   };
   const statusColors: Record<string, string> = {
     ACTIVE: 'bg-green-100 text-green-700',
-    INACTIVE: 'bg-gray-100 text-gray-600',
+    INACTIVE: 'bg-surface-2 text-ink-muted',
     ERROR: 'bg-red-100 text-red-700',
   };
 </script>
@@ -152,8 +152,8 @@
   <!-- Header -->
   <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
     <div>
-      <h1 class="text-2xl font-bold text-gray-900">{$_('email.accounts')}</h1>
-      <p class="text-sm text-gray-500 mt-1">{$_('email.noAccountsDesc')}</p>
+      <h1 class="text-2xl font-bold text-ink">{$_('email.accounts')}</h1>
+      <p class="text-sm text-ink-muted mt-1">{$_('email.noAccountsDesc')}</p>
     </div>
     <button
       on:click={openAddModal}
@@ -178,15 +178,15 @@
       <div class="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
     </div>
   {:else if accounts.length === 0}
-    <div class="text-center py-16 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+    <div class="text-center py-16 bg-surface-2 rounded-xl border border-dashed border-border">
       <div class="w-12 h-12 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-3">
         <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
             d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
         </svg>
       </div>
-      <p class="text-gray-700 font-medium text-sm">{$_('email.noAccounts')}</p>
-      <p class="text-gray-400 text-xs mt-1 mb-4">{$_('email.noAccountsDesc')}</p>
+      <p class="text-ink font-medium text-sm">{$_('email.noAccounts')}</p>
+      <p class="text-ink-subtle text-xs mt-1 mb-4">{$_('email.noAccountsDesc')}</p>
       <button on:click={openAddModal} class="bg-indigo-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
         {$_('email.addAccount')}
       </button>
@@ -194,7 +194,7 @@
   {:else}
     <div class="space-y-3">
       {#each accounts as account (account.id)}
-        <div class="bg-white border border-gray-200 rounded-xl p-4 flex items-start gap-4">
+        <div class="bg-surface border border-border rounded-xl p-4 flex items-start gap-4">
           <div class="w-10 h-10 bg-indigo-50 rounded-lg flex items-center justify-center shrink-0">
             <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -204,20 +204,20 @@
 
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2 flex-wrap">
-              <span class="font-medium text-gray-900 text-sm">{account.email}</span>
+              <span class="font-medium text-ink text-sm">{account.email}</span>
               {#if account.displayName}
-                <span class="text-gray-400 text-xs">({account.displayName})</span>
+                <span class="text-ink-subtle text-xs">({account.displayName})</span>
               {/if}
             </div>
             <div class="flex items-center gap-2 mt-1 flex-wrap">
-              <span class="text-xs px-2 py-0.5 rounded-full font-medium {providerColors[account.provider] ?? 'bg-gray-100 text-gray-600'}">
+              <span class="text-xs px-2 py-0.5 rounded-full font-medium {providerColors[account.provider] ?? 'bg-surface-2 text-ink-muted'}">
                 {account.provider === 'RESEND' ? $_('email.resend') : $_('email.smtp')}
               </span>
-              <span class="text-xs px-2 py-0.5 rounded-full font-medium {statusColors[account.status] ?? 'bg-gray-100 text-gray-600'}">
+              <span class="text-xs px-2 py-0.5 rounded-full font-medium {statusColors[account.status] ?? 'bg-surface-2 text-ink-muted'}">
                 {account.status}
               </span>
               {#if account.smtpHost}
-                <span class="text-xs text-gray-400">{account.smtpHost}:{account.smtpPort}</span>
+                <span class="text-xs text-ink-subtle">{account.smtpHost}:{account.smtpPort}</span>
               {/if}
             </div>
             {#if testResults[account.id]}
@@ -233,7 +233,7 @@
             <button
               on:click={() => testConnection(account.id)}
               disabled={testingId === account.id}
-              class="text-xs text-gray-600 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 whitespace-nowrap"
+              class="text-xs text-ink-muted border border-border px-3 py-1.5 rounded-lg hover:bg-surface-2 transition-colors disabled:opacity-50 whitespace-nowrap"
             >
               {testingId === account.id ? '...' : $_('email.testConnection')}
             </button>
@@ -261,13 +261,13 @@
     on:click|self={() => (showAddModal = false)}
     on:keydown={(e) => e.key === 'Escape' && (showAddModal = false)}
   >
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+    <div class="bg-surface rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
       <div class="p-6">
         <div class="flex items-center justify-between mb-5">
-          <h2 class="text-lg font-semibold text-gray-900">{$_('email.addAccountTitle')}</h2>
+          <h2 class="text-lg font-semibold text-ink">{$_('email.addAccountTitle')}</h2>
           <button
             on:click={() => (showAddModal = false)}
-            class="text-gray-400 hover:text-gray-600 transition-colors"
+            class="text-ink-subtle hover:text-gray-600 transition-colors"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -281,19 +281,19 @@
 
         <!-- Provider toggle -->
         <div class="mb-5">
-          <label class="block text-sm font-medium text-gray-700 mb-2">{$_('email.provider')}</label>
-          <div class="flex rounded-lg border border-gray-200 overflow-hidden">
+          <label class="block text-sm font-medium text-ink mb-2">{$_('email.provider')}</label>
+          <div class="flex rounded-lg border border-border overflow-hidden">
             <button
               type="button"
               on:click={() => (provider = 'SMTP')}
-              class="flex-1 py-2 text-sm font-medium transition-colors {provider === 'SMTP' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}"
+              class="flex-1 py-2 text-sm font-medium transition-colors {provider === 'SMTP' ? 'bg-indigo-600 text-white' : 'bg-surface text-ink-muted hover:bg-surface-2'}"
             >
               {$_('email.smtp')}
             </button>
             <button
               type="button"
               on:click={() => (provider = 'RESEND')}
-              class="flex-1 py-2 text-sm font-medium transition-colors {provider === 'RESEND' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}"
+              class="flex-1 py-2 text-sm font-medium transition-colors {provider === 'RESEND' ? 'bg-indigo-600 text-white' : 'bg-surface text-ink-muted hover:bg-surface-2'}"
             >
               {$_('email.resend')}
             </button>
@@ -302,99 +302,99 @@
 
         <form on:submit|preventDefault={addAccount} class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">{$_('email.fromEmail')} *</label>
+            <label class="block text-sm font-medium text-ink mb-1">{$_('email.fromEmail')} *</label>
             <input
               type="email"
               bind:value={form.email}
               required
               placeholder="campaigns@yourcompany.com"
-              class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              class="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              {$_('email.displayName')} <span class="text-gray-400 font-normal">({$_('common.optional')})</span>
+            <label class="block text-sm font-medium text-ink mb-1">
+              {$_('email.displayName')} <span class="text-ink-subtle font-normal">({$_('common.optional')})</span>
             </label>
             <input
               type="text"
               bind:value={form.displayName}
               placeholder={$_('email.placeholderDisplayName')}
-              class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              class="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
 
           {#if provider === 'SMTP'}
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">{$_('email.smtpHost')} *</label>
+                <label class="block text-sm font-medium text-ink mb-1">{$_('email.smtpHost')} *</label>
                 <input
                   type="text"
                   bind:value={form.smtpHost}
                   required
                   placeholder="smtp.example.com"
-                  class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  class="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">{$_('email.smtpPort')}</label>
+                <label class="block text-sm font-medium text-ink mb-1">{$_('email.smtpPort')}</label>
                 <input
                   type="number"
                   bind:value={form.smtpPort}
-                  class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  class="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">{$_('email.username')} *</label>
+              <label class="block text-sm font-medium text-ink mb-1">{$_('email.username')} *</label>
               <input
                 type="text"
                 bind:value={form.smtpUser}
                 required
                 placeholder="user@example.com"
-                class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                class="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">{$_('email.password')} *</label>
+              <label class="block text-sm font-medium text-ink mb-1">{$_('email.password')} *</label>
               <input
                 type="password"
                 bind:value={form.smtpPassword}
                 required
-                class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                class="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">
-                  {$_('email.imapHost')} <span class="text-gray-400 font-normal">({$_('common.optional')})</span>
+                <label class="block text-sm font-medium text-ink mb-1">
+                  {$_('email.imapHost')} <span class="text-ink-subtle font-normal">({$_('common.optional')})</span>
                 </label>
                 <input
                   type="text"
                   bind:value={form.imapHost}
                   placeholder="imap.example.com"
-                  class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  class="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">{$_('email.imapPort')}</label>
+                <label class="block text-sm font-medium text-ink mb-1">{$_('email.imapPort')}</label>
                 <input
                   type="number"
                   bind:value={form.imapPort}
-                  class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  class="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
             </div>
           {:else}
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">{$_('email.apiKey')} *</label>
+              <label class="block text-sm font-medium text-ink mb-1">{$_('email.apiKey')} *</label>
               <input
                 type="password"
                 bind:value={form.apiKey}
                 required
                 placeholder="re_xxxxxxxxxxxxxxxx"
-                class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                class="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
-              <p class="text-xs text-gray-400 mt-1">{$_('email.resendApiKeyHint')}</p>
+              <p class="text-xs text-ink-subtle mt-1">{$_('email.resendApiKeyHint')}</p>
             </div>
           {/if}
 
@@ -402,7 +402,7 @@
             <button
               type="button"
               on:click={() => (showAddModal = false)}
-              class="flex-1 border border-gray-200 text-gray-700 text-sm font-medium py-2.5 rounded-xl hover:bg-gray-50 transition-colors"
+              class="flex-1 border border-border text-ink text-sm font-medium py-2.5 rounded-xl hover:bg-surface-2 transition-colors"
             >
               {$_('common.cancel')}
             </button>

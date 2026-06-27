@@ -225,24 +225,24 @@
 </script>
 
 <div class="p-4 sm:p-6">
-  <div class="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 mb-1">
+  <div class="flex items-center gap-1.5 text-sm text-ink-muted mb-1">
     <span>{currentOrg?.name || $_('header.orgContext')}</span>
     {#if $currentProjectStore}
-      <span class="text-gray-300">›</span>
+      <span class="text-ink-subtle">›</span>
       <span class="text-indigo-600 dark:text-indigo-400">{$currentProjectStore.name}</span>
     {/if}
-    <span class="text-gray-300">›</span>
-    <span class="text-gray-700 dark:text-gray-200">{$_('nav.orgChecklists')}</span>
+    <span class="text-ink-subtle">›</span>
+    <span class="text-ink">{$_('nav.orgChecklists')}</span>
   </div>
 
   <div class="flex items-center justify-between mb-6">
-    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{$_('nav.orgChecklists')}</h1>
+    <h1 class="text-2xl font-bold text-ink">{$_('nav.orgChecklists')}</h1>
     <div class="flex items-center gap-2">
-      <button on:click={openImportModal} class="inline-flex items-center gap-2 px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 text-sm font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors cursor-pointer">
+      <button on:click={openImportModal} class="inline-flex items-center gap-2 px-3 py-2 bg-surface border border-border text-ink text-sm font-medium rounded-lg hover:bg-surface-2 transition-colors cursor-pointer">
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" /></svg>
         {$_('checklists.importFromMD')}
       </button>
-      <button on:click={openAIModal} class="inline-flex items-center gap-2 px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 text-sm font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors cursor-pointer">
+      <button on:click={openAIModal} class="inline-flex items-center gap-2 px-3 py-2 bg-surface border border-border text-ink text-sm font-medium rounded-lg hover:bg-surface-2 transition-colors cursor-pointer">
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" /></svg>
         {$_('checklists.generateWithAI')}
       </button>
@@ -257,7 +257,7 @@
       <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
     </div>
   {:else if items.length === 0}
-    <div class="text-center py-12 text-gray-500 dark:text-gray-400">
+    <div class="text-center py-12 text-ink-muted">
       <p>{$_('checklists.empty')}</p>
       <p class="text-sm mt-1">{$_('checklists.emptyDesc')}</p>
     </div>
@@ -268,11 +268,11 @@
         <!-- svelte-ignore a11y-no-static-element-interactions -->
         <div
           on:click={() => { if (item.projectId) goto(`/projects/${item.projectId}/checklists`); }}
-          class="block bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 hover:border-indigo-300 dark:hover:border-indigo-600 hover:shadow-sm transition-all cursor-pointer">
+          class="block bg-surface rounded-lg border border-border p-4 hover:border-indigo-300 dark:hover:border-indigo-600 hover:shadow-sm transition-all cursor-pointer">
           <div class="flex items-center justify-between">
             <div class="min-w-0 flex-1">
-              <h3 class="font-medium text-gray-900 dark:text-white">{item.name}</h3>
-              <p class="text-sm text-gray-500 dark:text-gray-400 truncate">
+              <h3 class="font-medium text-ink">{item.name}</h3>
+              <p class="text-sm text-ink-muted truncate">
                 {$_(checklistTypes.find(t => t.value === item.type)?.labelKey || 'checklists.custom')}
                 {item.description ? ' · ' + item.description.substring(0, 60) : ''}
               </p>
@@ -282,10 +282,10 @@
                 {@const total = item._count?.items || item.items?.length || 0}
                 {@const done = item.items?.filter((i) => i.isCompleted).length || 0}
                 <div class="flex items-center gap-1.5">
-                  <div class="w-16 h-1.5 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
+                  <div class="w-16 h-1.5 bg-gray-200 rounded-full overflow-hidden">
                     <div class="h-full bg-green-500 rounded-full" style="width: {total > 0 ? Math.round(done / total * 100) : 0}%"></div>
                   </div>
-                  <span class="text-xs text-gray-400 whitespace-nowrap">{done}/{total}</span>
+                  <span class="text-xs text-ink-subtle whitespace-nowrap">{done}/{total}</span>
                 </div>
               {/if}
               <span class="text-xs px-2 py-1 rounded-full whitespace-nowrap {item.scope === 'ORGANIZATION' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'}">
@@ -304,31 +304,31 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => showCreateModal = false}>
-  <div class="bg-white dark:bg-gray-800 rounded-xl w-full max-w-md p-6 shadow-xl">
-    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">{$_('checklists.createManual')}</h3>
+  <div class="bg-surface rounded-xl w-full max-w-md p-6 shadow-xl">
+    <h3 class="text-lg font-semibold text-ink mb-4">{$_('checklists.createManual')}</h3>
     <div class="mb-4">
-      <label class="block text-sm text-gray-500 dark:text-gray-400 mb-1">{$_('checklists.scope')}</label>
-      <select bind:value={createForm.projectId} class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-900 dark:text-white">
+      <label class="block text-sm text-ink-muted mb-1">{$_('checklists.scope')}</label>
+      <select bind:value={createForm.projectId} class="w-full bg-surface-2 border border-border rounded-lg px-3 py-2 text-ink">
         <option value="">{currentOrg?.name || $_('header.orgContext')}</option>
         {#each projects as proj}<option value={proj.id}>{proj.name}</option>{/each}
       </select>
     </div>
     <div class="mb-4">
-      <label class="block text-sm text-gray-500 dark:text-gray-400 mb-1">{$_('checklists.name')}</label>
-      <input type="text" bind:value={createForm.name} class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-900 dark:text-white" />
+      <label class="block text-sm text-ink-muted mb-1">{$_('checklists.name')}</label>
+      <input type="text" bind:value={createForm.name} class="w-full bg-surface-2 border border-border rounded-lg px-3 py-2 text-ink" />
     </div>
     <div class="mb-4">
-      <label class="block text-sm text-gray-500 dark:text-gray-400 mb-1">{$_('checklists.type')}</label>
-      <select bind:value={createForm.type} class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-900 dark:text-white">
+      <label class="block text-sm text-ink-muted mb-1">{$_('checklists.type')}</label>
+      <select bind:value={createForm.type} class="w-full bg-surface-2 border border-border rounded-lg px-3 py-2 text-ink">
         {#each checklistTypes as t}<option value={t.value}>{$_(t.labelKey)}</option>{/each}
       </select>
     </div>
     <div class="mb-4">
-      <label class="block text-sm text-gray-500 dark:text-gray-400 mb-1">{$_('checklists.description')}</label>
-      <textarea bind:value={createForm.description} rows="2" class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-900 dark:text-white"></textarea>
+      <label class="block text-sm text-ink-muted mb-1">{$_('checklists.description')}</label>
+      <textarea bind:value={createForm.description} rows="2" class="w-full bg-surface-2 border border-border rounded-lg px-3 py-2 text-ink"></textarea>
     </div>
     <div class="flex gap-3 justify-end">
-      <button on:click={() => showCreateModal = false} class="px-4 py-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white cursor-pointer">{$_('common.cancel')}</button>
+      <button on:click={() => showCreateModal = false} class="px-4 py-2 text-ink-muted hover:text-gray-700 cursor-pointer">{$_('common.cancel')}</button>
       <button on:click={createChecklist} disabled={creating || !createForm.name.trim()} class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 cursor-pointer">
         {creating ? $_('common.loading') : $_('common.create')}
       </button>
@@ -342,12 +342,12 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => { if (!aiGenerating) showAIModal = false; }}>
-  <div class="bg-white dark:bg-gray-800 rounded-xl w-full max-w-md p-6 shadow-xl">
-    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">{$_('checklists.generateWithAI')}</h3>
+  <div class="bg-surface rounded-xl w-full max-w-md p-6 shadow-xl">
+    <h3 class="text-lg font-semibold text-ink mb-4">{$_('checklists.generateWithAI')}</h3>
 
     <div class="mb-4">
-      <label class="block text-sm text-gray-500 dark:text-gray-400 mb-1">{$_('checklists.scope')}</label>
-      <select bind:value={aiForm.projectId} disabled={aiGenerating} class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-900 dark:text-white disabled:opacity-50">
+      <label class="block text-sm text-ink-muted mb-1">{$_('checklists.scope')}</label>
+      <select bind:value={aiForm.projectId} disabled={aiGenerating} class="w-full bg-surface-2 border border-border rounded-lg px-3 py-2 text-ink disabled:opacity-50">
         {#each projects as proj}<option value={proj.id}>{proj.name}</option>{/each}
       </select>
       {#if projects.length === 0}
@@ -356,8 +356,8 @@
     </div>
 
     <div class="mb-4">
-      <label class="block text-sm text-gray-500 dark:text-gray-400 mb-1">{$_('checklists.type')}</label>
-      <select bind:value={aiForm.type} disabled={aiGenerating} class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-900 dark:text-white disabled:opacity-50">
+      <label class="block text-sm text-ink-muted mb-1">{$_('checklists.type')}</label>
+      <select bind:value={aiForm.type} disabled={aiGenerating} class="w-full bg-surface-2 border border-border rounded-lg px-3 py-2 text-ink disabled:opacity-50">
         {#each checklistTypes as t}<option value={t.value}>{$_(t.labelKey)}</option>{/each}
       </select>
     </div>
@@ -376,7 +376,7 @@
     {/if}
 
     <div class="flex gap-3 justify-end">
-      <button on:click={() => showAIModal = false} disabled={aiGenerating} class="px-4 py-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white cursor-pointer disabled:opacity-50">{$_('common.cancel')}</button>
+      <button on:click={() => showAIModal = false} disabled={aiGenerating} class="px-4 py-2 text-ink-muted hover:text-gray-700 cursor-pointer disabled:opacity-50">{$_('common.cancel')}</button>
       <button on:click={generateWithAI} disabled={aiGenerating || !aiForm.projectId} class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 cursor-pointer">
         {aiGenerating ? $_('common.loading') : $_('checklists.generateWithAI')}
       </button>
@@ -390,20 +390,20 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => showImportModal = false}>
-  <div class="bg-white dark:bg-gray-800 rounded-xl w-full max-w-md p-6 shadow-xl">
-    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">{$_('checklists.importTitle')}</h3>
-    <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">{$_('checklists.importDesc')}</p>
+  <div class="bg-surface rounded-xl w-full max-w-md p-6 shadow-xl">
+    <h3 class="text-lg font-semibold text-ink mb-2">{$_('checklists.importTitle')}</h3>
+    <p class="text-sm text-ink-muted mb-4">{$_('checklists.importDesc')}</p>
 
     <div class="mb-4">
-      <label class="block text-sm text-gray-500 dark:text-gray-400 mb-1">{$_('checklists.scope')}</label>
-      <select bind:value={importProjectId} class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-900 dark:text-white">
+      <label class="block text-sm text-ink-muted mb-1">{$_('checklists.scope')}</label>
+      <select bind:value={importProjectId} class="w-full bg-surface-2 border border-border rounded-lg px-3 py-2 text-ink">
         <option value="">{currentOrg?.name || $_('header.orgContext')}</option>
         {#each projects as proj}<option value={proj.id}>{proj.name}</option>{/each}
       </select>
     </div>
 
     <div class="mb-4">
-      <input type="file" accept=".md" on:change={handleFileUpload} class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 dark:file:bg-indigo-900/30 dark:file:text-indigo-300 cursor-pointer" />
+      <input type="file" accept=".md" on:change={handleFileUpload} class="block w-full text-sm text-ink-muted file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 dark:file:bg-indigo-900/30 dark:file:text-indigo-300 cursor-pointer" />
     </div>
 
     {#if importError}
@@ -411,14 +411,14 @@
     {/if}
 
     {#if importParsed}
-      <div class="mb-4 p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50 text-sm">
-        <div class="font-medium text-gray-900 dark:text-white">{importParsed.name}</div>
-        <div class="text-gray-500 dark:text-gray-400 mt-1">{$_('checklists.importItems', { values: { count: importParsed.items.length } })}</div>
+      <div class="mb-4 p-3 rounded-lg bg-surface-2 text-sm">
+        <div class="font-medium text-ink">{importParsed.name}</div>
+        <div class="text-ink-muted mt-1">{$_('checklists.importItems', { values: { count: importParsed.items.length } })}</div>
       </div>
     {/if}
 
     <div class="flex gap-3 justify-end">
-      <button on:click={() => showImportModal = false} class="px-4 py-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white cursor-pointer">{$_('common.cancel')}</button>
+      <button on:click={() => showImportModal = false} class="px-4 py-2 text-ink-muted hover:text-gray-700 cursor-pointer">{$_('common.cancel')}</button>
       <button on:click={importChecklist} disabled={importing || !importParsed} class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 cursor-pointer">
         {importing ? $_('common.loading') : $_('checklists.importConfirm')}
       </button>
