@@ -949,6 +949,13 @@
       "connected": "Instagram успешно подключён",
       "error": "Не удалось подключить Instagram. Попробуйте снова.",
       "noAccount": "К вашей странице Facebook не привязан аккаунт Instagram Business."
+    },
+    "threads": {
+      "connect": "Подключить Threads",
+      "description": "Подключите аккаунт Threads для публикации текстовых постов и тредов.",
+      "connected": "Threads успешно подключён",
+      "error": "Не удалось подключить Threads. Попробуйте снова.",
+      "noAccount": "К этому профилю не привязан аккаунт Threads."
     }
   },
   "tracking": {

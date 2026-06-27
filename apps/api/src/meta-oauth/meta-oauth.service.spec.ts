@@ -105,4 +105,93 @@ describe('MetaOAuthService (Instagram Login)', () => {
     global.fetch = jest.fn().mockResolvedValue({ ok: false, text: async () => 'bad token' }) as any;
     await expect(service.getInstagramUser('t')).rejects.toThrow(/Instagram \/me failed/);
   });
+
+  // ─── Threads ───────────────────────────────────────────────────────────────
+
+  describe('Threads', () => {
+    beforeEach(() => {
+      config.get.mockImplementation(
+        (k: string) =>
+          ({ THREADS_APP_ID: 'th-app-123', THREADS_APP_SECRET: 'th-secret-123' } as Record<string, string>)[k],
+      );
+    });
+
+    it('builds a Threads authorization URL with threads scopes, client_id and state', () => {
+      const url = service.getThreadsAuthUrl('https://api.test/api/meta/callback', 'STATE');
+      expect(url).toContain('https://threads.net/oauth/authorize');
+      expect(url).toContain('client_id=th-app-123');
+      expect(url).toContain('state=STATE');
+      const decoded = decodeURIComponent(url);
+      expect(decoded).toContain('threads_basic');
+      expect(decoded).toContain('threads_content_publish');
+      expect(url).not.toContain('facebook.com');
+      expect(url).not.toContain('instagram.com');
+    });
+
+    it('exchangeThreadsCode POSTs to graph.threads.net and returns access_token + user_id (stringified)', async () => {
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ access_token: 'short-tok', user_id: 9988 }),
+      }) as any;
+
+      const result = await service.exchangeThreadsCode('the-code', 'https://api.test/api/meta/callback');
+      expect(result).toEqual({ access_token: 'short-tok', user_id: '9988' });
+      const [calledUrl, init] = (global.fetch as jest.Mock).mock.calls[0];
+      expect(calledUrl).toBe('https://graph.threads.net/oauth/access_token');
+      expect(init.method).toBe('POST');
+      expect(init.body.toString()).toContain('grant_type=authorization_code');
+    });
+
+    it('exchangeThreadsCode throws on a non-ok response', async () => {
+      global.fetch = jest.fn().mockResolvedValue({ ok: false, text: async () => 'bad code' }) as any;
+      await expect(service.exchangeThreadsCode('c', 'r')).rejects.toThrow(/Threads code exchange failed/);
+    });
+
+    it('exchangeThreadsCode throws when THREADS_APP_ID is missing', async () => {
+      config.get.mockImplementation((k: string) => (k === 'THREADS_APP_SECRET' ? 's' : undefined));
+      await expect(service.exchangeThreadsCode('c', 'r')).rejects.toThrow(/THREADS_APP_ID not configured/);
+    });
+
+    it('getThreadsLongLivedToken GETs graph.threads.net with th_exchange_token', async () => {
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ access_token: 'long-tok', expires_in: 5184000 }),
+      }) as any;
+
+      const result = await service.getThreadsLongLivedToken('short-tok');
+      expect(result).toEqual({ access_token: 'long-tok', expires_in: 5184000 });
+      const calledUrl = (global.fetch as jest.Mock).mock.calls[0][0] as string;
+      expect(calledUrl).toContain('https://graph.threads.net/access_token');
+      expect(calledUrl).toContain('grant_type=th_exchange_token');
+    });
+
+    it('getThreadsLongLivedToken throws on a non-ok response', async () => {
+      global.fetch = jest.fn().mockResolvedValue({ ok: false, text: async () => 'err' }) as any;
+      await expect(service.getThreadsLongLivedToken('x')).rejects.toThrow(
+        /Threads long-lived token exchange failed/,
+      );
+    });
+
+    it('getThreadsUser maps id/threads_profile_picture_url from graph.threads.net/me', async () => {
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ id: '9988', username: 'brand', threads_profile_picture_url: 'http://x/p.jpg' }),
+      }) as any;
+
+      const result = await service.getThreadsUser('long-tok');
+      expect(result).toEqual({ threadsUserId: '9988', username: 'brand', profilePictureUrl: 'http://x/p.jpg' });
+      const calledUrl = (global.fetch as jest.Mock).mock.calls[0][0] as string;
+      expect(calledUrl).toContain('https://graph.threads.net/me');
+    });
+
+    it('getThreadsUser returns null when username is missing', async () => {
+      global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ id: '1' }) }) as any;
+      expect(await service.getThreadsUser('t')).toBeNull();
+    });
+
+    it('getThreadsUser throws on a non-ok response', async () => {
+      global.fetch = jest.fn().mockResolvedValue({ ok: false, text: async () => 'bad token' }) as any;
+      await expect(service.getThreadsUser('t')).rejects.toThrow(/Threads \/me failed/);
+    });
+  });
 });
