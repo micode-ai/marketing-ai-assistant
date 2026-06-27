@@ -1,16 +1,17 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
-const GRAPH_VERSION = 'v21.0';
-const GRAPH = `https://graph.facebook.com/${GRAPH_VERSION}`;
+// "Instagram API with Instagram Login" (Instagram Business Login).
+// OAuth via api.instagram.com, Graph calls via graph.instagram.com.
+// Uses the Instagram app ID/secret (distinct from the Facebook app credentials).
+const IG_OAUTH = 'https://api.instagram.com/oauth';
+const IG_GRAPH = 'https://graph.instagram.com';
 
+// Phase 1 needs only basic + content publish. Comments/insights scopes
+// (instagram_business_manage_comments / _manage_insights) are added in Phase 2.
 const INSTAGRAM_SCOPES = [
-  'instagram_basic',
-  'instagram_content_publish',
-  'instagram_manage_insights',
-  'instagram_manage_comments',
-  'pages_show_list',
-  'pages_read_engagement',
+  'instagram_business_basic',
+  'instagram_business_content_publish',
 ];
 
 @Injectable()
@@ -19,9 +20,16 @@ export class MetaOAuthService {
 
   constructor(private config: ConfigService) {}
 
+  private creds(): { clientId: string; clientSecret: string } {
+    const clientId = this.config.get<string>('INSTAGRAM_APP_ID');
+    const clientSecret = this.config.get<string>('INSTAGRAM_APP_SECRET');
+    if (!clientId) throw new Error('INSTAGRAM_APP_ID not configured');
+    if (!clientSecret) throw new Error('INSTAGRAM_APP_SECRET not configured');
+    return { clientId, clientSecret };
+  }
+
   getInstagramAuthUrl(redirectUri: string, state: string): string {
-    const clientId = this.config.get('FACEBOOK_APP_ID');
-    if (!clientId) throw new Error('FACEBOOK_APP_ID not configured');
+    const { clientId } = this.creds();
     const params = new URLSearchParams({
       client_id: clientId,
       redirect_uri: redirectUri,
@@ -29,63 +37,57 @@ export class MetaOAuthService {
       scope: INSTAGRAM_SCOPES.join(','),
       state,
     });
-    return `https://www.facebook.com/${GRAPH_VERSION}/dialog/oauth?${params}`;
+    return `${IG_OAUTH}/authorize?${params}`;
   }
 
-  async exchangeCode(code: string, redirectUri: string): Promise<{ access_token: string; expires_in?: number }> {
-    const clientId = this.config.get('FACEBOOK_APP_ID');
-    const clientSecret = this.config.get('FACEBOOK_APP_SECRET');
-    if (!clientId) throw new Error('FACEBOOK_APP_ID not configured');
-    if (!clientSecret) throw new Error('FACEBOOK_APP_SECRET not configured');
-    const params = new URLSearchParams({
+  /** Exchange the auth code for a short-lived token. Returns the token + IG user id. */
+  async exchangeCode(code: string, redirectUri: string): Promise<{ access_token: string; user_id: string }> {
+    const { clientId, clientSecret } = this.creds();
+    const body = new URLSearchParams({
       client_id: clientId,
       client_secret: clientSecret,
+      grant_type: 'authorization_code',
       redirect_uri: redirectUri,
       code,
     });
-    const res = await fetch(`${GRAPH}/oauth/access_token?${params}`);
-    if (!res.ok) throw new Error(`Meta code exchange failed: ${await res.text()}`);
-    return res.json() as Promise<{ access_token: string; expires_in?: number }>;
+    const res = await fetch(`${IG_OAUTH}/access_token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body,
+    });
+    if (!res.ok) throw new Error(`Instagram code exchange failed: ${await res.text()}`);
+    const data = (await res.json()) as { access_token: string; user_id?: number | string };
+    return { access_token: data.access_token, user_id: String(data.user_id ?? '') };
   }
 
+  /** Exchange a short-lived token for a long-lived (60-day) token. */
   async getLongLivedToken(shortLivedToken: string): Promise<{ access_token: string; expires_in: number }> {
-    const clientId = this.config.get('FACEBOOK_APP_ID');
-    const clientSecret = this.config.get('FACEBOOK_APP_SECRET');
-    if (!clientId) throw new Error('FACEBOOK_APP_ID not configured');
-    if (!clientSecret) throw new Error('FACEBOOK_APP_SECRET not configured');
+    const { clientSecret } = this.creds();
     const params = new URLSearchParams({
-      grant_type: 'fb_exchange_token',
-      client_id: clientId,
+      grant_type: 'ig_exchange_token',
       client_secret: clientSecret,
-      fb_exchange_token: shortLivedToken,
+      access_token: shortLivedToken,
     });
-    const res = await fetch(`${GRAPH}/oauth/access_token?${params}`);
-    if (!res.ok) throw new Error(`Meta long-lived token exchange failed: ${await res.text()}`);
+    const res = await fetch(`${IG_GRAPH}/access_token?${params}`);
+    if (!res.ok) throw new Error(`Instagram long-lived token exchange failed: ${await res.text()}`);
     return res.json() as Promise<{ access_token: string; expires_in: number }>;
   }
 
-  async discoverInstagramAccount(userAccessToken: string): Promise<{
-    igUserId: string; username: string; profilePictureUrl?: string; pageId: string; pageAccessToken: string;
-  } | null> {
+  /** Fetch the connected Instagram account profile. Returns null if the profile is incomplete. */
+  async getInstagramUser(
+    accessToken: string,
+  ): Promise<{ igUserId: string; username: string; profilePictureUrl?: string } | null> {
     const params = new URLSearchParams({
-      fields: 'id,name,access_token,instagram_business_account{id,username,profile_picture_url}',
-      access_token: userAccessToken,
+      fields: 'user_id,username,profile_picture_url',
+      access_token: accessToken,
     });
-    const res = await fetch(`${GRAPH}/me/accounts?${params}`);
-    if (!res.ok) {
-      throw new Error(`Meta /me/accounts failed: ${await res.text()}`);
-    }
+    const res = await fetch(`${IG_GRAPH}/me?${params}`);
+    if (!res.ok) throw new Error(`Instagram /me failed: ${await res.text()}`);
     const data = (await res.json()) as {
-      data?: Array<{ id: string; name: string; access_token: string; instagram_business_account?: { id: string; username: string; profile_picture_url?: string } }>;
+      user_id?: string; id?: string; username?: string; profile_picture_url?: string;
     };
-    const page = (data.data || []).find((p) => p.instagram_business_account?.id);
-    if (!page || !page.instagram_business_account) return null;
-    return {
-      igUserId: page.instagram_business_account.id,
-      username: page.instagram_business_account.username,
-      profilePictureUrl: page.instagram_business_account.profile_picture_url,
-      pageId: page.id,
-      pageAccessToken: page.access_token,
-    };
+    const igUserId = String(data.user_id ?? data.id ?? '');
+    if (!igUserId || !data.username) return null;
+    return { igUserId, username: data.username, profilePictureUrl: data.profile_picture_url };
   }
 }
