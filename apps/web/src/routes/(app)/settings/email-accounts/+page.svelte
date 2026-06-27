@@ -138,13 +138,13 @@
   }
 
   const providerColors: Record<string, string> = {
-    SMTP: 'bg-blue-100 text-blue-700',
-    RESEND: 'bg-purple-100 text-purple-700',
+    SMTP: 'bg-blue-500/20 text-blue-700',
+    RESEND: 'bg-purple-500/20 text-purple-700',
   };
   const statusColors: Record<string, string> = {
-    ACTIVE: 'bg-green-100 text-green-700',
+    ACTIVE: 'bg-green-500/20 text-green-700',
     INACTIVE: 'bg-surface-2 text-ink-muted',
-    ERROR: 'bg-red-100 text-red-700',
+    ERROR: 'bg-red-500/20 text-red-700',
   };
 </script>
 
@@ -157,7 +157,7 @@
     </div>
     <button
       on:click={openAddModal}
-      class="inline-flex items-center gap-2 bg-indigo-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+      class="inline-flex items-center gap-2 bg-brand text-white text-sm font-medium px-4 py-2 rounded-lg hover:brightness-110 transition-colors"
     >
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -167,27 +167,27 @@
   </div>
 
   {#if error}
-    <div class="mb-4 bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">{error}</div>
+    <div class="mb-4 bg-red-500/12 border border-red-500/30 text-red-700 rounded-lg px-4 py-3 text-sm">{error}</div>
   {/if}
   {#if successMsg}
-    <div class="mb-4 bg-green-50 border border-green-200 text-green-700 rounded-lg px-4 py-3 text-sm">{successMsg}</div>
+    <div class="mb-4 bg-green-500/12 border border-green-500/30 text-green-700 rounded-lg px-4 py-3 text-sm">{successMsg}</div>
   {/if}
 
   {#if loading}
     <div class="flex justify-center py-16">
-      <div class="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+      <div class="w-6 h-6 border-2 border-brand/40 border-t-transparent rounded-full animate-spin"></div>
     </div>
   {:else if accounts.length === 0}
     <div class="text-center py-16 bg-surface-2 rounded-xl border border-dashed border-border">
-      <div class="w-12 h-12 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-3">
-        <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div class="w-12 h-12 bg-brand-subtle/10 rounded-full flex items-center justify-center mx-auto mb-3">
+        <svg class="w-6 h-6 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
             d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
         </svg>
       </div>
       <p class="text-ink font-medium text-sm">{$_('email.noAccounts')}</p>
       <p class="text-ink-subtle text-xs mt-1 mb-4">{$_('email.noAccountsDesc')}</p>
-      <button on:click={openAddModal} class="bg-indigo-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
+      <button on:click={openAddModal} class="bg-brand text-white text-sm font-medium px-4 py-2 rounded-lg hover:brightness-110 transition-colors">
         {$_('email.addAccount')}
       </button>
     </div>
@@ -195,8 +195,8 @@
     <div class="space-y-3">
       {#each accounts as account (account.id)}
         <div class="bg-surface border border-border rounded-xl p-4 flex items-start gap-4">
-          <div class="w-10 h-10 bg-indigo-50 rounded-lg flex items-center justify-center shrink-0">
-            <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="w-10 h-10 bg-brand-subtle/10 rounded-lg flex items-center justify-center shrink-0">
+            <svg class="w-5 h-5 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
@@ -240,7 +240,7 @@
             <button
               on:click={() => deleteAccount(account.id)}
               disabled={deletingId === account.id}
-              class="text-xs text-red-600 border border-red-100 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50 whitespace-nowrap"
+              class="text-xs text-red-600 border border-red-500/20 px-3 py-1.5 rounded-lg hover:bg-red-500/12 transition-colors disabled:opacity-50 whitespace-nowrap"
             >
               {$_('email.deleteAccount')}
             </button>
@@ -267,7 +267,7 @@
           <h2 class="text-lg font-semibold text-ink">{$_('email.addAccountTitle')}</h2>
           <button
             on:click={() => (showAddModal = false)}
-            class="text-ink-subtle hover:text-gray-600 transition-colors"
+            class="text-ink-subtle hover:text-ink-muted transition-colors"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -276,7 +276,7 @@
         </div>
 
         {#if addError}
-          <div class="mb-4 bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-sm">{addError}</div>
+          <div class="mb-4 bg-red-500/12 border border-red-500/30 text-red-700 rounded-lg px-3 py-2 text-sm">{addError}</div>
         {/if}
 
         <!-- Provider toggle -->
@@ -286,14 +286,14 @@
             <button
               type="button"
               on:click={() => (provider = 'SMTP')}
-              class="flex-1 py-2 text-sm font-medium transition-colors {provider === 'SMTP' ? 'bg-indigo-600 text-white' : 'bg-surface text-ink-muted hover:bg-surface-2'}"
+              class="flex-1 py-2 text-sm font-medium transition-colors {provider === 'SMTP' ? 'bg-brand text-white' : 'bg-surface text-ink-muted hover:bg-surface-2'}"
             >
               {$_('email.smtp')}
             </button>
             <button
               type="button"
               on:click={() => (provider = 'RESEND')}
-              class="flex-1 py-2 text-sm font-medium transition-colors {provider === 'RESEND' ? 'bg-indigo-600 text-white' : 'bg-surface text-ink-muted hover:bg-surface-2'}"
+              class="flex-1 py-2 text-sm font-medium transition-colors {provider === 'RESEND' ? 'bg-brand text-white' : 'bg-surface text-ink-muted hover:bg-surface-2'}"
             >
               {$_('email.resend')}
             </button>
@@ -308,7 +308,7 @@
               bind:value={form.email}
               required
               placeholder="campaigns@yourcompany.com"
-              class="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              class="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
           <div>
@@ -319,7 +319,7 @@
               type="text"
               bind:value={form.displayName}
               placeholder={$_('email.placeholderDisplayName')}
-              class="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              class="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
@@ -332,7 +332,7 @@
                   bind:value={form.smtpHost}
                   required
                   placeholder="smtp.example.com"
-                  class="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  class="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
               <div>
@@ -340,7 +340,7 @@
                 <input
                   type="number"
                   bind:value={form.smtpPort}
-                  class="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  class="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
             </div>
@@ -351,7 +351,7 @@
                 bind:value={form.smtpUser}
                 required
                 placeholder="user@example.com"
-                class="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                class="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
             <div>
@@ -360,7 +360,7 @@
                 type="password"
                 bind:value={form.smtpPassword}
                 required
-                class="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                class="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -372,7 +372,7 @@
                   type="text"
                   bind:value={form.imapHost}
                   placeholder="imap.example.com"
-                  class="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  class="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
               <div>
@@ -380,7 +380,7 @@
                 <input
                   type="number"
                   bind:value={form.imapPort}
-                  class="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  class="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
             </div>
@@ -392,7 +392,7 @@
                 bind:value={form.apiKey}
                 required
                 placeholder="re_xxxxxxxxxxxxxxxx"
-                class="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                class="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               />
               <p class="text-xs text-ink-subtle mt-1">{$_('email.resendApiKeyHint')}</p>
             </div>
@@ -409,7 +409,7 @@
             <button
               type="submit"
               disabled={saving}
-              class="flex-1 bg-indigo-600 text-white text-sm font-medium py-2.5 rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-60"
+              class="flex-1 bg-brand text-white text-sm font-medium py-2.5 rounded-xl hover:brightness-110 transition-colors disabled:opacity-60"
             >
               {saving ? $_('common.loading') : $_('email.addAccount')}
             </button>

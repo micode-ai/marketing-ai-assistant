@@ -288,15 +288,15 @@
   }
 
   const statusColors: Record<string, string> = {
-    sent: 'bg-green-100 text-green-700',
-    sending: 'bg-yellow-100 text-yellow-700',
+    sent: 'bg-green-500/20 text-green-700',
+    sending: 'bg-yellow-500/20 text-yellow-700',
     draft: 'bg-surface-2 text-ink-muted',
   };
 
   const subStatusColors: Record<string, string> = {
-    ACTIVE: 'bg-green-100 text-green-700',
+    ACTIVE: 'bg-green-500/20 text-green-700',
     UNSUBSCRIBED: 'bg-surface-2 text-ink-muted',
-    BOUNCED: 'bg-red-100 text-red-700',
+    BOUNCED: 'bg-red-500/20 text-red-700',
   };
 </script>
 
@@ -310,7 +310,7 @@
     {#if activeTab === 'lists'}
       <button
         on:click={() => (showCreateListModal = true)}
-        class="inline-flex items-center gap-2 bg-indigo-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+        class="inline-flex items-center gap-2 bg-brand text-white text-sm font-medium px-4 py-2 rounded-lg hover:brightness-110 transition-colors"
       >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -320,7 +320,7 @@
     {:else}
       <button
         on:click={openSendModal}
-        class="inline-flex items-center gap-2 bg-indigo-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+        class="inline-flex items-center gap-2 bg-brand text-white text-sm font-medium px-4 py-2 rounded-lg hover:brightness-110 transition-colors"
       >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -335,13 +335,13 @@
   <div class="flex gap-1 mb-6 bg-surface-2 p-1 rounded-xl w-fit">
     <button
       on:click={() => (activeTab = 'lists')}
-      class="px-4 py-2 text-sm font-medium rounded-lg transition-colors {activeTab === 'lists' ? 'bg-surface text-ink shadow-sm' : 'text-ink-muted hover:text-gray-700'}"
+      class="px-4 py-2 text-sm font-medium rounded-lg transition-colors {activeTab === 'lists' ? 'bg-surface text-ink shadow-sm' : 'text-ink-muted hover:text-ink'}"
     >
       {$_('email.tabLists')}
     </button>
     <button
       on:click={() => (activeTab = 'campaigns')}
-      class="px-4 py-2 text-sm font-medium rounded-lg transition-colors {activeTab === 'campaigns' ? 'bg-surface text-ink shadow-sm' : 'text-ink-muted hover:text-gray-700'}"
+      class="px-4 py-2 text-sm font-medium rounded-lg transition-colors {activeTab === 'campaigns' ? 'bg-surface text-ink shadow-sm' : 'text-ink-muted hover:text-ink'}"
     >
       {$_('email.tabCampaigns')}
     </button>
@@ -350,17 +350,17 @@
   <!-- ── LISTS TAB ────────────────────────────────────────────────────── -->
   {#if activeTab === 'lists'}
     {#if listsError}
-      <div class="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm mb-4">{listsError}</div>
+      <div class="bg-red-500/12 border border-red-500/30 text-red-700 rounded-lg px-4 py-3 text-sm mb-4">{listsError}</div>
     {/if}
 
     {#if listsLoading}
       <div class="flex justify-center py-16">
-        <div class="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+        <div class="w-6 h-6 border-2 border-brand/40 border-t-transparent rounded-full animate-spin"></div>
       </div>
     {:else if lists.length === 0}
       <div class="text-center py-16 bg-surface-2 rounded-xl border border-dashed border-border">
-        <div class="w-12 h-12 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-3">
-          <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="w-12 h-12 bg-brand-subtle/10 rounded-full flex items-center justify-center mx-auto mb-3">
+          <svg class="w-6 h-6 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
@@ -368,7 +368,7 @@
         <p class="text-ink font-medium text-sm">{$_('email.noLists')}</p>
         <button
           on:click={() => (showCreateListModal = true)}
-          class="mt-3 bg-indigo-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+          class="mt-3 bg-brand text-white text-sm font-medium px-4 py-2 rounded-lg hover:brightness-110 transition-colors"
         >
           {$_('email.createList')}
         </button>
@@ -376,7 +376,7 @@
     {:else}
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {#each lists as list (list.id)}
-          <div class="bg-surface border border-border rounded-xl p-5 flex flex-col gap-3 hover:border-indigo-200 transition-colors">
+          <div class="bg-surface border border-border rounded-xl p-5 flex flex-col gap-3 hover:border-brand/40 transition-colors">
             <div class="flex items-start justify-between gap-2">
               <div class="min-w-0">
                 <h3 class="font-semibold text-ink text-sm truncate">{list.name}</h3>
@@ -396,7 +396,7 @@
               </button>
             </div>
 
-            <div class="flex items-center gap-1.5 text-indigo-600">
+            <div class="flex items-center gap-1.5 text-brand">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -409,7 +409,7 @@
 
             <button
               on:click={() => openSubscribers(list)}
-              class="w-full text-center text-sm font-medium text-indigo-600 border border-indigo-100 py-2 rounded-lg hover:bg-indigo-50 transition-colors"
+              class="w-full text-center text-sm font-medium text-brand border border-brand/40 py-2 rounded-lg hover:bg-brand-subtle/10 transition-colors"
             >
               {$_('email.viewSubscribers')}
             </button>
@@ -422,17 +422,17 @@
   <!-- ── CAMPAIGNS TAB ────────────────────────────────────────────────── -->
   {#if activeTab === 'campaigns'}
     {#if campaignsError}
-      <div class="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm mb-4">{campaignsError}</div>
+      <div class="bg-red-500/12 border border-red-500/30 text-red-700 rounded-lg px-4 py-3 text-sm mb-4">{campaignsError}</div>
     {/if}
 
     {#if campaignsLoading}
       <div class="flex justify-center py-16">
-        <div class="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+        <div class="w-6 h-6 border-2 border-brand/40 border-t-transparent rounded-full animate-spin"></div>
       </div>
     {:else if campaigns.length === 0}
       <div class="text-center py-16 bg-surface-2 rounded-xl border border-dashed border-border">
-        <div class="w-12 h-12 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-3">
-          <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="w-12 h-12 bg-brand-subtle/10 rounded-full flex items-center justify-center mx-auto mb-3">
+          <svg class="w-6 h-6 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
           </svg>
@@ -440,7 +440,7 @@
         <p class="text-ink font-medium text-sm">{$_('email.noCampaigns')}</p>
         <button
           on:click={openSendModal}
-          class="mt-3 bg-indigo-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+          class="mt-3 bg-brand text-white text-sm font-medium px-4 py-2 rounded-lg hover:brightness-110 transition-colors"
         >
           {$_('email.sendCampaign')}
         </button>
@@ -532,7 +532,7 @@
       <div class="p-6">
         <div class="flex items-center justify-between mb-5">
           <h2 class="text-lg font-semibold text-ink">{$_('email.createListTitle')}</h2>
-          <button on:click={() => (showCreateListModal = false)} class="text-ink-subtle hover:text-gray-600 transition-colors">
+          <button on:click={() => (showCreateListModal = false)} class="text-ink-subtle hover:text-ink-muted transition-colors">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -540,7 +540,7 @@
         </div>
 
         {#if createListError}
-          <div class="mb-4 bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-sm">{createListError}</div>
+          <div class="mb-4 bg-red-500/12 border border-red-500/30 text-red-700 rounded-lg px-3 py-2 text-sm">{createListError}</div>
         {/if}
 
         <form on:submit|preventDefault={createList} class="space-y-4">
@@ -551,7 +551,7 @@
               bind:value={newListName}
               required
               placeholder={$_('email.placeholderListName')}
-              class="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              class="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
           <div>
@@ -562,7 +562,7 @@
               type="text"
               bind:value={newListDesc}
               placeholder={$_('email.placeholderListDesc')}
-              class="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              class="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
           <div class="flex gap-3 pt-1">
@@ -576,7 +576,7 @@
             <button
               type="submit"
               disabled={creatingList}
-              class="flex-1 bg-indigo-600 text-white text-sm font-medium py-2.5 rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-60"
+              class="flex-1 bg-brand text-white text-sm font-medium py-2.5 rounded-xl hover:brightness-110 transition-colors disabled:opacity-60"
             >
               {creatingList ? $_('common.loading') : $_('email.createList')}
             </button>
@@ -604,7 +604,7 @@
             <h2 class="text-lg font-semibold text-ink">{selectedList.name}</h2>
             <p class="text-sm text-ink-subtle mt-0.5">{$_('email.subscribers')}</p>
           </div>
-          <button on:click={() => (selectedList = null)} class="text-ink-subtle hover:text-gray-600 transition-colors">
+          <button on:click={() => (selectedList = null)} class="text-ink-subtle hover:text-ink-muted transition-colors">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -618,18 +618,18 @@
             bind:value={newSubEmail}
             required
             placeholder={$_('email.subscriberEmail')}
-            class="flex-1 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            class="flex-1 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           />
           <input
             type="text"
             bind:value={newSubName}
             placeholder={$_('email.subscriberName')}
-            class="w-36 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            class="w-36 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           />
           <button
             type="submit"
             disabled={addingSubscriber}
-            class="bg-indigo-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-60 whitespace-nowrap"
+            class="bg-brand text-white text-sm font-medium px-4 py-2 rounded-lg hover:brightness-110 transition-colors disabled:opacity-60 whitespace-nowrap"
           >
             {addingSubscriber ? '...' : $_('email.addSubscriber')}
           </button>
@@ -643,7 +643,7 @@
       <div class="overflow-y-auto flex-1">
         {#if subscribersLoading}
           <div class="flex justify-center py-10">
-            <div class="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+            <div class="w-5 h-5 border-2 border-brand/40 border-t-transparent rounded-full animate-spin"></div>
           </div>
         {:else if subscribersError}
           <div class="px-6 py-4 text-sm text-red-600">{subscribersError}</div>
@@ -660,7 +660,7 @@
                 <th class="px-3 py-3"></th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-gray-50">
+            <tbody class="divide-y divide-border">
               {#each subscribers as sub (sub.id)}
                 <tr class="hover:bg-surface-2 transition-colors">
                   <td class="px-6 py-3 text-ink font-medium">{sub.email}</td>
@@ -707,7 +707,7 @@
       <div class="p-6">
         <div class="flex items-center justify-between mb-5">
           <h2 class="text-lg font-semibold text-ink">{$_('email.sendCampaignTitle')}</h2>
-          <button on:click={() => (showSendModal = false)} class="text-ink-subtle hover:text-gray-600 transition-colors">
+          <button on:click={() => (showSendModal = false)} class="text-ink-subtle hover:text-ink-muted transition-colors">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -715,24 +715,24 @@
         </div>
 
         {#if sendSuccess}
-          <div class="mb-4 bg-green-50 border border-green-200 text-green-700 rounded-lg px-4 py-3 text-sm text-center font-medium">
+          <div class="mb-4 bg-green-500/12 border border-green-500/30 text-green-700 rounded-lg px-4 py-3 text-sm text-center font-medium">
             ✓ {sendSuccess}
           </div>
         {/if}
         {#if sendError}
-          <div class="mb-4 bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-sm">{sendError}</div>
+          <div class="mb-4 bg-red-500/12 border border-red-500/30 text-red-700 rounded-lg px-3 py-2 text-sm">{sendError}</div>
         {/if}
 
         {#if accountsLoading}
           <div class="flex justify-center py-8">
-            <div class="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+            <div class="w-5 h-5 border-2 border-brand/40 border-t-transparent rounded-full animate-spin"></div>
           </div>
         {:else if emailAccounts.length === 0}
           <div class="text-center py-8">
             <p class="text-ink-muted text-sm mb-3">{$_('email.noAccounts')}</p>
             <a
               href="/settings/email-accounts"
-              class="text-indigo-600 text-sm font-medium hover:underline"
+              class="text-brand text-sm font-medium hover:underline"
             >
               {$_('email.goToEmailAccounts')}
             </a>
@@ -744,7 +744,7 @@
               <select
                 bind:value={campaignForm.emailAccountId}
                 required
-                class="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                class="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 <option value="">— {$_('email.selectAccount')} —</option>
                 {#each emailAccounts as acc}
@@ -758,7 +758,7 @@
               <select
                 bind:value={campaignForm.listId}
                 required
-                class="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                class="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 <option value="">— {$_('email.selectList')} —</option>
                 {#each lists as l}
@@ -774,7 +774,7 @@
                 bind:value={campaignForm.subject}
                 required
                 placeholder={$_('email.placeholderSubject')}
-                class="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                class="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
 
@@ -786,7 +786,7 @@
                 type="text"
                 bind:value={campaignForm.previewText}
                 placeholder={$_('email.placeholderPreviewText')}
-                class="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                class="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
 
@@ -800,7 +800,7 @@
                 required
                 rows="8"
                 placeholder={$_('email.placeholderHtml')}
-                class="w-full border border-border rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-y"
+                class="w-full border border-border rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring resize-y"
               ></textarea>
             </div>
 
@@ -815,7 +815,7 @@
               <button
                 type="submit"
                 disabled={sending || !!sendSuccess}
-                class="flex-1 bg-indigo-600 text-white text-sm font-medium py-2.5 rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-60"
+                class="flex-1 bg-brand text-white text-sm font-medium py-2.5 rounded-xl hover:brightness-110 transition-colors disabled:opacity-60"
               >
                 {sending ? $_('email.sending') : $_('email.sendNow')}
               </button>

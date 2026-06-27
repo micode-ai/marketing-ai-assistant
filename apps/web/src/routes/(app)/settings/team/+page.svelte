@@ -35,8 +35,8 @@
 
   function roleBadgeClass(role: string): string {
     switch (role) {
-      case 'OWNER': return 'bg-amber-100 text-amber-700';
-      case 'ADMIN': return 'bg-blue-100 text-blue-700';
+      case 'OWNER': return 'bg-amber-500/20 text-amber-700';
+      case 'ADMIN': return 'bg-blue-500/20 text-blue-700';
       default: return 'bg-surface-2 text-ink-muted';
     }
   }
@@ -158,7 +158,7 @@
       {#if !isOwner}
         <button
           on:click={() => (showLeaveModal = true)}
-          class="inline-flex items-center gap-2 border border-red-200 text-red-600 text-sm font-medium px-4 py-2 rounded-lg hover:bg-red-50 transition-colors duration-150 cursor-pointer"
+          class="inline-flex items-center gap-2 border border-red-500/30 text-red-600 text-sm font-medium px-4 py-2 rounded-lg hover:bg-red-500/12 transition-colors duration-150 cursor-pointer"
         >
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
@@ -182,10 +182,10 @@
 
   <!-- Messages -->
   {#if successMsg}
-    <div class="bg-green-50 border border-green-200 text-green-700 rounded-lg px-3 py-2 text-sm mb-4">{successMsg}</div>
+    <div class="bg-green-500/12 border border-green-500/30 text-green-700 rounded-lg px-3 py-2 text-sm mb-4">{successMsg}</div>
   {/if}
   {#if errorMsg}
-    <div class="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-sm mb-4">{errorMsg}</div>
+    <div class="bg-red-500/12 border border-red-500/30 text-red-700 rounded-lg px-3 py-2 text-sm mb-4">{errorMsg}</div>
   {/if}
 
   {#if loading}
@@ -204,7 +204,7 @@
         </h2>
         <div class="space-y-3">
           {#each pendingRequests as member}
-            <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center gap-4">
+            <div class="bg-amber-500/12 border border-amber-500/30 rounded-xl p-4 flex items-center gap-4">
               <div class="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white font-semibold text-sm flex-shrink-0 overflow-hidden">
                 {initials(member.user?.name || '')}
               </div>
@@ -268,7 +268,7 @@
           {#if isAdmin && member.userId !== currentUserId && member.role !== 'OWNER'}
             <button
               on:click={() => (removingMember = member)}
-              class="text-xs text-red-600 border border-red-200 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors duration-150 cursor-pointer flex-shrink-0"
+              class="text-xs text-red-600 border border-red-500/30 px-3 py-1.5 rounded-lg hover:bg-red-500/12 transition-colors duration-150 cursor-pointer flex-shrink-0"
             >
               {$_('settings.removeMember')}
             </button>
@@ -295,7 +295,7 @@
       </div>
       <div class="p-6 space-y-4">
         {#if inviteError}
-          <div class="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-sm">{inviteError}</div>
+          <div class="bg-red-500/12 border border-red-500/30 text-red-700 rounded-lg px-3 py-2 text-sm">{inviteError}</div>
         {/if}
         <div>
           <label for="invite-email" class="block text-xs font-medium text-ink mb-1">{$_('settings.inviteEmail')}</label>
@@ -344,7 +344,7 @@
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => (showLeaveModal = false)}>
     <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-sm p-6">
-      <div class="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center mb-4">
+      <div class="w-12 h-12 bg-red-500/12 rounded-xl flex items-center justify-center mb-4">
         <svg class="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
         </svg>
@@ -375,7 +375,7 @@
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => (removingMember = null)}>
     <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-sm p-6">
-      <div class="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center mb-4">
+      <div class="w-12 h-12 bg-red-500/12 rounded-xl flex items-center justify-center mb-4">
         <svg class="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
         </svg>

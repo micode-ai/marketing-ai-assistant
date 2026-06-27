@@ -263,19 +263,19 @@
       <div class="flex bg-surface-2 rounded-lg overflow-hidden text-sm">
         {#each ['month', 'quarter', 'year'] as p}
           <button
-            class="px-3 py-1.5 cursor-pointer {periodMode === p ? 'bg-indigo-600 text-white' : 'text-ink-subtle hover:text-gray-200'}"
+            class="px-3 py-1.5 cursor-pointer {periodMode === p ? 'bg-brand text-white' : 'text-ink-subtle hover:text-ink-subtle'}"
             on:click={() => { periodMode = p; }}
           >{$_(`finances.${p}`)}</button>
         {/each}
       </div>
-      <button on:click={openAddModal} class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 cursor-pointer whitespace-nowrap">
+      <button on:click={openAddModal} class="px-4 py-2 bg-brand text-white text-sm font-medium rounded-lg hover:brightness-110 cursor-pointer whitespace-nowrap">
         + {$_('finances.addRecord')}
       </button>
     </div>
   </div>
 
   {#if loading}
-    <div class="flex justify-center py-16"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div></div>
+    <div class="flex justify-center py-16"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-brand"></div></div>
   {:else}
     <!-- Summary Cards -->
     {#if summary}
@@ -288,9 +288,9 @@
         <div class="text-xs text-ink-subtle">{$_('finances.expenses')}</div>
         <div class="text-2xl font-bold text-red-400 mt-1 truncate">{formatCurrency(summary.totalExpense)}</div>
       </div>
-      <div class="bg-indigo-500/10 border border-indigo-500/25 rounded-xl p-4 min-w-0">
+      <div class="bg-brand border border-brand rounded-xl p-4 min-w-0">
         <div class="text-xs text-ink-subtle">{$_('finances.profit')}</div>
-        <div class="text-2xl font-bold text-indigo-400 mt-1 truncate">{formatCurrency(summary.profit)}</div>
+        <div class="text-2xl font-bold text-brand mt-1 truncate">{formatCurrency(summary.profit)}</div>
       </div>
     </div>
     {/if}
@@ -319,12 +319,12 @@
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-4 py-3 border-b border-border">
         <div class="flex gap-2 text-sm flex-wrap">
           {#each ['ALL', 'INCOME', 'EXPENSE'] as t}
-            <button class="px-3 py-1 rounded cursor-pointer {filterType === t ? 'bg-indigo-600 text-white' : 'text-ink-subtle hover:text-white'}" on:click={() => { filterType = t; }}>
+            <button class="px-3 py-1 rounded cursor-pointer {filterType === t ? 'bg-brand text-white' : 'text-ink-subtle hover:text-white'}" on:click={() => { filterType = t; }}>
               {t === 'ALL' ? $_('finances.all') : t === 'INCOME' ? $_('finances.income') : $_('finances.expenses')}
             </button>
           {/each}
         </div>
-        <button on:click={() => showCategoriesModal = true} class="text-sm text-indigo-400 hover:text-indigo-300 cursor-pointer text-left sm:text-right">{$_('finances.manageCategories')}</button>
+        <button on:click={() => showCategoriesModal = true} class="text-sm text-brand hover:text-brand cursor-pointer text-left sm:text-right">{$_('finances.manageCategories')}</button>
       </div>
 
       {#if records.length === 0}
@@ -358,14 +358,14 @@
                   <td class="px-4 py-2.5 text-right whitespace-nowrap {record.type === 'INCOME' ? 'text-green-400' : 'text-red-400'}">{formatCurrency(record.amountInBaseCurrency)}</td>
                   <td class="px-4 py-2.5 whitespace-nowrap text-right">
                     <div class="inline-flex items-center gap-1">
-                      <button on:click={() => openEditModal(record)} class="p-1 text-ink-muted hover:text-gray-300 cursor-pointer" title="Edit">
+                      <button on:click={() => openEditModal(record)} class="p-1 text-ink-muted hover:text-ink-subtle cursor-pointer" title="Edit">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z" /></svg>
                       </button>
                       {#if deletingId === record.id}
                         <button on:click={() => deleteRecord(record.id)} class="p-1 text-red-400 hover:text-red-300 cursor-pointer" title="Confirm">
                           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
                         </button>
-                        <button on:click={() => deletingId = null} class="p-1 text-ink-subtle hover:text-gray-300 cursor-pointer" title="Cancel">
+                        <button on:click={() => deletingId = null} class="p-1 text-ink-subtle hover:text-ink-subtle cursor-pointer" title="Cancel">
                           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
                         </button>
                       {:else}
@@ -451,7 +451,7 @@
 
     <div class="flex gap-3 justify-end">
       <button on:click={() => showRecordModal = false} class="px-4 py-2 text-ink-subtle hover:text-white cursor-pointer">{$_('finances.cancel')}</button>
-      <button on:click={saveRecord} disabled={recordSaving || !recordForm.categoryId || !recordForm.amount} class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 cursor-pointer">
+      <button on:click={saveRecord} disabled={recordSaving || !recordForm.categoryId || !recordForm.amount} class="px-4 py-2 bg-brand text-white rounded-lg hover:brightness-110 disabled:opacity-50 cursor-pointer">
         {recordSaving ? '...' : $_('finances.save')}
       </button>
     </div>
@@ -492,7 +492,7 @@
         <option value="INCOME">{$_('finances.income')}</option>
       </select>
       <input type="color" bind:value={newCatColor} class="w-8 h-8 rounded cursor-pointer" />
-      <button on:click={addCategory} disabled={catSaving || !newCatName.trim()} class="px-3 py-1.5 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700 disabled:opacity-50 cursor-pointer">{$_('finances.categories.addCategory')}</button>
+      <button on:click={addCategory} disabled={catSaving || !newCatName.trim()} class="px-3 py-1.5 bg-brand text-white text-sm rounded hover:brightness-110 disabled:opacity-50 cursor-pointer">{$_('finances.categories.addCategory')}</button>
     </div>
   </div>
 </div>

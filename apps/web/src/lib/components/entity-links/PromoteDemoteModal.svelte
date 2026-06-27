@@ -48,7 +48,7 @@
         <!-- svelte-ignore a11y_click_events_have_key_events -->
         <!-- svelte-ignore a11y_no_static_element_interactions -->
         <label class="flex items-start gap-3 p-3 rounded-lg border cursor-pointer
-          {linkType === 'COPY' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' : 'border-border'}">
+          {linkType === 'COPY' ? 'border-brand bg-brand-subtle/10' : 'border-border'}">
           <input type="radio" bind:group={linkType} value="COPY" class="mt-0.5" />
           <div>
             <p class="font-medium text-ink">{$_('entityLinks.copy')}</p>
@@ -58,7 +58,7 @@
         <!-- svelte-ignore a11y_click_events_have_key_events -->
         <!-- svelte-ignore a11y_no_static_element_interactions -->
         <label class="flex items-start gap-3 p-3 rounded-lg border cursor-pointer
-          {linkType === 'LINK' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' : 'border-border'}">
+          {linkType === 'LINK' ? 'border-brand bg-brand-subtle/10' : 'border-border'}">
           <input type="radio" bind:group={linkType} value="LINK" class="mt-0.5" />
           <div>
             <p class="font-medium text-ink">{$_('entityLinks.link')}</p>
@@ -85,7 +85,7 @@
           {$_('common.cancel')}
         </button>
         <button on:click={submit} disabled={loading || (mode === 'demote' && !selectedProjectId)}
-          class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg disabled:opacity-50">
+          class="px-4 py-2 text-sm font-medium text-white bg-brand hover:brightness-110 rounded-lg disabled:opacity-50">
           {loading ? $_('common.saving') : (mode === 'promote' ? $_('entityLinks.promote') : $_('entityLinks.demote'))}
         </button>
       </div>

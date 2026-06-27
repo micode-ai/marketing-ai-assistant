@@ -31,13 +31,13 @@
 
   const statusBadge: Record<string, string> = {
     DRAFT: 'bg-surface-2 text-ink-muted',
-    REVIEW: 'bg-yellow-100 text-yellow-700',
-    APPROVED: 'bg-green-100 text-green-700',
-    PUBLISHED: 'bg-blue-100 text-blue-700',
-    REJECTED: 'bg-red-100 text-red-600',
+    REVIEW: 'bg-yellow-500/20 text-yellow-700',
+    APPROVED: 'bg-green-500/20 text-green-700',
+    PUBLISHED: 'bg-blue-500/20 text-blue-700',
+    REJECTED: 'bg-red-500/20 text-red-600',
   };
   const statusDot: Record<string, string> = {
-    DRAFT: 'bg-gray-400',
+    DRAFT: 'bg-ink-subtle',
     REVIEW: 'bg-yellow-400',
     APPROVED: 'bg-green-500',
     PUBLISHED: 'bg-blue-500',
@@ -215,7 +215,7 @@
     <span>{currentOrg?.name || $_('header.orgContext')}</span>
     {#if $currentProjectStore}
       <span class="text-ink-subtle">›</span>
-      <span class="text-indigo-600 dark:text-indigo-400">{$currentProjectStore.name}</span>
+      <span class="text-brand">{$currentProjectStore.name}</span>
     {/if}
     <span class="text-ink-subtle">›</span>
     <span class="text-ink">{$_('nav.orgCalendar')}</span>
@@ -332,7 +332,7 @@
                   on:click|stopPropagation={() => selectedContent = content}
                   title={content.title}
                 >
-                  <span class="w-1.5 h-1.5 rounded-full flex-shrink-0 {statusDot[content.status] || 'bg-gray-400'}"></span>
+                  <span class="w-1.5 h-1.5 rounded-full flex-shrink-0 {statusDot[content.status] || 'bg-ink-subtle'}"></span>
                   <span class="truncate">{content.title}</span>
                 </div>
               {/each}
@@ -428,16 +428,16 @@
           </span>
           {#if selectedContent.platforms?.length}
             {#each selectedContent.platforms as p}
-              <span class="text-xs px-2 py-0.5 bg-blue-50 text-blue-600 rounded">{p}</span>
+              <span class="text-xs px-2 py-0.5 bg-blue-500/12 text-blue-600 rounded">{p}</span>
             {/each}
           {:else if selectedContent.platform}
-            <span class="text-xs px-2 py-0.5 bg-blue-50 text-blue-600 rounded">{selectedContent.platform}</span>
+            <span class="text-xs px-2 py-0.5 bg-blue-500/12 text-blue-600 rounded">{selectedContent.platform}</span>
           {/if}
           <span class="text-xs px-2 py-0.5 rounded {statusBadge[selectedContent.status] || 'bg-surface-2 text-ink-muted'}">
             {$_(statusLabel[selectedContent.status] || 'content.draft')}
           </span>
           {#if selectedContent.project?.name}
-            <span class="text-xs px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded">{selectedContent.project.name}</span>
+            <span class="text-xs px-2 py-0.5 bg-brand-subtle/10 text-brand rounded">{selectedContent.project.name}</span>
           {/if}
         </div>
 
@@ -464,7 +464,7 @@
             </div>
           {/if}
           <div class="flex items-center gap-2 text-sm">
-            <span class="w-2 h-2 rounded-full bg-gray-400"></span>
+            <span class="w-2 h-2 rounded-full bg-ink-subtle"></span>
             <span class="text-ink-muted">
               {$_('calendar.createdOn', { values: { date: new Date(selectedContent.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' }) } })}
             </span>

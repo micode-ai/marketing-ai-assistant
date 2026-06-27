@@ -13,8 +13,8 @@
 
   const statusBadge: Record<string, string> = {
     DRAFT: 'bg-surface-2 text-ink-muted',
-    APPROVED: 'bg-yellow-100 text-yellow-700',
-    PUBLISHED: 'bg-green-100 text-green-700',
+    APPROVED: 'bg-yellow-500/20 text-yellow-700',
+    PUBLISHED: 'bg-green-500/20 text-green-700',
     ARCHIVED: 'bg-surface-2 text-ink-subtle',
   };
 
@@ -81,7 +81,7 @@
                 {$_(statusLabel[item.status] || 'campaigns.detail.statusDraft')}
               </span>
               {#if item.language}
-                <span class="text-xs px-1.5 py-0.5 bg-indigo-50 text-indigo-700 rounded">{item.language.toUpperCase()}</span>
+                <span class="text-xs px-1.5 py-0.5 bg-brand-subtle/10 text-brand rounded">{item.language.toUpperCase()}</span>
               {/if}
               <span class="text-xs text-ink-subtle">{item.type}</span>
               <span class="text-xs text-ink-subtle">· {formatDate(item.updatedAt)}</span>
@@ -93,14 +93,14 @@
           <div class="flex items-center gap-1 flex-shrink-0">
             <a
               href={contentHref(item)}
-              class="text-xs px-2 py-1 text-ink-muted hover:text-gray-700 hover:bg-surface-2 rounded cursor-pointer"
+              class="text-xs px-2 py-1 text-ink-muted hover:text-ink hover:bg-surface-2 rounded cursor-pointer"
             >
               {$_('campaigns.detail.open')}
             </a>
             <button
               on:click={() => detach(item.id)}
               disabled={detaching === item.id}
-              class="text-xs px-2 py-1 text-red-500 hover:bg-red-50 rounded cursor-pointer disabled:opacity-50"
+              class="text-xs px-2 py-1 text-red-500 hover:bg-red-500/12 rounded cursor-pointer disabled:opacity-50"
             >
               {$_('campaigns.detail.detach')}
             </button>

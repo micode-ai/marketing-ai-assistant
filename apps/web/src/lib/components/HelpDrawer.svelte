@@ -75,7 +75,7 @@
       </h2>
       <button
         on:click={close}
-        class="text-ink-subtle hover:text-gray-600 transition-colors duration-150 cursor-pointer p-1 -mr-1"
+        class="text-ink-subtle hover:text-ink-muted transition-colors duration-150 cursor-pointer p-1 -mr-1"
         aria-label="Close"
       >
         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

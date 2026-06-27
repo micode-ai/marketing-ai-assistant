@@ -326,7 +326,7 @@
                 <img src={account.profileImageUrl} alt={account.accountName} class="w-7 h-7 rounded-full" />
               {/if}
               <span class="text-sm text-ink font-medium">{account.accountName}</span>
-              <span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full">{$_('social.connected')}</span>
+              <span class="text-xs px-2 py-0.5 bg-green-500/20 text-green-700 rounded-full">{$_('social.connected')}</span>
               <select
                 bind:value={account.language}
                 on:change={() => updateAccountLanguage(account)}
@@ -337,7 +337,7 @@
                 <option value="pl">Polski</option>
                 <option value="ru">Русский</option>
               </select>
-              <button on:click={() => disconnectingId = account.id} class="text-xs px-3 py-1.5 border border-red-200 text-red-500 rounded-lg hover:bg-red-50 transition-colors duration-150 cursor-pointer">
+              <button on:click={() => disconnectingId = account.id} class="text-xs px-3 py-1.5 border border-red-500/30 text-red-500 rounded-lg hover:bg-red-500/12 transition-colors duration-150 cursor-pointer">
                 {$_('social.disconnect')}
               </button>
             </div>
@@ -368,7 +368,7 @@
                 <img src={account.profileImageUrl} alt={account.accountName} class="w-7 h-7 rounded-full" />
               {/if}
               <span class="text-sm text-ink font-medium">@{account.accountName}</span>
-              <span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full">{$_('social.connected')}</span>
+              <span class="text-xs px-2 py-0.5 bg-green-500/20 text-green-700 rounded-full">{$_('social.connected')}</span>
               <select
                 bind:value={account.language}
                 on:change={() => updateAccountLanguage(account)}
@@ -379,7 +379,7 @@
                 <option value="pl">Polski</option>
                 <option value="ru">Русский</option>
               </select>
-              <button on:click={() => disconnectingId = account.id} class="text-xs px-3 py-1.5 border border-red-200 text-red-500 rounded-lg hover:bg-red-50 transition-colors duration-150 cursor-pointer">
+              <button on:click={() => disconnectingId = account.id} class="text-xs px-3 py-1.5 border border-red-500/30 text-red-500 rounded-lg hover:bg-red-500/12 transition-colors duration-150 cursor-pointer">
                 {$_('social.disconnect')}
               </button>
             </div>
@@ -404,7 +404,7 @@
       </div>
       <div class="flex flex-col gap-2">
         {#each accounts.filter(a => a.platform === 'FACEBOOK') as account}
-          <div class="flex flex-col gap-2 p-2.5 rounded-lg border {account.status === 'REAUTH_REQUIRED' ? 'border-orange-300 bg-orange-50' : 'border-border bg-surface-2/50'}">
+          <div class="flex flex-col gap-2 p-2.5 rounded-lg border {account.status === 'REAUTH_REQUIRED' ? 'border-orange-300 bg-orange-500/12' : 'border-border bg-surface-2/50'}">
             <div class="flex flex-wrap items-center justify-between gap-2">
               <div class="flex items-center gap-2 min-w-0">
                 {#if account.profileImageUrl}
@@ -414,9 +414,9 @@
                   <div class="flex items-center gap-2">
                     <span class="text-sm text-ink font-medium truncate" title={account.accountName}>{account.accountName}</span>
                     {#if account.status === 'REAUTH_REQUIRED'}
-                      <span class="text-xs px-2 py-0.5 bg-orange-100 text-orange-700 rounded-full flex-shrink-0">{$_('social.reauthRequired.badge')}</span>
+                      <span class="text-xs px-2 py-0.5 bg-orange-500/20 text-orange-700 rounded-full flex-shrink-0">{$_('social.reauthRequired.badge')}</span>
                     {:else}
-                      <span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full flex-shrink-0">{$_('social.connected')}</span>
+                      <span class="text-xs px-2 py-0.5 bg-green-500/20 text-green-700 rounded-full flex-shrink-0">{$_('social.connected')}</span>
                     {/if}
                   </div>
                   <span class="text-xs text-ink-muted font-mono truncate" title={account.accountId}>{account.accountId}</span>
@@ -433,10 +433,10 @@
                   <option value="pl">Polski</option>
                   <option value="ru">Русский</option>
                 </select>
-                <button on:click={() => openEditFacebook(account)} class="text-xs px-3 py-1.5 border {account.status === 'REAUTH_REQUIRED' ? 'border-orange-400 text-orange-700 bg-orange-100 hover:bg-orange-200 font-medium' : 'border-border text-ink bg-surface hover:bg-surface-2'} rounded-lg transition-colors duration-150 cursor-pointer">
+                <button on:click={() => openEditFacebook(account)} class="text-xs px-3 py-1.5 border {account.status === 'REAUTH_REQUIRED' ? 'border-orange-400 text-orange-700 bg-orange-500/20 hover:bg-orange-500/20 font-medium' : 'border-border text-ink bg-surface hover:bg-surface-2'} rounded-lg transition-colors duration-150 cursor-pointer">
                   {account.status === 'REAUTH_REQUIRED' ? $_('social.reauthRequired.cta') : $_('common.edit')}
                 </button>
-                <button on:click={() => disconnectingId = account.id} class="text-xs px-3 py-1.5 border border-red-200 text-red-500 rounded-lg hover:bg-red-50 transition-colors duration-150 cursor-pointer bg-surface">
+                <button on:click={() => disconnectingId = account.id} class="text-xs px-3 py-1.5 border border-red-500/30 text-red-500 rounded-lg hover:bg-red-500/12 transition-colors duration-150 cursor-pointer bg-surface">
                   {$_('social.disconnect')}
                 </button>
               </div>
@@ -473,7 +473,7 @@
               <div class="flex flex-col min-w-0">
                 <div class="flex items-center gap-2">
                   <span class="text-sm text-ink font-medium truncate" title={account.accountName}>{account.accountName}</span>
-                  <span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full flex-shrink-0">{$_('social.connected')}</span>
+                  <span class="text-xs px-2 py-0.5 bg-green-500/20 text-green-700 rounded-full flex-shrink-0">{$_('social.connected')}</span>
                 </div>
                 <span class="text-xs text-ink-muted font-mono truncate" title={account.accountId}>{account.accountId}</span>
               </div>
@@ -489,7 +489,7 @@
                 <option value="pl">Polski</option>
                 <option value="ru">Русский</option>
               </select>
-              <button on:click={() => disconnectingId = account.id} class="text-xs px-3 py-1.5 border border-red-200 text-red-500 rounded-lg hover:bg-red-50 transition-colors duration-150 cursor-pointer bg-surface">
+              <button on:click={() => disconnectingId = account.id} class="text-xs px-3 py-1.5 border border-red-500/30 text-red-500 rounded-lg hover:bg-red-500/12 transition-colors duration-150 cursor-pointer bg-surface">
                 {$_('social.disconnect')}
               </button>
             </div>
@@ -522,7 +522,7 @@
               <div class="flex flex-col min-w-0">
                 <div class="flex items-center gap-2">
                   <span class="text-sm text-ink font-medium truncate" title={account.accountName}>{account.accountName}</span>
-                  <span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full flex-shrink-0">{$_('social.connected')}</span>
+                  <span class="text-xs px-2 py-0.5 bg-green-500/20 text-green-700 rounded-full flex-shrink-0">{$_('social.connected')}</span>
                 </div>
                 <span class="text-xs text-ink-muted font-mono truncate" title={account.accountId}>{account.accountId}</span>
               </div>
@@ -538,7 +538,7 @@
                 <option value="pl">Polski</option>
                 <option value="ru">Русский</option>
               </select>
-              <button on:click={() => disconnectingId = account.id} class="text-xs px-3 py-1.5 border border-red-200 text-red-500 rounded-lg hover:bg-red-50 transition-colors duration-150 cursor-pointer bg-surface">
+              <button on:click={() => disconnectingId = account.id} class="text-xs px-3 py-1.5 border border-red-500/30 text-red-500 rounded-lg hover:bg-red-500/12 transition-colors duration-150 cursor-pointer bg-surface">
                 {$_('social.disconnect')}
               </button>
             </div>
@@ -571,7 +571,7 @@
               <div class="flex flex-col min-w-0">
                 <div class="flex items-center gap-2">
                   <span class="text-sm text-ink font-medium truncate" title={account.accountName}>{account.accountName}</span>
-                  <span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full flex-shrink-0">{$_('social.connected')}</span>
+                  <span class="text-xs px-2 py-0.5 bg-green-500/20 text-green-700 rounded-full flex-shrink-0">{$_('social.connected')}</span>
                 </div>
                 <span class="text-xs text-ink-muted font-mono truncate" title={account.accountId}>{account.accountId}</span>
               </div>
@@ -590,7 +590,7 @@
               <button on:click={() => openEditTelegram(account)} class="text-xs px-3 py-1.5 border border-border text-ink rounded-lg hover:bg-surface-2 transition-colors duration-150 cursor-pointer bg-surface">
                 {$_('common.edit')}
               </button>
-              <button on:click={() => disconnectingId = account.id} class="text-xs px-3 py-1.5 border border-red-200 text-red-500 rounded-lg hover:bg-red-50 transition-colors duration-150 cursor-pointer bg-surface">
+              <button on:click={() => disconnectingId = account.id} class="text-xs px-3 py-1.5 border border-red-500/30 text-red-500 rounded-lg hover:bg-red-500/12 transition-colors duration-150 cursor-pointer bg-surface">
                 {$_('social.disconnect')}
               </button>
             </div>
@@ -866,7 +866,7 @@
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => disconnectingId = null}>
     <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-sm p-6">
-      <div class="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center mb-4">
+      <div class="w-12 h-12 bg-red-500/12 rounded-xl flex items-center justify-center mb-4">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M13.181 8.68a4.503 4.503 0 0 1 1.903 6.405m-9.768-3.782L3 6.757l4.416-1.596m6.784 9.645L10.632 18l-4.416-1.596m9.963-3.782a4.503 4.503 0 0 1-8.271-1.15" />
         </svg>
@@ -892,9 +892,9 @@
 {#if toast}
   <div class="fixed bottom-6 right-6 z-[60] max-w-sm">
     <div class="flex items-start gap-3 rounded-xl shadow-lg border px-4 py-3 text-sm
-      {toast.type === 'warning' ? 'bg-amber-50 border-amber-200 text-amber-800' :
-       toast.type === 'success' ? 'bg-green-50 border-green-200 text-green-800' :
-       'bg-red-50 border-red-200 text-red-800'}">
+      {toast.type === 'warning' ? 'bg-amber-500/12 border-amber-500/30 text-amber-800' :
+       toast.type === 'success' ? 'bg-green-500/12 border-green-500/30 text-green-800' :
+       'bg-red-500/12 border-red-500/30 text-red-800'}">
       {#if toast.type === 'warning'}
         <svg xmlns="http://www.w3.org/2000/svg" class="mt-0.5 w-4 h-4 flex-shrink-0 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />

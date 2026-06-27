@@ -58,12 +58,12 @@
 </script>
 
 {#if invitations.length > 0}
-  <div class="border-b border-amber-200 bg-amber-50">
+  <div class="border-b border-amber-500/30 bg-amber-500/12">
     {#each invitations as inv (inv.id)}
       <div class="px-4 py-3 flex items-center justify-between gap-4 max-w-7xl mx-auto">
         <div class="flex items-center gap-3 min-w-0">
           <!-- Icon -->
-          <div class="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+          <div class="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center flex-shrink-0">
             <svg class="w-4 h-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               {#if inv.requestedAt}
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />

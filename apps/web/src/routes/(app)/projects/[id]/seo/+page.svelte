@@ -350,10 +350,10 @@
   }
 
   const intentBadge: Record<string, string> = {
-    INFORMATIONAL: 'bg-blue-100 text-blue-700',
+    INFORMATIONAL: 'bg-blue-500/20 text-blue-700',
     NAVIGATIONAL: 'bg-surface-2 text-ink',
-    COMMERCIAL: 'bg-amber-100 text-amber-700',
-    TRANSACTIONAL: 'bg-green-100 text-green-700',
+    COMMERCIAL: 'bg-amber-500/20 text-amber-700',
+    TRANSACTIONAL: 'bg-green-500/20 text-green-700',
   };
 
   const intentLabel: Record<string, string> = {
@@ -496,7 +496,7 @@
         </div>
         <button
           on:click={dismissSyncResult}
-          class="text-ink-subtle hover:text-gray-600 p-1"
+          class="text-ink-subtle hover:text-ink-muted p-1"
           title="Dismiss"
         >
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -516,7 +516,7 @@
                 <th class="px-3 py-2 font-medium">Change</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-gray-50">
+            <tbody class="divide-y divide-border">
               {#each lastSyncResult.details as d}
                 <tr class="hover:bg-surface-2">
                   <td class="px-3 py-2 text-ink">{d.keyword}</td>
@@ -569,10 +569,10 @@
     <!-- Loading skeleton -->
     <div class="bg-surface rounded-xl border border-border animate-pulse">
       <div class="p-4 border-b border-border">
-        <div class="h-4 bg-gray-200 rounded w-1/3"></div>
+        <div class="h-4 bg-surface-2 rounded w-1/3"></div>
       </div>
       {#each Array(5) as _}
-        <div class="p-4 border-b border-gray-50">
+        <div class="p-4 border-b border-border">
           <div class="h-4 bg-surface-2 rounded w-full"></div>
         </div>
       {/each}
@@ -616,7 +616,7 @@
               <th class="text-right text-xs font-medium text-ink-muted uppercase tracking-wider px-5 py-3"></th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-50">
+          <tbody class="divide-y divide-border">
             {#each keywords as kw}
               {@const history = historyMap[kw.id] || []}
               {@const trend = trendIndicator(history)}
@@ -714,13 +714,13 @@
                 <!-- Tracking Status -->
                 <td class="px-5 py-3.5 text-center">
                   {#if kw.tracking !== false}
-                    <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">
+                    <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-green-500/20 text-green-700 font-medium">
                       <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
                       {$_('seo.active')}
                     </span>
                   {:else}
                     <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-surface-2 text-ink-muted font-medium">
-                      <span class="w-1.5 h-1.5 bg-gray-400 rounded-full"></span>
+                      <span class="w-1.5 h-1.5 bg-ink-subtle rounded-full"></span>
                       {$_('seo.paused')}
                     </span>
                   {/if}
@@ -794,9 +794,9 @@
 {#if toast}
   <div class="fixed bottom-6 right-6 z-[60] max-w-sm">
     <div class="flex items-start gap-3 rounded-xl shadow-lg border px-4 py-3 text-sm
-      {toast.type === 'warning' ? 'bg-amber-50 border-amber-200 text-amber-800' :
-       toast.type === 'success' ? 'bg-green-50 border-green-200 text-green-800' :
-       'bg-red-50 border-red-200 text-red-800'}">
+      {toast.type === 'warning' ? 'bg-amber-500/12 border-amber-500/30 text-amber-800' :
+       toast.type === 'success' ? 'bg-green-500/12 border-green-500/30 text-green-800' :
+       'bg-red-500/12 border-red-500/30 text-red-800'}">
       {#if toast.type === 'warning'}
         <svg xmlns="http://www.w3.org/2000/svg" class="mt-0.5 w-4 h-4 flex-shrink-0 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
@@ -954,7 +954,7 @@
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => deletingId = null}>
     <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-sm">
       <div class="p-6">
-        <div class="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center mb-4">
+        <div class="w-12 h-12 bg-red-500/12 rounded-xl flex items-center justify-center mb-4">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
           </svg>
@@ -1011,7 +1011,7 @@
             max="100"
             bind:value={recordRank}
             disabled={recordNotInTop100}
-            class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-400"
+            class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-surface-2 disabled:text-ink-subtle"
             placeholder={$_('seo.recordPosition.rankPlaceholder')}
           />
           <label class="flex items-center gap-2 mt-2 cursor-pointer select-none">

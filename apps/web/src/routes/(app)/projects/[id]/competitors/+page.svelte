@@ -305,7 +305,7 @@
       <!-- Suggest with AI -->
       <button
         on:click={openSuggestModal}
-        class="border border-purple-300 text-purple-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-purple-50 transition-colors duration-150 flex items-center gap-2 cursor-pointer"
+        class="border border-purple-300 text-purple-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-purple-500/12 transition-colors duration-150 flex items-center gap-2 cursor-pointer"
       >
         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
@@ -336,7 +336,7 @@
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         {#each suggestedCompetitors as suggestion}
-          <div class="bg-purple-50 border border-purple-200 rounded-xl p-5">
+          <div class="bg-purple-500/12 border border-purple-500/30 rounded-xl p-5">
             <div class="flex items-start justify-between mb-2">
               <div class="flex-1 min-w-0">
                 <h3 class="font-semibold text-ink">{suggestion.name}</h3>
@@ -404,14 +404,14 @@
       {#each Array(4) as _}
         <div class="bg-surface rounded-xl border border-border p-5 h-44 animate-pulse">
           <div class="flex items-center gap-3 mb-4">
-            <div class="w-10 h-10 bg-gray-200 rounded-full"></div>
+            <div class="w-10 h-10 bg-surface-2 rounded-full"></div>
             <div class="flex-1">
-              <div class="h-4 bg-gray-200 rounded w-32 mb-2"></div>
-              <div class="h-3 bg-gray-200 rounded w-48"></div>
+              <div class="h-4 bg-surface-2 rounded w-32 mb-2"></div>
+              <div class="h-3 bg-surface-2 rounded w-48"></div>
             </div>
           </div>
-          <div class="h-3 bg-gray-200 rounded w-full mb-2"></div>
-          <div class="h-3 bg-gray-200 rounded w-3/4"></div>
+          <div class="h-3 bg-surface-2 rounded w-full mb-2"></div>
+          <div class="h-3 bg-surface-2 rounded w-3/4"></div>
         </div>
       {/each}
     </div>
@@ -449,7 +449,7 @@
                 <!-- svelte-ignore a11y_no_static_element_interactions -->
                 <div
                   on:click={() => toggleActive(competitor)}
-                  class="w-3 h-3 rounded-full cursor-pointer transition-colors duration-150 {competitor.isActive ? 'bg-green-500' : 'bg-gray-300'}"
+                  class="w-3 h-3 rounded-full cursor-pointer transition-colors duration-150 {competitor.isActive ? 'bg-green-500' : 'bg-border-strong'}"
                   title={$_('competitors.toggleActive')}
                 ></div>
               </div>
@@ -470,7 +470,7 @@
               <button
                 on:click={() => analyzeCompetitor(competitor)}
                 disabled={analyzingId === competitor.id}
-                class="text-xs px-3 py-1.5 border border-purple-300 text-purple-600 rounded-lg hover:bg-purple-50 transition-colors duration-150 cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                class="text-xs px-3 py-1.5 border border-purple-300 text-purple-600 rounded-lg hover:bg-purple-500/12 transition-colors duration-150 cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
               >
                 {#if analyzingId === competitor.id}
                   <svg class="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24">
@@ -488,7 +488,7 @@
               <!-- Delete button -->
               <button
                 on:click={() => deletingId = competitor.id}
-                class="text-xs px-2 py-1.5 border border-red-200 text-red-500 rounded-lg hover:bg-red-50 transition-colors duration-150 cursor-pointer"
+                class="text-xs px-2 py-1.5 border border-red-500/30 text-red-500 rounded-lg hover:bg-red-500/12 transition-colors duration-150 cursor-pointer"
                 title={$_('common.delete')}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -506,7 +506,7 @@
           <!-- Meta info -->
           <div class="flex items-center gap-4 text-xs text-ink-subtle mb-3">
             <span class="inline-flex items-center gap-1">
-              <span class="inline-block w-2 h-2 rounded-full {competitor.isActive ? 'bg-green-500' : 'bg-gray-300'}"></span>
+              <span class="inline-block w-2 h-2 rounded-full {competitor.isActive ? 'bg-green-500' : 'bg-border-strong'}"></span>
               {competitor.isActive ? $_('competitors.active') : $_('competitors.inactive')}
             </span>
             <span class="inline-flex items-center gap-1">
@@ -657,7 +657,7 @@
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={closeSuggestModal}>
     <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-md">
       <div class="p-6 border-b border-border flex items-center gap-2.5">
-        <div class="w-8 h-8 bg-purple-50 rounded-lg flex items-center justify-center flex-shrink-0">
+        <div class="w-8 h-8 bg-purple-500/12 rounded-lg flex items-center justify-center flex-shrink-0">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
           </svg>
@@ -719,7 +719,7 @@
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => deletingId = null}>
     <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-sm">
       <div class="p-6">
-        <div class="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center mb-4">
+        <div class="w-12 h-12 bg-red-500/12 rounded-xl flex items-center justify-center mb-4">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
           </svg>
@@ -746,9 +746,9 @@
 {#if toast}
   <div class="fixed bottom-6 right-6 z-[60] max-w-sm">
     <div class="flex items-start gap-3 rounded-xl shadow-lg border px-4 py-3 text-sm
-      {toast.type === 'warning' ? 'bg-amber-50 border-amber-200 text-amber-800' :
-       toast.type === 'success' ? 'bg-green-50 border-green-200 text-green-800' :
-       'bg-red-50 border-red-200 text-red-800'}">
+      {toast.type === 'warning' ? 'bg-amber-500/12 border-amber-500/30 text-amber-800' :
+       toast.type === 'success' ? 'bg-green-500/12 border-green-500/30 text-green-800' :
+       'bg-red-500/12 border-red-500/30 text-red-800'}">
       {#if toast.type === 'success'}
         <svg xmlns="http://www.w3.org/2000/svg" class="mt-0.5 w-4 h-4 flex-shrink-0 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />

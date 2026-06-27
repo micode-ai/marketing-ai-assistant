@@ -126,7 +126,7 @@
   function deltaClass(delta: number, invertGood = false): string {
     if (delta === 0) return 'bg-surface-2 text-ink-muted';
     const good = invertGood ? delta < 0 : delta > 0;
-    return good ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700';
+    return good ? 'bg-green-500/20 text-green-700' : 'bg-red-500/20 text-red-700';
   }
 
   // Derived deltas (only when compare=true and prev* fields present)

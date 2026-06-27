@@ -165,12 +165,12 @@
   }
 
   const eventColors: Record<string, string> = {
-    'content.published': 'bg-blue-100 text-blue-700',
-    'campaign.sent': 'bg-purple-100 text-purple-700',
-    'conversion.tracked': 'bg-green-100 text-green-700',
-    'subscriber.added': 'bg-amber-100 text-amber-700',
-    'subscriber.unsubscribed': 'bg-red-100 text-red-700',
-    'agent.completed': 'bg-indigo-100 text-indigo-700',
+    'content.published': 'bg-blue-500/20 text-blue-700',
+    'campaign.sent': 'bg-purple-500/20 text-purple-700',
+    'conversion.tracked': 'bg-green-500/20 text-green-700',
+    'subscriber.added': 'bg-amber-500/20 text-amber-700',
+    'subscriber.unsubscribed': 'bg-red-500/20 text-red-700',
+    'agent.completed': 'bg-brand-subtle/15 text-brand',
   };
 </script>
 
@@ -183,7 +183,7 @@
     </div>
     <button
       on:click={openAddModal}
-      class="inline-flex items-center gap-2 bg-indigo-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors cursor-pointer"
+      class="inline-flex items-center gap-2 bg-brand text-white text-sm font-medium px-4 py-2 rounded-lg hover:brightness-110 transition-colors cursor-pointer"
     >
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -193,10 +193,10 @@
   </div>
 
   {#if error}
-    <div class="mb-4 bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">{error}</div>
+    <div class="mb-4 bg-red-500/12 border border-red-500/30 text-red-700 rounded-lg px-4 py-3 text-sm">{error}</div>
   {/if}
   {#if successMsg}
-    <div class="mb-4 bg-green-50 border border-green-200 text-green-700 rounded-lg px-4 py-3 text-sm">{successMsg}</div>
+    <div class="mb-4 bg-green-500/12 border border-green-500/30 text-green-700 rounded-lg px-4 py-3 text-sm">{successMsg}</div>
   {/if}
 
   <!-- Loading skeleton -->
@@ -206,14 +206,14 @@
         <div class="bg-surface rounded-xl border border-border p-5 animate-pulse">
           <div class="flex items-center gap-4">
             <div class="flex-1 space-y-2">
-              <div class="h-4 bg-gray-200 rounded w-2/3"></div>
+              <div class="h-4 bg-surface-2 rounded w-2/3"></div>
               <div class="h-3 bg-surface-2 rounded w-1/3"></div>
               <div class="flex gap-2 mt-2">
                 <div class="h-5 bg-surface-2 rounded-full w-24"></div>
                 <div class="h-5 bg-surface-2 rounded-full w-20"></div>
               </div>
             </div>
-            <div class="h-6 w-10 bg-gray-200 rounded-full"></div>
+            <div class="h-6 w-10 bg-surface-2 rounded-full"></div>
           </div>
         </div>
       {/each}
@@ -222,8 +222,8 @@
   <!-- Empty state -->
   {:else if webhooks.length === 0}
     <div class="text-center py-16 bg-surface-2 rounded-xl border border-dashed border-border">
-      <div class="w-12 h-12 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-3">
-        <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div class="w-12 h-12 bg-brand-subtle/10 rounded-full flex items-center justify-center mx-auto mb-3">
+        <svg class="w-6 h-6 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
             d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
         </svg>
@@ -232,7 +232,7 @@
       <p class="text-ink-subtle text-xs mt-1 mb-4">{$_('webhooks.emptyDesc')}</p>
       <button
         on:click={openAddModal}
-        class="bg-indigo-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors cursor-pointer"
+        class="bg-brand text-white text-sm font-medium px-4 py-2 rounded-lg hover:brightness-110 transition-colors cursor-pointer"
       >
         {$_('webhooks.addWebhook')}
       </button>
@@ -245,8 +245,8 @@
         <div class="bg-surface rounded-xl border border-border p-5">
           <div class="flex items-start gap-4">
             <!-- Icon -->
-            <div class="w-10 h-10 bg-indigo-50 rounded-lg flex items-center justify-center shrink-0 mt-0.5">
-              <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="w-10 h-10 bg-brand-subtle/10 rounded-lg flex items-center justify-center shrink-0 mt-0.5">
+              <svg class="w-5 h-5 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
               </svg>
@@ -258,7 +258,7 @@
               <div class="flex items-center gap-2 flex-wrap">
                 <span class="font-medium text-ink text-sm truncate max-w-md">{webhook.url}</span>
                 {#if webhook.isActive}
-                  <span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full font-medium">{$_('webhooks.active')}</span>
+                  <span class="text-xs px-2 py-0.5 bg-green-500/20 text-green-700 rounded-full font-medium">{$_('webhooks.active')}</span>
                 {:else}
                   <span class="text-xs px-2 py-0.5 bg-surface-2 text-ink-muted rounded-full font-medium">{$_('webhooks.inactive')}</span>
                 {/if}
@@ -281,7 +281,7 @@
                 </code>
                 <button
                   on:click={() => toggleSecretVisibility(webhook.id)}
-                  class="text-ink-subtle hover:text-gray-600 transition-colors cursor-pointer"
+                  class="text-ink-subtle hover:text-ink-muted transition-colors cursor-pointer"
                   title={visibleSecrets[webhook.id] ? $_('webhooks.hideSecret') : $_('webhooks.showSecret')}
                 >
                   {#if visibleSecrets[webhook.id]}
@@ -300,7 +300,7 @@
                 </button>
                 <button
                   on:click={() => copySecret(webhook.secret, webhook.id)}
-                  class="text-ink-subtle hover:text-gray-600 transition-colors cursor-pointer"
+                  class="text-ink-subtle hover:text-ink-muted transition-colors cursor-pointer"
                   title={$_('webhooks.copySecret')}
                 >
                   {#if copiedId === webhook.id}
@@ -329,7 +329,7 @@
               <!-- Toggle -->
               <button
                 on:click={() => toggleActive(webhook)}
-                class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer {webhook.isActive ? 'bg-indigo-600' : 'bg-gray-200'}"
+                class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer {webhook.isActive ? 'bg-brand' : 'bg-surface-2'}"
                 title={webhook.isActive ? $_('webhooks.deactivate') : $_('webhooks.activate')}
               >
                 <span
@@ -348,7 +348,7 @@
               <!-- Delete -->
               <button
                 on:click={() => (deletingId = webhook.id)}
-                class="text-xs text-red-600 border border-red-100 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors cursor-pointer whitespace-nowrap"
+                class="text-xs text-red-600 border border-red-500/20 px-3 py-1.5 rounded-lg hover:bg-red-500/12 transition-colors cursor-pointer whitespace-nowrap"
               >
                 {$_('common.delete')}
               </button>
@@ -378,7 +378,7 @@
           </h2>
           <button
             on:click={() => (showModal = false)}
-            class="text-ink-subtle hover:text-gray-600 transition-colors cursor-pointer"
+            class="text-ink-subtle hover:text-ink-muted transition-colors cursor-pointer"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -387,7 +387,7 @@
         </div>
 
         {#if modalError}
-          <div class="mb-4 bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-sm">{modalError}</div>
+          <div class="mb-4 bg-red-500/12 border border-red-500/30 text-red-700 rounded-lg px-3 py-2 text-sm">{modalError}</div>
         {/if}
 
         <form on:submit|preventDefault={saveWebhook} class="space-y-4">
@@ -399,7 +399,7 @@
               bind:value={form.url}
               required
               placeholder="https://example.com/webhook"
-              class="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              class="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             />
             <p class="text-xs text-ink-subtle mt-1">{$_('webhooks.urlHint')}</p>
           </div>
@@ -414,7 +414,7 @@
                     type="checkbox"
                     checked={form.events.includes(event)}
                     on:change={() => toggleEvent(event)}
-                    class="w-4 h-4 rounded border-border text-indigo-600 focus:ring-indigo-500"
+                    class="w-4 h-4 rounded border-border text-brand focus:ring-ring"
                   />
                   <div class="flex-1">
                     <span class="text-sm text-ink font-medium">{$_(`webhooks.events.${event}`)}</span>
@@ -439,7 +439,7 @@
             <button
               type="submit"
               disabled={saving || !form.url || form.events.length === 0}
-              class="flex-1 bg-indigo-600 text-white text-sm font-medium py-2.5 rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-60 cursor-pointer"
+              class="flex-1 bg-brand text-white text-sm font-medium py-2.5 rounded-xl hover:brightness-110 transition-colors disabled:opacity-60 cursor-pointer"
             >
               {saving ? $_('common.loading') : editingId ? $_('common.save') : $_('common.create')}
             </button>
@@ -456,7 +456,7 @@
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => (deletingId = null)}>
     <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-sm p-6">
-      <div class="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center mb-4">
+      <div class="w-12 h-12 bg-red-500/12 rounded-xl flex items-center justify-center mb-4">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round"
             d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />

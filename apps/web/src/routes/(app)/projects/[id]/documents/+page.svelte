@@ -375,7 +375,7 @@
 
   <!-- LangSmith trace banner -->
   {#if lastTraceUrl}
-    <div class="mb-4 flex items-center gap-3 px-4 py-3 bg-purple-50 border border-purple-200 rounded-xl text-sm">
+    <div class="mb-4 flex items-center gap-3 px-4 py-3 bg-purple-500/12 border border-purple-500/30 rounded-xl text-sm">
       <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-purple-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
       </svg>
@@ -477,7 +477,7 @@
                   <span class="text-xs px-2 py-0.5 bg-surface-2 text-ink-muted rounded font-medium">{getTypeLabel(doc.type)}</span>
                   <span class="text-xs text-ink-subtle">{$_('documents.version')} {doc.version}</span>
                   {#if doc.generatedByAi}
-                    <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 bg-purple-50 text-purple-600 rounded">
+                    <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 bg-purple-500/12 text-purple-600 rounded">
                       <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
                       </svg>
@@ -485,7 +485,7 @@
                     </span>
                   {/if}
                   {#if doc.fileUrl}
-                    <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 bg-blue-50 text-blue-600 rounded">
+                    <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 bg-blue-500/12 text-blue-600 rounded">
                       <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="m18.375 12.739-7.693 7.693a4.5 4.5 0 0 1-6.364-6.364l10.94-10.94A3 3 0 1 1 19.5 7.372L8.552 18.32m.009-.01-.01.01m5.699-9.941-7.81 7.81a1.5 1.5 0 0 0 2.112 2.13" />
                       </svg>
@@ -533,7 +533,7 @@
               <!-- Delete button -->
               <button
                 on:click|stopPropagation={() => deletingId = doc.id}
-                class="text-xs px-2 py-1.5 border border-red-200 text-red-500 rounded-lg hover:bg-red-50 transition-colors duration-150 cursor-pointer"
+                class="text-xs px-2 py-1.5 border border-red-500/30 text-red-500 rounded-lg hover:bg-red-500/12 transition-colors duration-150 cursor-pointer"
                 title={$_('documents.deleteDocument')}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -610,7 +610,7 @@
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => showCreateModal = false}>
     <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-lg">
       <div class="p-6 border-b border-border flex items-center gap-2.5">
-        <div class="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center flex-shrink-0">
+        <div class="w-8 h-8 bg-green-500/12 rounded-lg flex items-center justify-center flex-shrink-0">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
           </svg>
@@ -671,7 +671,7 @@
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => showUploadModal = false}>
     <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-md">
       <div class="p-6 border-b border-border flex items-center gap-2.5">
-        <div class="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
+        <div class="w-8 h-8 bg-blue-500/12 rounded-lg flex items-center justify-center flex-shrink-0">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
           </svg>
@@ -682,7 +682,7 @@
         <!-- Drop zone -->
         <!-- svelte-ignore a11y_no_static_element_interactions -->
         <div
-          class="border-2 border-dashed rounded-xl p-6 text-center transition-colors duration-150 {dragOver ? 'border-primary-400 bg-brand-subtle/10' : 'border-border hover:border-gray-400'}"
+          class="border-2 border-dashed rounded-xl p-6 text-center transition-colors duration-150 {dragOver ? 'border-primary-400 bg-brand-subtle/10' : 'border-border hover:border-border'}"
           on:drop={handleDrop}
           on:dragover={handleDragOver}
           on:dragleave={handleDragLeave}
@@ -696,7 +696,7 @@
                 <p class="text-sm font-medium text-ink truncate max-w-[200px]">{uploadFile.name}</p>
                 <p class="text-xs text-ink-muted">{formatFileSize(uploadFile.size)}</p>
               </div>
-              <button on:click|stopPropagation={() => uploadFile = null} class="text-ink-subtle hover:text-gray-600 cursor-pointer">
+              <button on:click|stopPropagation={() => uploadFile = null} class="text-ink-subtle hover:text-ink-muted cursor-pointer">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                 </svg>
@@ -779,7 +779,7 @@
               <span class="text-xs px-2 py-0.5 bg-surface-2 text-ink-muted rounded font-medium">{getTypeLabel(viewingDocument.type)}</span>
               <span class="text-xs text-ink-subtle">{$_('documents.version')} {viewingDocument.version}</span>
               {#if viewingDocument.generatedByAi}
-                <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 bg-purple-50 text-purple-600 rounded">
+                <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 bg-purple-500/12 text-purple-600 rounded">
                   <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
                   </svg>
@@ -793,7 +793,7 @@
             </div>
           </div>
         </div>
-        <button on:click={() => viewingDocument = null} class="p-1.5 rounded-lg text-ink-subtle hover:text-gray-600 hover:bg-surface-2 transition-colors duration-150 cursor-pointer flex-shrink-0 ml-4">
+        <button on:click={() => viewingDocument = null} class="p-1.5 rounded-lg text-ink-subtle hover:text-ink-muted hover:bg-surface-2 transition-colors duration-150 cursor-pointer flex-shrink-0 ml-4">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
           </svg>
@@ -801,7 +801,7 @@
       </div>
       <div class="flex-1 overflow-y-auto p-6">
         {#if viewingDocument.contentMd}
-          <div class="prose prose-sm max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-strong:text-gray-900 prose-ul:text-gray-700 prose-ol:text-gray-700 prose-li:text-gray-700 prose-headings:mt-4 prose-headings:mb-2 prose-p:my-1.5 prose-ul:my-1.5 prose-ol:my-1.5 prose-li:my-0.5 prose-pre:bg-gray-50 prose-pre:text-gray-800 prose-pre:border prose-pre:border-gray-200 prose-pre:my-2 prose-code:text-primary-700 prose-code:bg-brand-subtle/10 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-code:before:content-[''] prose-code:after:content-[''] prose-a:text-primary-600 prose-blockquote:text-gray-600 prose-blockquote:border-primary-300">
+          <div class="prose prose-sm max-w-none prose-headings:text-ink prose-p:text-ink prose-strong:text-ink prose-ul:text-ink prose-ol:text-ink prose-li:text-ink prose-headings:mt-4 prose-headings:mb-2 prose-p:my-1.5 prose-ul:my-1.5 prose-ol:my-1.5 prose-li:my-0.5 prose-pre:bg-surface-2 prose-pre:text-ink prose-pre:border prose-pre:border-border prose-pre:my-2 prose-code:text-primary-700 prose-code:bg-brand-subtle/10 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-code:before:content-[''] prose-code:after:content-[''] prose-a:text-primary-600 prose-blockquote:text-ink-muted prose-blockquote:border-primary-300">
             {@html renderMarkdown(viewingDocument.contentMd)}
           </div>
         {:else if viewingDocument.fileUrl && viewingDocument.mimeType && isImageMime(viewingDocument.mimeType)}
@@ -862,7 +862,7 @@
         </button>
         <button
           on:click={() => { deletingId = viewingDocument.id; }}
-          class="px-4 py-2 border border-red-200 text-red-500 rounded-lg text-sm font-medium hover:bg-red-50 transition-colors duration-150 cursor-pointer flex items-center gap-2"
+          class="px-4 py-2 border border-red-500/30 text-red-500 rounded-lg text-sm font-medium hover:bg-red-500/12 transition-colors duration-150 cursor-pointer flex items-center gap-2"
         >
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
@@ -881,7 +881,7 @@
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => editingDocument = null}>
     <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-3xl">
       <div class="p-6 border-b border-border flex items-center gap-2.5">
-        <div class="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
+        <div class="w-8 h-8 bg-blue-500/12 rounded-lg flex items-center justify-center flex-shrink-0">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
           </svg>
@@ -961,7 +961,7 @@
                 <span class="text-sm font-medium text-ink truncate">{t.label}</span>
                 <span class="text-xs text-ink-subtle font-mono">{t.slug}</span>
                 {#if t.isDefault}
-                  <span class="text-xs px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded">default</span>
+                  <span class="text-xs px-1.5 py-0.5 bg-blue-500/12 text-blue-600 rounded">default</span>
                 {/if}
               </div>
               {#if isTypeInUse(t.slug)}
@@ -983,7 +983,7 @@
 
         <!-- Delete type confirmation -->
         {#if deletingTypeId}
-          <div class="px-3 py-3 bg-red-50 border border-red-200 rounded-lg">
+          <div class="px-3 py-3 bg-red-500/12 border border-red-500/30 rounded-lg">
             <p class="text-sm text-red-700 mb-2">{$_('documents.confirmDeleteType')}</p>
             <div class="flex gap-2">
               <button
@@ -1036,7 +1036,7 @@
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" on:click|self={() => deletingId = null}>
     <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-sm">
       <div class="p-6">
-        <div class="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center mb-4">
+        <div class="w-12 h-12 bg-red-500/12 rounded-xl flex items-center justify-center mb-4">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
           </svg>
