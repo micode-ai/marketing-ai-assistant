@@ -7,9 +7,11 @@ import { decryptData } from '../common/crypto.util';
 import {
   fetchThreadsProfile,
   fetchThreadsAccountInsights,
+  fetchThreadsAccountInsightsRange,
   fetchThreadsMediaList,
   fetchThreadsMediaInsights,
   ThreadsAuthError,
+  DailyThreadsInsightRow,
 } from './threads-graph.util';
 
 const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
@@ -28,6 +30,13 @@ export interface SyncAccountResult {
 @Injectable()
 export class ThreadsSyncService {
   private readonly logger = new Logger(ThreadsSyncService.name);
+
+  /**
+   * Minimum number of daily account-metric rows that must exist before we
+   * consider the account sufficiently backfilled. Accounts below this
+   * threshold trigger a 90-day historical backfill before each sync.
+   */
+  static readonly BACKFILL_THRESHOLD_DAYS = 7;
 
   constructor(
     private prisma: PrismaService,
@@ -176,6 +185,89 @@ export class ThreadsSyncService {
   }
 
   /**
+   * Backfill up to `days` (default 90) days of daily account-level metrics
+   * for an account that has too few historical rows. Token decryption and auth
+   * errors are handled the same way as in `syncAccount`. Safe to call
+   * repeatedly — each row is upserted, so re-runs are idempotent.
+   *
+   * @returns `{ daysWritten }` — number of distinct calendar days written.
+   */
+  async backfillAccount(
+    account: {
+      id: string;
+      organizationId: string;
+      accountName: string;
+      encryptedTokens: string;
+      scopes?: string[];
+    },
+    days = 90,
+  ): Promise<{ daysWritten: number }> {
+    let accessToken: string | undefined;
+    let threadsUserId: string | undefined;
+    try {
+      const tokens = decryptData(
+        account.encryptedTokens,
+        this.config.get<string>('ENCRYPTION_KEY', ''),
+      );
+      accessToken = tokens?.accessToken;
+      threadsUserId = tokens?.threadsUserId;
+    } catch (e) {
+      this.logger.warn(
+        `Failed to decrypt tokens for Threads account ${account.id} during backfill: ${e}`,
+      );
+      return { daysWritten: 0 };
+    }
+
+    if (!accessToken || !threadsUserId) {
+      this.logger.warn(
+        `Threads account ${account.id} missing accessToken/threadsUserId — skipping backfill`,
+      );
+      return { daysWritten: 0 };
+    }
+
+    const until = Math.floor(this.truncateToDate(new Date()).getTime() / 1000);
+    const since = until - days * 86400;
+
+    let rows: DailyThreadsInsightRow[];
+    try {
+      rows = await fetchThreadsAccountInsightsRange(threadsUserId, accessToken, since, until);
+    } catch (e) {
+      if (e instanceof ThreadsAuthError) {
+        await this.handleAuthError(account, e);
+      }
+      throw e;
+    }
+
+    for (const row of rows) {
+      const date = new Date(row.date);
+      await this.prisma.threadsAccountMetrics.upsert({
+        where: {
+          socialAccountId_date: { socialAccountId: account.id, date },
+        },
+        create: {
+          socialAccountId: account.id,
+          date,
+          views: row.views ?? null,
+          likes: row.likes ?? null,
+          replies: row.replies ?? null,
+          reposts: row.reposts ?? null,
+          quotes: row.quotes ?? null,
+        },
+        update: {
+          views: row.views ?? null,
+          likes: row.likes ?? null,
+          replies: row.replies ?? null,
+          reposts: row.reposts ?? null,
+          quotes: row.quotes ?? null,
+        },
+      });
+    }
+
+    this.logger.log(`Backfilled Threads account ${account.id} (${rows.length} days)`);
+    return { daysWritten: rows.length };
+  }
+
+  /**
    * Hourly cron. Plan throttling:
    *  FREE       → account metrics only, at most once/day.
    *  PRO        → account + media, skip if synced within 6h.
@@ -196,6 +288,18 @@ export class ThreadsSyncService {
       try {
         const plan = account.organization.subscription?.plan || 'FREE';
 
+        // Self-healing backfill: if this account has fewer than the threshold
+        // of daily rows, pull 90 days of history before the regular sync.
+        // Runs BEFORE the plan-throttle continues so a sparse account always
+        // gets its historical data even when today's metric already exists.
+        const have = await this.prisma.threadsAccountMetrics.count({
+          where: { socialAccountId: account.id },
+        });
+        if (have < ThreadsSyncService.BACKFILL_THRESHOLD_DAYS) {
+          await this.backfillAccount(account, 90);
+        }
+
+        // Plan throttle for the daily sync only:
         if (plan === 'FREE') {
           // Account metrics only, once per day.
           if (await this.hasMetricsForToday(account.id)) continue;
