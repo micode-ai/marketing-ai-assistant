@@ -12,8 +12,7 @@
   } from './threads-dashboard-state';
 
   export let projectId: string;
-
-  type Period = 7 | 28 | 90;
+  export let days: number = 30;
 
   interface AccountPoint {
     date: string;
@@ -44,7 +43,6 @@
     worstPosts: ThreadsPost[];
   }
 
-  const PERIODS: Period[] = [7, 28, 90];
   const SYNC_INTERVAL_MS = 5 * 60 * 1000; // periodic refresh while mounted
 
   let status: ThreadsStatus | null = null;
@@ -52,7 +50,6 @@
   let loading = true;
   let dataLoading = false;
   let syncing = false;
-  let period: Period = 28;
   let syncInterval: ReturnType<typeof setInterval> | null = null;
 
   // Chart
@@ -87,6 +84,9 @@
     reinit();
   }
 
+  let prevDays = days;
+  $: if (mounted && days !== prevDays) { prevDays = days; fetchMetrics(); }
+
   async function init() {
     loading = true;
     await checkStatus();
@@ -106,7 +106,6 @@
     advice = '';
     contextSummary = '';
     adviceError = '';
-    period = 28;
     await init();
   }
 
@@ -154,7 +153,7 @@
   async function fetchMetrics() {
     dataLoading = true;
     try {
-      metrics = await api.get<Metrics>('/threads/metrics', { projectId, days: period });
+      metrics = await api.get<Metrics>('/threads/metrics', { projectId, days });
       await tick();
       renderChart();
     } catch {
@@ -162,11 +161,6 @@
     } finally {
       dataLoading = false;
     }
-  }
-
-  async function changePeriod(p: Period) {
-    period = p;
-    await fetchMetrics();
   }
 
   function renderChart() {
@@ -187,7 +181,7 @@
             backgroundColor: 'rgba(28, 28, 30, 0.1)',
             fill: true,
             tension: 0.3,
-            pointRadius: period <= 28 ? 2 : 0,
+            pointRadius: days <= 30 ? 2 : 0,
             yAxisID: 'y1',
           },
           {
@@ -197,7 +191,7 @@
             backgroundColor: 'rgba(59, 130, 246, 0.1)',
             fill: false,
             tension: 0.3,
-            pointRadius: period <= 28 ? 2 : 0,
+            pointRadius: days <= 30 ? 2 : 0,
           },
           {
             label: $_('threads.likes'),
@@ -206,7 +200,7 @@
             backgroundColor: 'rgba(239, 68, 68, 0.1)',
             fill: false,
             tension: 0.3,
-            pointRadius: period <= 28 ? 2 : 0,
+            pointRadius: days <= 30 ? 2 : 0,
           },
         ],
       },
@@ -345,15 +339,6 @@
             {$_('threads.syncNow')}
           {/if}
         </button>
-        <div class="flex bg-surface-2 rounded-lg p-0.5">
-          {#each PERIODS as p}
-            <button on:click={() => changePeriod(p)} disabled={dataLoading}
-              class="px-2.5 py-1 text-xs font-medium rounded-md transition-colors
-                {period === p ? 'bg-surface text-ink shadow-sm' : 'text-ink-muted hover:text-ink'}">
-              {$_(`threads.period${p}`)}
-            </button>
-          {/each}
-        </div>
       </div>
     </div>
 
