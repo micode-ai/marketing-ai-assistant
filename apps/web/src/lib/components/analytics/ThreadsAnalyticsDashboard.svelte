@@ -10,6 +10,7 @@
     isSyncStale,
     type ThreadsStatus,
   } from './threads-dashboard-state';
+  import { pickTotal } from './pick-total';
 
   export let projectId: string;
   export let days: number = 30;
@@ -41,12 +42,19 @@
     account: AccountPoint[];
     topPosts: ThreadsPost[];
     worstPosts: ThreadsPost[];
+    periodTotals?: {
+      views?: number;
+      likes?: number;
+      replies?: number;
+      reposts?: number;
+      quotes?: number;
+    };
   }
 
   const SYNC_INTERVAL_MS = 5 * 60 * 1000; // periodic refresh while mounted
 
   let status: ThreadsStatus | null = null;
-  let metrics: Metrics = { account: [], topPosts: [], worstPosts: [] };
+  let metrics: Metrics = { account: [], topPosts: [], worstPosts: [], periodTotals: {} };
   let loading = true;
   let dataLoading = false;
   let syncing = false;
@@ -157,7 +165,7 @@
       await tick();
       renderChart();
     } catch {
-      metrics = { account: [], topPosts: [], worstPosts: [] };
+      metrics = { account: [], topPosts: [], worstPosts: [], periodTotals: {} };
     } finally {
       dataLoading = false;
     }
@@ -222,11 +230,11 @@
   $: currentFollowers = metrics.account.length
     ? metrics.account[metrics.account.length - 1].followersCount ?? 0
     : 0;
-  $: totalViews    = metrics.account.reduce((s, d) => s + (d.views    ?? 0), 0);
-  $: totalLikes    = metrics.account.reduce((s, d) => s + (d.likes    ?? 0), 0);
-  $: totalReplies  = metrics.account.reduce((s, d) => s + (d.replies  ?? 0), 0);
-  $: totalReposts  = metrics.account.reduce((s, d) => s + (d.reposts  ?? 0), 0);
-  $: totalQuotes   = metrics.account.reduce((s, d) => s + (d.quotes   ?? 0), 0);
+  $: totalViews    = pickTotal(metrics.periodTotals?.views,   metrics.account.reduce((s, d) => s + (d.views    ?? 0), 0));
+  $: totalLikes    = pickTotal(metrics.periodTotals?.likes,   metrics.account.reduce((s, d) => s + (d.likes    ?? 0), 0));
+  $: totalReplies  = pickTotal(metrics.periodTotals?.replies, metrics.account.reduce((s, d) => s + (d.replies  ?? 0), 0));
+  $: totalReposts  = pickTotal(metrics.periodTotals?.reposts, metrics.account.reduce((s, d) => s + (d.reposts  ?? 0), 0));
+  $: totalQuotes   = pickTotal(metrics.periodTotals?.quotes,  metrics.account.reduce((s, d) => s + (d.quotes   ?? 0), 0));
 
   function formatNumber(n: number | null | undefined): string {
     const v = n ?? 0;

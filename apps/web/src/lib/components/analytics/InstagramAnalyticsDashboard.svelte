@@ -10,6 +10,7 @@
     isSyncStale,
     type InstagramStatus,
   } from './instagram-dashboard-state';
+  import { pickTotal } from './pick-total';
 
   export let projectId: string;
   export let days: number = 30;
@@ -41,12 +42,18 @@
     account: AccountPoint[];
     topPosts: MediaPost[];
     worstPosts: MediaPost[];
+    periodTotals?: {
+      reach?: number;
+      views?: number;
+      accountsEngaged?: number;
+      totalInteractions?: number;
+    };
   }
 
   const SYNC_INTERVAL_MS = 5 * 60 * 1000; // periodic refresh while mounted
 
   let status: InstagramStatus | null = null;
-  let metrics: Metrics = { account: [], topPosts: [], worstPosts: [] };
+  let metrics: Metrics = { account: [], topPosts: [], worstPosts: [], periodTotals: {} };
   let loading = true;
   let dataLoading = false;
   let syncing = false;
@@ -157,7 +164,7 @@
       await tick();
       renderChart();
     } catch {
-      metrics = { account: [], topPosts: [], worstPosts: [] };
+      metrics = { account: [], topPosts: [], worstPosts: [], periodTotals: {} };
     } finally {
       dataLoading = false;
     }
@@ -222,8 +229,8 @@
   $: currentFollowers = metrics.account.length
     ? metrics.account[metrics.account.length - 1].followersCount ?? 0
     : 0;
-  $: totalReach = metrics.account.reduce((s, d) => s + (d.reach ?? 0), 0);
-  $: totalViews = metrics.account.reduce((s, d) => s + (d.views ?? 0), 0);
+  $: totalReach = pickTotal(metrics.periodTotals?.reach, metrics.account.reduce((s, d) => s + (d.reach ?? 0), 0));
+  $: totalViews = pickTotal(metrics.periodTotals?.views, metrics.account.reduce((s, d) => s + (d.views ?? 0), 0));
 
   function formatNumber(n: number | null | undefined): string {
     const v = n ?? 0;

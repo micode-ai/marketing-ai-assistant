@@ -1,5 +1,15 @@
+jest.mock('./threads-graph.util', () => ({
+  fetchThreadsAccountInsightsTotals: jest.fn(),
+}));
+
+jest.mock('../common/crypto.util', () => ({
+  decryptData: jest.fn(),
+}));
+
 import { BadRequestException } from '@nestjs/common';
 import { ThreadsService } from './threads.service';
+import { fetchThreadsAccountInsightsTotals } from './threads-graph.util';
+import { decryptData } from '../common/crypto.util';
 
 function makePrisma() {
   return {
@@ -76,6 +86,10 @@ describe('ThreadsService', () => {
       syncService as any,
       config as any,
     );
+    // Default: decryptData returns nothing so periodTotals stays {} without error.
+    (decryptData as jest.Mock).mockReturnValue(undefined);
+    // Default: fetchThreadsAccountInsightsTotals resolves to empty.
+    (fetchThreadsAccountInsightsTotals as jest.Mock).mockResolvedValue({});
   });
 
   describe('getStatus', () => {
@@ -140,7 +154,7 @@ describe('ThreadsService', () => {
 
       const metrics = await service.getMetrics('p1', 28);
 
-      expect(metrics).toEqual({ account: [], topPosts: [], worstPosts: [] });
+      expect(metrics).toEqual({ account: [], topPosts: [], worstPosts: [], periodTotals: {} });
     });
 
     it('returns account series + top/worst posts ordered by engagementRate', async () => {
@@ -205,6 +219,68 @@ describe('ThreadsService', () => {
       expect(metrics.topPosts.map((m: any) => m.threadsMediaId)).toEqual(['a', 'b']);
       // Both already in top → worst is empty (no overlap).
       expect(metrics.worstPosts).toEqual([]);
+    });
+
+    it('includes periodTotals from fetchThreadsAccountInsightsTotals when tokens decrypt successfully', async () => {
+      prisma.projectSocialAccount.findMany.mockResolvedValue([threadsLink()]);
+      (decryptData as jest.Mock).mockReturnValue({
+        accessToken: 'live_tok',
+        threadsUserId: 'tid_123',
+      });
+      (fetchThreadsAccountInsightsTotals as jest.Mock).mockResolvedValue({
+        views: 5000,
+        likes: 300,
+        replies: 100,
+        reposts: 50,
+        quotes: 20,
+      });
+
+      const metrics = await service.getMetrics('p1', 7);
+
+      expect(metrics.periodTotals).toEqual({
+        views: 5000,
+        likes: 300,
+        replies: 100,
+        reposts: 50,
+        quotes: 20,
+      });
+      // Verify the API call received a plausible since/until window.
+      const [threadsUserId, token, since, until] = (
+        fetchThreadsAccountInsightsTotals as jest.Mock
+      ).mock.calls[0];
+      expect(threadsUserId).toBe('tid_123');
+      expect(token).toBe('live_tok');
+      expect(until - since).toBe(7 * 86400);
+    });
+
+    it('returns periodTotals:{} and still delivers account/posts when totals fetch throws', async () => {
+      prisma.projectSocialAccount.findMany.mockResolvedValue([threadsLink()]);
+      prisma.threadsAccountMetrics.findMany.mockResolvedValue([
+        {
+          date: new Date('2026-06-20T00:00:00Z'),
+          followersCount: 50,
+          views: 800,
+          likes: null,
+          replies: null,
+          reposts: null,
+          quotes: null,
+        },
+      ]);
+      (decryptData as jest.Mock).mockReturnValue({
+        accessToken: 'tok',
+        threadsUserId: 'tid_1',
+      });
+      (fetchThreadsAccountInsightsTotals as jest.Mock).mockRejectedValue(
+        new Error('Threads Graph unavailable'),
+      );
+
+      const metrics = await service.getMetrics('p1', 28);
+
+      // The main payload is still intact.
+      expect(metrics.account).toHaveLength(1);
+      expect(metrics.account[0].views).toBe(800);
+      // periodTotals degrades gracefully.
+      expect(metrics.periodTotals).toEqual({});
     });
   });
 

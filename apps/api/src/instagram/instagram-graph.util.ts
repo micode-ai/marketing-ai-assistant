@@ -210,6 +210,28 @@ async function fetchInsightsWithTolerance<T>(
 
 /**
  * GET /{igUserId}/insights?metric=reach,views,accounts_engaged,total_interactions
+ *   &period=day&metric_type=total_value&since=<sinceUnix>&until=<untilUnix>
+ *
+ * Returns the aggregate totals for the requested time window. Uses the same
+ * per-metric tolerance as the other insight helpers (batch → individual retry
+ * on non-auth failure; auth errors always propagate).
+ */
+export async function fetchAccountInsightsTotals(
+  igUserId: string,
+  token: string,
+  sinceUnix: number,
+  untilUnix: number,
+): Promise<AccountInsights> {
+  return fetchInsightsWithTolerance<AccountInsights>(igUserId, token, ACCOUNT_METRIC_KEYS, {
+    period: 'day',
+    metric_type: 'total_value',
+    since: String(sinceUnix),
+    until: String(untilUnix),
+  });
+}
+
+/**
+ * GET /{igUserId}/insights?metric=reach,views,accounts_engaged,total_interactions
  *   &period=day&metric_type=total_value
  */
 export async function fetchAccountInsights(

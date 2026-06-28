@@ -1,6 +1,7 @@
 import {
   fetchAccountProfile,
   fetchAccountInsights,
+  fetchAccountInsightsTotals,
   fetchAccountInsightsRange,
   fetchMediaList,
   fetchMediaInsights,
@@ -365,6 +366,68 @@ describe('instagram-graph.util', () => {
 
       expect(callCount).toBe(2);
       expect(rows.find((r) => r.date === '2026-07-31')).toBeDefined();
+    });
+  });
+
+  describe('fetchAccountInsightsTotals', () => {
+    it('reads metric_type=total_value over the range into per-metric totals', async () => {
+      global.fetch = (jest.fn(async (_url: string) => ({
+        ok: true,
+        json: async () => ({
+          data: [
+            { name: 'views', total_value: { value: 5000 } },
+            { name: 'reach', total_value: { value: 800 } },
+          ],
+        }),
+      })) as unknown as typeof fetch);
+      const t = await fetchAccountInsightsTotals('ig1', 'tok', 1, 2);
+      expect(t.views).toBe(5000);
+      expect(t.reach).toBe(800);
+    });
+
+    it('passes since/until as query params with metric_type=total_value', async () => {
+      const calls: string[] = [];
+      global.fetch = (jest.fn(async (url: string) => {
+        calls.push(url);
+        return { ok: true, json: async () => ({ data: [] }) };
+      }) as unknown as typeof fetch);
+
+      await fetchAccountInsightsTotals('ig1', 'tok', 1000, 2000);
+
+      expect(calls.length).toBeGreaterThan(0);
+      const url = calls[0];
+      expect(url).toContain('since=1000');
+      expect(url).toContain('until=2000');
+      expect(url).toContain('metric_type=total_value');
+      expect(url).toContain('period=day');
+      expect(url).toContain('metric=reach');
+    });
+
+    it('throws InstagramAuthError on 401', async () => {
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: false,
+        status: 401,
+        text: async () => '',
+      }) as unknown as typeof fetch;
+      await expect(
+        fetchAccountInsightsTotals('ig1', 'tok', 1, 2),
+      ).rejects.toBeInstanceOf(InstagramAuthError);
+    });
+
+    it('tolerates a per-metric failure and returns partial results', async () => {
+      const fetchMock = jest.fn().mockImplementation((url: string) => {
+        const metric = metricOf(url);
+        if (metric.includes(',')) return Promise.resolve(notOk(400));
+        if (metric === 'views') return Promise.resolve(notOk(400));
+        return Promise.resolve(
+          okJson({ data: [{ name: metric, total_value: { value: 1 } }] }),
+        );
+      });
+      global.fetch = fetchMock as unknown as typeof fetch;
+
+      const result = await fetchAccountInsightsTotals('ig1', 'tok', 1, 2);
+      expect(result.views).toBeUndefined();
+      expect(result.reach).toBe(1);
     });
   });
 
