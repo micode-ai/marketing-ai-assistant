@@ -2,6 +2,8 @@ import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../database/prisma.service';
 import { ThreadsSyncService } from './threads-sync.service';
+import { decryptData } from '../common/crypto.util';
+import { fetchThreadsAccountInsightsTotals, DailyThreadsInsightValues } from './threads-graph.util';
 
 const INSIGHTS_SCOPE = 'threads_manage_insights';
 const SKIP_IF_RECENT_MS = 10 * 60 * 1000; // 10 minutes
@@ -86,7 +88,7 @@ export class ThreadsService {
   async getMetrics(projectId: string, days: number) {
     const account = await this.resolveAccount(projectId);
     if (!account) {
-      return { account: [], topPosts: [], worstPosts: [] };
+      return { account: [], topPosts: [], worstPosts: [], periodTotals: {} };
     }
 
     const since = new Date();
@@ -117,6 +119,32 @@ export class ThreadsService {
       .filter((m) => !topIds.has(m.threadsMediaId))
       .slice(0, 5);
 
+    // Fetch aggregate period totals (metric_type=total_value over the window).
+    // Any failure is swallowed — periodTotals is supplementary data.
+    let periodTotals: DailyThreadsInsightValues = {};
+    try {
+      const tokens = decryptData(
+        account.encryptedTokens,
+        this.config.get<string>('ENCRYPTION_KEY', ''),
+      );
+      if (tokens?.accessToken && tokens?.threadsUserId) {
+        const now = new Date();
+        const until = Math.floor(
+          Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()) / 1000,
+        );
+        const sinceUnix = until - days * 86400;
+        periodTotals = await fetchThreadsAccountInsightsTotals(
+          tokens.threadsUserId,
+          tokens.accessToken,
+          sinceUnix,
+          until,
+        );
+      }
+    } catch (e) {
+      this.logger.warn(`Threads periodTotals failed for project ${projectId}: ${e}`);
+      periodTotals = {};
+    }
+
     return {
       account: accountMetrics.map((m) => ({
         date: m.date,
@@ -129,6 +157,7 @@ export class ThreadsService {
       })),
       topPosts,
       worstPosts,
+      periodTotals,
     };
   }
 

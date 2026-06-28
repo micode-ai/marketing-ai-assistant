@@ -102,9 +102,10 @@ function readInsightValue(row: InsightRow | undefined): number | undefined {
 /**
  * The numeric-only fields of a Threads daily row. Used as the assignment
  * target in the range-fetch map to avoid TypeScript complaining that
- * `string` (date) is not assignable to `number`.
+ * `string` (date) is not assignable to `number`. Also used as the return
+ * type for the period-total fetch so callers can type against a named shape.
  */
-interface DailyThreadsInsightValues {
+export interface DailyThreadsInsightValues {
   views?: number;
   likes?: number;
   replies?: number;
@@ -271,6 +272,36 @@ export async function fetchThreadsAccountInsights(
     token,
     ACCOUNT_METRIC_KEYS,
     { period: 'day', metric_type: 'total_value' },
+    'threads_insights',
+  );
+}
+
+/**
+ * GET {GRAPH}/{threadsUserId}/threads_insights
+ *   ?metric=views,likes,replies,reposts,quotes
+ *   &period=day&metric_type=total_value&since=<sinceUnix>&until=<untilUnix>
+ *
+ * Returns the aggregate totals for the requested time window. Does NOT
+ * include followers_count (that metric is not supported with since/until).
+ * Uses the same per-metric tolerance as the other insight helpers (batch →
+ * individual retry on non-auth failure; auth errors always propagate).
+ */
+export async function fetchThreadsAccountInsightsTotals(
+  threadsUserId: string,
+  token: string,
+  sinceUnix: number,
+  untilUnix: number,
+): Promise<DailyThreadsInsightValues> {
+  return fetchInsightsWithTolerance<DailyThreadsInsightValues>(
+    threadsUserId,
+    token,
+    RANGE_METRIC_KEYS,
+    {
+      period: 'day',
+      metric_type: 'total_value',
+      since: String(sinceUnix),
+      until: String(untilUnix),
+    },
     'threads_insights',
   );
 }
