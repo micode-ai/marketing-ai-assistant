@@ -149,7 +149,7 @@ describe('AnalyticsService', () => {
 
       await service.generateRecommendations('proj_1', 'en');
 
-      const [url, options] = mockFetch.mock.calls[0] as [string, RequestInit];
+      const [url, options] = mockFetch.mock.calls[0] as [string, { body: string }];
       expect(url).toContain('/analytics-recommendations');
 
       const body = JSON.parse(options.body as string);
