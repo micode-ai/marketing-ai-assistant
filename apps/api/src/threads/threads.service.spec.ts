@@ -9,6 +9,8 @@ function makePrisma() {
     threadsAccountMetrics: {
       findMany: jest.fn().mockResolvedValue([]),
       findFirst: jest.fn().mockResolvedValue(null),
+      // Default count >= BACKFILL_THRESHOLD_DAYS so existing tests don't trigger backfill.
+      count: jest.fn().mockResolvedValue(10),
     },
     threadsMedia: {
       findMany: jest.fn().mockResolvedValue([]),
@@ -34,6 +36,7 @@ function makeSyncService() {
     syncAccount: jest
       .fn()
       .mockResolvedValue({ accountSynced: true, mediaSynced: 3 }),
+    backfillAccount: jest.fn().mockResolvedValue({ daysWritten: 0 }),
     planAllowsMedia: jest.fn((plan: string) => plan !== 'FREE'),
   };
 }
