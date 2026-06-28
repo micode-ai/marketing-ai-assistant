@@ -915,7 +915,18 @@
     "surface": {
       "web": "Site",
       "app": "App"
-    }
+    },
+    "gscClicks": "GSC Clicks",
+    "igFollowers": "IG Followers",
+    "threadsEngagement": "Threads Engagement",
+    "channelsDrilldown": "Channels",
+    "viewDetails": "Details",
+    "tabOverviewChannel": "Overview",
+    "tabWebsite": "Website",
+    "tabSearch": "Search",
+    "tabInstagram": "Instagram",
+    "tabThreads": "Threads",
+    "tabApp": "Mobile App"
   },
   "instagram": {
     "title": "Instagram Analytics",
@@ -1246,6 +1257,19 @@
     "finances": {
       "title": "Finances — track your project income and expenses",
       "desc": "Try it: click \"Add Record\" to log an expense or income. You can use different currencies — exchange rates are fetched automatically. See your P&L at a glance with charts and summaries."
+    },
+    "metric": {
+      "conversions": "Total conversions attributed to your campaigns in the selected period.",
+      "conversionRate": "Percentage of tracked visitors who completed a desired action.",
+      "visitors": "Unique visitors recorded by the site tracking snippet in the selected period.",
+      "gscClicks": "Total clicks from Google Search Console across your tracked keywords.",
+      "gscPosition": "Average search ranking position across all your tracked keywords.",
+      "igFollowers": "Net change in Instagram followers during the selected period.",
+      "igEngagement": "Total likes, comments and saves on your Instagram posts.",
+      "threadsEngagement": "Total likes, replies and reposts on your Threads posts.",
+      "threadsViews": "Total impressions across your Threads posts in the selected period.",
+      "overviewTrend": "Trend lines showing how your key marketing metrics changed over time.",
+      "emailPerformance": "Emails sent, opened and clicked in the selected period."
     }
   },
   "seo": {

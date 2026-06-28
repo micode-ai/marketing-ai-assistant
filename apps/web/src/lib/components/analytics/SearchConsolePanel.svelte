@@ -4,8 +4,7 @@
   import { api } from '$lib/api/client';
 
   export let projectId: string;
-
-  type PeriodOption = 7 | 28 | 90;
+  export let days: number = 30;
 
   interface GSCSummaryMetric {
     clicks: number;
@@ -28,7 +27,6 @@
   let integrationLoading = true;
   let dataLoading = false;
   let error: string | null = null;
-  let period: PeriodOption = 28;
 
   // Chart instances
   let ChartJS: any = null;
@@ -43,8 +41,6 @@
   let querySortDir: 'asc' | 'desc' = 'desc';
   let pageSort: SortKey = 'clicks';
   let pageSortDir: 'asc' | 'desc' = 'desc';
-
-  const PERIOD_OPTIONS: PeriodOption[] = [7, 28, 90];
 
   const DEVICE_COLORS: Record<string, string> = {
     MOBILE: '#3B82F6',
@@ -74,13 +70,15 @@
     reloadForProject();
   }
 
+  let prevDays = days;
+  $: if (mounted && days !== prevDays) { prevDays = days; loadSummary(); }
+
   async function reloadForProject() {
     destroyCharts();
     integration = null;
     summary = null;
     error = null;
     integrationLoading = true;
-    period = 28;
     await loadIntegration();
   }
 
@@ -113,7 +111,7 @@
     try {
       summary = await api.get<GSCSummary>('/google/search-console/summary', {
         projectId,
-        days: period,
+        days,
       });
       await tick();
       renderCharts();
@@ -196,11 +194,6 @@
     }
   }
 
-  async function changePeriod(p: PeriodOption) {
-    period = p;
-    await loadSummary();
-  }
-
   function toggleQuerySort(key: SortKey) {
     if (querySort === key) querySortDir = querySortDir === 'asc' ? 'desc' : 'asc';
     else { querySort = key; querySortDir = 'desc'; }
@@ -281,24 +274,10 @@
     </div>
 
     {#if isConnected}
-      <div class="flex items-center gap-3">
-        <a href={`/projects/${projectId}/search-console`}
-           class="text-sm font-medium text-brand hover:text-primary-700 hover:underline cursor-pointer">
-          {$_('gscDetail.details')} →
-        </a>
-        <!-- Period selector -->
-        <div class="flex bg-surface-2 rounded-lg p-0.5">
-          {#each PERIOD_OPTIONS as p}
-            <button
-              on:click={() => changePeriod(p)}
-              disabled={dataLoading}
-              class="px-2.5 py-1 text-xs font-medium rounded-md transition-colors duration-150
-                {period === p ? 'bg-surface text-ink shadow-sm' : 'text-ink-muted hover:text-ink'}">
-              {$_(`seo.searchConsolePanel.period${p}d`)}
-            </button>
-          {/each}
-        </div>
-      </div>
+      <a href={`/projects/${projectId}/search-console`}
+         class="text-sm font-medium text-brand hover:text-primary-700 hover:underline cursor-pointer">
+        {$_('gscDetail.details')} →
+      </a>
     {/if}
   </div>
 
