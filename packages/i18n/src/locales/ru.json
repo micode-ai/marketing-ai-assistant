@@ -802,7 +802,18 @@
     "surface": {
       "web": "Сайт",
       "app": "Приложение"
-    }
+    },
+    "gscClicks": "Клики GSC",
+    "igFollowers": "Подписчики IG",
+    "threadsEngagement": "Взаимодействия Threads",
+    "channelsDrilldown": "Каналы",
+    "viewDetails": "Подробности",
+    "tabOverviewChannel": "Обзор",
+    "tabWebsite": "Сайт",
+    "tabSearch": "Поиск",
+    "tabInstagram": "Instagram",
+    "tabThreads": "Threads",
+    "tabApp": "Мобильное приложение"
   },
   "instagram": {
     "title": "Аналитика Instagram",
@@ -1235,7 +1246,8 @@
       "igEngagement": "Суммарные лайки, комментарии и сохранения на ваших публикациях в Instagram.",
       "threadsEngagement": "Суммарные лайки, ответы и репосты ваших публикаций в Threads.",
       "threadsViews": "Общее число показов ваших публикаций в Threads за выбранный период.",
-      "overviewTrend": "Линии тренда, показывающие изменение ключевых маркетинговых метрик во времени."
+      "overviewTrend": "Линии тренда, показывающие изменение ключевых маркетинговых метрик во времени.",
+      "emailPerformance": "Письма, отправленные, открытые и с кликами за выбранный период."
     }
   },
   "seo": {

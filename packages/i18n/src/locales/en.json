@@ -920,7 +920,13 @@
     "igFollowers": "IG Followers",
     "threadsEngagement": "Threads Engagement",
     "channelsDrilldown": "Channels",
-    "viewDetails": "Details"
+    "viewDetails": "Details",
+    "tabOverviewChannel": "Overview",
+    "tabWebsite": "Website",
+    "tabSearch": "Search",
+    "tabInstagram": "Instagram",
+    "tabThreads": "Threads",
+    "tabApp": "Mobile App"
   },
   "instagram": {
     "title": "Instagram Analytics",
@@ -1262,7 +1268,8 @@
       "igEngagement": "Total likes, comments and saves on your Instagram posts.",
       "threadsEngagement": "Total likes, replies and reposts on your Threads posts.",
       "threadsViews": "Total impressions across your Threads posts in the selected period.",
-      "overviewTrend": "Trend lines showing how your key marketing metrics changed over time."
+      "overviewTrend": "Trend lines showing how your key marketing metrics changed over time.",
+      "emailPerformance": "Emails sent, opened and clicked in the selected period."
     }
   },
   "seo": {
