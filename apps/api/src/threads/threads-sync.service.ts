@@ -253,12 +253,15 @@ export class ThreadsSyncService {
           reposts: row.reposts ?? null,
           quotes: row.quotes ?? null,
         },
+        // `?? undefined` (not null) on update: a metric the range didn't return
+        // must NOT overwrite a value an existing day already has. Backfill only
+        // fills gaps; it never destroys data from the daily total_value sync.
         update: {
-          views: row.views ?? null,
-          likes: row.likes ?? null,
-          replies: row.replies ?? null,
-          reposts: row.reposts ?? null,
-          quotes: row.quotes ?? null,
+          views: row.views ?? undefined,
+          likes: row.likes ?? undefined,
+          replies: row.replies ?? undefined,
+          reposts: row.reposts ?? undefined,
+          quotes: row.quotes ?? undefined,
         },
       });
     }
