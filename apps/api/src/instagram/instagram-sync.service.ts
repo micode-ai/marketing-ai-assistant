@@ -279,6 +279,18 @@ export class InstagramSyncService {
       try {
         const plan = account.organization.subscription?.plan || 'FREE';
 
+        // Self-healing backfill: if this account has fewer than the threshold
+        // of daily rows, pull 90 days of history before the regular sync.
+        // Runs BEFORE the plan-throttle continues so a sparse account always
+        // gets its historical data even when today's metric already exists.
+        const have = await this.prisma.instagramAccountMetrics.count({
+          where: { socialAccountId: account.id },
+        });
+        if (have < InstagramSyncService.BACKFILL_THRESHOLD_DAYS) {
+          await this.backfillAccount(account, 90);
+        }
+
+        // plan throttle for the daily sync only:
         if (plan === 'FREE') {
           // Account metrics only, once per day.
           if (await this.hasMetricsForToday(account.id)) continue;
@@ -287,15 +299,6 @@ export class InstagramSyncService {
           if (await this.syncedWithin(account.id, SIX_HOURS_MS)) continue;
         }
         // ENTERPRISE: hourly, account + media.
-
-        // Self-healing backfill: if this account has fewer than the threshold
-        // of daily rows, pull 90 days of history before the regular sync.
-        const have = await this.prisma.instagramAccountMetrics.count({
-          where: { socialAccountId: account.id },
-        });
-        if (have < InstagramSyncService.BACKFILL_THRESHOLD_DAYS) {
-          await this.backfillAccount(account, 90);
-        }
 
         await this.syncAccount(account, this.planAllowsMedia(plan));
       } catch (error) {
