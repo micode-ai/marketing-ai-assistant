@@ -915,7 +915,12 @@
     "surface": {
       "web": "Site",
       "app": "App"
-    }
+    },
+    "gscClicks": "GSC Clicks",
+    "igFollowers": "IG Followers",
+    "threadsEngagement": "Threads Engagement",
+    "channelsDrilldown": "Channels",
+    "viewDetails": "Details"
   },
   "instagram": {
     "title": "Instagram Analytics",
