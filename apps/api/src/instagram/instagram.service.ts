@@ -158,6 +158,15 @@ export class InstagramService {
     const plan = org?.subscription?.plan || 'FREE';
     const withMedia = this.syncService.planAllowsMedia(plan);
 
+    // Self-healing backfill: trigger a 90-day history pull when the account
+    // has fewer rows than the threshold (mirrors the cron-loop trigger).
+    const have = await this.prisma.instagramAccountMetrics.count({
+      where: { socialAccountId: account.id },
+    });
+    if (have < InstagramSyncService.BACKFILL_THRESHOLD_DAYS) {
+      await this.syncService.backfillAccount(account, 90);
+    }
+
     const result = await this.syncService.syncAccount(account, withMedia);
     return { skipped: false, ...result };
   }

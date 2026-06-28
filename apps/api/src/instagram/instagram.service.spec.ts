@@ -9,6 +9,8 @@ function makePrisma() {
     instagramAccountMetrics: {
       findMany: jest.fn().mockResolvedValue([]),
       findFirst: jest.fn().mockResolvedValue(null),
+      // Default >= BACKFILL_THRESHOLD_DAYS so existing tests don't trigger backfill.
+      count: jest.fn().mockResolvedValue(10),
     },
     instagramMedia: {
       findMany: jest.fn().mockResolvedValue([]),
@@ -35,6 +37,7 @@ function makeSyncService() {
       .fn()
       .mockResolvedValue({ accountSynced: true, mediaSynced: 3 }),
     planAllowsMedia: jest.fn((plan: string) => plan !== 'FREE'),
+    backfillAccount: jest.fn().mockResolvedValue({ daysWritten: 0 }),
   };
 }
 

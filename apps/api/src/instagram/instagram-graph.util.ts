@@ -58,6 +58,15 @@ export interface AccountInsights {
   totalInteractions?: number;
 }
 
+/**
+ * One day of account-level insight data returned by the range-fetch helper.
+ * Extends AccountInsights so the ACCOUNT_METRIC_KEYS mapping can assign
+ * fields directly without extra casts.
+ */
+export interface DailyInsightRow extends AccountInsights {
+  date: string; // YYYY-MM-DD (UTC)
+}
+
 export interface MediaItem {
   id: string;
   caption?: string;
@@ -211,6 +220,76 @@ export async function fetchAccountInsights(
     period: 'day',
     metric_type: 'total_value',
   });
+}
+
+/**
+ * Fetch daily account insights for a date range by chunking into spans of
+ * ≤ 30 days. Uses the time-series form of the insights API (no
+ * `metric_type=total_value`) so each metric row exposes a `values[]` array
+ * with one entry per day. Auth errors propagate via InstagramAuthError;
+ * non-auth failures for a given chunk are skipped gracefully.
+ *
+ * @param sinceUnix  Unix timestamp (seconds) for the start of the range (inclusive).
+ * @param untilUnix  Unix timestamp (seconds) for the end of the range (exclusive).
+ */
+export async function fetchAccountInsightsRange(
+  igUserId: string,
+  token: string,
+  sinceUnix: number,
+  untilUnix: number,
+): Promise<DailyInsightRow[]> {
+  const CHUNK_SECS = 30 * 86400;
+  const map = new Map<string, DailyInsightRow>();
+
+  let s = sinceUnix;
+  while (s < untilUnix) {
+    const u = Math.min(s + CHUNK_SECS, untilUnix);
+
+    const params = new URLSearchParams({
+      metric: 'reach,views,accounts_engaged,total_interactions',
+      period: 'day',
+      since: String(s),
+      until: String(u),
+      access_token: token,
+    });
+
+    const res = await fetch(`${GRAPH}/${igUserId}/insights?${params}`);
+    if (!res.ok) {
+      // Throws InstagramAuthError on 401 / OAuthException; non-auth → skip.
+      await throwIfAuthError(res);
+      logger.warn(
+        `fetchAccountInsightsRange: chunk [${s},${u}] failed for ${igUserId} (non-auth), skipping`,
+      );
+      s = u;
+      continue;
+    }
+
+    const json = (await res.json()) as {
+      data?: Array<{
+        name: string;
+        period?: string;
+        values?: Array<{ value?: number; end_time?: string }>;
+      }>;
+    };
+
+    for (const row of json.data ?? []) {
+      const key = ACCOUNT_METRIC_KEYS[row.name];
+      if (!key) continue;
+      for (const entry of row.values ?? []) {
+        if (!entry.end_time) continue;
+        const val = entry.value;
+        if (typeof val !== 'number') continue;
+        const date = new Date(entry.end_time).toISOString().slice(0, 10);
+        const existing = map.get(date) ?? { date };
+        (existing as AccountInsights)[key] = val;
+        map.set(date, existing);
+      }
+    }
+
+    s = u;
+  }
+
+  return Array.from(map.values()).sort((a, b) => a.date.localeCompare(b.date));
 }
 
 /**
