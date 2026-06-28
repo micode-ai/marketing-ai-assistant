@@ -245,11 +245,14 @@ export class InstagramSyncService {
           accountsEngaged: row.accountsEngaged ?? null,
           totalInteractions: row.totalInteractions ?? null,
         },
+        // `?? undefined` (not null) on update: a metric the range didn't return
+        // must NOT overwrite a value an existing day already has (e.g. today's
+        // row populated by the daily total_value sync). Backfill only fills gaps.
         update: {
-          reach: row.reach ?? null,
-          views: row.views ?? null,
-          accountsEngaged: row.accountsEngaged ?? null,
-          totalInteractions: row.totalInteractions ?? null,
+          reach: row.reach ?? undefined,
+          views: row.views ?? undefined,
+          accountsEngaged: row.accountsEngaged ?? undefined,
+          totalInteractions: row.totalInteractions ?? undefined,
         },
       });
     }
