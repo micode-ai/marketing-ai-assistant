@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../database/prisma.service';
@@ -166,6 +166,158 @@ export class AnalyticsService {
       this.prisma.socialAccount.count({ where: socialAccountWhere }),
     ]);
     return { contentCount, campaignCount, subscriberCount, checklistItems, checklistCount, contentCountAll, socialAccountCount };
+  }
+
+  async generateRecommendations(
+    projectId: string,
+    language: string,
+  ): Promise<{ recommendations: any[] }> {
+    const [
+      projectResult,
+      metricsTotalsResult,
+      funnelResult,
+      utmResult,
+      contentTotalResult,
+      contentPublishedResult,
+      campaignCountResult,
+      keywordCountResult,
+      competitorCountResult,
+      emailListCountResult,
+      gscKeyResult,
+      socialLinksResult,
+    ] = await Promise.allSettled([
+      this.prisma.project.findUnique({
+        where: { id: projectId },
+        select: { name: true, industry: true, projectType: true },
+      }),
+      this.getMetricsTotals({ projectId }, 30),
+      this.getFunnel({ projectId }, 30),
+      this.getUtmBreakdown({ projectId }, 30),
+      this.prisma.content.count({ where: { projectId } }),
+      this.prisma.content.count({ where: { projectId, status: 'PUBLISHED' as any } }),
+      this.prisma.campaign.count({ where: { projectId } }),
+      this.prisma.keyword.count({ where: { projectId } }),
+      this.prisma.competitor.count({ where: { projectId } }),
+      this.prisma.emailList.count({ where: { projectId } }),
+      this.prisma.projectApiKey.findFirst({
+        where: { projectId, platform: 'GOOGLE' as any },
+        select: { id: true },
+      }),
+      this.prisma.projectSocialAccount.findMany({
+        where: { projectId },
+        include: { socialAccount: { select: { platform: true } } },
+      }),
+    ]);
+
+    // Log any partial failures but continue with defaults
+    const labels = [
+      'project', 'metricsTotals', 'funnel', 'utm',
+      'contentTotal', 'contentPublished', 'campaigns',
+      'keywords', 'competitors', 'emailLists', 'gscKey', 'socialLinks',
+    ];
+    [
+      projectResult, metricsTotalsResult, funnelResult, utmResult,
+      contentTotalResult, contentPublishedResult, campaignCountResult,
+      keywordCountResult, competitorCountResult, emailListCountResult,
+      gscKeyResult, socialLinksResult,
+    ].forEach((r, i) => {
+      if (r.status === 'rejected') {
+        this.logger.warn(`[recommendations] project=${projectId} partial failure [${labels[i]}]: ${r.reason}`);
+      }
+    });
+
+    const project = projectResult.status === 'fulfilled' ? projectResult.value : null;
+    const metricsTotal = metricsTotalsResult.status === 'fulfilled' ? metricsTotalsResult.value : null;
+    const funnel = funnelResult.status === 'fulfilled' ? funnelResult.value : null;
+    const utm = utmResult.status === 'fulfilled' ? utmResult.value : null;
+
+    const visitors = metricsTotal?.total.visitors ?? 0;
+    const conversions = metricsTotal?.total.conversions ?? 0;
+    const conversionRate =
+      visitors > 0 ? Number(((conversions / visitors) * 100).toFixed(2)) : 0;
+
+    const funnelSteps = (funnel?.steps ?? []).map((s: any) => ({
+      step: s.name as string,
+      count: s.count as number,
+      dropOffPct: (s.dropOffRate as number) ?? 0,
+    }));
+
+    const topUtm = (utm?.sources ?? []).slice(0, 5).map((s: any) => ({
+      source: s.name as string,
+      medium: '',
+      visits: s.visits as number,
+      conversionRate: s.conversionRate as number,
+    }));
+
+    // GSC: cheap existence check only — clicks/avgPosition skipped (spec §7)
+    const gscConnected =
+      gscKeyResult.status === 'fulfilled' && gscKeyResult.value !== null;
+    this.logger.log(
+      `[recommendations] project=${projectId} GSC connected=${gscConnected}; clicks/avgPosition degraded to connected-only flag (spec §7)`,
+    );
+
+    // Instagram / Threads: existence check via linked social accounts only (spec §7)
+    const socialLinks =
+      socialLinksResult.status === 'fulfilled'
+        ? (socialLinksResult.value as any[])
+        : [];
+    const linkedPlatforms = new Set(
+      socialLinks.map((l: any) => l.socialAccount?.platform),
+    );
+    const igConnected = linkedPlatforms.has('INSTAGRAM');
+    const threadsConnected = linkedPlatforms.has('THREADS');
+    this.logger.log(
+      `[recommendations] project=${projectId} IG=${igConnected}, Threads=${threadsConnected}; follower/engagement metrics degraded to connected-only (spec §7)`,
+    );
+
+    const digest = {
+      periodDays: 30,
+      web: { visitors, conversions, conversionRate },
+      funnel: funnelSteps,
+      topUtm,
+      gsc: { connected: gscConnected },
+      instagram: { connected: igConnected },
+      threads: { connected: threadsConnected },
+      counts: {
+        content: contentTotalResult.status === 'fulfilled' ? contentTotalResult.value : 0,
+        contentPublished: contentPublishedResult.status === 'fulfilled' ? contentPublishedResult.value : 0,
+        campaigns: campaignCountResult.status === 'fulfilled' ? campaignCountResult.value : 0,
+        keywords: keywordCountResult.status === 'fulfilled' ? keywordCountResult.value : 0,
+        competitors: competitorCountResult.status === 'fulfilled' ? competitorCountResult.value : 0,
+        emailLists: emailListCountResult.status === 'fulfilled' ? emailListCountResult.value : 0,
+      },
+      projectType: project?.projectType ?? 'WEBSITE',
+    };
+
+    const agentUrl = process.env.AI_AGENT_URL || 'http://localhost:3001';
+
+    let response: Awaited<ReturnType<typeof fetch>>;
+    try {
+      response = await fetch(`${agentUrl}/analytics-recommendations`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          projectName: project?.name ?? null,
+          industry: project?.industry ?? null,
+          projectType: project?.projectType ?? null,
+          language,
+          data: digest,
+        }),
+      });
+    } catch (error) {
+      this.logger.error(`Analytics recommendations request failed: ${error}`);
+      throw new BadRequestException('Failed to reach the AI agent');
+    }
+
+    if (!response.ok) {
+      this.logger.error(
+        `Analytics recommendations agent returned ${response.status}`,
+      );
+      throw new BadRequestException('AI agent returned an error');
+    }
+
+    const data = (await response.json()) as { recommendations: any[] };
+    return { recommendations: data.recommendations };
   }
 
   @Cron('0 1 * * *')
