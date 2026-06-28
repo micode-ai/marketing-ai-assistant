@@ -1,5 +1,15 @@
+jest.mock('./instagram-graph.util', () => ({
+  fetchAccountInsightsTotals: jest.fn(),
+}));
+
+jest.mock('../common/crypto.util', () => ({
+  decryptData: jest.fn(),
+}));
+
 import { BadRequestException } from '@nestjs/common';
 import { InstagramService } from './instagram.service';
+import { fetchAccountInsightsTotals } from './instagram-graph.util';
+import { decryptData } from '../common/crypto.util';
 
 function makePrisma() {
   return {
@@ -76,6 +86,10 @@ describe('InstagramService', () => {
       syncService as any,
       config as any,
     );
+    // Default: decryptData returns nothing so periodTotals stays {} without error.
+    (decryptData as jest.Mock).mockReturnValue(undefined);
+    // Default: fetchAccountInsightsTotals resolves to empty.
+    (fetchAccountInsightsTotals as jest.Mock).mockResolvedValue({});
   });
 
   describe('getStatus', () => {
@@ -140,7 +154,7 @@ describe('InstagramService', () => {
 
       const metrics = await service.getMetrics('p1', 28);
 
-      expect(metrics).toEqual({ account: [], topPosts: [], worstPosts: [] });
+      expect(metrics).toEqual({ account: [], topPosts: [], worstPosts: [], periodTotals: {} });
     });
 
     it('returns account series + top/worst posts ordered by engagementRate', async () => {
@@ -204,6 +218,65 @@ describe('InstagramService', () => {
       expect(metrics.topPosts.map((m: any) => m.igMediaId)).toEqual(['a', 'b']);
       // Both already in top → worst is empty (no overlap).
       expect(metrics.worstPosts).toEqual([]);
+    });
+
+    it('includes periodTotals from fetchAccountInsightsTotals when tokens decrypt successfully', async () => {
+      prisma.projectSocialAccount.findMany.mockResolvedValue([igLink()]);
+      (decryptData as jest.Mock).mockReturnValue({
+        accessToken: 'live_tok',
+        igUserId: 'ig_123',
+      });
+      (fetchAccountInsightsTotals as jest.Mock).mockResolvedValue({
+        reach: 400,
+        views: 1200,
+        accountsEngaged: 80,
+        totalInteractions: 150,
+      });
+
+      const metrics = await service.getMetrics('p1', 7);
+
+      expect(metrics.periodTotals).toEqual({
+        reach: 400,
+        views: 1200,
+        accountsEngaged: 80,
+        totalInteractions: 150,
+      });
+      // Verify the API call received a plausible since/until window.
+      const [igUserId, token, since, until] = (
+        fetchAccountInsightsTotals as jest.Mock
+      ).mock.calls[0];
+      expect(igUserId).toBe('ig_123');
+      expect(token).toBe('live_tok');
+      expect(until - since).toBe(7 * 86400);
+    });
+
+    it('returns periodTotals:{} and still delivers account/posts when totals fetch throws', async () => {
+      prisma.projectSocialAccount.findMany.mockResolvedValue([igLink()]);
+      prisma.instagramAccountMetrics.findMany.mockResolvedValue([
+        {
+          date: new Date('2026-06-20T00:00:00Z'),
+          followersCount: 50,
+          reach: 200,
+          views: null,
+          accountsEngaged: null,
+          totalInteractions: null,
+        },
+      ]);
+      (decryptData as jest.Mock).mockReturnValue({
+        accessToken: 'tok',
+        igUserId: 'ig_1',
+      });
+      (fetchAccountInsightsTotals as jest.Mock).mockRejectedValue(
+        new Error('IG Graph unavailable'),
+      );
+
+      const metrics = await service.getMetrics('p1', 28);
+
+      // The main payload is still intact.
+      expect(metrics.account).toHaveLength(1);
+      expect(metrics.account[0].reach).toBe(200);
+      // periodTotals degrades gracefully.
+      expect(metrics.periodTotals).toEqual({});
     });
   });
 
