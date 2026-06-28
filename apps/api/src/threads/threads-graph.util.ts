@@ -99,6 +99,28 @@ function readInsightValue(row: InsightRow | undefined): number | undefined {
   return undefined;
 }
 
+/**
+ * The numeric-only fields of a Threads daily row. Used as the assignment
+ * target in the range-fetch map to avoid TypeScript complaining that
+ * `string` (date) is not assignable to `number`.
+ */
+interface DailyThreadsInsightValues {
+  views?: number;
+  likes?: number;
+  replies?: number;
+  reposts?: number;
+  quotes?: number;
+}
+
+/**
+ * One day of account-level insight data returned by the range-fetch helper.
+ * Mirrors DailyInsightRow from instagram-graph.util — no followersCount
+ * because the time-series endpoint does not support that metric.
+ */
+export interface DailyThreadsInsightRow extends DailyThreadsInsightValues {
+  date: string; // YYYY-MM-DD (UTC)
+}
+
 // API metric name → ThreadsAccountInsights key.
 const ACCOUNT_METRIC_KEYS: Record<string, keyof ThreadsAccountInsights> = {
   views: 'views',
@@ -107,6 +129,15 @@ const ACCOUNT_METRIC_KEYS: Record<string, keyof ThreadsAccountInsights> = {
   reposts: 'reposts',
   quotes: 'quotes',
   followers_count: 'followersCount',
+};
+
+// Metric names used exclusively for time-series range fetches (no followers_count).
+const RANGE_METRIC_KEYS: Record<string, keyof DailyThreadsInsightValues> = {
+  views: 'views',
+  likes: 'likes',
+  replies: 'replies',
+  reposts: 'reposts',
+  quotes: 'quotes',
 };
 
 // API metric name → ThreadsMediaInsights key.
@@ -242,6 +273,76 @@ export async function fetchThreadsAccountInsights(
     { period: 'day', metric_type: 'total_value' },
     'threads_insights',
   );
+}
+
+/**
+ * Fetch daily account insights for a date range by chunking into spans of
+ * ≤ 30 days. Uses the time-series form of the threads_insights API (no
+ * `metric_type=total_value`) so each metric row exposes a `values[]` array
+ * with one entry per day. Auth errors propagate via ThreadsAuthError;
+ * non-auth failures for a given chunk are skipped gracefully.
+ *
+ * @param sinceUnix  Unix timestamp (seconds) for the start of the range (inclusive).
+ * @param untilUnix  Unix timestamp (seconds) for the end of the range (exclusive).
+ */
+export async function fetchThreadsAccountInsightsRange(
+  threadsUserId: string,
+  token: string,
+  sinceUnix: number,
+  untilUnix: number,
+): Promise<DailyThreadsInsightRow[]> {
+  const CHUNK_SECS = 30 * 86400;
+  const map = new Map<string, DailyThreadsInsightRow>();
+
+  let s = sinceUnix;
+  while (s < untilUnix) {
+    const u = Math.min(s + CHUNK_SECS, untilUnix);
+
+    const params = new URLSearchParams({
+      metric: 'views,likes,replies,reposts,quotes',
+      period: 'day',
+      since: String(s),
+      until: String(u),
+      access_token: token,
+    });
+
+    const res = await fetch(`${GRAPH}/${threadsUserId}/threads_insights?${params}`);
+    if (!res.ok) {
+      // Throws ThreadsAuthError on 401 / OAuthException; non-auth → skip chunk.
+      await throwIfAuthError(res);
+      logger.warn(
+        `fetchThreadsAccountInsightsRange: chunk [${s},${u}] failed for ${threadsUserId} (non-auth), skipping`,
+      );
+      s = u;
+      continue;
+    }
+
+    const json = (await res.json()) as {
+      data?: Array<{
+        name: string;
+        period?: string;
+        values?: Array<{ value?: number; end_time?: string }>;
+      }>;
+    };
+
+    for (const row of json.data ?? []) {
+      const key = RANGE_METRIC_KEYS[row.name];
+      if (!key) continue;
+      for (const entry of row.values ?? []) {
+        if (!entry.end_time) continue;
+        const val = entry.value;
+        if (typeof val !== 'number') continue;
+        const date = new Date(entry.end_time).toISOString().slice(0, 10);
+        const existing = map.get(date) ?? { date };
+        (existing as DailyThreadsInsightValues)[key] = val;
+        map.set(date, existing);
+      }
+    }
+
+    s = u;
+  }
+
+  return Array.from(map.values()).sort((a, b) => a.date.localeCompare(b.date));
 }
 
 /**

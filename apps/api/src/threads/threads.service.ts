@@ -138,6 +138,24 @@ export class ThreadsService {
       throw new BadRequestException('Threads not connected');
     }
 
+    // Apply the same plan throttle as the cron: FREE pulls account metrics only.
+    const org = await this.prisma.organization.findUnique({
+      where: { id: account.organizationId },
+      include: { subscription: true },
+    });
+    const plan = org?.subscription?.plan || 'FREE';
+    const withMedia = this.syncService.planAllowsMedia(plan);
+
+    // Self-healing backfill: runs BEFORE the skip-if-recent guard so a sparse
+    // account (count < threshold) always gets its 90-day history even when the
+    // page was visited very recently and "today" already has a metric row.
+    const have = await this.prisma.threadsAccountMetrics.count({
+      where: { socialAccountId: account.id },
+    });
+    if (have < ThreadsSyncService.BACKFILL_THRESHOLD_DAYS) {
+      await this.syncService.backfillAccount(account, 90);
+    }
+
     const newest = await this.prisma.threadsAccountMetrics.findFirst({
       where: { socialAccountId: account.id },
       orderBy: { createdAt: 'desc' },
@@ -150,14 +168,6 @@ export class ThreadsService {
     ) {
       return { skipped: true };
     }
-
-    // Apply the same plan throttle as the cron: FREE pulls account metrics only.
-    const org = await this.prisma.organization.findUnique({
-      where: { id: account.organizationId },
-      include: { subscription: true },
-    });
-    const plan = org?.subscription?.plan || 'FREE';
-    const withMedia = this.syncService.planAllowsMedia(plan);
 
     const result = await this.syncService.syncAccount(account, withMedia);
     return { skipped: false, ...result };
