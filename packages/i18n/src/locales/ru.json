@@ -813,7 +813,32 @@
     "tabSearch": "Поиск",
     "tabInstagram": "Instagram",
     "tabThreads": "Threads",
-    "tabApp": "Мобильное приложение"
+    "tabApp": "Мобильное приложение",
+    "recommendations": {
+      "title": "Рекомендации AI",
+      "subtitle": "Получите персональные рекомендации AI для улучшения эффективности маркетинга.",
+      "generate": "Сгенерировать рекомендации",
+      "refresh": "Обновить",
+      "loading": "Генерация рекомендаций…",
+      "error": "Не удалось сгенерировать рекомендации. Попробуйте ещё раз.",
+      "empty": "Рекомендаций пока нет",
+      "priorityHigh": "Высокий",
+      "priorityMedium": "Средний",
+      "priorityLow": "Низкий",
+      "why": "Почему:",
+      "how": "Как:",
+      "impact": "Эффект:",
+      "generatedAt": "Сгенерировано {date}",
+      "channel": {
+        "seo": "SEO",
+        "content": "Контент",
+        "social": "Соцсети",
+        "email": "Email",
+        "conversion": "Конверсия",
+        "web": "Сайт",
+        "general": "Общее"
+      }
+    }
   },
   "instagram": {
     "title": "Аналитика Instagram",

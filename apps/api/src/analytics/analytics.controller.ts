@@ -1,5 +1,6 @@
-import { Controller, Get, Post, Body, Query, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, UseGuards, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { ProjectAccessGuard } from '../common/guards/project-access.guard';
 import { AnalyticsService } from './analytics.service';
 
 @ApiTags('analytics')
@@ -137,5 +138,15 @@ export class AnalyticsController {
   @Post('funnel-steps')
   setFunnelSteps(@Query('projectId') projectId: string, @Body() dto: { steps: Array<{ name: string; eventType: string; order: number; description?: string }> }) {
     return this.analyticsService.setFunnelSteps(projectId, dto.steps);
+  }
+
+  @Post('recommendations')
+  @UseGuards(ProjectAccessGuard)
+  @ApiOperation({ summary: 'Generate AI recommendations from cross-channel analytics digest' })
+  getRecommendations(
+    @Query('projectId') projectId: string,
+    @Body() body: { language?: string },
+  ) {
+    return this.analyticsService.generateRecommendations(projectId, body?.language || 'en');
   }
 }
