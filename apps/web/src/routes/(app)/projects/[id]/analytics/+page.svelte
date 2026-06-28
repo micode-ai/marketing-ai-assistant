@@ -9,6 +9,7 @@
   import InstagramAnalyticsDashboard from '$lib/components/analytics/InstagramAnalyticsDashboard.svelte';
   import ThreadsAnalyticsDashboard from '$lib/components/analytics/ThreadsAnalyticsDashboard.svelte';
   import AnalyticsOverview from '$lib/components/analytics/AnalyticsOverview.svelte';
+  import AnalyticsRecommendations from '$lib/components/analytics/AnalyticsRecommendations.svelte';
   import InfoTooltip from '$lib/components/InfoTooltip.svelte';
   import { currentProjectStore, projectsStore } from '$lib/stores/projects';
 
@@ -420,6 +421,8 @@
           switchChannel(ch);
         }}
       />
+
+      <AnalyticsRecommendations projectId={projectId ?? ''} />
 
     {:else if activeChannel === 'website'}
       <!-- Website sub-tab bar -->

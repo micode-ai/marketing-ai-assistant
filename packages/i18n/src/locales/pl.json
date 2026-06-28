@@ -906,7 +906,32 @@
     "tabSearch": "Wyszukiwarka",
     "tabInstagram": "Instagram",
     "tabThreads": "Threads",
-    "tabApp": "Aplikacja mobilna"
+    "tabApp": "Aplikacja mobilna",
+    "recommendations": {
+      "title": "Rekomendacje AI",
+      "subtitle": "Uzyskaj spersonalizowane rekomendacje AI, aby poprawić efektywność marketingu.",
+      "generate": "Generuj rekomendacje",
+      "refresh": "Odśwież",
+      "loading": "Generowanie rekomendacji…",
+      "error": "Nie udało się wygenerować rekomendacji. Spróbuj ponownie.",
+      "empty": "Brak rekomendacji",
+      "priorityHigh": "Wysoki",
+      "priorityMedium": "Średni",
+      "priorityLow": "Niski",
+      "why": "Dlaczego:",
+      "how": "Jak:",
+      "impact": "Wpływ:",
+      "generatedAt": "Wygenerowano {date}",
+      "channel": {
+        "seo": "SEO",
+        "content": "Treści",
+        "social": "Social Media",
+        "email": "Email",
+        "conversion": "Konwersja",
+        "web": "Web",
+        "general": "Ogólne"
+      }
+    }
   },
   "instagram": {
     "title": "Analityka Instagrama",
