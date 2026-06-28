@@ -381,6 +381,34 @@ describe('InstagramSyncService', () => {
 
       expect(backfillSpy).not.toHaveBeenCalled();
     });
+
+    it('FREE + today metric exists + count < threshold → backfills but skips daily sync', async () => {
+      // Regression: backfill must run BEFORE the FREE throttle so a sparse
+      // account (2 rows including today) is backfilled even though
+      // hasMetricsForToday would cause a `continue` in the old ordering.
+      prisma.socialAccount.findMany.mockResolvedValue([cronAccount('FREE')]);
+      prisma.instagramAccountMetrics.count.mockResolvedValue(2); // < BACKFILL_THRESHOLD_DAYS (7)
+      // hasMetricsForToday → true (findUnique returns a row)
+      prisma.instagramAccountMetrics.findUnique.mockResolvedValue({ id: 'today-row' });
+
+      const backfillSpy = jest
+        .spyOn(service, 'backfillAccount')
+        .mockResolvedValue({ daysWritten: 88 });
+      const syncSpy = jest
+        .spyOn(service, 'syncAccount')
+        .mockResolvedValue({ accountSynced: true, mediaSynced: 0 });
+
+      await service.handleCron();
+
+      // Backfill must have been called first.
+      expect(backfillSpy).toHaveBeenCalledTimes(1);
+      expect(backfillSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'acc_1' }),
+        90,
+      );
+      // The FREE throttle fires after the backfill → regular sync is skipped.
+      expect(syncSpy).not.toHaveBeenCalled();
+    });
   });
 
   describe('handleCron plan throttling', () => {
