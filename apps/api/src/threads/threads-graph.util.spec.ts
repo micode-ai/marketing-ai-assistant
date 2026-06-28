@@ -1,5 +1,6 @@
 import {
   fetchThreadsAccountInsightsRange,
+  fetchThreadsAccountInsightsTotals,
   ThreadsAuthError,
 } from './threads-graph.util';
 
@@ -170,6 +171,97 @@ describe('threads-graph.util', () => {
       const since = Math.floor(Date.UTC(2026, 5, 1) / 1000);
       const until = since + 86400;
       await fetchThreadsAccountInsightsRange('tid1', 'tok', since, until);
+
+      expect(calls.length).toBeGreaterThan(0);
+      const metric = new URL(calls[0]).searchParams.get('metric') ?? '';
+      expect(metric).not.toContain('followers_count');
+    });
+  });
+
+  describe('fetchThreadsAccountInsightsTotals', () => {
+    it('reads metric_type=total_value over the range and maps views/likes/replies/reposts/quotes', async () => {
+      global.fetch = (jest.fn(async (_url: string) => ({
+        ok: true,
+        json: async () => ({
+          data: [
+            { name: 'views', total_value: { value: 5000 } },
+            { name: 'likes', total_value: { value: 300 } },
+            { name: 'replies', total_value: { value: 100 } },
+            { name: 'reposts', total_value: { value: 50 } },
+            { name: 'quotes', total_value: { value: 20 } },
+          ],
+        }),
+      })) as unknown as typeof fetch);
+
+      const t = await fetchThreadsAccountInsightsTotals('tid1', 'tok', 1000, 2000);
+      expect(t.views).toBe(5000);
+      expect(t.likes).toBe(300);
+      expect(t.replies).toBe(100);
+      expect(t.reposts).toBe(50);
+      expect(t.quotes).toBe(20);
+    });
+
+    it('passes since/until and metric_type=total_value, uses the threads_insights endpoint', async () => {
+      const calls: string[] = [];
+      global.fetch = (jest.fn(async (url: string) => {
+        calls.push(url);
+        return { ok: true, json: async () => ({ data: [] }) };
+      }) as unknown as typeof fetch);
+
+      await fetchThreadsAccountInsightsTotals('tid1', 'tok', 1000, 2000);
+
+      expect(calls.length).toBeGreaterThan(0);
+      const url = calls[0];
+      expect(url).toContain('threads_insights');
+      expect(url).toContain('since=1000');
+      expect(url).toContain('until=2000');
+      expect(url).toContain('metric_type=total_value');
+      expect(url).toContain('period=day');
+      expect(new URL(url).searchParams.get('metric')).toContain('views');
+    });
+
+    it('throws ThreadsAuthError on HTTP 401', async () => {
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: false,
+        status: 401,
+        text: async () => '',
+      }) as unknown as typeof fetch;
+
+      await expect(
+        fetchThreadsAccountInsightsTotals('tid1', 'tok', 1, 2),
+      ).rejects.toBeInstanceOf(ThreadsAuthError);
+    });
+
+    it('tolerates a per-metric failure and returns partial results', async () => {
+      const fetchMock = jest.fn().mockImplementation((url: string) => {
+        const metric = new URL(url).searchParams.get('metric') ?? '';
+        if (metric.includes(',')) {
+          return Promise.resolve({ ok: false, status: 400, text: async () => 'error' });
+        }
+        if (metric === 'views') {
+          return Promise.resolve({ ok: false, status: 400, text: async () => 'error' });
+        }
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ data: [{ name: metric, total_value: { value: 1 } }] }),
+        });
+      });
+      global.fetch = fetchMock as unknown as typeof fetch;
+
+      const result = await fetchThreadsAccountInsightsTotals('tid1', 'tok', 1, 2);
+      expect(result.views).toBeUndefined();
+      expect(result.likes).toBe(1);
+      expect(result.replies).toBe(1);
+    });
+
+    it('does not include followers_count in the metric request for totals', async () => {
+      const calls: string[] = [];
+      global.fetch = jest.fn(async (url: string) => {
+        calls.push(url);
+        return { ok: true, json: async () => ({ data: [] }) };
+      }) as unknown as typeof fetch;
+
+      await fetchThreadsAccountInsightsTotals('tid1', 'tok', 1000, 2000);
 
       expect(calls.length).toBeGreaterThan(0);
       const metric = new URL(calls[0]).searchParams.get('metric') ?? '';
