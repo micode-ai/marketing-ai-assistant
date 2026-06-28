@@ -3,6 +3,7 @@ import { encryptData } from '../common/crypto.util';
 import {
   fetchAccountProfile,
   fetchAccountInsights,
+  fetchAccountInsightsRange,
   fetchMediaList,
   fetchMediaInsights,
   InstagramAuthError,
@@ -14,6 +15,7 @@ jest.mock('./instagram-graph.util', () => {
     ...actual,
     fetchAccountProfile: jest.fn(),
     fetchAccountInsights: jest.fn(),
+    fetchAccountInsightsRange: jest.fn(),
     fetchMediaList: jest.fn(),
     fetchMediaInsights: jest.fn(),
   };
@@ -25,6 +27,8 @@ const mockFetchAccountProfile = fetchAccountProfile as jest.MockedFunction<
 const mockFetchAccountInsights = fetchAccountInsights as jest.MockedFunction<
   typeof fetchAccountInsights
 >;
+const mockFetchAccountInsightsRange =
+  fetchAccountInsightsRange as jest.MockedFunction<typeof fetchAccountInsightsRange>;
 const mockFetchMediaList = fetchMediaList as jest.MockedFunction<
   typeof fetchMediaList
 >;
@@ -48,6 +52,8 @@ function makePrisma() {
     instagramAccountMetrics: {
       upsert: jest.fn().mockResolvedValue({}),
       findUnique: jest.fn().mockResolvedValue(null),
+      // Default count >= BACKFILL_THRESHOLD_DAYS so existing tests don't trigger backfill.
+      count: jest.fn().mockResolvedValue(10),
     },
     instagramMedia: {
       upsert: jest.fn().mockResolvedValue({}),
@@ -243,6 +249,165 @@ describe('InstagramSyncService', () => {
         resourceId: 'acc_1',
         errorCode: 'IG_TOKEN_EXPIRED',
       });
+    });
+  });
+
+  describe('backfillAccount', () => {
+    beforeEach(() => {
+      mockFetchAccountInsightsRange.mockResolvedValue([]);
+    });
+
+    it('upserts one row per returned day with correct socialAccountId_date keys and values', async () => {
+      mockFetchAccountInsightsRange.mockResolvedValue([
+        { date: '2026-05-01', reach: 100, views: 200, accountsEngaged: 30, totalInteractions: 40 },
+        { date: '2026-05-02', reach: 150, views: 250 },
+      ]);
+
+      const result = await service.backfillAccount(makeAccount(), 90);
+
+      expect(result).toEqual({ daysWritten: 2 });
+      expect(prisma.instagramAccountMetrics.upsert).toHaveBeenCalledTimes(2);
+
+      const call0 = prisma.instagramAccountMetrics.upsert.mock.calls[0][0];
+      expect(call0.where.socialAccountId_date).toEqual({
+        socialAccountId: 'acc_1',
+        date: new Date('2026-05-01'),
+      });
+      expect(call0.create).toMatchObject({
+        socialAccountId: 'acc_1',
+        reach: 100,
+        views: 200,
+        accountsEngaged: 30,
+        totalInteractions: 40,
+      });
+      expect(call0.update).toMatchObject({ reach: 100, views: 200 });
+
+      const call1 = prisma.instagramAccountMetrics.upsert.mock.calls[1][0];
+      expect(call1.where.socialAccountId_date).toEqual({
+        socialAccountId: 'acc_1',
+        date: new Date('2026-05-02'),
+      });
+      // Partial row: missing fields become null.
+      expect(call1.create).toMatchObject({ reach: 150, views: 250 });
+      expect(call1.create.accountsEngaged).toBeNull();
+    });
+
+    it('is idempotent — second call issues upserts with the same keys and no error', async () => {
+      mockFetchAccountInsightsRange.mockResolvedValue([
+        { date: '2026-05-01', reach: 100 },
+      ]);
+
+      await service.backfillAccount(makeAccount(), 90);
+      await service.backfillAccount(makeAccount(), 90);
+
+      expect(prisma.instagramAccountMetrics.upsert).toHaveBeenCalledTimes(2);
+      const key0 =
+        prisma.instagramAccountMetrics.upsert.mock.calls[0][0].where.socialAccountId_date;
+      const key1 =
+        prisma.instagramAccountMetrics.upsert.mock.calls[1][0].where.socialAccountId_date;
+      expect(key0).toEqual(key1);
+    });
+
+    it('returns {daysWritten:0} when token decryption fails', async () => {
+      const result = await service.backfillAccount(
+        makeAccount({ encryptedTokens: 'not-valid-encrypted-data' }),
+        90,
+      );
+      expect(result).toEqual({ daysWritten: 0 });
+      expect(prisma.instagramAccountMetrics.upsert).not.toHaveBeenCalled();
+    });
+
+    it('returns {daysWritten:0} when igUserId is absent in payload', async () => {
+      const encryptedTokens = encryptData({ accessToken: 'tok-only' }, ENCRYPTION_KEY);
+      const result = await service.backfillAccount(makeAccount({ encryptedTokens }), 90);
+      expect(result).toEqual({ daysWritten: 0 });
+    });
+
+    it('propagates auth error after calling handleAuthError', async () => {
+      const authErr = new InstagramAuthError('expired');
+      mockFetchAccountInsightsRange.mockRejectedValue(authErr);
+
+      await expect(service.backfillAccount(makeAccount(), 90)).rejects.toThrow(authErr);
+      expect(prisma.socialAccount.update).toHaveBeenCalledWith(
+        expect.objectContaining({ data: { status: 'REAUTH_REQUIRED' } }),
+      );
+    });
+  });
+
+  describe('self-healing trigger', () => {
+    function cronAccount(plan: string) {
+      return makeAccount({
+        organization: { subscription: { plan } },
+      });
+    }
+
+    beforeEach(() => {
+      mockFetchAccountProfile.mockResolvedValue({ followersCount: 1 });
+      mockFetchAccountInsights.mockResolvedValue({});
+      mockFetchMediaList.mockResolvedValue([]);
+      mockFetchAccountInsightsRange.mockResolvedValue([]);
+    });
+
+    it('calls backfillAccount before syncAccount when count < BACKFILL_THRESHOLD_DAYS', async () => {
+      prisma.socialAccount.findMany.mockResolvedValue([cronAccount('ENTERPRISE')]);
+      prisma.instagramAccountMetrics.count.mockResolvedValue(
+        InstagramSyncService.BACKFILL_THRESHOLD_DAYS - 1,
+      );
+      const backfillSpy = jest
+        .spyOn(service, 'backfillAccount')
+        .mockResolvedValue({ daysWritten: 5 });
+
+      await service.handleCron();
+
+      expect(backfillSpy).toHaveBeenCalledTimes(1);
+      expect(backfillSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'acc_1' }),
+        90,
+      );
+      // Normal sync still runs after backfill.
+      expect(prisma.instagramAccountMetrics.upsert).toHaveBeenCalledTimes(1);
+    });
+
+    it('does NOT call backfillAccount when count >= BACKFILL_THRESHOLD_DAYS', async () => {
+      prisma.socialAccount.findMany.mockResolvedValue([cronAccount('ENTERPRISE')]);
+      prisma.instagramAccountMetrics.count.mockResolvedValue(
+        InstagramSyncService.BACKFILL_THRESHOLD_DAYS,
+      );
+      const backfillSpy = jest
+        .spyOn(service, 'backfillAccount')
+        .mockResolvedValue({ daysWritten: 0 });
+
+      await service.handleCron();
+
+      expect(backfillSpy).not.toHaveBeenCalled();
+    });
+
+    it('FREE + today metric exists + count < threshold → backfills but skips daily sync', async () => {
+      // Regression: backfill must run BEFORE the FREE throttle so a sparse
+      // account (2 rows including today) is backfilled even though
+      // hasMetricsForToday would cause a `continue` in the old ordering.
+      prisma.socialAccount.findMany.mockResolvedValue([cronAccount('FREE')]);
+      prisma.instagramAccountMetrics.count.mockResolvedValue(2); // < BACKFILL_THRESHOLD_DAYS (7)
+      // hasMetricsForToday → true (findUnique returns a row)
+      prisma.instagramAccountMetrics.findUnique.mockResolvedValue({ id: 'today-row' });
+
+      const backfillSpy = jest
+        .spyOn(service, 'backfillAccount')
+        .mockResolvedValue({ daysWritten: 88 });
+      const syncSpy = jest
+        .spyOn(service, 'syncAccount')
+        .mockResolvedValue({ accountSynced: true, mediaSynced: 0 });
+
+      await service.handleCron();
+
+      // Backfill must have been called first.
+      expect(backfillSpy).toHaveBeenCalledTimes(1);
+      expect(backfillSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'acc_1' }),
+        90,
+      );
+      // The FREE throttle fires after the backfill → regular sync is skipped.
+      expect(syncSpy).not.toHaveBeenCalled();
     });
   });
 

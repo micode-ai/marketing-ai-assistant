@@ -7,9 +7,11 @@ import { decryptData } from '../common/crypto.util';
 import {
   fetchAccountProfile,
   fetchAccountInsights,
+  fetchAccountInsightsRange,
   fetchMediaList,
   fetchMediaInsights,
   InstagramAuthError,
+  DailyInsightRow,
 } from './instagram-graph.util';
 
 const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
@@ -28,6 +30,13 @@ export interface SyncAccountResult {
 @Injectable()
 export class InstagramSyncService {
   private readonly logger = new Logger(InstagramSyncService.name);
+
+  /**
+   * Minimum number of daily account-metric rows that must exist before we
+   * consider the account sufficiently backfilled. Accounts below this
+   * threshold trigger a 90-day historical backfill before each sync.
+   */
+  static readonly BACKFILL_THRESHOLD_DAYS = 7;
 
   constructor(
     private prisma: PrismaService,
@@ -169,6 +178,90 @@ export class InstagramSyncService {
   }
 
   /**
+   * Backfill up to `days` (default 90) days of daily account-level metrics
+   * for an account that has too few historical rows. Token decryption and auth
+   * errors are handled the same way as in `syncAccount`. Safe to call
+   * repeatedly — each row is upserted, so re-runs are idempotent.
+   *
+   * @returns `{ daysWritten }` — number of distinct calendar days written.
+   */
+  async backfillAccount(
+    account: {
+      id: string;
+      organizationId: string;
+      accountName: string;
+      encryptedTokens: string;
+      scopes?: string[];
+    },
+    days = 90,
+  ): Promise<{ daysWritten: number }> {
+    let accessToken: string | undefined;
+    let igUserId: string | undefined;
+    try {
+      const tokens = decryptData(
+        account.encryptedTokens,
+        this.config.get<string>('ENCRYPTION_KEY', ''),
+      );
+      accessToken = tokens?.accessToken;
+      igUserId = tokens?.igUserId;
+    } catch (e) {
+      this.logger.warn(
+        `Failed to decrypt tokens for IG account ${account.id} during backfill: ${e}`,
+      );
+      return { daysWritten: 0 };
+    }
+
+    if (!accessToken || !igUserId) {
+      this.logger.warn(
+        `IG account ${account.id} missing accessToken/igUserId — skipping backfill`,
+      );
+      return { daysWritten: 0 };
+    }
+
+    const until = Math.floor(this.truncateToDate(new Date()).getTime() / 1000);
+    const since = until - days * 86400;
+
+    let rows: DailyInsightRow[];
+    try {
+      rows = await fetchAccountInsightsRange(igUserId, accessToken, since, until);
+    } catch (e) {
+      if (this.isAuthError(e)) {
+        await this.handleAuthError(account, e);
+      }
+      throw e;
+    }
+
+    for (const row of rows) {
+      const date = new Date(row.date);
+      await this.prisma.instagramAccountMetrics.upsert({
+        where: {
+          socialAccountId_date: { socialAccountId: account.id, date },
+        },
+        create: {
+          socialAccountId: account.id,
+          date,
+          reach: row.reach ?? null,
+          views: row.views ?? null,
+          accountsEngaged: row.accountsEngaged ?? null,
+          totalInteractions: row.totalInteractions ?? null,
+        },
+        // `?? undefined` (not null) on update: a metric the range didn't return
+        // must NOT overwrite a value an existing day already has (e.g. today's
+        // row populated by the daily total_value sync). Backfill only fills gaps.
+        update: {
+          reach: row.reach ?? undefined,
+          views: row.views ?? undefined,
+          accountsEngaged: row.accountsEngaged ?? undefined,
+          totalInteractions: row.totalInteractions ?? undefined,
+        },
+      });
+    }
+
+    this.logger.log(`Backfilled IG account ${account.id} (${rows.length} days)`);
+    return { daysWritten: rows.length };
+  }
+
+  /**
    * Hourly cron. Plan throttling:
    *  FREE       → account metrics only, at most once/day.
    *  PRO        → account + media, skip if synced within 6h.
@@ -189,6 +282,18 @@ export class InstagramSyncService {
       try {
         const plan = account.organization.subscription?.plan || 'FREE';
 
+        // Self-healing backfill: if this account has fewer than the threshold
+        // of daily rows, pull 90 days of history before the regular sync.
+        // Runs BEFORE the plan-throttle continues so a sparse account always
+        // gets its historical data even when today's metric already exists.
+        const have = await this.prisma.instagramAccountMetrics.count({
+          where: { socialAccountId: account.id },
+        });
+        if (have < InstagramSyncService.BACKFILL_THRESHOLD_DAYS) {
+          await this.backfillAccount(account, 90);
+        }
+
+        // plan throttle for the daily sync only:
         if (plan === 'FREE') {
           // Account metrics only, once per day.
           if (await this.hasMetricsForToday(account.id)) continue;

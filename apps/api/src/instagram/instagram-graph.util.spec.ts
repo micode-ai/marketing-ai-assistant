@@ -1,6 +1,7 @@
 import {
   fetchAccountProfile,
   fetchAccountInsights,
+  fetchAccountInsightsRange,
   fetchMediaList,
   fetchMediaInsights,
   InstagramAuthError,
@@ -250,6 +251,120 @@ describe('instagram-graph.util', () => {
       await fetchMediaInsights('MEDIA1', 'tok', 'CAROUSEL_ALBUM');
 
       expect(metricOf(fetchMock.mock.calls[0][0] as string)).toBe('reach,saved,shares');
+    });
+  });
+
+  describe('fetchAccountInsightsRange', () => {
+    it('chunks a 90-day window into <=30-day requests and maps values[] to per-day rows', async () => {
+      const calls: string[] = [];
+      global.fetch = (jest.fn(async (url: string) => {
+        calls.push(url);
+        return {
+          ok: true,
+          json: async () => ({
+            data: [
+              {
+                name: 'reach',
+                period: 'day',
+                values: [
+                  { value: 10, end_time: '2026-06-01T07:00:00+0000' },
+                  { value: 20, end_time: '2026-06-02T07:00:00+0000' },
+                ],
+              },
+              {
+                name: 'views',
+                period: 'day',
+                values: [
+                  { value: 100, end_time: '2026-06-01T07:00:00+0000' },
+                  { value: 200, end_time: '2026-06-02T07:00:00+0000' },
+                ],
+              },
+            ],
+          }),
+        };
+      }) as unknown as typeof fetch);
+
+      const until = Math.floor(Date.UTC(2026, 8, 1) / 1000); // Sep 1 2026
+      const since = until - 90 * 86400;
+      const rows = await fetchAccountInsightsRange('ig1', 'tok', since, until);
+
+      expect(calls.length).toBeGreaterThanOrEqual(3); // 90d / 30d -> >=3 chunks
+      expect(calls.every((u) => !u.includes('total_value'))).toBe(true); // time-series form
+      const d1 = rows.find((r) => r.date === '2026-06-01');
+      expect(d1).toMatchObject({ reach: 10, views: 100 });
+    });
+
+    it('returns rows sorted by date', async () => {
+      global.fetch = jest.fn(async () => ({
+        ok: true,
+        json: async () => ({
+          data: [
+            {
+              name: 'reach',
+              period: 'day',
+              values: [
+                { value: 5, end_time: '2026-07-10T07:00:00+0000' },
+                { value: 3, end_time: '2026-07-08T07:00:00+0000' },
+              ],
+            },
+          ],
+        }),
+      })) as unknown as typeof fetch;
+
+      const since = Math.floor(Date.UTC(2026, 6, 1) / 1000);
+      const until = since + 30 * 86400;
+      const rows = await fetchAccountInsightsRange('ig1', 'tok', since, until);
+
+      const dates = rows.map((r) => r.date);
+      expect(dates).toEqual([...dates].sort());
+    });
+
+    it('throws InstagramAuthError on 401 and propagates it', async () => {
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: false,
+        status: 401,
+        text: async () => '',
+      }) as unknown as typeof fetch;
+
+      const since = Math.floor(Date.UTC(2026, 5, 1) / 1000);
+      const until = since + 86400;
+      await expect(
+        fetchAccountInsightsRange('ig1', 'tok', since, until),
+      ).rejects.toBeInstanceOf(InstagramAuthError);
+    });
+
+    it('skips a non-auth failing chunk and continues', async () => {
+      let callCount = 0;
+      global.fetch = jest.fn(async () => {
+        callCount++;
+        if (callCount === 1) {
+          // First chunk fails with non-auth error
+          return {
+            ok: false,
+            status: 500,
+            text: async () => 'server error',
+          };
+        }
+        return {
+          ok: true,
+          json: async () => ({
+            data: [
+              {
+                name: 'reach',
+                period: 'day',
+                values: [{ value: 42, end_time: '2026-07-31T07:00:00+0000' }],
+              },
+            ],
+          }),
+        };
+      }) as unknown as typeof fetch;
+
+      const since = Math.floor(Date.UTC(2026, 5, 1) / 1000); // Jun 1
+      const until = since + 60 * 86400; // 60 days → exactly 2 chunks of 30d
+      const rows = await fetchAccountInsightsRange('ig1', 'tok', since, until);
+
+      expect(callCount).toBe(2);
+      expect(rows.find((r) => r.date === '2026-07-31')).toBeDefined();
     });
   });
 
