@@ -51,9 +51,16 @@
         `/analytics/recommendations?projectId=${projectId}`,
         { language: $locale || 'en' },
       );
-      recommendations = sortByPriority(result.recommendations ?? []);
-      generatedAt = Date.now();
-      localStorage.setItem(storageKey(), JSON.stringify({ recommendations, generatedAt }));
+      const recs = sortByPriority(result.recommendations ?? []);
+      if (recs.length === 0) {
+        // Don't clobber a previously cached good result with an empty response
+        // (e.g. agent parse failure); surface a soft error and keep what we had.
+        error = $_('analytics.recommendations.error');
+      } else {
+        recommendations = recs;
+        generatedAt = Date.now();
+        localStorage.setItem(storageKey(), JSON.stringify({ recommendations, generatedAt }));
+      }
     } catch (e: any) {
       error = e?.message || $_('analytics.recommendations.error');
     } finally {

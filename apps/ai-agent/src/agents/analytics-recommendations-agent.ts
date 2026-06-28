@@ -64,7 +64,7 @@ Rules:
   lines.push(`Period: last ${data.periodDays} days`);
   lines.push('');
   lines.push('Analytics digest:');
-  lines.push(JSON.stringify({ ...data, counts: data.counts }, null, 0));
+  lines.push(JSON.stringify(data, null, 0));
 
   const userPrompt = lines.join('\n');
 
@@ -98,7 +98,19 @@ export function parseRecommendations(raw: string): Recommendation[] {
         const rec = item as Record<string, unknown>;
         const hasAllKeys = REQUIRED_KEYS.every((k) => k in rec && rec[k] !== undefined && rec[k] !== null);
         if (hasAllKeys) {
-          valid.push(rec as unknown as Recommendation);
+          // Normalize the enums so a non-compliant model response can't render a
+          // raw i18n key (unknown channel) or an unstyled badge (e.g. "HIGH").
+          const priority = String(rec.priority).toLowerCase();
+          const channel = String(rec.channel).toLowerCase();
+          valid.push({
+            ...(rec as unknown as Recommendation),
+            priority: (['high', 'medium', 'low'] as const).includes(priority as never)
+              ? (priority as Recommendation['priority'])
+              : 'medium',
+            channel: (['seo', 'content', 'social', 'email', 'conversion', 'web', 'general'] as const).includes(channel as never)
+              ? (channel as Recommendation['channel'])
+              : 'general',
+          });
         }
       }
     }
