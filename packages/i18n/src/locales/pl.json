@@ -895,7 +895,18 @@
     "surface": {
       "web": "Strona",
       "app": "Aplikacja"
-    }
+    },
+    "gscClicks": "Kliknięcia GSC",
+    "igFollowers": "Obserwujący IG",
+    "threadsEngagement": "Zaangażowanie Threads",
+    "channelsDrilldown": "Kanały",
+    "viewDetails": "Szczegóły",
+    "tabOverviewChannel": "Przegląd",
+    "tabWebsite": "Strona",
+    "tabSearch": "Wyszukiwarka",
+    "tabInstagram": "Instagram",
+    "tabThreads": "Threads",
+    "tabApp": "Aplikacja mobilna"
   },
   "instagram": {
     "title": "Analityka Instagrama",
@@ -1226,6 +1237,19 @@
     "finances": {
       "title": "Finanse — śledź przychody i wydatki projektu",
       "desc": "Spróbuj: kliknij \"Dodaj wpis\", aby zapisać wydatek lub przychód. Możesz używać różnych walut — kursy wymiany pobierane są automatycznie. Zobacz P&L na wykresach i podsumowaniach."
+    },
+    "metric": {
+      "conversions": "Łączna liczba konwersji przypisanych Twoim kampaniom w wybranym okresie.",
+      "conversionRate": "Procent śledzonych odwiedzających, którzy wykonali pożądaną akcję.",
+      "visitors": "Unikalni odwiedzający zarejestrowani przez snippet śledzenia w wybranym okresie.",
+      "gscClicks": "Łączna liczba kliknięć z Google Search Console dla śledzonych słów kluczowych.",
+      "gscPosition": "Średnia pozycja w wynikach wyszukiwania dla wszystkich śledzonych słów kluczowych.",
+      "igFollowers": "Netto zmiana liczby obserwujących na Instagramie w wybranym okresie.",
+      "igEngagement": "Łączna liczba polubień, komentarzy i zapisów na Twoich postach na Instagramie.",
+      "threadsEngagement": "Łączna liczba polubień, odpowiedzi i udostępnień na Twoich postach w Threads.",
+      "threadsViews": "Łączna liczba wyświetleń Twoich postów w Threads w wybranym okresie.",
+      "overviewTrend": "Linie trendu pokazujące, jak zmieniały się Twoje kluczowe wskaźniki marketingowe.",
+      "emailPerformance": "Wysłane, otwarte i kliknięte wiadomości e-mail w wybranym okresie."
     }
   },
   "seo": {
