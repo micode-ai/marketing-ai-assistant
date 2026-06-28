@@ -1,3 +1,7 @@
+<script lang="ts" context="module">
+  let _counter = 0;
+</script>
+
 <script lang="ts">
   import { _ } from 'svelte-i18n';
 
@@ -5,6 +9,7 @@
   export let key = '';
   export let side: 'top' | 'bottom' = 'top';
 
+  const tipId = 'info-tip-' + (++_counter);
   let open = false;
 
   $: resolved = key ? $_(key) : text;
@@ -17,7 +22,7 @@
   <button
     type="button"
     aria-label={resolved}
-    aria-describedby={open ? 'tooltip-content' : undefined}
+    aria-describedby={open ? tipId : undefined}
     class="w-4 h-4 rounded-full border border-border text-ink-subtle text-[10px] inline-flex items-center justify-center cursor-help hover:text-ink hover:border-brand/40 transition-colors"
     on:mouseenter={show}
     on:mouseleave={hide}
@@ -29,7 +34,7 @@
 
   {#if open}
     <span
-      id="tooltip-content"
+      id={tipId}
       role="tooltip"
       class="absolute z-30 w-52 rounded-lg bg-surface-2 border border-brand/40 text-ink text-xs p-2 shadow-xl pointer-events-none motion-reduce:transition-none transition-opacity duration-150
         {side === 'top'

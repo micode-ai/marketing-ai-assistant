@@ -29,10 +29,11 @@
   let prevDays = days;
 
   // Channel quick-link headline stats
-  let channelStats: { gsc: string; instagram: string; threads: string } = {
+  let channelStats: { gsc: string; instagram: string; threads: string; app: string } = {
     gsc: '',
     instagram: '',
     threads: '',
+    app: '',
   };
 
   onMount(async () => {
@@ -160,6 +161,9 @@
         }
       }
 
+      // Explicit reassignment so Svelte reactivity picks up in-place mutations
+      channelStats = { ...channelStats };
+
       cards = buildSummaryCards({ totals, gsc: gscData, instagram: igData, threads: threadsData });
     } catch (e) {
       error = String(e);
@@ -265,6 +269,7 @@
     gsc: 'bg-green-500/12 text-green-600',
     instagram: 'bg-pink-500/12 text-pink-600',
     threads: 'bg-purple-500/12 text-purple-600',
+    app: 'bg-indigo-500/12 text-indigo-600',
   };
 
   const channelIcons: Record<string, string> = {
@@ -272,12 +277,14 @@
     gsc: `<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg>`,
     instagram: `<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="20" height="20" rx="5" ry="5" /><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" /><line x1="17.5" y1="6.5" x2="17.51" y2="6.5" /></svg>`,
     threads: `<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25c0 0 1-2.25 4.5-2.25s5.25 2.016 5.25 4.5c0 5.25-9 5.25-9 5.25s5.25 0 5.25-3c0-1.5-1.5-3-3.75-3S7.5 10.5 7.5 11.25" /></svg>`,
+    app: `<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><rect x="5" y="2" width="14" height="20" rx="2" ry="2" /><line x1="12" y1="18" x2="12.01" y2="18" /></svg>`,
   };
 
   const quickLinkChannels = [
-    { id: 'gsc', labelKey: 'analytics.surface.web', condition: () => connected.gsc },
+    { id: 'gsc', labelKey: 'analytics.tabSearch', condition: () => connected.gsc },
     { id: 'instagram', labelKey: 'instagram.title', condition: () => connected.instagram },
     { id: 'threads', labelKey: 'threads.title', condition: () => connected.threads },
+    { id: 'app', labelKey: 'analytics.tabApp', condition: () => connected.app },
   ];
 </script>
 
@@ -350,7 +357,7 @@
     </div>
 
     <!-- Channel quick-links -->
-    {#if connected.gsc || connected.instagram || connected.threads}
+    {#if connected.gsc || connected.instagram || connected.threads || connected.app}
       <div class="bg-surface rounded-xl border border-border p-5">
         <h3 class="text-sm font-semibold text-ink mb-4">{$_('analytics.channelsDrilldown')}</h3>
         <div class="divide-y divide-border">
