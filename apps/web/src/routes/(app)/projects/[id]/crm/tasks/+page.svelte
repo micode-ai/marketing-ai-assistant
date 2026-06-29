@@ -430,7 +430,7 @@
             type="text"
             bind:value={addForm.title}
             class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-surface text-ink"
-            placeholder="Follow up with client"
+            placeholder={$_('crm.tasks.form.titlePlaceholder')}
           />
         </div>
 
@@ -445,7 +445,7 @@
             rows="2"
             bind:value={addForm.description}
             class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-surface text-ink resize-none"
-            placeholder="Add details..."
+            placeholder={$_('crm.tasks.form.descriptionPlaceholder')}
           ></textarea>
         </div>
 
@@ -489,7 +489,7 @@
             bind:value={addForm.contactId}
             class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-surface text-ink"
           >
-            <option value="">{$_('common.optional')}</option>
+            <option value="">{$_('crm.none')}</option>
             {#each contacts as c (c.id)}
               <option value={c.id}>{contactDisplayName(c, c.id)}</option>
             {/each}
@@ -507,7 +507,7 @@
             bind:value={addForm.dealId}
             class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-surface text-ink"
           >
-            <option value="">{$_('common.optional')}</option>
+            <option value="">{$_('crm.none')}</option>
             {#each deals as d (d.id)}
               <option value={d.id}>{d.title}</option>
             {/each}
