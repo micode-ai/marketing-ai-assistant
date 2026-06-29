@@ -433,14 +433,14 @@ describe('InstagramSyncService', () => {
       expect(prisma.instagramAccountMetrics.upsert).not.toHaveBeenCalled();
     });
 
-    it('FREE: syncs account metrics only (no media) when none today', async () => {
+    it('FREE: syncs account + media (per-post analytics) when none today', async () => {
       prisma.socialAccount.findMany.mockResolvedValue([cronAccount('FREE')]);
       prisma.instagramAccountMetrics.findUnique.mockResolvedValue(null);
 
       await service.handleCron();
 
       expect(prisma.instagramAccountMetrics.upsert).toHaveBeenCalledTimes(1);
-      expect(mockFetchMediaList).not.toHaveBeenCalled();
+      expect(mockFetchMediaList).toHaveBeenCalledTimes(1);
     });
 
     it('PRO: skips if media synced within 6h', async () => {
