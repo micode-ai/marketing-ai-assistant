@@ -1784,7 +1784,8 @@
     "nav": {
       "contacts": "Contacts",
       "companies": "Companies",
-      "deals": "Deals"
+      "deals": "Deals",
+      "tasks": "Tasks"
     },
     "companies": {
       "title": "Companies",
@@ -1894,6 +1895,41 @@
       "viewFinances": "View finances →",
       "titlePlaceholder": "Q4 Enterprise Deal",
       "loseReasonPlaceholder": "Budget constraints, chose competitor..."
+    },
+    "tasks": {
+      "title": "Tasks",
+      "add": "Add task",
+      "empty": "No open tasks",
+      "overdue": "Overdue",
+      "today": "Today",
+      "upcoming": "Upcoming",
+      "myTasks": "My tasks only",
+      "complete": "Mark complete",
+      "reopen": "Reopen",
+      "due": "Due {date}",
+      "noDue": "No due date",
+      "addSuccess": "Task created",
+      "completeSuccess": "Task completed",
+      "reopenSuccess": "Task reopened",
+      "deleteSuccess": "Task deleted",
+      "form": {
+        "title": "Task title",
+        "description": "Description",
+        "dueDate": "Due date",
+        "owner": "Assignee"
+      }
+    },
+    "activities": {
+      "title": "Activity",
+      "log": "Log activity",
+      "types": {
+        "NOTE": "Note",
+        "CALL": "Call",
+        "EMAIL": "Email",
+        "MEETING": "Meeting"
+      },
+      "occurredAt": "Date",
+      "body": "Details"
     },
     "pipeline": {
       "manageStages": "Manage stages",

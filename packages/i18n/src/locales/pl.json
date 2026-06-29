@@ -1764,7 +1764,8 @@
     "nav": {
       "contacts": "Kontakty",
       "companies": "Firmy",
-      "deals": "Transakcje"
+      "deals": "Transakcje",
+      "tasks": "Zadania"
     },
     "companies": {
       "title": "Firmy",
@@ -1874,6 +1875,41 @@
       "viewFinances": "Przejdź do finansów →",
       "titlePlaceholder": "Kontrakt Q4 dla klienta enterprise",
       "loseReasonPlaceholder": "Ograniczenia budżetowe, wybrał konkurencję..."
+    },
+    "tasks": {
+      "title": "Zadania",
+      "add": "Dodaj zadanie",
+      "empty": "Brak otwartych zadań",
+      "overdue": "Zaległe",
+      "today": "Dziś",
+      "upcoming": "Nadchodzące",
+      "myTasks": "Tylko moje zadania",
+      "complete": "Oznacz jako ukończone",
+      "reopen": "Otwórz ponownie",
+      "due": "Termin: {date}",
+      "noDue": "Brak terminu",
+      "addSuccess": "Zadanie dodane",
+      "completeSuccess": "Zadanie ukończone",
+      "reopenSuccess": "Zadanie otwarte ponownie",
+      "deleteSuccess": "Zadanie usunięte",
+      "form": {
+        "title": "Tytuł zadania",
+        "description": "Opis",
+        "dueDate": "Termin",
+        "owner": "Przypisz do"
+      }
+    },
+    "activities": {
+      "title": "Aktywność",
+      "log": "Zapisz aktywność",
+      "types": {
+        "NOTE": "Notatka",
+        "CALL": "Rozmowa",
+        "EMAIL": "E-mail",
+        "MEETING": "Spotkanie"
+      },
+      "occurredAt": "Data",
+      "body": "Szczegóły"
     },
     "pipeline": {
       "manageStages": "Zarządzaj etapami",
