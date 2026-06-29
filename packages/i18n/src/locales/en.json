@@ -1861,6 +1861,7 @@
       "form": {
         "title": "Deal title"
       },
+      "openCount": "{count, plural, one {# deal} other {# deals}}",
       "status": {
         "OPEN": "Open",
         "WON": "Won",
@@ -1891,7 +1892,9 @@
       "noContact": "No contact",
       "noCompany": "No company",
       "incomeBooked": "Income booked",
-      "viewFinances": "View finances"
+      "viewFinances": "View finances →",
+      "titlePlaceholder": "Q4 Enterprise Deal",
+      "loseReasonPlaceholder": "Budget constraints, chose competitor..."
     },
     "pipeline": {
       "manageStages": "Manage stages",

@@ -252,7 +252,7 @@
       <div class="bg-surface rounded-xl border border-border p-4">
         <p class="text-xs font-medium text-ink-muted uppercase tracking-wider mb-1">{$_('crm.pipeline.forecast.open')}</p>
         <p class="text-xl font-bold text-ink">{formatMoney(forecast.openValue, currency, $locale ?? 'en')}</p>
-        <p class="text-xs text-ink-muted mt-1">{forecast.openCount} {$_('crm.deals.title').toLowerCase()}</p>
+        <p class="text-xs text-ink-muted mt-1">{$_('crm.deals.openCount', { values: { count: forecast.openCount } })}</p>
       </div>
       <div class="bg-surface rounded-xl border border-border p-4 col-span-2 sm:col-span-1">
         <p class="text-xs font-medium text-ink-muted uppercase tracking-wider mb-1">{$_('crm.pipeline.forecast.won')}</p>

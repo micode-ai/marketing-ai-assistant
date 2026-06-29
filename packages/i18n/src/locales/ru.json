@@ -1839,6 +1839,7 @@
       "form": {
         "title": "Название сделки"
       },
+      "openCount": "{count, plural, one {# сделка} few {# сделки} many {# сделок} other {# сделки}}",
       "status": {
         "OPEN": "Открыта",
         "WON": "Выиграна",
@@ -1869,7 +1870,9 @@
       "noContact": "Без контакта",
       "noCompany": "Без компании",
       "incomeBooked": "Доход зафиксирован",
-      "viewFinances": "Перейти к финансам"
+      "viewFinances": "Перейти к финансам →",
+      "titlePlaceholder": "Корпоративная сделка Q4",
+      "loseReasonPlaceholder": "Бюджетные ограничения, выбрал конкурента..."
     },
     "pipeline": {
       "manageStages": "Управление этапами",

@@ -307,7 +307,7 @@
                 id="deal-title"
                 type="text"
                 bind:value={title}
-                placeholder="Q4 Enterprise Deal"
+                placeholder={$_('crm.deal.titlePlaceholder')}
                 class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-surface text-ink"
               />
             </div>
@@ -462,7 +462,7 @@
                   href="/projects/{projectId}/finances"
                   class="text-xs text-brand hover:underline mt-0.5 inline-block"
                 >
-                  {$_('crm.deal.viewFinances')} →
+                  {$_('crm.deal.viewFinances')}
                 </a>
               </div>
             </div>
@@ -501,7 +501,7 @@
               >
                 {$_('crm.deals.lose')}
               </button>
-            {:else}
+            {:else if deal.status === 'WON' || deal.status === 'LOST'}
               <button
                 type="button"
                 on:click={doReopen}
@@ -582,7 +582,7 @@
           id="lose-reason"
           bind:value={loseReason}
           rows={3}
-          placeholder="Budget constraints, chose competitor..."
+          placeholder={$_('crm.deal.loseReasonPlaceholder')}
           class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-surface text-ink resize-none"
         ></textarea>
       </div>
