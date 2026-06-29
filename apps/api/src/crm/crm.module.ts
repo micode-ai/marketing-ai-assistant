@@ -10,11 +10,12 @@ import { CompaniesService } from './companies.service';
 import { ContactsSyncService } from './contacts-sync.service';
 import { DealsService } from './deals.service';
 import { PipelineService } from './pipeline.service';
+import { TaskDigestService } from './task-digest.service';
 
 @Module({
   imports: [DatabaseModule],
   controllers: [ContactsController, CompaniesController, DealsController, PipelineController],
-  providers: [ContactsService, CompaniesService, ContactsSyncService, DealsService, PipelineService, ProjectAccessGuard],
+  providers: [ContactsService, CompaniesService, ContactsSyncService, DealsService, PipelineService, ProjectAccessGuard, TaskDigestService],
   exports: [ContactsSyncService],
 })
 export class CrmModule {}
