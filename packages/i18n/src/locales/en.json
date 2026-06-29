@@ -1966,6 +1966,7 @@
       "title": "AI Insights",
       "generate": "Generate AI insights",
       "refresh": "Refresh",
+      "hotFirst": "Hot first",
       "score": "Score",
       "reason": "Reason",
       "nextStep": "Next step",

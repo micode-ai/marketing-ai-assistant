@@ -5,7 +5,7 @@
   import { onMount } from 'svelte';
   import { dealsApi, type Deal, type DealStage, type DealInsight } from '$lib/api/crm-deals';
   import { tasksApi } from '$lib/api/crm-tasks';
-  import { scoreBand, type ScoreBand } from '$lib/api/crm-score-band';
+  import { scoreBand, bandClass } from '$lib/api/crm-score-band';
   import { crmApi } from '$lib/api/crm';
   import { loadActiveMembers, type TeamMember } from '$lib/api/crm-owners';
   import { organizationIdStore } from '$lib/stores/projects';
@@ -232,12 +232,6 @@
   let insightLoading = false;
   let insightError = '';
   let copiedDraft = false;
-
-  function bandClass(band: ScoreBand | null): string {
-    if (band === 'hot') return 'text-red-600 bg-red-500/10';
-    if (band === 'warm') return 'text-amber-600 bg-amber-500/10';
-    return 'text-ink-muted bg-surface-2';
-  }
 
   async function loadInsight() {
     if (!projectId || !dealId) return;
