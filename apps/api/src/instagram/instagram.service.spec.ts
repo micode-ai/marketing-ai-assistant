@@ -38,6 +38,10 @@ function makePrisma() {
         .fn()
         .mockResolvedValue({ subscription: { plan: 'ENTERPRISE' } }),
     },
+    aiAdvice: {
+      upsert: jest.fn().mockResolvedValue({}),
+      findUnique: jest.fn().mockResolvedValue(null),
+    },
   };
 }
 
@@ -346,6 +350,88 @@ describe('InstagramService', () => {
       await service.triggerSync('p1');
 
       expect(syncService.syncAccount).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('generateAdvice persistence', () => {
+    beforeEach(() => {
+      prisma.projectSocialAccount.findMany.mockResolvedValue([igLink()]);
+      jest.spyOn(service, 'getMetrics').mockResolvedValue({
+        account: [],
+        topPosts: [],
+        worstPosts: [],
+        periodTotals: {},
+      } as any);
+    });
+
+    it('persists non-empty advice (upsert by projectId+channel) and returns generatedAt', async () => {
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ advice: '## Do X', contextSummary: 'ctx' }),
+      }) as any;
+
+      const result = await service.generateAdvice('p1', 'ru');
+
+      expect(result.advice).toBe('## Do X');
+      expect(typeof result.generatedAt).toBe('number');
+      expect(prisma.aiAdvice.upsert).toHaveBeenCalledTimes(1);
+      const arg = prisma.aiAdvice.upsert.mock.calls[0][0];
+      expect(arg.where).toEqual({ projectId_channel: { projectId: 'p1', channel: 'instagram' } });
+      expect(arg.create).toMatchObject({ projectId: 'p1', channel: 'instagram', advice: '## Do X', contextSummary: 'ctx', language: 'ru' });
+      expect(arg.update).toMatchObject({ advice: '## Do X', contextSummary: 'ctx', language: 'ru' });
+    });
+
+    it('does NOT persist when advice is empty', async () => {
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ advice: '', contextSummary: '' }),
+      }) as any;
+
+      await service.generateAdvice('p1', 'en');
+
+      expect(prisma.aiAdvice.upsert).not.toHaveBeenCalled();
+    });
+
+    it('still returns advice when persistence fails (swallowed)', async () => {
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ advice: 'keep me', contextSummary: 'c' }),
+      }) as any;
+      prisma.aiAdvice.upsert.mockRejectedValueOnce(new Error('db down'));
+
+      const result = await service.generateAdvice('p1', 'en');
+
+      expect(result.advice).toBe('keep me');
+    });
+  });
+
+  describe('getStoredAdvice', () => {
+    it('returns the persisted advice + epoch generatedAt', async () => {
+      const when = new Date('2026-06-29T10:00:00Z');
+      prisma.aiAdvice.findUnique.mockResolvedValue({
+        advice: 'stored advice',
+        contextSummary: 'stored ctx',
+        generatedAt: when,
+      });
+
+      const result = await service.getStoredAdvice('p1');
+
+      expect(prisma.aiAdvice.findUnique).toHaveBeenCalledWith({
+        where: { projectId_channel: { projectId: 'p1', channel: 'instagram' } },
+      });
+      expect(result).toEqual({
+        advice: 'stored advice',
+        contextSummary: 'stored ctx',
+        generatedAt: when.getTime(),
+      });
+    });
+
+    it('returns nulls when nothing is stored', async () => {
+      prisma.aiAdvice.findUnique.mockResolvedValue(null);
+
+      const result = await service.getStoredAdvice('p1');
+
+      expect(result).toEqual({ advice: null, contextSummary: null, generatedAt: null });
     });
   });
 });
