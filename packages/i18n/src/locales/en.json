@@ -1852,7 +1852,6 @@
       "winSuccess": "Deal marked as won",
       "loseSuccess": "Deal marked as lost",
       "value": "Value",
-      "currency": "Currency",
       "stage": "Stage",
       "owner": "Owner",
       "contact": "Contact",

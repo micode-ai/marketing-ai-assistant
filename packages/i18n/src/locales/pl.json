@@ -1832,7 +1832,6 @@
       "winSuccess": "Transakcja oznaczona jako wygrana",
       "loseSuccess": "Transakcja oznaczona jako przegrana",
       "value": "Wartość",
-      "currency": "Waluta",
       "stage": "Etap",
       "owner": "Właściciel",
       "contact": "Kontakt",

@@ -3,6 +3,7 @@
   import { _, locale } from 'svelte-i18n';
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
+  import { api } from '$lib/api/client';
   import { dealsApi, type Deal, type DealStage, type Forecast } from '$lib/api/crm-deals';
   import { formatMoney, columnTotal } from '$lib/api/crm-forecast';
   import { crmApi, type CrmContact, type CrmCompany } from '$lib/api/crm';
@@ -41,13 +42,14 @@
     if (!projectId) return;
     loading = true;
     try {
-      const [s, d, f] = await Promise.all([
+      const [s, d, f, proj] = await Promise.all([
         dealsApi.listStages(projectId),
         dealsApi.listDeals(projectId, { status: 'OPEN' }),
         dealsApi.forecast(projectId),
+        api.get<any>(`/projects/${projectId}`),
       ]);
       stages = s; deals = d; forecast = f;
-      currency = d[0]?.currency || currency;
+      currency = proj.baseCurrency || d[0]?.currency || 'USD';
     } catch (e: unknown) {
       showToast((e as Error).message || $_('common.error'), 'error');
     } finally {
@@ -111,7 +113,6 @@
   let addForm = {
     title: '',
     value: '',
-    currency: 'USD',
     stageId: '',
     contactId: '',
     companyId: '',
@@ -143,14 +144,13 @@
       await dealsApi.createDeal(projectId, {
         title: addForm.title.trim(),
         value: addForm.value ? parseFloat(addForm.value) : 0,
-        currency: addForm.currency || 'USD',
         stageId: addForm.stageId || null,
         contactId: addForm.contactId || null,
         companyId: addForm.companyId || null,
         ownerId: addForm.ownerId || null,
         expectedCloseDate: addForm.expectedCloseDate || null,
       });
-      addForm = { title: '', value: '', currency: 'USD', stageId: '', contactId: '', companyId: '', ownerId: '', expectedCloseDate: '' };
+      addForm = { title: '', value: '', stageId: '', contactId: '', companyId: '', ownerId: '', expectedCloseDate: '' };
       showAddModal = false;
       showToast($_('crm.deals.addSuccess'), 'success');
       await load();
@@ -465,30 +465,17 @@
           />
         </div>
 
-        <!-- Value + Currency -->
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label for="deal-value" class="block text-sm font-medium text-ink mb-1.5">{$_('crm.deals.value')}</label>
-            <input
-              id="deal-value"
-              type="number"
-              min="0"
-              bind:value={addForm.value}
-              class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-surface text-ink"
-              placeholder="5000"
-            />
-          </div>
-          <div>
-            <label for="deal-currency" class="block text-sm font-medium text-ink mb-1.5">{$_('crm.deals.currency')}</label>
-            <input
-              id="deal-currency"
-              type="text"
-              maxlength="3"
-              bind:value={addForm.currency}
-              class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-surface text-ink"
-              placeholder="USD"
-            />
-          </div>
+        <!-- Value -->
+        <div>
+          <label for="deal-value" class="block text-sm font-medium text-ink mb-1.5">{$_('crm.deals.value')}</label>
+          <input
+            id="deal-value"
+            type="number"
+            min="0"
+            bind:value={addForm.value}
+            class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-surface text-ink"
+            placeholder="5000"
+          />
         </div>
 
         <!-- Stage -->
