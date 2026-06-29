@@ -22,7 +22,8 @@
 
   const storageKey = () => `analytics_reco_${projectId}`;
 
-  onMount(() => {
+  onMount(async () => {
+    // 1) Instant paint from the local cache (if any) — avoids a flash of empty.
     try {
       const cached = localStorage.getItem(storageKey());
       if (cached) {
@@ -34,6 +35,24 @@
       }
     } catch {
       // ignore parse errors
+    }
+
+    // 2) Load the authoritative persisted copy from the server so the cards
+    // survive reloads, cache clears, and device/browser changes. On any failure
+    // (offline / none stored yet) we keep whatever the local cache provided.
+    if (!projectId) return;
+    try {
+      const stored = await api.get<{ recommendations: Recommendation[]; generatedAt: number | null }>(
+        '/analytics/recommendations',
+        { projectId },
+      );
+      if (stored?.recommendations?.length) {
+        recommendations = sortByPriority(stored.recommendations);
+        generatedAt = stored.generatedAt ?? generatedAt;
+        localStorage.setItem(storageKey(), JSON.stringify({ recommendations, generatedAt }));
+      }
+    } catch {
+      // keep the local cache
     }
   });
 
@@ -47,7 +66,7 @@
     loading = true;
     error = '';
     try {
-      const result = await api.post<{ recommendations: Recommendation[] }>(
+      const result = await api.post<{ recommendations: Recommendation[]; generatedAt?: number }>(
         `/analytics/recommendations?projectId=${projectId}`,
         { language: $locale || 'en' },
       );
@@ -58,7 +77,9 @@
         error = $_('analytics.recommendations.error');
       } else {
         recommendations = recs;
-        generatedAt = Date.now();
+        // The server persists the result and returns its timestamp; fall back to
+        // the local clock if it's absent.
+        generatedAt = result.generatedAt ?? Date.now();
         localStorage.setItem(storageKey(), JSON.stringify({ recommendations, generatedAt }));
       }
     } catch (e: any) {

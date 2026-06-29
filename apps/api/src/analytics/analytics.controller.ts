@@ -149,4 +149,11 @@ export class AnalyticsController {
   ) {
     return this.analyticsService.generateRecommendations(projectId, body?.language || 'en');
   }
+
+  @Get('recommendations')
+  @UseGuards(ProjectAccessGuard)
+  @ApiOperation({ summary: 'Get the last persisted AI recommendations for a project' })
+  getStoredRecommendations(@Query('projectId') projectId: string) {
+    return this.analyticsService.getStoredRecommendations(projectId);
+  }
 }
