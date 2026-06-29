@@ -327,9 +327,12 @@
               <tr class="hover:bg-surface-2/50 transition-colors duration-100">
                 <!-- Name -->
                 <td class="px-5 py-3.5">
-                  <span class="text-sm font-medium text-ink">
+                  <a
+                    href="/projects/{projectId}/crm/contacts/{contact.id}"
+                    class="text-sm font-medium text-ink hover:text-brand transition-colors"
+                  >
                     {contactDisplayName(contact, $_('crm.contacts.anonymous'))}
-                  </span>
+                  </a>
                   {#if contact.source}
                     <span class="ml-2 text-xs px-1.5 py-0.5 rounded bg-surface-2 text-ink-subtle font-mono">
                       {$_(`crm.source.${contact.source}`, { default: contact.source })}
