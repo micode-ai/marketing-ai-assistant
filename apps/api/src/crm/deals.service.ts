@@ -55,6 +55,7 @@ export class DealsService {
         stage: { select: { id: true, name: true, order: true, probability: true } },
         contact: { select: { id: true, firstName: true, lastName: true, email: true } },
         company: { select: { id: true, name: true } },
+        insight: { select: { score: true, generatedAt: true } },
       },
       orderBy: { updatedAt: 'desc' },
     });
@@ -63,7 +64,7 @@ export class DealsService {
   async get(projectId: string, id: string) {
     const deal = await this.prisma.deal.findFirst({
       where: { id, projectId },
-      include: { stage: true, contact: true, company: true },
+      include: { stage: true, contact: true, company: true, insight: { select: { score: true, generatedAt: true } } },
     });
     if (!deal) throw new NotFoundException('Deal not found');
     return deal;

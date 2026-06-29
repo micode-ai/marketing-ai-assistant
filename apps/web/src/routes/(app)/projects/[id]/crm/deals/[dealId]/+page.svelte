@@ -1,9 +1,11 @@
 <script lang="ts">
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
-  import { _ } from 'svelte-i18n';
+  import { _, locale } from 'svelte-i18n';
   import { onMount } from 'svelte';
-  import { dealsApi, type Deal, type DealStage } from '$lib/api/crm-deals';
+  import { dealsApi, type Deal, type DealStage, type DealInsight } from '$lib/api/crm-deals';
+  import { tasksApi } from '$lib/api/crm-tasks';
+  import { scoreBand, bandClass } from '$lib/api/crm-score-band';
   import { crmApi } from '$lib/api/crm';
   import { loadActiveMembers, type TeamMember } from '$lib/api/crm-owners';
   import { organizationIdStore } from '$lib/stores/projects';
@@ -108,6 +110,7 @@
       loadActiveMembers($organizationIdStore).then((m) => { members = m; });
     }
     await Promise.all([load(), loadLookups()]);
+    await loadInsight();
   });
 
   // Project-switch guard: redirect to new project's deals list
@@ -222,6 +225,71 @@
 
   function handleLoseModalKeydown(e: KeyboardEvent) {
     if (e.key === 'Escape') showLoseModal = false;
+  }
+
+  // AI insights state
+  let insight: DealInsight | null = null;
+  let insightLoading = false;
+  let insightError = '';
+  let copiedDraft = false;
+
+  async function loadInsight() {
+    if (!projectId || !dealId) return;
+    try {
+      insight = await dealsApi.getInsights(projectId, dealId);
+    } catch {
+      // non-critical — panel stays in empty state if load fails
+    }
+  }
+
+  async function generate() {
+    if (!projectId || !dealId) return;
+    insightLoading = true;
+    insightError = '';
+    try {
+      insight = await dealsApi.generateInsights(projectId, dealId, $locale || 'en');
+    } catch (e: unknown) {
+      insightError = (e as Error).message || $_('crm.insights.error');
+      showToast(insightError, 'error');
+    } finally {
+      insightLoading = false;
+    }
+  }
+
+  async function createTaskFromInsight() {
+    if (!projectId || !insight) return;
+    try {
+      await tasksApi.createTask(projectId, {
+        title: insight.nextStep,
+        dealId,
+        contactId: deal?.contactId ?? undefined,
+      });
+      showToast($_('crm.insights.taskCreated'), 'success');
+    } catch (e: unknown) {
+      showToast((e as Error).message || $_('crm.insights.error'), 'error');
+    }
+  }
+
+  async function logDraftAsActivity() {
+    if (!projectId || !insight) return;
+    try {
+      await tasksApi.createActivity(projectId, {
+        type: 'EMAIL',
+        body: insight.draftBody,
+        dealId,
+        contactId: deal?.contactId ?? undefined,
+      });
+      showToast($_('crm.insights.activityLogged'), 'success');
+    } catch (e: unknown) {
+      showToast((e as Error).message || $_('crm.insights.error'), 'error');
+    }
+  }
+
+  async function copyDraft() {
+    if (!insight) return;
+    await navigator.clipboard.writeText(insight.draftBody);
+    copiedDraft = true;
+    setTimeout(() => { copiedDraft = false; }, 2000);
   }
 
   const statusColors: Record<string, string> = {
@@ -523,6 +591,140 @@
             </button>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- AI Insights panel -->
+    <div class="mt-6 bg-surface rounded-xl border border-border">
+      <div class="px-5 py-4 border-b border-border flex items-center justify-between">
+        <h2 class="text-xs font-semibold text-ink-muted uppercase tracking-wider">{$_('crm.insights.title')}</h2>
+        {#if insight && !insightLoading}
+          <button
+            type="button"
+            on:click={generate}
+            class="text-xs text-brand hover:underline cursor-pointer"
+          >
+            {$_('crm.insights.refresh')}
+          </button>
+        {/if}
+      </div>
+      <div class="p-5">
+        {#if insightLoading && !insight}
+          <div class="flex items-center gap-2 text-sm text-ink-muted">
+            <svg class="animate-spin w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+            </svg>
+            {$_('crm.insights.loading')}
+          </div>
+        {:else if insight}
+          {@const band = scoreBand(insight.score)}
+          <!-- Score -->
+          <div class="flex items-center gap-3 mb-4">
+            <div>
+              <span class="text-xs font-medium text-ink-muted uppercase tracking-wider block mb-1">{$_('crm.insights.score')}</span>
+              <div class="flex items-center gap-2">
+                <span class="text-2xl font-bold text-ink">{insight.score}</span>
+                {#if band}
+                  <span class="text-xs px-2.5 py-1 rounded-full font-medium {bandClass(band)}">
+                    {$_(`crm.insights.band.${band}`)}
+                  </span>
+                {/if}
+              </div>
+            </div>
+          </div>
+
+          <!-- Score reason -->
+          {#if insight.scoreReason}
+            <div class="mb-4">
+              <span class="text-xs font-medium text-ink-muted uppercase tracking-wider block mb-1">{$_('crm.insights.reason')}</span>
+              <p class="text-sm text-ink">{insight.scoreReason}</p>
+            </div>
+          {/if}
+
+          <!-- Next step -->
+          <div class="mb-4 p-3 bg-surface-2 rounded-lg">
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex-1 min-w-0">
+                <span class="text-xs font-medium text-ink-muted uppercase tracking-wider block mb-1">{$_('crm.insights.nextStep')}</span>
+                <p class="text-sm text-ink">{insight.nextStep}</p>
+              </div>
+              <button
+                type="button"
+                on:click={createTaskFromInsight}
+                class="flex-shrink-0 text-xs border border-brand text-brand px-3 py-1.5 rounded-lg hover:bg-brand/5 transition-colors duration-150 cursor-pointer"
+              >
+                {$_('crm.insights.createTask')}
+              </button>
+            </div>
+          </div>
+
+          <!-- Email draft -->
+          <div class="mb-4">
+            <span class="text-xs font-medium text-ink-muted uppercase tracking-wider block mb-2">{$_('crm.insights.draft')}</span>
+            {#if insight.draftSubject}
+              <div class="mb-2">
+                <span class="text-xs text-ink-muted block mb-0.5">{$_('crm.insights.subject')}</span>
+                <p class="text-sm text-ink font-medium">{insight.draftSubject}</p>
+              </div>
+            {/if}
+            <div class="mb-2">
+              <span class="text-xs text-ink-muted block mb-0.5">{$_('crm.insights.body')}</span>
+              <pre class="text-sm text-ink whitespace-pre-wrap font-sans bg-surface-2 rounded-lg p-3">{insight.draftBody}</pre>
+            </div>
+            <div class="flex gap-2 mt-2">
+              <button
+                type="button"
+                on:click={copyDraft}
+                class="text-xs border border-border px-3 py-1.5 rounded-lg hover:bg-surface-2 transition-colors duration-150 cursor-pointer text-ink-muted"
+              >
+                {copiedDraft ? $_('crm.insights.copied') : $_('crm.insights.copy')}
+              </button>
+              <button
+                type="button"
+                on:click={logDraftAsActivity}
+                class="text-xs border border-border px-3 py-1.5 rounded-lg hover:bg-surface-2 transition-colors duration-150 cursor-pointer text-ink-muted"
+              >
+                {$_('crm.insights.logActivity')}
+              </button>
+            </div>
+          </div>
+
+          <!-- Generated at + refresh -->
+          <div class="flex items-center justify-between mt-2">
+            <span class="text-xs text-ink-muted">
+              {$_('crm.insights.generatedAt', { values: { date: new Date(insight.generatedAt).toLocaleString() } })}
+            </span>
+            {#if insightLoading}
+              <svg class="animate-spin w-4 h-4 text-ink-muted" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+              </svg>
+            {/if}
+          </div>
+        {:else}
+          <!-- Empty state -->
+          <div class="text-center py-4">
+            <p class="text-sm text-ink-muted mb-4">{$_('crm.insights.empty')}</p>
+            {#if insightError}
+              <p class="text-xs text-red-600 mb-3">{insightError}</p>
+            {/if}
+            <button
+              type="button"
+              on:click={generate}
+              disabled={insightLoading}
+              class="inline-flex items-center gap-2 bg-brand text-white px-4 py-2 rounded-lg text-sm font-medium hover:brightness-110 transition-colors duration-150 disabled:opacity-50 cursor-pointer"
+            >
+              {#if insightLoading}
+                <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                </svg>
+              {/if}
+              {insightLoading ? $_('crm.insights.loading') : $_('crm.insights.generate')}
+            </button>
+          </div>
+        {/if}
       </div>
     </div>
 

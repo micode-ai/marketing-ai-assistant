@@ -5,6 +5,7 @@
   import { goto } from '$app/navigation';
   import { api } from '$lib/api/client';
   import { dealsApi, type Deal, type DealStage, type Forecast } from '$lib/api/crm-deals';
+  import { scoreBand, bandClass } from '$lib/api/crm-score-band';
   import { formatMoney, columnTotal } from '$lib/api/crm-forecast';
   import { crmApi, type CrmContact, type CrmCompany } from '$lib/api/crm';
   import { loadActiveMembers, ownerName, type TeamMember } from '$lib/api/crm-owners';
@@ -20,6 +21,7 @@
   let mounted = false;
   let prevProjectId = '';
   let dragDealId: string | null = null;
+  let hotFirst = false;
 
   // Team members for owner display
   let members: TeamMember[] = [];
@@ -226,6 +228,19 @@
       <h1 class="text-2xl font-bold text-ink">{$_('crm.deals.title')}</h1>
     </div>
     <div class="flex items-center gap-2">
+      <button
+        type="button"
+        aria-pressed={hotFirst}
+        on:click={() => { hotFirst = !hotFirst; }}
+        class="border px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-150 flex items-center gap-2 cursor-pointer
+          {hotFirst ? 'bg-red-500/10 border-red-400 text-red-700' : 'border-border text-ink hover:bg-surface-2'}"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.362 5.214A8.252 8.252 0 0 1 12 21 8.25 8.25 0 0 1 6.038 7.047 8.287 8.287 0 0 0 9 9.601a8.983 8.983 0 0 1 3.361-6.867 8.21 8.21 0 0 0 3 2.48Z" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 18a3.75 3.75 0 0 0 .495-7.468 5.99 5.99 0 0 0-1.925 3.547 5.975 5.975 0 0 1-2.133-1.001A3.75 3.75 0 0 0 12 18Z" />
+        </svg>
+        {$_('crm.insights.hotFirst')}
+      </button>
       <a
         href="/projects/{projectId}/crm/deals/stages"
         class="border border-border text-ink px-3 py-2 rounded-lg text-sm font-medium hover:bg-surface-2 transition-colors duration-150 flex items-center gap-2"
@@ -306,7 +321,9 @@
     <!-- Kanban board -->
     <div class="flex gap-4 overflow-x-auto pb-6 min-h-[480px]">
       {#each stages as stage (stage.id)}
-        {@const stageDeals = dealsByStage(stage.id)}
+        {@const stageDeals = hotFirst
+          ? dealsByStage(stage.id).slice().sort((a, b) => (b.insight?.score ?? -1) - (a.insight?.score ?? -1))
+          : dealsByStage(stage.id)}
         <!-- svelte-ignore a11y-no-static-element-interactions -->
         <div
           class="flex-shrink-0 w-72 flex flex-col bg-surface-2/50 rounded-xl border border-border"
@@ -333,13 +350,23 @@
                 on:dragstart={() => { dragDealId = deal.id; }}
                 class="bg-surface rounded-lg border border-border p-3 cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow duration-150 group"
               >
-                <!-- Title -->
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <div
-                  class="text-sm font-medium text-ink mb-2 hover:text-brand transition-colors cursor-pointer"
-                  on:click={() => goto(`/projects/${projectId}/crm/deals/${deal.id}`)}
-                >
-                  {deal.title}
+                <!-- Title + score badge -->
+                <div class="flex items-start justify-between gap-2 mb-2">
+                  <!-- svelte-ignore a11y-click-events-have-key-events -->
+                  <div
+                    class="text-sm font-medium text-ink hover:text-brand transition-colors cursor-pointer flex-1 min-w-0"
+                    on:click={() => goto(`/projects/${projectId}/crm/deals/${deal.id}`)}
+                  >
+                    {deal.title}
+                  </div>
+                  {#if deal.insight?.score != null}
+                    {@const band = scoreBand(deal.insight.score)}
+                    {#if band}
+                      <span class="flex-shrink-0 text-xs px-1.5 py-0.5 rounded-full font-semibold leading-5 {bandClass(band)}">
+                        {deal.insight.score}
+                      </span>
+                    {/if}
+                  {/if}
                 </div>
 
                 <!-- Value -->
