@@ -17,11 +17,12 @@ import { TaskDigestService } from './task-digest.service';
 import { ActivitiesService } from './activities.service';
 import { TasksService } from './tasks.service';
 import { TimelineService } from './timeline.service';
+import { DealInsightsService } from './deal-insights.service';
 
 @Module({
   imports: [DatabaseModule],
   controllers: [ContactsController, CompaniesController, DealsController, PipelineController, ActivitiesController, TasksController, TimelineController],
-  providers: [ContactsService, CompaniesService, ContactsSyncService, DealsService, PipelineService, ProjectAccessGuard, TaskDigestService, ActivitiesService, TasksService, TimelineService],
+  providers: [ContactsService, CompaniesService, ContactsSyncService, DealsService, PipelineService, ProjectAccessGuard, TaskDigestService, ActivitiesService, TasksService, TimelineService, DealInsightsService],
   exports: [ContactsSyncService],
 })
 export class CrmModule {}

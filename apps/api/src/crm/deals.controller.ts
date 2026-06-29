@@ -2,14 +2,19 @@ import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } f
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ProjectAccessGuard } from '../common/guards/project-access.guard';
 import { DealsService } from './deals.service';
+import { DealInsightsService } from './deal-insights.service';
 import { CreateDealDto, LoseDealDto, UpdateDealDto } from './dto/deal.dto';
+import { GenerateInsightsDto } from './dto/deal-insights.dto';
 
 @ApiTags('crm')
 @ApiBearerAuth()
 @Controller('crm/deals')
 @UseGuards(ProjectAccessGuard)
 export class DealsController {
-  constructor(private readonly deals: DealsService) {}
+  constructor(
+    private readonly deals: DealsService,
+    private readonly dealInsights: DealInsightsService,
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'List deals (filterable)' })
@@ -26,6 +31,20 @@ export class DealsController {
   @Get('forecast')
   forecast(@Query('projectId') projectId: string) {
     return this.deals.forecast(projectId);
+  }
+
+  @Post(':id/insights')
+  generateInsights(
+    @Query('projectId') projectId: string,
+    @Param('id') id: string,
+    @Body() dto: GenerateInsightsDto,
+  ) {
+    return this.dealInsights.generate(projectId, id, dto.language || 'en');
+  }
+
+  @Get(':id/insights')
+  getInsights(@Query('projectId') projectId: string, @Param('id') id: string) {
+    return this.dealInsights.get(projectId, id);
   }
 
   @Get(':id')

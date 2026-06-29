@@ -1383,12 +1383,35 @@ model Deal {
   financeRecord FinanceRecord? @relation("DealFinanceRecord", fields: [financeRecordId], references: [id], onDelete: SetNull)
   activities    Activity[]
   tasks         Task[]
+  insight       DealInsight?
 
   @@index([projectId])
   @@index([projectId, status])
   @@index([stageId])
   @@index([ownerId])
   @@map("deals")
+}
+
+// =============================================================================
+// CRM AI Insights
+// =============================================================================
+
+model DealInsight {
+  id           String   @id @default(cuid())
+  dealId       String   @unique
+  score        Int
+  scoreReason  String
+  nextStep     String
+  draftSubject String?
+  draftBody    String
+  language     String?
+  generatedAt  DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  deal Deal @relation(fields: [dealId], references: [id], onDelete: Cascade)
+
+  @@map("deal_insights")
 }
 
 // =============================================================================
