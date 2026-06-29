@@ -1763,7 +1763,8 @@
     },
     "nav": {
       "contacts": "Kontakty",
-      "companies": "Firmy"
+      "companies": "Firmy",
+      "deals": "Transakcje"
     },
     "companies": {
       "title": "Firmy",
@@ -1815,6 +1816,44 @@
       "deleteConfirm": "Czy na pewno chcesz usunąć {name}? Tej operacji nie można cofnąć.",
       "deleteError": "Nie udało się usunąć firmy"
     },
-    "unassigned": "Nieprzypisany"
+    "unassigned": "Nieprzypisany",
+    "deals": {
+      "title": "Transakcje",
+      "add": "Dodaj transakcję",
+      "addSuccess": "Transakcja dodana",
+      "empty": "Brak etapów lejka sprzedaży",
+      "emptyHint": "Utwórz etapy lejka, aby śledzić transakcje.",
+      "dropHere": "Upuść tutaj",
+      "win": "Wygrana",
+      "lose": "Przegrana",
+      "loseTitle": "Oznacz jako przegrana",
+      "reopen": "Otwórz ponownie",
+      "lostReasonPrompt": "Powód przegranej",
+      "winSuccess": "Transakcja oznaczona jako wygrana",
+      "loseSuccess": "Transakcja oznaczona jako przegrana",
+      "value": "Wartość",
+      "currency": "Waluta",
+      "stage": "Etap",
+      "owner": "Właściciel",
+      "contact": "Kontakt",
+      "company": "Firma",
+      "expectedClose": "Oczekiwana data zamknięcia",
+      "form": {
+        "title": "Tytuł transakcji"
+      },
+      "status": {
+        "OPEN": "Otwarta",
+        "WON": "Wygrana",
+        "LOST": "Przegrana"
+      }
+    },
+    "pipeline": {
+      "manageStages": "Zarządzaj etapami",
+      "forecast": {
+        "weighted": "Ważony lejek",
+        "open": "Otwarty lejek",
+        "won": "Wygrane w tym okresie"
+      }
+    }
   }
 }
