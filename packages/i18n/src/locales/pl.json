@@ -1818,6 +1818,7 @@
       "deleteError": "Nie udało się usunąć firmy"
     },
     "unassigned": "Nieprzypisany",
+    "none": "Brak",
     "deals": {
       "title": "Transakcje",
       "add": "Dodaj transakcję",
@@ -1894,7 +1895,9 @@
       "deleteSuccess": "Zadanie usunięte",
       "form": {
         "title": "Tytuł zadania",
+        "titlePlaceholder": "Skontaktuj się z klientem",
         "description": "Opis",
+        "descriptionPlaceholder": "Dodaj szczegóły...",
         "dueDate": "Termin",
         "owner": "Przypisz do"
       }

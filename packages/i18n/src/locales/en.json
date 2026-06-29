@@ -1838,6 +1838,7 @@
       "deleteError": "Failed to delete company"
     },
     "unassigned": "Unassigned",
+    "none": "—",
     "deals": {
       "title": "Deals",
       "add": "Add deal",
@@ -1914,7 +1915,9 @@
       "deleteSuccess": "Task deleted",
       "form": {
         "title": "Task title",
+        "titlePlaceholder": "Follow up with client",
         "description": "Description",
+        "descriptionPlaceholder": "Add details...",
         "dueDate": "Due date",
         "owner": "Assignee"
       }
