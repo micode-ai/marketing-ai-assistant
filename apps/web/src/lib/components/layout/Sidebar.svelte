@@ -36,7 +36,7 @@
   $: inProject = !!$currentProjectStore;
   $: projectId = $currentProjectStore?.id;
 
-  const orgSections = ['content', 'checklists', 'documents', 'campaigns', 'email', 'analytics', 'finances', 'seo', 'competitors', 'experiments', 'sequences', 'calendar'];
+  const orgSections = ['content', 'checklists', 'documents', 'campaigns', 'email', 'analytics', 'finances', 'seo', 'competitors', 'experiments', 'sequences', 'calendar', 'crm'];
 
   function switchOrg(orgId: string) {
     organizationIdStore.set(orgId);
@@ -143,6 +143,7 @@
     { seg: 'email',      iconKey: 'envelope',     labelKey: 'nav.orgEmail' },
     { seg: 'analytics',  iconKey: 'presentation', labelKey: 'nav.orgAnalytics' },
     { seg: 'finances',   iconKey: 'banknotes',    labelKey: 'nav.orgFinances' },
+    { seg: 'crm',        iconKey: 'users',        labelKey: 'nav.orgCrm' },
   ];
   // AI Chat + Templates surfaced inside a project (carry project context — Task 9).
   const projectToolLinks = [

@@ -62,6 +62,7 @@
     "orgEmail": "Email",
     "orgAnalytics": "Analityka",
     "orgSeo": "SEO",
+    "orgCrm": "CRM",
     "orgCompetitors": "Konkurencja",
     "orgExperiments": "Eksperymenty",
     "orgSequences": "Sekwencje",
@@ -1678,5 +1679,35 @@
     "continueInChat": "Kontynuuj w czacie",
     "regenerate": "Wygeneruj ponownie",
     "adviceError": "Nie udało się wygenerować porady."
+  },
+  "crm": {
+    "contacts": {
+      "title": "Kontakty",
+      "add": "Dodaj kontakt",
+      "import": "Importuj CSV",
+      "syncNow": "Synchronizuj teraz",
+      "search": "Szukaj kontaktów...",
+      "anonymous": "Anonim",
+      "empty": "Brak kontaktów",
+      "columns": {
+        "name": "Nazwa",
+        "email": "Email",
+        "company": "Firma",
+        "tags": "Tagi",
+        "status": "Status",
+        "lastSeen": "Ostatnio widziany"
+      }
+    },
+    "status": {
+      "ACTIVE": "Aktywny",
+      "UNSUBSCRIBED": "Wypisany",
+      "ARCHIVED": "Zarchiwizowany"
+    },
+    "source": {
+      "TRACKED_USER": "Śledzony użytkownik",
+      "SUBSCRIBER": "Subskrybent",
+      "MANUAL": "Ręczny",
+      "IMPORT": "Import"
+    }
   }
 }

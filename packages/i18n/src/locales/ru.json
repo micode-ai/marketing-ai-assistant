@@ -62,6 +62,7 @@
     "orgEmail": "Email",
     "orgAnalytics": "Аналитика",
     "orgSeo": "SEO",
+    "orgCrm": "CRM",
     "orgCompetitors": "Конкуренты",
     "orgExperiments": "Эксперименты",
     "orgSequences": "Последовательности",
@@ -1676,5 +1677,35 @@
     "continueInChat": "Продолжить в чате",
     "regenerate": "Сгенерировать заново",
     "adviceError": "Не удалось сгенерировать совет."
+  },
+  "crm": {
+    "contacts": {
+      "title": "Контакты",
+      "add": "Добавить контакт",
+      "import": "Импортировать CSV",
+      "syncNow": "Синхронизировать",
+      "search": "Поиск контактов...",
+      "anonymous": "Аноним",
+      "empty": "Контактов пока нет",
+      "columns": {
+        "name": "Имя",
+        "email": "Email",
+        "company": "Компания",
+        "tags": "Теги",
+        "status": "Статус",
+        "lastSeen": "Последний визит"
+      }
+    },
+    "status": {
+      "ACTIVE": "Активный",
+      "UNSUBSCRIBED": "Отписан",
+      "ARCHIVED": "В архиве"
+    },
+    "source": {
+      "TRACKED_USER": "Отслеживаемый пользователь",
+      "SUBSCRIBER": "Подписчик",
+      "MANUAL": "Вручную",
+      "IMPORT": "Импорт"
+    }
   }
 }

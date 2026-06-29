@@ -62,6 +62,7 @@
     "orgEmail": "Email",
     "orgAnalytics": "Analytics",
     "orgSeo": "SEO",
+    "orgCrm": "CRM",
     "orgCompetitors": "Competitors",
     "orgExperiments": "Experiments",
     "orgSequences": "Sequences",
@@ -1698,5 +1699,35 @@
     "continueInChat": "Continue in chat",
     "regenerate": "Regenerate",
     "adviceError": "Failed to generate advice."
+  },
+  "crm": {
+    "contacts": {
+      "title": "Contacts",
+      "add": "Add contact",
+      "import": "Import CSV",
+      "syncNow": "Sync now",
+      "search": "Search contacts...",
+      "anonymous": "Anonymous",
+      "empty": "No contacts yet",
+      "columns": {
+        "name": "Name",
+        "email": "Email",
+        "company": "Company",
+        "tags": "Tags",
+        "status": "Status",
+        "lastSeen": "Last seen"
+      }
+    },
+    "status": {
+      "ACTIVE": "Active",
+      "UNSUBSCRIBED": "Unsubscribed",
+      "ARCHIVED": "Archived"
+    },
+    "source": {
+      "TRACKED_USER": "Tracked user",
+      "SUBSCRIBER": "Subscriber",
+      "MANUAL": "Manual",
+      "IMPORT": "Import"
+    }
   }
 }
