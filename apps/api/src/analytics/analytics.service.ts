@@ -171,7 +171,7 @@ export class AnalyticsService {
   async generateRecommendations(
     projectId: string,
     language: string,
-  ): Promise<{ recommendations: any[] }> {
+  ): Promise<{ recommendations: any[]; generatedAt: number }> {
     const [
       projectResult,
       metricsTotalsResult,
@@ -317,7 +317,53 @@ export class AnalyticsService {
     }
 
     const data = (await response.json()) as { recommendations: any[] };
-    return { recommendations: data.recommendations };
+    const recommendations = data.recommendations ?? [];
+
+    // Persist the latest non-empty result so the cards survive page re-entry,
+    // reloads, and device/browser changes. Empty responses (e.g. an agent parse
+    // failure) are not stored, so a previously good set is never clobbered.
+    const now = new Date();
+    if (recommendations.length > 0) {
+      try {
+        await this.prisma.analyticsRecommendation.upsert({
+          where: { projectId },
+          create: { projectId, recommendations, language, generatedAt: now },
+          update: { recommendations, language, generatedAt: now },
+        });
+      } catch (error) {
+        this.logger.warn(
+          `[recommendations] persist failed for project=${projectId}: ${error}`,
+        );
+      }
+    }
+
+    return { recommendations, generatedAt: now.getTime() };
+  }
+
+  /**
+   * Returns the last persisted AI recommendations for a project (or an empty
+   * set if none have been generated yet). Used to restore the cards on page
+   * entry so they survive reloads and device changes.
+   */
+  async getStoredRecommendations(projectId: string): Promise<{
+    recommendations: any[];
+    generatedAt: number | null;
+    language: string | null;
+  }> {
+    const row = await this.prisma.analyticsRecommendation.findUnique({
+      where: { projectId },
+    });
+    if (!row) {
+      return { recommendations: [], generatedAt: null, language: null };
+    }
+    const recommendations = Array.isArray(row.recommendations)
+      ? (row.recommendations as any[])
+      : [];
+    return {
+      recommendations,
+      generatedAt: row.generatedAt.getTime(),
+      language: row.language ?? null,
+    };
   }
 
   @Cron('0 1 * * *')
