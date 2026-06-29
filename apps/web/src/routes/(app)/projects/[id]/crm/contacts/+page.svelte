@@ -151,12 +151,13 @@
     try {
       const formData = new FormData();
       formData.append('file', file);
-      const res = await api.upload<{ created: number; updated: number; errors: number }>(
+      const res = await api.upload<{ created: number; updated: number; errors: string[] }>(
         `/crm/contacts/import?projectId=${projectId}`,
         formData,
       );
+      const errorCount = res.errors?.length ?? 0;
       showToast(
-        `${$_('crm.contacts.import')}: ${$_('crm.contacts.importResult', { values: { created: res.created, updated: res.updated, errors: res.errors } })}`,
+        `${$_('crm.contacts.import')}: ${$_('crm.contacts.importResult', { values: { created: res.created, updated: res.updated, errors: errorCount } })}`,
         'success',
       );
       await load();
@@ -411,7 +412,7 @@
       <!-- Pagination footer -->
       <div class="px-5 py-3 border-t border-border bg-surface-2/30 flex items-center justify-between">
         <span class="text-xs text-ink-muted">
-          {(pageNum - 1) * pageSize + 1}–{Math.min(pageNum * pageSize, total)} of {total}
+          {(pageNum - 1) * pageSize + 1}–{Math.min(pageNum * pageSize, total)} {$_('crm.contacts.ofTotal')} {total}
         </span>
         <div class="flex items-center gap-2">
           <button

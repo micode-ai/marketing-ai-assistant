@@ -1694,6 +1694,7 @@
       "syncResult": "{created} создано, {updated} обновлено",
       "capped": "(с ограничением)",
       "importResult": "{created} создано, {updated} обновлено, {errors} ошибок",
+      "ofTotal": "из",
       "form": {
         "firstName": "Имя",
         "lastName": "Фамилия",

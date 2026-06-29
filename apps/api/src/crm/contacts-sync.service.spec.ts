@@ -68,6 +68,34 @@ describe('ContactsSyncService.materialize', () => {
     expect(upd.trackedUserId).toBe('t1');         // snapshot still linked
   });
 
+  it('subscriber pass never overwrites a curated MANUAL contact name; tracked snapshot still refreshes', async () => {
+    prisma.emailSubscriber.findMany.mockResolvedValue([
+      { id: 's1', email: 'm@x.com', name: 'AutoName', status: 'ACTIVE' },
+    ]);
+    prisma.trackedUser.findMany.mockResolvedValue([
+      { id: 't1', email: 'm@x.com', lastSeen: new Date('2026-06-01'), firstUtm: null, lastUtm: null },
+    ]);
+    // Existing contact is MANUAL with a human-curated firstName.
+    prisma.contact.findUnique.mockResolvedValue({
+      id: 'c1',
+      email: 'm@x.com',
+      source: 'MANUAL',
+      firstName: 'Curated',
+    });
+
+    await service.materialize('p1');
+
+    // Subscriber pass (first update): curated firstName is NOT clobbered.
+    const subUpd = prisma.contact.update.mock.calls[0][0].data;
+    expect(subUpd.firstName).toBeUndefined();
+    expect(subUpd.source).toBeUndefined();
+
+    // Tracked-user pass (second update): behavioural snapshot still refreshes.
+    const trkUpd = prisma.contact.update.mock.calls[1][0].data;
+    expect(trkUpd.trackedUserId).toBe('t1');
+    expect(trkUpd.firstName).toBeUndefined();
+  });
+
   it('stops creating once the plan cap is reached (capped=true)', async () => {
     prisma.organization.findUnique.mockResolvedValue({ subscription: { plan: 'FREE' } });
     prisma.contact.count.mockResolvedValue(100); // FREE cap = 100, already full

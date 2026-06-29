@@ -1696,6 +1696,7 @@
       "syncResult": "{created} dodanych, {updated} zaktualizowanych",
       "capped": "(z limitem)",
       "importResult": "{created} dodanych, {updated} zaktualizowanych, {errors} błędów",
+      "ofTotal": "z",
       "form": {
         "firstName": "Imię",
         "lastName": "Nazwisko",

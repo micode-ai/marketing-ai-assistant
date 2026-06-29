@@ -1716,6 +1716,7 @@
       "syncResult": "{created} created, {updated} updated",
       "capped": "(capped)",
       "importResult": "{created} created, {updated} updated, {errors} errors",
+      "ofTotal": "of",
       "form": {
         "firstName": "First name",
         "lastName": "Last name",
