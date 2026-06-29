@@ -261,6 +261,19 @@ enum EntityModelType {
   EMAIL_SEQUENCE
 }
 
+enum ContactSource {
+  TRACKED_USER
+  SUBSCRIBER
+  MANUAL
+  IMPORT
+}
+
+enum ContactStatus {
+  ACTIVE
+  UNSUBSCRIBED
+  ARCHIVED
+}
+
 // =============================================================================
 // Users & Auth
 // =============================================================================
@@ -284,6 +297,8 @@ model User {
   createdDocuments Document[]
   chatSessions     ChatSession[]
   entityLinks      EntityLink[]
+  ownedContacts    Contact[]            @relation("ContactOwner")
+  ownedCompanies   Company[]            @relation("CompanyOwner")
 
   @@index([email])
   @@map("users")
@@ -416,6 +431,8 @@ model Project {
   appReviews        AppReview[]
   analyticsRecommendation AnalyticsRecommendation?
   aiAdvice          AiAdvice[]
+  contacts          Contact[]
+  companies         Company[]
 
   @@index([organizationId])
   @@map("projects")
@@ -1241,6 +1258,62 @@ model TrackedUser {
   @@index([projectId])
   @@index([email])
   @@map("tracked_users")
+}
+
+// =============================================================================
+// CRM — Contacts & Companies
+// =============================================================================
+
+model Contact {
+  id                String        @id @default(cuid())
+  projectId         String
+  email             String?
+  firstName         String?
+  lastName          String?
+  phone             String?
+  companyId         String?
+  ownerId           String?
+  source            ContactSource @default(MANUAL)
+  status            ContactStatus @default(ACTIVE)
+  tags              String[]      @default([])
+  notes             String?
+  trackedUserId     String?
+  emailSubscriberId String?
+  lastSeen          DateTime?
+  firstUtm          Json?
+  lastUtm           Json?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  project Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  company Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  owner   User?    @relation("ContactOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+
+  @@unique([projectId, email])
+  @@index([projectId])
+  @@index([ownerId])
+  @@index([companyId])
+  @@map("contacts")
+}
+
+model Company {
+  id        String   @id @default(cuid())
+  projectId String
+  name      String
+  domain    String?
+  website   String?
+  notes     String?
+  ownerId   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project  Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  owner    User?     @relation("CompanyOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  contacts Contact[]
+
+  @@unique([projectId, domain])
+  @@index([projectId])
+  @@map("companies")
 }
 
 // =============================================================================
