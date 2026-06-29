@@ -1,4 +1,5 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { parse } from 'csv-parse/sync';
 import { PrismaService } from '../database/prisma.service';
 import { PLAN_LIMITS } from '@marketing-ai/shared-types';
 
@@ -107,5 +108,96 @@ export class ContactsService {
     if (!existing) throw new NotFoundException('Contact not found');
     await this.prisma.contact.delete({ where: { id } });
     return { deleted: true as const };
+  }
+
+  async importCsv(
+    projectId: string,
+    plan: string,
+    csvText: string,
+  ): Promise<{ created: number; updated: number; skipped: number; errors: string[] }> {
+    const limit = this.contactLimit(plan);
+    let count = await this.prisma.contact.count({ where: { projectId } });
+
+    let rows: Record<string, string>[];
+    try {
+      rows = parse(csvText, {
+        columns: (header: string[]) => header.map((h) => h.trim().toLowerCase()),
+        skip_empty_lines: true,
+        trim: true,
+        relax_column_count: true,
+      });
+    } catch (e) {
+      return { created: 0, updated: 0, skipped: 0, errors: [`CSV parse error: ${e}`] };
+    }
+
+    let created = 0;
+    let updated = 0;
+    let skipped = 0;
+    const errors: string[] = [];
+
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      try {
+        const email = (row.email || '').trim() || null;
+        const firstName = (row.firstname || '').trim() || null;
+        const lastName = (row.lastname || '').trim() || null;
+        const phone = (row.phone || '').trim() || null;
+        const companyName = (row.company || '').trim();
+        const tags = (row.tags || '')
+          .split(',')
+          .map((t) => t.trim())
+          .filter(Boolean);
+
+        if (!email && !firstName && !lastName) {
+          skipped++;
+          continue;
+        }
+
+        let companyId: string | null = null;
+        if (companyName) {
+          const existingCo = await this.prisma.company.findFirst({
+            where: { projectId, name: companyName },
+            select: { id: true },
+          });
+          companyId = existingCo
+            ? existingCo.id
+            : (await this.prisma.company.create({ data: { projectId, name: companyName } })).id;
+        }
+
+        const existing = email
+          ? await this.prisma.contact.findUnique({ where: { projectId_email: { projectId, email } } })
+          : null;
+
+        if (existing) {
+          await this.prisma.contact.update({
+            where: { id: existing.id },
+            data: {
+              firstName: firstName ?? existing.firstName,
+              lastName: lastName ?? existing.lastName,
+              phone: phone ?? existing.phone,
+              companyId: companyId ?? existing.companyId,
+              tags: tags.length ? tags : existing.tags,
+              source: existing.source === 'MANUAL' ? 'MANUAL' : 'IMPORT',
+            },
+          });
+          updated++;
+        } else {
+          if (count >= limit) {
+            errors.push(`Row ${i + 1}: contact limit reached`);
+            skipped++;
+            continue;
+          }
+          await this.prisma.contact.create({
+            data: { projectId, email, firstName, lastName, phone, companyId, tags, source: 'IMPORT' },
+          });
+          created++;
+          count++;
+        }
+      } catch (e) {
+        errors.push(`Row ${i + 1}: ${e}`);
+      }
+    }
+
+    return { created, updated, skipped, errors };
   }
 }

@@ -9,9 +9,14 @@ function makePrisma() {
       findMany: jest.fn().mockResolvedValue([]),
       count: jest.fn().mockResolvedValue(0),
       findFirst: jest.fn().mockResolvedValue(null),
+      findUnique: jest.fn().mockResolvedValue(null),
       create: jest.fn().mockImplementation(({ data }) => Promise.resolve({ id: 'c1', ...data })),
       update: jest.fn().mockImplementation(({ data }) => Promise.resolve({ id: 'c1', ...data })),
       delete: jest.fn().mockResolvedValue({ id: 'c1' }),
+    },
+    company: {
+      findFirst: jest.fn().mockResolvedValue(null),
+      create: jest.fn().mockResolvedValue({ id: 'co1', name: 'Acme' }),
     },
   };
 }
@@ -68,5 +73,36 @@ describe('ContactsService', () => {
     expect(prisma.contact.update).toHaveBeenCalledWith({ where: { id: 'c1' }, data: { notes: 'hi' } });
     const del = await service.remove('p1', 'c1');
     expect(del).toEqual({ deleted: true });
+  });
+});
+
+describe('ContactsService.importCsv', () => {
+  let prisma: ReturnType<typeof makePrisma>;
+  let service: ContactsService;
+  beforeEach(() => {
+    jest.clearAllMocks();
+    prisma = makePrisma();
+    prisma.contact.findUnique.mockResolvedValue(null);
+    prisma.company.findFirst.mockResolvedValue(null);
+    prisma.company.create.mockResolvedValue({ id: 'co1', name: 'Acme' });
+    service = new ContactsService(prisma as any);
+  });
+
+  it('parses headers case-insensitively, upserts by email with source IMPORT, resolves company by name', async () => {
+    const csv = 'Email,FirstName,LastName,Company,Tags\na@x.com,Ann,Lee,Acme,"vip,warm"\n';
+
+    const res = await service.importCsv('p1', 'PRO', csv);
+
+    expect(res).toMatchObject({ created: 1, updated: 0, skipped: 0 });
+    const data = prisma.contact.create.mock.calls[0][0].data;
+    expect(data).toMatchObject({ projectId: 'p1', email: 'a@x.com', firstName: 'Ann', lastName: 'Lee', source: 'IMPORT', companyId: 'co1' });
+    expect(data.tags).toEqual(['vip', 'warm']);
+  });
+
+  it('skips rows with no email and no name; collects malformed rows into errors without aborting', async () => {
+    const csv = 'email,firstName\n,,\nb@x.com,Bob\n';
+    const res = await service.importCsv('p1', 'PRO', csv);
+    expect(res.created).toBe(1);     // b@x.com
+    expect(res.skipped).toBe(1);     // the empty row
   });
 });
