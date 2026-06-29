@@ -415,9 +415,29 @@ model Project {
   appStoreMetrics   AppStoreMetrics[]
   appReviews        AppReview[]
   analyticsRecommendation AnalyticsRecommendation?
+  aiAdvice          AiAdvice[]
 
   @@index([organizationId])
   @@map("projects")
+}
+
+/// Last AI-generated advice for a project, per channel (e.g. "instagram",
+/// "threads"). Persisted so the advice cards survive page re-entry, tab
+/// switches, reloads, and device/browser changes.
+model AiAdvice {
+  id             String   @id @default(cuid())
+  projectId      String
+  channel        String
+  advice         String
+  contextSummary String?
+  language       String?
+  generatedAt    DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  project        Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, channel])
+  @@map("ai_advice")
 }
 
 /// Last AI-generated cross-channel analytics recommendations for a project.
