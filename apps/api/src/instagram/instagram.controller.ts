@@ -49,4 +49,10 @@ export class InstagramController {
   ) {
     return this.service.generateAdvice(projectId, body?.language || 'en');
   }
+
+  @Get('advice')
+  @ApiOperation({ summary: 'Get the last persisted Instagram advice for a project' })
+  getStoredAdvice(@Query('projectId') projectId: string) {
+    return this.service.getStoredAdvice(projectId);
+  }
 }
