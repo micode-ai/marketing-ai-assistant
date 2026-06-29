@@ -250,6 +250,7 @@
       insight = await dealsApi.generateInsights(projectId, dealId, $locale || 'en');
     } catch (e: unknown) {
       insightError = (e as Error).message || $_('crm.insights.error');
+      showToast(insightError, 'error');
     } finally {
       insightLoading = false;
     }

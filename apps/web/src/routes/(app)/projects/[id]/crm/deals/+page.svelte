@@ -229,6 +229,8 @@
     </div>
     <div class="flex items-center gap-2">
       <button
+        type="button"
+        aria-pressed={hotFirst}
         on:click={() => { hotFirst = !hotFirst; }}
         class="border px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-150 flex items-center gap-2 cursor-pointer
           {hotFirst ? 'bg-red-500/10 border-red-400 text-red-700' : 'border-border text-ink hover:bg-surface-2'}"
@@ -359,9 +361,11 @@
                   </div>
                   {#if deal.insight?.score != null}
                     {@const band = scoreBand(deal.insight.score)}
-                    <span class="flex-shrink-0 text-xs px-1.5 py-0.5 rounded-full font-semibold leading-5 {bandClass(band)}">
-                      {deal.insight.score}
-                    </span>
+                    {#if band}
+                      <span class="flex-shrink-0 text-xs px-1.5 py-0.5 rounded-full font-semibold leading-5 {bandClass(band)}">
+                        {deal.insight.score}
+                      </span>
+                    {/if}
                   {/if}
                 </div>
 
