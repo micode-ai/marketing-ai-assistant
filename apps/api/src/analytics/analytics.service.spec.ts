@@ -36,6 +36,10 @@ function makePrisma() {
     projectSocialAccount: {
       findMany: jest.fn().mockResolvedValue([]),
     },
+    analyticsRecommendation: {
+      upsert: jest.fn().mockResolvedValue({}),
+      findUnique: jest.fn().mockResolvedValue(null),
+    },
     // Analytics data queries used by the delegated methods (spied below)
     dailyMetrics: {
       findMany: jest.fn().mockResolvedValue([]),
@@ -134,10 +138,48 @@ describe('AnalyticsService', () => {
 
       const result = await service.generateRecommendations('proj_1', 'en');
 
-      expect(result).toEqual({
-        recommendations: [{ title: 'Boost SEO', priority: 'HIGH' }],
-      });
+      expect(result.recommendations).toEqual([{ title: 'Boost SEO', priority: 'HIGH' }]);
+      expect(typeof result.generatedAt).toBe('number');
       expect(mockFetch).toHaveBeenCalledTimes(1);
+    });
+
+    it('persists a non-empty result (upsert by projectId)', async () => {
+      const recs = [{ title: 'Boost SEO', priority: 'HIGH' }];
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ recommendations: recs }),
+      }) as any;
+
+      await service.generateRecommendations('proj_1', 'pl');
+
+      expect(prisma.analyticsRecommendation.upsert).toHaveBeenCalledTimes(1);
+      const arg = prisma.analyticsRecommendation.upsert.mock.calls[0][0];
+      expect(arg.where).toEqual({ projectId: 'proj_1' });
+      expect(arg.create).toMatchObject({ projectId: 'proj_1', recommendations: recs, language: 'pl' });
+      expect(arg.update).toMatchObject({ recommendations: recs, language: 'pl' });
+    });
+
+    it('does NOT persist an empty result', async () => {
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ recommendations: [] }),
+      }) as any;
+
+      await service.generateRecommendations('proj_1', 'en');
+
+      expect(prisma.analyticsRecommendation.upsert).not.toHaveBeenCalled();
+    });
+
+    it('still returns recommendations when persistence fails (swallowed)', async () => {
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ recommendations: [{ title: 'X', priority: 'LOW' }] }),
+      }) as any;
+      prisma.analyticsRecommendation.upsert.mockRejectedValueOnce(new Error('db down'));
+
+      const result = await service.generateRecommendations('proj_1', 'en');
+
+      expect(result.recommendations).toEqual([{ title: 'X', priority: 'LOW' }]);
     });
 
     it('sends web.visitors and counts.keywords from mocked inputs', async () => {
@@ -297,11 +339,38 @@ describe('AnalyticsService', () => {
 
       // Should not throw — tolerates partial failures
       const result = await service.generateRecommendations('proj_1', 'en');
-      expect(result).toEqual({ recommendations: [] });
+      expect(result.recommendations).toEqual([]);
 
       const body = JSON.parse((mockFetch.mock.calls[0] as any)[1].body);
       expect(body.data.counts.keywords).toBe(0);
       expect(body.data.counts.campaigns).toBe(0);
+    });
+  });
+
+  describe('getStoredRecommendations', () => {
+    it('returns the persisted recommendations + epoch generatedAt', async () => {
+      const when = new Date('2026-06-29T10:00:00Z');
+      prisma.analyticsRecommendation.findUnique.mockResolvedValue({
+        recommendations: [{ title: 'Stored', priority: 'HIGH' }],
+        language: 'ru',
+        generatedAt: when,
+      });
+
+      const result = await service.getStoredRecommendations('proj_1');
+
+      expect(result).toEqual({
+        recommendations: [{ title: 'Stored', priority: 'HIGH' }],
+        generatedAt: when.getTime(),
+        language: 'ru',
+      });
+    });
+
+    it('returns an empty set when nothing is stored', async () => {
+      prisma.analyticsRecommendation.findUnique.mockResolvedValue(null);
+
+      const result = await service.getStoredRecommendations('proj_1');
+
+      expect(result).toEqual({ recommendations: [], generatedAt: null, language: null });
     });
   });
 });
