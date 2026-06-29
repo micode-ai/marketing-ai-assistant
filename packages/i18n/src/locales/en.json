@@ -1784,7 +1784,8 @@
     "nav": {
       "contacts": "Contacts",
       "companies": "Companies",
-      "deals": "Deals"
+      "deals": "Deals",
+      "tasks": "Tasks"
     },
     "companies": {
       "title": "Companies",
@@ -1837,6 +1838,7 @@
       "deleteError": "Failed to delete company"
     },
     "unassigned": "Unassigned",
+    "none": "—",
     "deals": {
       "title": "Deals",
       "add": "Add deal",
@@ -1894,6 +1896,50 @@
       "viewFinances": "View finances →",
       "titlePlaceholder": "Q4 Enterprise Deal",
       "loseReasonPlaceholder": "Budget constraints, chose competitor..."
+    },
+    "tasks": {
+      "title": "Tasks",
+      "add": "Add task",
+      "empty": "No open tasks",
+      "overdue": "Overdue",
+      "today": "Today",
+      "upcoming": "Upcoming",
+      "myTasks": "My tasks only",
+      "complete": "Mark complete",
+      "reopen": "Reopen",
+      "due": "Due {date}",
+      "noDue": "No due date",
+      "addSuccess": "Task created",
+      "completeSuccess": "Task completed",
+      "reopenSuccess": "Task reopened",
+      "deleteSuccess": "Task deleted",
+      "form": {
+        "title": "Task title",
+        "titlePlaceholder": "Follow up with client",
+        "description": "Description",
+        "descriptionPlaceholder": "Add details...",
+        "dueDate": "Due date",
+        "owner": "Assignee"
+      }
+    },
+    "activities": {
+      "title": "Activity",
+      "log": "Log activity",
+      "type": "Type",
+      "types": {
+        "NOTE": "Note",
+        "CALL": "Call",
+        "EMAIL": "Email",
+        "MEETING": "Meeting"
+      },
+      "occurredAt": "Date",
+      "body": "Details",
+      "bodyPlaceholder": "Add details about this interaction..."
+    },
+    "timeline": {
+      "heading": "Timeline",
+      "empty": "No activities or tasks yet",
+      "logActivitySuccess": "Activity logged"
     },
     "pipeline": {
       "manageStages": "Manage stages",

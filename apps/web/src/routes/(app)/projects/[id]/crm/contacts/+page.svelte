@@ -183,7 +183,7 @@
 </script>
 
 <div class="p-4 sm:p-6">
-  <!-- CRM sub-navigation: Contacts | Companies | Deals -->
+  <!-- CRM sub-navigation: Contacts | Companies | Deals | Tasks -->
   <div class="flex items-center gap-1 mb-6 p-1 bg-surface-2 rounded-lg w-fit">
     <a
       href="/projects/{projectId}/crm/contacts"
@@ -203,6 +203,12 @@
       class="px-4 py-1.5 rounded-md text-sm font-medium transition-colors text-ink-muted hover:text-ink"
     >
       {$_('crm.nav.deals')}
+    </a>
+    <a
+      href="/projects/{projectId}/crm/tasks"
+      class="px-4 py-1.5 rounded-md text-sm font-medium transition-colors text-ink-muted hover:text-ink"
+    >
+      {$_('crm.nav.tasks')}
     </a>
   </div>
 

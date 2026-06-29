@@ -1762,7 +1762,8 @@
     "nav": {
       "contacts": "Контакты",
       "companies": "Компании",
-      "deals": "Сделки"
+      "deals": "Сделки",
+      "tasks": "Задачи"
     },
     "companies": {
       "title": "Компании",
@@ -1815,6 +1816,7 @@
       "deleteError": "Не удалось удалить компанию"
     },
     "unassigned": "Не назначен",
+    "none": "Не выбрано",
     "deals": {
       "title": "Сделки",
       "add": "Добавить сделку",
@@ -1872,6 +1874,50 @@
       "viewFinances": "Перейти к финансам →",
       "titlePlaceholder": "Корпоративная сделка Q4",
       "loseReasonPlaceholder": "Бюджетные ограничения, выбрал конкурента..."
+    },
+    "tasks": {
+      "title": "Задачи",
+      "add": "Добавить задачу",
+      "empty": "Нет открытых задач",
+      "overdue": "Просроченные",
+      "today": "Сегодня",
+      "upcoming": "Предстоящие",
+      "myTasks": "Только мои задачи",
+      "complete": "Отметить выполненной",
+      "reopen": "Открыть повторно",
+      "due": "Срок: {date}",
+      "noDue": "Без срока",
+      "addSuccess": "Задача создана",
+      "completeSuccess": "Задача выполнена",
+      "reopenSuccess": "Задача открыта повторно",
+      "deleteSuccess": "Задача удалена",
+      "form": {
+        "title": "Название задачи",
+        "titlePlaceholder": "Связаться с клиентом",
+        "description": "Описание",
+        "descriptionPlaceholder": "Добавьте подробности...",
+        "dueDate": "Срок выполнения",
+        "owner": "Исполнитель"
+      }
+    },
+    "activities": {
+      "title": "Активность",
+      "log": "Записать активность",
+      "type": "Тип",
+      "types": {
+        "NOTE": "Заметка",
+        "CALL": "Звонок",
+        "EMAIL": "Письмо",
+        "MEETING": "Встреча"
+      },
+      "occurredAt": "Дата",
+      "body": "Подробности",
+      "bodyPlaceholder": "Добавьте подробности об этом взаимодействии..."
+    },
+    "timeline": {
+      "heading": "История",
+      "empty": "Нет активностей или задач",
+      "logActivitySuccess": "Активность записана"
     },
     "pipeline": {
       "manageStages": "Управление этапами",

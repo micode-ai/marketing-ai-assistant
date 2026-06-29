@@ -7,6 +7,7 @@
   import { contactDisplayName } from '$lib/api/crm-display';
   import { loadActiveMembers, ownerName, type TeamMember } from '$lib/api/crm-owners';
   import { organizationIdStore } from '$lib/stores/projects';
+  import CrmTimeline from '$lib/components/crm/CrmTimeline.svelte';
 
   $: projectId = $page.params['id'];
   $: contactId = $page.params['contactId'];
@@ -517,6 +518,11 @@
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- Timeline section -->
+    <div class="mt-8">
+      <CrmTimeline {projectId} contactId={contact.id} />
     </div>
   {/if}
 </div>
