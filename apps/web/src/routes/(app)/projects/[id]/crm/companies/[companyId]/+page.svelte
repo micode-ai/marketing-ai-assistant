@@ -5,6 +5,8 @@
   import { onMount } from 'svelte';
   import { crmApi, type CrmCompany, type CrmContact } from '$lib/api/crm';
   import { contactDisplayName } from '$lib/api/crm-display';
+  import { loadActiveMembers, type TeamMember } from '$lib/api/crm-owners';
+  import { organizationIdStore } from '$lib/stores/projects';
 
   $: projectId = $page.params['id'];
   $: companyId = $page.params['companyId'];
@@ -20,6 +22,10 @@
   let domain = '';
   let website = '';
   let notes = '';
+  let ownerId = '';
+
+  // Team members for owner picker
+  let members: TeamMember[] = [];
 
   // Delete modal
   let showDeleteModal = false;
@@ -40,6 +46,7 @@
     domain = c.domain ?? '';
     website = c.website ?? '';
     notes = c.notes ?? '';
+    ownerId = c.ownerId ?? '';
   }
 
   async function load() {
@@ -58,6 +65,9 @@
   onMount(async () => {
     mounted = true;
     prevProjectId = projectId;
+    if ($organizationIdStore) {
+      loadActiveMembers($organizationIdStore).then((m) => { members = m; });
+    }
     await load();
   });
 
@@ -73,7 +83,8 @@
     (name !== (company.name ?? '') ||
       domain !== (company.domain ?? '') ||
       website !== (company.website ?? '') ||
-      notes !== (company.notes ?? ''));
+      notes !== (company.notes ?? '') ||
+      ownerId !== (company.ownerId ?? ''));
 
   function computePatch(): Partial<CrmCompany> {
     if (!company) return {};
@@ -82,6 +93,7 @@
     if (domain !== (company.domain ?? '')) patch.domain = domain || null;
     if (website !== (company.website ?? '')) patch.website = website || null;
     if (notes !== (company.notes ?? '')) patch.notes = notes || null;
+    if (ownerId !== (company.ownerId ?? '')) patch.ownerId = ownerId || null;
     return patch;
   }
 
@@ -309,9 +321,21 @@
             <h2 class="text-xs font-semibold text-ink-muted uppercase tracking-wider">{$_('crm.company.meta')}</h2>
           </div>
           <div class="p-5 space-y-4">
+            <!-- Owner picker -->
             <div>
-              <p class="text-xs font-medium text-ink-muted uppercase tracking-wider mb-1.5">{$_('crm.company.owner')}</p>
-              <p class="text-sm text-ink font-mono break-all">{company.ownerId ?? '—'}</p>
+              <label for="co-owner" class="block text-xs font-medium text-ink-muted uppercase tracking-wider mb-1.5">
+                {$_('crm.company.owner')}
+              </label>
+              <select
+                id="co-owner"
+                bind:value={ownerId}
+                class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-surface text-ink"
+              >
+                <option value="">{$_('crm.unassigned')}</option>
+                {#each members as member (member.userId)}
+                  <option value={member.userId}>{member.name}</option>
+                {/each}
+              </select>
             </div>
             <div>
               <p class="text-xs font-medium text-ink-muted uppercase tracking-wider mb-1.5">{$_('crm.companies.columns.contacts')}</p>
