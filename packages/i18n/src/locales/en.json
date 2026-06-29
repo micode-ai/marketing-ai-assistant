@@ -1961,6 +1961,32 @@
         "open": "Open pipeline",
         "won": "Won this period"
       }
+    },
+    "insights": {
+      "title": "AI Insights",
+      "generate": "Generate AI insights",
+      "refresh": "Refresh",
+      "score": "Score",
+      "reason": "Reason",
+      "nextStep": "Next step",
+      "createTask": "Create task",
+      "taskCreated": "Task created",
+      "draft": "Email draft",
+      "subject": "Subject",
+      "body": "Body",
+      "copy": "Copy",
+      "copied": "Copied!",
+      "logActivity": "Log as activity",
+      "activityLogged": "Activity logged",
+      "empty": "No AI insights yet. Generate insights to get an AI-powered score, next steps, and an email draft.",
+      "loading": "Generating insights...",
+      "error": "Failed to generate insights",
+      "generatedAt": "Generated {date}",
+      "band": {
+        "hot": "Hot",
+        "warm": "Warm",
+        "cold": "Cold"
+      }
     }
   }
 }

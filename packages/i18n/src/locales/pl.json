@@ -1941,6 +1941,32 @@
         "open": "Otwarty lejek",
         "won": "Wygrane w tym okresie"
       }
+    },
+    "insights": {
+      "title": "Analiza AI",
+      "generate": "Generuj analizę AI",
+      "refresh": "Odśwież",
+      "score": "Wynik",
+      "reason": "Uzasadnienie",
+      "nextStep": "Następny krok",
+      "createTask": "Utwórz zadanie",
+      "taskCreated": "Zadanie utworzone",
+      "draft": "Szkic wiadomości",
+      "subject": "Temat",
+      "body": "Treść",
+      "copy": "Kopiuj",
+      "copied": "Skopiowano!",
+      "logActivity": "Zapisz jako aktywność",
+      "activityLogged": "Aktywność zapisana",
+      "empty": "Brak analizy AI. Wygeneruj analizę, aby uzyskać wynik, kolejne kroki i szkic wiadomości.",
+      "loading": "Generowanie analizy...",
+      "error": "Nie udało się wygenerować analizy",
+      "generatedAt": "Wygenerowano {date}",
+      "band": {
+        "hot": "Gorący",
+        "warm": "Ciepły",
+        "cold": "Zimny"
+      }
     }
   }
 }
