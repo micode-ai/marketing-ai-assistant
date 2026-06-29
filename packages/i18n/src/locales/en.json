@@ -1867,6 +1867,32 @@
         "LOST": "Lost"
       }
     },
+    "deal": {
+      "title": "Deal Details",
+      "backToList": "Back to deals",
+      "notFound": "Deal not found",
+      "loadError": "Failed to load deal",
+      "info": "Deal Info",
+      "details": "Details",
+      "titleLabel": "Title",
+      "save": "Save changes",
+      "saving": "Saving...",
+      "saveSuccess": "Deal saved",
+      "saveError": "Failed to save deal",
+      "delete": "Delete deal",
+      "deleteTitle": "Delete Deal",
+      "deleteConfirm": "Are you sure you want to delete \"{title}\"? This action cannot be undone.",
+      "deleteError": "Failed to delete deal",
+      "winError": "Failed to mark deal as won",
+      "loseError": "Failed to mark deal as lost",
+      "reopenSuccess": "Deal reopened",
+      "reopenError": "Failed to reopen deal",
+      "noStage": "No stage",
+      "noContact": "No contact",
+      "noCompany": "No company",
+      "incomeBooked": "Income booked",
+      "viewFinances": "View finances"
+    },
     "pipeline": {
       "manageStages": "Manage stages",
       "forecast": {
