@@ -5,6 +5,8 @@
   import { crmApi, type CrmContact } from '$lib/api/crm';
   import { contactDisplayName } from '$lib/api/crm-display';
   import { api } from '$lib/api/client';
+  import { loadActiveMembers, ownerName, type TeamMember } from '$lib/api/crm-owners';
+  import { organizationIdStore } from '$lib/stores/projects';
 
   $: projectId = $page.params['id'];
 
@@ -17,6 +19,9 @@
   let loading = false;
   let mounted = false;
   let prevProjectId = '';
+
+  // Team members for owner display
+  let members: TeamMember[] = [];
 
   // Modals
   let showAddModal = false;
@@ -80,6 +85,9 @@
     mounted = true;
     prevProjectId = projectId;
     load();
+    if ($organizationIdStore) {
+      loadActiveMembers($organizationIdStore).then((m) => { members = m; });
+    }
   });
 
   // Project-switch safe refetch (route is reused across [id] changes)
@@ -336,6 +344,7 @@
               <th class="text-left text-xs font-medium text-ink-muted uppercase tracking-wider px-5 py-3">{$_('crm.contacts.columns.email')}</th>
               <th class="text-left text-xs font-medium text-ink-muted uppercase tracking-wider px-5 py-3">{$_('crm.contacts.columns.company')}</th>
               <th class="text-left text-xs font-medium text-ink-muted uppercase tracking-wider px-5 py-3">{$_('crm.contacts.columns.tags')}</th>
+              <th class="text-left text-xs font-medium text-ink-muted uppercase tracking-wider px-5 py-3">{$_('crm.contact.owner')}</th>
               <th class="text-left text-xs font-medium text-ink-muted uppercase tracking-wider px-5 py-3">{$_('crm.contacts.columns.status')}</th>
               <th class="text-left text-xs font-medium text-ink-muted uppercase tracking-wider px-5 py-3">{$_('crm.contacts.columns.lastSeen')}</th>
             </tr>
@@ -390,6 +399,11 @@
                   {:else}
                     <span class="text-sm text-ink-subtle">—</span>
                   {/if}
+                </td>
+
+                <!-- Owner -->
+                <td class="px-5 py-3.5">
+                  <span class="text-sm text-ink-muted">{ownerName(members, contact.ownerId, $_('crm.unassigned'))}</span>
                 </td>
 
                 <!-- Status -->

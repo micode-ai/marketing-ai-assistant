@@ -4,6 +4,8 @@
   import { _ } from 'svelte-i18n';
   import { onMount } from 'svelte';
   import { crmApi, type CrmCompany } from '$lib/api/crm';
+  import { loadActiveMembers, ownerName, type TeamMember } from '$lib/api/crm-owners';
+  import { organizationIdStore } from '$lib/stores/projects';
 
   $: projectId = $page.params['id'];
 
@@ -13,6 +15,9 @@
   let loading = false;
   let mounted = false;
   let prevProjectId = '';
+
+  // Team members for owner display
+  let members: TeamMember[] = [];
 
   // Add modal
   let showAddModal = false;
@@ -47,6 +52,9 @@
     mounted = true;
     prevProjectId = projectId;
     load();
+    if ($organizationIdStore) {
+      loadActiveMembers($organizationIdStore).then((m) => { members = m; });
+    }
   });
 
   // Project-switch safe refetch
@@ -235,11 +243,7 @@
 
                 <!-- Owner -->
                 <td class="px-5 py-3.5">
-                  {#if company.ownerId}
-                    <span class="text-sm text-ink-muted font-mono text-xs break-all">{company.ownerId}</span>
-                  {:else}
-                    <span class="text-sm text-ink-subtle">—</span>
-                  {/if}
+                  <span class="text-sm text-ink-muted">{ownerName(members, company.ownerId, $_('crm.unassigned'))}</span>
                 </td>
               </tr>
             {/each}

@@ -1834,6 +1834,7 @@
       "deleteTitle": "Delete Company",
       "deleteConfirm": "Are you sure you want to delete {name}? This action cannot be undone.",
       "deleteError": "Failed to delete company"
-    }
+    },
+    "unassigned": "Unassigned"
   }
 }

@@ -5,6 +5,8 @@
   import { onMount } from 'svelte';
   import { crmApi, type CrmContact } from '$lib/api/crm';
   import { contactDisplayName } from '$lib/api/crm-display';
+  import { loadActiveMembers, ownerName, type TeamMember } from '$lib/api/crm-owners';
+  import { organizationIdStore } from '$lib/stores/projects';
 
   $: projectId = $page.params['id'];
   $: contactId = $page.params['contactId'];
@@ -24,11 +26,15 @@
   let phone = '';
   let notes = '';
   let companyId = '';
+  let ownerId = '';
   let tags: string[] = [];
   let newTag = '';
 
   // Companies dropdown
   let companies: Company[] = [];
+
+  // Team members for owner picker
+  let members: TeamMember[] = [];
 
   // Delete modal
   let showDeleteModal = false;
@@ -51,6 +57,7 @@
     phone = c.phone ?? '';
     notes = c.notes ?? '';
     companyId = c.companyId ?? '';
+    ownerId = c.ownerId ?? '';
     tags = [...(c.tags ?? [])];
   }
 
@@ -79,6 +86,9 @@
   onMount(async () => {
     mounted = true;
     prevProjectId = projectId;
+    if ($organizationIdStore) {
+      loadActiveMembers($organizationIdStore).then((m) => { members = m; });
+    }
     await Promise.all([load(), loadCompanies()]);
   });
 
@@ -97,6 +107,7 @@
       phone !== (contact.phone ?? '') ||
       notes !== (contact.notes ?? '') ||
       companyId !== (contact.companyId ?? '') ||
+      ownerId !== (contact.ownerId ?? '') ||
       JSON.stringify(tags) !== JSON.stringify(contact.tags ?? []));
 
   function computePatch(): Partial<CrmContact> {
@@ -108,6 +119,7 @@
     if (phone !== (contact.phone ?? '')) patch.phone = phone || null;
     if (notes !== (contact.notes ?? '')) patch.notes = notes || null;
     if (companyId !== (contact.companyId ?? '')) patch.companyId = companyId || null;
+    if (ownerId !== (contact.ownerId ?? '')) patch.ownerId = ownerId || null;
     if (JSON.stringify(tags) !== JSON.stringify(contact.tags ?? [])) patch.tags = tags;
     return patch;
   }
@@ -424,10 +436,21 @@
               </select>
             </div>
 
-            <!-- Owner (read-only — no team members endpoint available) -->
+            <!-- Owner picker -->
             <div>
-              <p class="text-xs font-medium text-ink-muted uppercase tracking-wider mb-1.5">{$_('crm.contact.owner')}</p>
-              <p class="text-sm text-ink font-mono break-all">{contact.ownerId ?? '—'}</p>
+              <label for="detail-owner" class="block text-xs font-medium text-ink-muted uppercase tracking-wider mb-1.5">
+                {$_('crm.contact.owner')}
+              </label>
+              <select
+                id="detail-owner"
+                bind:value={ownerId}
+                class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-surface text-ink"
+              >
+                <option value="">{$_('crm.unassigned')}</option>
+                {#each members as member (member.userId)}
+                  <option value={member.userId}>{member.name}</option>
+                {/each}
+              </select>
             </div>
 
             <!-- Source (read-only) -->

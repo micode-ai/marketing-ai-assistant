@@ -1814,6 +1814,7 @@
       "deleteTitle": "Usuń firmę",
       "deleteConfirm": "Czy na pewno chcesz usunąć {name}? Tej operacji nie można cofnąć.",
       "deleteError": "Nie udało się usunąć firmy"
-    }
+    },
+    "unassigned": "Nieprzypisany"
   }
 }
