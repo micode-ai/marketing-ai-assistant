@@ -1684,11 +1684,25 @@
     "contacts": {
       "title": "Kontakty",
       "add": "Dodaj kontakt",
+      "addSuccess": "Kontakt dodany",
       "import": "Importuj CSV",
       "syncNow": "Synchronizuj teraz",
       "search": "Szukaj kontaktów...",
       "anonymous": "Anonim",
       "empty": "Brak kontaktów",
+      "emptyFiltered": "Żaden kontakt nie pasuje do wybranych filtrów.",
+      "emptyHint": "Dodaj pierwszy kontakt ręcznie, zaimportuj CSV lub zsynchronizuj śledzonych użytkowników.",
+      "count": "{count, plural, one {# kontakt} few {# kontakty} many {# kontaktów} other {# kontaktów}}",
+      "syncResult": "{created} dodanych, {updated} zaktualizowanych",
+      "capped": "(z limitem)",
+      "importResult": "{created} dodanych, {updated} zaktualizowanych, {errors} błędów",
+      "form": {
+        "firstName": "Imię",
+        "lastName": "Nazwisko",
+        "email": "Email",
+        "phone": "Telefon",
+        "tagsHint": "oddzielone przecinkami"
+      },
       "columns": {
         "name": "Nazwa",
         "email": "Email",

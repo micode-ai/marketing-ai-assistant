@@ -1704,11 +1704,25 @@
     "contacts": {
       "title": "Contacts",
       "add": "Add contact",
+      "addSuccess": "Contact added",
       "import": "Import CSV",
       "syncNow": "Sync now",
       "search": "Search contacts...",
       "anonymous": "Anonymous",
       "empty": "No contacts yet",
+      "emptyFiltered": "No contacts match your current filters.",
+      "emptyHint": "Add your first contact manually, import a CSV, or sync tracked users.",
+      "count": "{count, plural, one {# contact} other {# contacts}}",
+      "syncResult": "{created} created, {updated} updated",
+      "capped": "(capped)",
+      "importResult": "{created} created, {updated} updated, {errors} errors",
+      "form": {
+        "firstName": "First name",
+        "lastName": "Last name",
+        "email": "Email",
+        "phone": "Phone",
+        "tagsHint": "comma-separated"
+      },
       "columns": {
         "name": "Name",
         "email": "Email",
