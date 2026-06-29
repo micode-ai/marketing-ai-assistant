@@ -134,19 +134,34 @@ export class ContactsSyncService {
 
   /**
    * Build the update payload: always refresh provenance + behavioural snapshot,
-   * but never overwrite a non-null human field (firstName/lastName/phone) with
-   * null, and never set `source` (so an existing source is never downgraded).
+   * but never set `source` (so an existing source is never downgraded) and
+   * protect human-entered fields (firstName/lastName/phone):
+   *   - When the existing contact is MANUAL or IMPORT, the human-entered record
+   *     is authoritative — human fields are NEVER overwritten by an auto value
+   *     (null OR non-null). The behavioural snapshot still refreshes.
+   *   - Otherwise (auto-materialized contact), a non-null/non-empty auto value
+   *     may set a human field, but a null/empty value never clobbers an existing
+   *     non-null one.
    */
   private mergeUpdate(
-    existing: { firstName?: string | null; lastName?: string | null; phone?: string | null },
+    existing: {
+      source?: string | null;
+      firstName?: string | null;
+      lastName?: string | null;
+      phone?: string | null;
+    },
     incoming: Record<string, unknown>,
   ): Record<string, unknown> {
+    const humanAuthoritative = existing.source === 'MANUAL' || existing.source === 'IMPORT';
     const out: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(incoming)) {
       if (k === 'source') continue; // never downgrade
       const isHumanField = k === 'firstName' || k === 'lastName' || k === 'phone';
-      if (isHumanField && (v === null || v === undefined || v === '')) {
-        if ((existing as any)[k]) continue; // keep the existing non-null human value
+      if (isHumanField) {
+        if (humanAuthoritative) continue; // curated record wins — never overwrite
+        if (v === null || v === undefined || v === '') {
+          if ((existing as any)[k]) continue; // keep the existing non-null human value
+        }
       }
       out[k] = v;
     }

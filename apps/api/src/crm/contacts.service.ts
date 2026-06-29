@@ -1,4 +1,10 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { parse } from 'csv-parse/sync';
 import { PrismaService } from '../database/prisma.service';
 import { PLAN_LIMITS } from '@marketing-ai/shared-types';
@@ -77,20 +83,27 @@ export class ContactsService {
     if (count >= limit) {
       throw new ForbiddenException('Contact limit reached for your plan');
     }
-    return this.prisma.contact.create({
-      data: {
-        projectId,
-        email: dto.email ?? null,
-        firstName: dto.firstName ?? null,
-        lastName: dto.lastName ?? null,
-        phone: dto.phone ?? null,
-        companyId: dto.companyId ?? null,
-        ownerId: dto.ownerId ?? null,
-        tags: dto.tags ?? [],
-        notes: dto.notes ?? null,
-        source: 'MANUAL',
-      },
-    });
+    try {
+      return await this.prisma.contact.create({
+        data: {
+          projectId,
+          email: dto.email ?? null,
+          firstName: dto.firstName ?? null,
+          lastName: dto.lastName ?? null,
+          phone: dto.phone ?? null,
+          companyId: dto.companyId ?? null,
+          ownerId: dto.ownerId ?? null,
+          tags: dto.tags ?? [],
+          notes: dto.notes ?? null,
+          source: 'MANUAL',
+        },
+      });
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+        throw new ConflictException('A contact with this email already exists');
+      }
+      throw e;
+    }
   }
 
   async update(projectId: string, id: string, dto: any) {

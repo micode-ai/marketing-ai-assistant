@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../database/prisma.service';
 
 @Injectable()
@@ -29,16 +30,23 @@ export class CompaniesService {
   }
 
   async create(projectId: string, dto: any) {
-    return this.prisma.company.create({
-      data: {
-        projectId,
-        name: dto.name,
-        domain: dto.domain ?? null,
-        website: dto.website ?? null,
-        notes: dto.notes ?? null,
-        ownerId: dto.ownerId ?? null,
-      },
-    });
+    try {
+      return await this.prisma.company.create({
+        data: {
+          projectId,
+          name: dto.name,
+          domain: dto.domain ?? null,
+          website: dto.website ?? null,
+          notes: dto.notes ?? null,
+          ownerId: dto.ownerId ?? null,
+        },
+      });
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+        throw new ConflictException('A company with this domain already exists');
+      }
+      throw e;
+    }
   }
 
   async update(projectId: string, id: string, dto: any) {

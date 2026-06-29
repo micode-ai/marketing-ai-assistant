@@ -1,4 +1,5 @@
-import { NotFoundException } from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { CompaniesService } from './companies.service';
 
 function makePrisma() {
@@ -30,6 +31,18 @@ describe('CompaniesService', () => {
     const res = await service.create('p1', { name: 'Acme', domain: 'acme.com' });
     expect(prisma.company.create.mock.calls[0][0].data).toMatchObject({ projectId: 'p1', name: 'Acme', domain: 'acme.com' });
     expect(res.id).toBe('co1');
+  });
+
+  it('create throws ConflictException on a duplicate (projectId,domain) — Prisma P2002', async () => {
+    const p2002 = new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
+      code: 'P2002',
+      clientVersion: '5.0.0',
+    });
+    prisma.company.create.mockRejectedValue(p2002);
+
+    await expect(service.create('p1', { name: 'Acme', domain: 'acme.com' })).rejects.toBeInstanceOf(
+      ConflictException,
+    );
   });
 
   it('get throws NotFound when missing/foreign', async () => {
