@@ -1763,7 +1763,8 @@
     },
     "nav": {
       "contacts": "Kontakty",
-      "companies": "Firmy"
+      "companies": "Firmy",
+      "deals": "Transakcje"
     },
     "companies": {
       "title": "Firmy",
@@ -1815,6 +1816,85 @@
       "deleteConfirm": "Czy na pewno chcesz usunąć {name}? Tej operacji nie można cofnąć.",
       "deleteError": "Nie udało się usunąć firmy"
     },
-    "unassigned": "Nieprzypisany"
+    "unassigned": "Nieprzypisany",
+    "deals": {
+      "title": "Transakcje",
+      "add": "Dodaj transakcję",
+      "addSuccess": "Transakcja dodana",
+      "empty": "Brak etapów lejka sprzedaży",
+      "emptyHint": "Utwórz etapy lejka, aby śledzić transakcje.",
+      "dropHere": "Upuść tutaj",
+      "win": "Wygrana",
+      "lose": "Przegrana",
+      "loseTitle": "Oznacz jako przegrana",
+      "reopen": "Otwórz ponownie",
+      "lostReasonPrompt": "Powód przegranej",
+      "winSuccess": "Transakcja oznaczona jako wygrana",
+      "loseSuccess": "Transakcja oznaczona jako przegrana",
+      "value": "Wartość",
+      "stage": "Etap",
+      "owner": "Właściciel",
+      "contact": "Kontakt",
+      "company": "Firma",
+      "expectedClose": "Oczekiwana data zamknięcia",
+      "form": {
+        "title": "Tytuł transakcji"
+      },
+      "openCount": "{count, plural, one {# transakcja} few {# transakcje} many {# transakcji} other {# transakcji}}",
+      "status": {
+        "OPEN": "Otwarta",
+        "WON": "Wygrana",
+        "LOST": "Przegrana"
+      }
+    },
+    "deal": {
+      "title": "Szczegóły transakcji",
+      "backToList": "Powrót do transakcji",
+      "notFound": "Nie znaleziono transakcji",
+      "loadError": "Nie udało się wczytać transakcji",
+      "info": "Informacje o transakcji",
+      "details": "Szczegóły",
+      "titleLabel": "Tytuł",
+      "save": "Zapisz zmiany",
+      "saving": "Zapisywanie...",
+      "saveSuccess": "Transakcja zapisana",
+      "saveError": "Nie udało się zapisać transakcji",
+      "delete": "Usuń transakcję",
+      "deleteTitle": "Usuń transakcję",
+      "deleteConfirm": "Czy na pewno chcesz usunąć \"{title}\"? Tej operacji nie można cofnąć.",
+      "deleteError": "Nie udało się usunąć transakcji",
+      "winError": "Nie udało się oznaczyć transakcji jako wygranej",
+      "loseError": "Nie udało się oznaczyć transakcji jako przegranej",
+      "reopenSuccess": "Transakcja otwarta ponownie",
+      "reopenError": "Nie udało się otworzyć transakcji ponownie",
+      "noStage": "Brak etapu",
+      "noContact": "Brak kontaktu",
+      "noCompany": "Brak firmy",
+      "incomeBooked": "Przychód zaksięgowany",
+      "viewFinances": "Przejdź do finansów →",
+      "titlePlaceholder": "Kontrakt Q4 dla klienta enterprise",
+      "loseReasonPlaceholder": "Ograniczenia budżetowe, wybrał konkurencję..."
+    },
+    "pipeline": {
+      "manageStages": "Zarządzaj etapami",
+      "stages": "Etapy lejka",
+      "stageName": "Nazwa etapu",
+      "probability": "Prawdopodobieństwo (%)",
+      "addStage": "Dodaj etap",
+      "deleteTitle": "Usuń etap",
+      "deleteWarning": "Usunięcie etapu przeniesie wszystkie otwarte transakcje do poprzedniego etapu. Tej operacji nie można cofnąć.",
+      "moveUp": "Przesuń w górę",
+      "moveDown": "Przesuń w dół",
+      "lastStageError": "Nie można usunąć ostatniego etapu lejka",
+      "back": "Wróć do tablicy",
+      "saveSuccess": "Etap zapisany",
+      "addSuccess": "Etap dodany",
+      "deleteSuccess": "Etap usunięty",
+      "forecast": {
+        "weighted": "Ważony lejek",
+        "open": "Otwarty lejek",
+        "won": "Wygrane w tym okresie"
+      }
+    }
   }
 }

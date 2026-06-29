@@ -274,6 +274,12 @@ enum ContactStatus {
   ARCHIVED
 }
 
+enum DealStatus {
+  OPEN
+  WON
+  LOST
+}
+
 // =============================================================================
 // Users & Auth
 // =============================================================================
@@ -299,6 +305,7 @@ model User {
   entityLinks      EntityLink[]
   ownedContacts    Contact[]            @relation("ContactOwner")
   ownedCompanies   Company[]            @relation("CompanyOwner")
+  ownedDeals       Deal[]               @relation("DealOwner")
 
   @@index([email])
   @@map("users")
@@ -433,6 +440,8 @@ model Project {
   aiAdvice          AiAdvice[]
   contacts          Contact[]
   companies         Company[]
+  pipelineStages    PipelineStage[]
+  deals             Deal[]
 
   @@index([organizationId])
   @@map("projects")
@@ -1288,6 +1297,7 @@ model Contact {
   project Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   company Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
   owner   User?    @relation("ContactOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  deals   Deal[]
 
   @@unique([projectId, email])
   @@index([projectId])
@@ -1310,10 +1320,65 @@ model Company {
   project  Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
   owner    User?     @relation("CompanyOwner", fields: [ownerId], references: [id], onDelete: SetNull)
   contacts Contact[]
+  deals    Deal[]
 
   @@unique([projectId, domain])
   @@index([projectId])
   @@map("companies")
+}
+
+// =============================================================================
+// CRM — Deals & Pipelines
+// =============================================================================
+
+model PipelineStage {
+  id          String   @id @default(cuid())
+  projectId   String
+  name        String
+  order       Int
+  probability Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  deals   Deal[]
+
+  @@unique([projectId, order])
+  @@index([projectId])
+  @@map("pipeline_stages")
+}
+
+model Deal {
+  id                String     @id @default(cuid())
+  projectId         String
+  title             String
+  value             Decimal    @default(0) @db.Decimal(12, 2)
+  currency          String     @db.VarChar(3)
+  stageId           String?
+  status            DealStatus @default(OPEN)
+  ownerId           String?
+  contactId         String?
+  companyId         String?
+  expectedCloseDate DateTime?
+  wonAt             DateTime?
+  lostAt            DateTime?
+  lostReason        String?
+  financeRecordId   String?    @unique
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  project       Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  stage         PipelineStage? @relation(fields: [stageId], references: [id], onDelete: SetNull)
+  owner         User?          @relation("DealOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  contact       Contact?       @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  company       Company?       @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  financeRecord FinanceRecord? @relation("DealFinanceRecord", fields: [financeRecordId], references: [id], onDelete: SetNull)
+
+  @@index([projectId])
+  @@index([projectId, status])
+  @@index([stageId])
+  @@index([ownerId])
+  @@map("deals")
 }
 
 // =============================================================================
@@ -1406,6 +1471,7 @@ model FinanceRecord {
   project      Project?        @relation(fields: [projectId], references: [id], onDelete: Cascade)
   organization Organization?   @relation("OrgFinanceRecord", fields: [organizationId], references: [id], onDelete: Cascade)
   category     FinanceCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  deal         Deal?           @relation("DealFinanceRecord")
 
   @@index([projectId])
   @@index([projectId, type])
