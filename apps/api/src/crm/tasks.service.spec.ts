@@ -36,7 +36,7 @@ describe('TasksService', () => {
   });
 
   it('create sets OPEN status + project scope', async () => {
-    const res = await service.create('p1', { title: 'Call Bob', dueDate: '2026-07-01', ownerId: 'u1' });
+    await service.create('p1', { title: 'Call Bob', dueDate: '2026-07-01', ownerId: 'u1' });
     const data = prisma.task.create.mock.calls[0][0].data;
     expect(data).toMatchObject({ projectId: 'p1', title: 'Call Bob', status: 'OPEN', ownerId: 'u1' });
     expect(data.dueDate).toBeInstanceOf(Date);
