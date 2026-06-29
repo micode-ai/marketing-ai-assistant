@@ -46,7 +46,7 @@ function makeSyncService() {
     syncAccount: jest
       .fn()
       .mockResolvedValue({ accountSynced: true, mediaSynced: 3 }),
-    planAllowsMedia: jest.fn((plan: string) => plan !== 'FREE'),
+    planAllowsMedia: jest.fn(() => true),
     backfillAccount: jest.fn().mockResolvedValue({ daysWritten: 0 }),
   };
 }
@@ -324,7 +324,7 @@ describe('InstagramService', () => {
       });
     });
 
-    it('FREE: triggers syncAccount with withMedia=false (no media on the manual path)', async () => {
+    it('FREE: triggers syncAccount with withMedia=true (per-post analytics on the manual path)', async () => {
       prisma.projectSocialAccount.findMany.mockResolvedValue([igLink()]);
       prisma.instagramAccountMetrics.findFirst.mockResolvedValue(null);
       prisma.organization.findUnique.mockResolvedValue({
@@ -335,7 +335,7 @@ describe('InstagramService', () => {
 
       expect(syncService.syncAccount).toHaveBeenCalledWith(
         expect.objectContaining({ id: 'acc_1' }),
-        false,
+        true,
       );
     });
 

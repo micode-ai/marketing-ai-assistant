@@ -261,8 +261,8 @@ describe('ThreadsSyncService', () => {
   });
 
   describe('planAllowsMedia', () => {
-    it('returns false for FREE', () => {
-      expect(service.planAllowsMedia('FREE')).toBe(false);
+    it('returns true for FREE (per-post analytics on every plan)', () => {
+      expect(service.planAllowsMedia('FREE')).toBe(true);
     });
 
     it('returns true for PRO', () => {
@@ -456,14 +456,14 @@ describe('ThreadsSyncService', () => {
       expect(prisma.threadsAccountMetrics.upsert).not.toHaveBeenCalled();
     });
 
-    it('FREE: syncs account metrics only (no media) when none today', async () => {
+    it('FREE: syncs account + media (per-post analytics) when none today', async () => {
       prisma.socialAccount.findMany.mockResolvedValue([cronAccount('FREE')]);
       prisma.threadsAccountMetrics.findUnique.mockResolvedValue(null);
 
       await service.handleCron();
 
       expect(prisma.threadsAccountMetrics.upsert).toHaveBeenCalledTimes(1);
-      expect(mockFetchThreadsMediaList).not.toHaveBeenCalled();
+      expect(mockFetchThreadsMediaList).toHaveBeenCalledTimes(1);
     });
 
     it('PRO: skips if media synced within 6h', async () => {

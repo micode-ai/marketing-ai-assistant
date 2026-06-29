@@ -351,11 +351,13 @@ export class ThreadsSyncService {
   // ---------------------------------------------------------------------------
 
   /**
-   * Plan → media decision. FREE syncs account metrics only; PRO/ENTERPRISE also
-   * pull media insights. Public so manual-sync paths can apply the same throttle.
+   * Plan → media decision. Per-post analytics (media insights) are available on
+   * every plan; plans differ only in sync frequency (the throttle in handleCron:
+   * FREE once/day, PRO every 6h, ENTERPRISE hourly). Public so manual-sync paths
+   * can apply the same decision as the cron.
    */
-  planAllowsMedia(plan: string): boolean {
-    return plan !== 'FREE';
+  planAllowsMedia(_plan: string): boolean {
+    return true;
   }
 
   private truncateToDate(d: Date): Date {
