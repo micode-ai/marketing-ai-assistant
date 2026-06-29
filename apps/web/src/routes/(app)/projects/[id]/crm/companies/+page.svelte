@@ -1,5 +1,6 @@
 <script lang="ts">
   import { page } from '$app/stores';
+  import { goto } from '$app/navigation';
   import { _ } from 'svelte-i18n';
   import { onMount } from 'svelte';
   import { crmApi, type CrmCompany } from '$lib/api/crm';
@@ -198,12 +199,19 @@
           </thead>
           <tbody class="divide-y divide-border">
             {#each items as company (company.id)}
-              <tr class="hover:bg-surface-2/50 transition-colors duration-100">
+              <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+            <tr
+              class="hover:bg-surface-2/50 transition-colors duration-100 cursor-pointer"
+              on:click={() => goto(`/projects/${projectId}/crm/companies/${company.id}`)}
+            >
                 <!-- Name -->
                 <td class="px-5 py-3.5">
+                  <!-- svelte-ignore a11y-click-events-have-key-events -->
                   <a
                     href="/projects/{projectId}/crm/companies/{company.id}"
                     class="text-sm font-medium text-ink hover:text-brand transition-colors"
+                    on:click|stopPropagation
                   >
                     {company.name}
                   </a>
@@ -296,7 +304,7 @@
             type="text"
             bind:value={addForm.name}
             class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-surface text-ink"
-            placeholder="Acme Corp"
+            placeholder={$_('crm.companies.form.namePlaceholder')}
           />
         </div>
 
@@ -310,7 +318,7 @@
             type="text"
             bind:value={addForm.domain}
             class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-surface text-ink"
-            placeholder="acme.com"
+            placeholder={$_('crm.companies.form.domainPlaceholder')}
           />
         </div>
 
@@ -324,7 +332,7 @@
             type="url"
             bind:value={addForm.website}
             class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-surface text-ink"
-            placeholder="https://acme.com"
+            placeholder={$_('crm.companies.form.websitePlaceholder')}
           />
         </div>
 

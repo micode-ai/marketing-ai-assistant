@@ -203,7 +203,7 @@
                 id="co-domain"
                 type="text"
                 bind:value={domain}
-                placeholder="acme.com"
+                placeholder={$_('crm.companies.form.domainPlaceholder')}
                 class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-surface text-ink"
               />
             </div>
@@ -217,7 +217,7 @@
                 id="co-website"
                 type="url"
                 bind:value={website}
-                placeholder="https://acme.com"
+                placeholder={$_('crm.companies.form.websitePlaceholder')}
                 class="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-surface text-ink"
               />
             </div>
@@ -306,7 +306,7 @@
         <!-- Meta card -->
         <div class="bg-surface rounded-xl border border-border">
           <div class="px-5 py-4 border-b border-border">
-            <h2 class="text-xs font-semibold text-ink-muted uppercase tracking-wider">{$_('crm.company.details')}</h2>
+            <h2 class="text-xs font-semibold text-ink-muted uppercase tracking-wider">{$_('crm.company.meta')}</h2>
           </div>
           <div class="p-5 space-y-4">
             <div>

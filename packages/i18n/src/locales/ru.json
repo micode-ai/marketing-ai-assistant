@@ -1776,7 +1776,10 @@
         "name": "Название компании",
         "domain": "Домен",
         "website": "Веб-сайт",
-        "notes": "Заметки"
+        "notes": "Заметки",
+        "namePlaceholder": "Acme Corp",
+        "domainPlaceholder": "acme.com",
+        "websitePlaceholder": "https://acme.com"
       },
       "columns": {
         "name": "Название",
@@ -1791,6 +1794,7 @@
       "notFound": "Компания не найдена",
       "loadError": "Не удалось загрузить компанию",
       "details": "Данные",
+      "meta": "Сводка",
       "name": "Название компании",
       "domain": "Домен",
       "website": "Веб-сайт",

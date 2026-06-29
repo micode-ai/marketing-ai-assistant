@@ -1798,7 +1798,10 @@
         "name": "Company name",
         "domain": "Domain",
         "website": "Website",
-        "notes": "Notes"
+        "notes": "Notes",
+        "namePlaceholder": "Acme Corp",
+        "domainPlaceholder": "acme.com",
+        "websitePlaceholder": "https://acme.com"
       },
       "columns": {
         "name": "Name",
@@ -1813,6 +1816,7 @@
       "notFound": "Company not found",
       "loadError": "Failed to load company",
       "details": "Details",
+      "meta": "Overview",
       "name": "Company name",
       "domain": "Domain",
       "website": "Website",

@@ -1778,7 +1778,10 @@
         "name": "Nazwa firmy",
         "domain": "Domena",
         "website": "Strona internetowa",
-        "notes": "Notatki"
+        "notes": "Notatki",
+        "namePlaceholder": "Acme Corp",
+        "domainPlaceholder": "acme.com",
+        "websitePlaceholder": "https://acme.com"
       },
       "columns": {
         "name": "Nazwa",
@@ -1793,6 +1796,7 @@
       "notFound": "Nie znaleziono firmy",
       "loadError": "Nie udało się wczytać firmy",
       "details": "Szczegóły",
+      "meta": "Podsumowanie",
       "name": "Nazwa firmy",
       "domain": "Domena",
       "website": "Strona internetowa",
