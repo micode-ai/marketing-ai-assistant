@@ -1847,6 +1847,32 @@
         "LOST": "Przegrana"
       }
     },
+    "deal": {
+      "title": "Szczegóły transakcji",
+      "backToList": "Powrót do transakcji",
+      "notFound": "Nie znaleziono transakcji",
+      "loadError": "Nie udało się wczytać transakcji",
+      "info": "Informacje o transakcji",
+      "details": "Szczegóły",
+      "titleLabel": "Tytuł",
+      "save": "Zapisz zmiany",
+      "saving": "Zapisywanie...",
+      "saveSuccess": "Transakcja zapisana",
+      "saveError": "Nie udało się zapisać transakcji",
+      "delete": "Usuń transakcję",
+      "deleteTitle": "Usuń transakcję",
+      "deleteConfirm": "Czy na pewno chcesz usunąć \"{title}\"? Tej operacji nie można cofnąć.",
+      "deleteError": "Nie udało się usunąć transakcji",
+      "winError": "Nie udało się oznaczyć transakcji jako wygranej",
+      "loseError": "Nie udało się oznaczyć transakcji jako przegranej",
+      "reopenSuccess": "Transakcja otwarta ponownie",
+      "reopenError": "Nie udało się otworzyć transakcji ponownie",
+      "noStage": "Brak etapu",
+      "noContact": "Brak kontaktu",
+      "noCompany": "Brak firmy",
+      "incomeBooked": "Przychód zaksięgowany",
+      "viewFinances": "Przejdź do finansów"
+    },
     "pipeline": {
       "manageStages": "Zarządzaj etapami",
       "forecast": {
