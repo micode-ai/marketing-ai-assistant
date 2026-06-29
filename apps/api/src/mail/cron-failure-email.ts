@@ -7,7 +7,8 @@ export type CronName =
   | 'gsc-sync'
   | 'instagram-sync'
   | 'meta-token-refresh'
-  | 'threads-sync';
+  | 'threads-sync'
+  | 'crm-contacts-sync';
 
 export interface CronFailureEmailInput {
   language: string;
@@ -46,6 +47,7 @@ const STRINGS: Record<'en' | 'pl' | 'ru', Strings> = {
       'instagram-sync': 'Instagram analytics sync',
       'meta-token-refresh': 'Meta token refresh',
       'threads-sync': 'Threads analytics sync',
+      'crm-contacts-sync': 'CRM contacts sync',
     },
     resourceLabel: 'Resource',
     errorLabel: 'Error',
@@ -67,6 +69,7 @@ const STRINGS: Record<'en' | 'pl' | 'ru', Strings> = {
       'instagram-sync': 'Synchronizacja analityki Instagram',
       'meta-token-refresh': 'Odświeżanie tokenów Meta',
       'threads-sync': 'Synchronizacja analityki Threads',
+      'crm-contacts-sync': 'Synchronizacja kontaktów CRM',
     },
     resourceLabel: 'Zasób',
     errorLabel: 'Błąd',
@@ -88,6 +91,7 @@ const STRINGS: Record<'en' | 'pl' | 'ru', Strings> = {
       'instagram-sync': 'Синхронизация аналитики Instagram',
       'meta-token-refresh': 'Обновление токенов Meta',
       'threads-sync': 'Синхронизация аналитики Threads',
+      'crm-contacts-sync': 'Синхронизация контактов CRM',
     },
     resourceLabel: 'Ресурс',
     errorLabel: 'Ошибка',

@@ -1,12 +1,17 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../database/prisma.service';
+import { CronFailureNotifier } from '../common/cron-failure-notifier.service';
 import { PLAN_LIMITS } from '@marketing-ai/shared-types';
 
 @Injectable()
 export class ContactsSyncService {
   private readonly logger = new Logger(ContactsSyncService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notifier: CronFailureNotifier,
+  ) {}
 
   private contactLimit(plan: string): number {
     const limit = (PLAN_LIMITS as any)[plan]?.contacts ?? PLAN_LIMITS.FREE.contacts;
@@ -98,6 +103,33 @@ export class ContactsSyncService {
     }
 
     return { created, updated, capped };
+  }
+
+  @Cron('0 4 * * *')
+  async handleCron(): Promise<void> {
+    this.logger.log('Starting daily CRM contact materialization');
+    const projects = await this.prisma.project.findMany({
+      where: { status: 'ACTIVE' },
+      select: { id: true, organizationId: true, name: true },
+    });
+    const webUrl = (process.env.WEB_URL || 'http://localhost:5173').replace(/\/$/, '');
+    for (const project of projects) {
+      try {
+        await this.materialize(project.id);
+      } catch (error) {
+        this.logger.error(`CRM materialize failed for project ${project.id}: ${error}`);
+        await this.notifier.report({
+          organizationId: project.organizationId,
+          cronName: 'crm-contacts-sync',
+          resourceType: 'Project',
+          resourceId: project.id,
+          resourceLabel: project.name,
+          errorCode: 'CRM_SYNC_FAILED',
+          error: error instanceof Error ? error.message : String(error),
+          actionUrl: `${webUrl}/projects/${project.id}/crm/contacts`,
+        });
+      }
+    }
   }
 
   /**
