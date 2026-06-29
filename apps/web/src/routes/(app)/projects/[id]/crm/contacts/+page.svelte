@@ -65,7 +65,7 @@
     try {
       const res = await crmApi.syncContacts(projectId);
       showToast(
-        `${$_('crm.contacts.syncNow')}: ${res.created} created, ${res.updated} updated${res.capped ? ' (capped)' : ''}`,
+        `${$_('crm.contacts.syncNow')}: ${$_('crm.contacts.syncResult', { values: { created: res.created, updated: res.updated } })}${res.capped ? ' ' + $_('crm.contacts.capped') : ''}`,
         'success',
       );
       await load();
@@ -132,7 +132,7 @@
       addForm = { email: '', firstName: '', lastName: '', phone: '', status: 'ACTIVE', tags: '' };
       showAddModal = false;
       await load();
-      showToast($_('crm.contacts.add'), 'success');
+      showToast($_('crm.contacts.addSuccess'), 'success');
     } catch (e: unknown) {
       showToast((e as Error).message || $_('common.error'), 'error');
     } finally {
@@ -156,7 +156,7 @@
         formData,
       );
       showToast(
-        `${$_('crm.contacts.import')}: ${res.created} created, ${res.updated} updated, ${res.errors} errors`,
+        `${$_('crm.contacts.import')}: ${$_('crm.contacts.importResult', { values: { created: res.created, updated: res.updated, errors: res.errors } })}`,
         'success',
       );
       await load();
@@ -178,7 +178,7 @@
   <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
     <div>
       <h1 class="text-2xl font-bold text-ink">{$_('crm.contacts.title')}</h1>
-      <p class="text-sm text-ink-muted mt-1">{total} {total === 1 ? 'contact' : 'contacts'}</p>
+      <p class="text-sm text-ink-muted mt-1">{$_('crm.contacts.count', { values: { count: total } })}</p>
     </div>
     <div class="flex items-center gap-2 flex-wrap">
       <!-- Hidden file input for CSV import -->
@@ -290,9 +290,9 @@
       <h2 class="text-xl font-semibold text-ink mb-2">{$_('crm.contacts.empty')}</h2>
       <p class="text-ink-muted mb-6 max-w-sm text-sm">
         {#if search || statusFilter}
-          No contacts match your current filters.
+          {$_('crm.contacts.emptyFiltered')}
         {:else}
-          Add your first contact manually, import a CSV, or sync tracked users.
+          {$_('crm.contacts.emptyHint')}
         {/if}
       </p>
       {#if !search && !statusFilter}
@@ -464,7 +464,7 @@
       <div class="p-6 space-y-4">
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label for="crm-firstName" class="block text-sm font-medium text-ink mb-1.5">First name</label>
+            <label for="crm-firstName" class="block text-sm font-medium text-ink mb-1.5">{$_('crm.contacts.form.firstName')}</label>
             <input
               id="crm-firstName"
               type="text"
@@ -474,7 +474,7 @@
             />
           </div>
           <div>
-            <label for="crm-lastName" class="block text-sm font-medium text-ink mb-1.5">Last name</label>
+            <label for="crm-lastName" class="block text-sm font-medium text-ink mb-1.5">{$_('crm.contacts.form.lastName')}</label>
             <input
               id="crm-lastName"
               type="text"
@@ -486,7 +486,7 @@
         </div>
 
         <div>
-          <label for="crm-email" class="block text-sm font-medium text-ink mb-1.5">Email</label>
+          <label for="crm-email" class="block text-sm font-medium text-ink mb-1.5">{$_('crm.contacts.form.email')}</label>
           <input
             id="crm-email"
             type="email"
@@ -498,7 +498,7 @@
 
         <div>
           <label for="crm-phone" class="block text-sm font-medium text-ink mb-1.5">
-            Phone
+            {$_('crm.contacts.form.phone')}
             <span class="font-normal text-ink-subtle text-xs ml-1">— {$_('common.optional')}</span>
           </label>
           <input
@@ -526,7 +526,7 @@
         <div>
           <label for="crm-tags" class="block text-sm font-medium text-ink mb-1.5">
             {$_('crm.contacts.columns.tags')}
-            <span class="font-normal text-ink-subtle text-xs ml-1">— comma-separated</span>
+            <span class="font-normal text-ink-subtle text-xs ml-1">— {$_('crm.contacts.form.tagsHint')}</span>
           </label>
           <input
             id="crm-tags"

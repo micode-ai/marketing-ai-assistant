@@ -1682,11 +1682,25 @@
     "contacts": {
       "title": "Контакты",
       "add": "Добавить контакт",
+      "addSuccess": "Контакт добавлен",
       "import": "Импортировать CSV",
       "syncNow": "Синхронизировать",
       "search": "Поиск контактов...",
       "anonymous": "Аноним",
       "empty": "Контактов пока нет",
+      "emptyFiltered": "Ни один контакт не соответствует текущим фильтрам.",
+      "emptyHint": "Добавьте первый контакт вручную, импортируйте CSV или синхронизируйте отслеживаемых пользователей.",
+      "count": "{count, plural, one {# контакт} few {# контакта} many {# контактов} other {# контакта}}",
+      "syncResult": "{created} создано, {updated} обновлено",
+      "capped": "(с ограничением)",
+      "importResult": "{created} создано, {updated} обновлено, {errors} ошибок",
+      "form": {
+        "firstName": "Имя",
+        "lastName": "Фамилия",
+        "email": "Email",
+        "phone": "Телефон",
+        "tagsHint": "через запятую"
+      },
       "columns": {
         "name": "Имя",
         "email": "Email",
