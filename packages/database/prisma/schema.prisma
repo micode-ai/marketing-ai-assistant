@@ -414,9 +414,26 @@ model Project {
   financeRecords    FinanceRecord[]
   appStoreMetrics   AppStoreMetrics[]
   appReviews        AppReview[]
+  analyticsRecommendation AnalyticsRecommendation?
 
   @@index([organizationId])
   @@map("projects")
+}
+
+/// Last AI-generated cross-channel analytics recommendations for a project.
+/// One row per project (regenerated on demand); persisted so the cards survive
+/// page re-entry, reloads, and device/browser changes.
+model AnalyticsRecommendation {
+  id              String   @id @default(cuid())
+  projectId       String   @unique
+  project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  recommendations Json
+  language        String?
+  generatedAt     DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("analytics_recommendations")
 }
 
 model ProjectApiKey {
