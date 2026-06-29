@@ -1841,6 +1841,7 @@
       "form": {
         "title": "Tytuł transakcji"
       },
+      "openCount": "{count, plural, one {# transakcja} few {# transakcje} many {# transakcji} other {# transakcji}}",
       "status": {
         "OPEN": "Otwarta",
         "WON": "Wygrana",
@@ -1871,7 +1872,9 @@
       "noContact": "Brak kontaktu",
       "noCompany": "Brak firmy",
       "incomeBooked": "Przychód zaksięgowany",
-      "viewFinances": "Przejdź do finansów"
+      "viewFinances": "Przejdź do finansów →",
+      "titlePlaceholder": "Kontrakt Q4 dla klienta enterprise",
+      "loseReasonPlaceholder": "Ograniczenia budżetowe, wybrał konkurencję..."
     },
     "pipeline": {
       "manageStages": "Zarządzaj etapami",

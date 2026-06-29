@@ -65,12 +65,17 @@
     if (index === 0) return;
     const a = stages[index];
     const b = stages[index - 1];
+    const aOldOrder = a.order;
+    const bOldOrder = b.order;
     try {
-      await dealsApi.updateStage(projectId, a.id, { order: b.order });
-      await dealsApi.updateStage(projectId, b.id, { order: a.order });
+      // Three-step atomic swap: park A at a temp negative order so B can take A's slot without collision
+      await dealsApi.updateStage(projectId, a.id, { order: -1 });
+      await dealsApi.updateStage(projectId, b.id, { order: aOldOrder });
+      await dealsApi.updateStage(projectId, a.id, { order: bOldOrder });
       await loadStages();
     } catch (e: unknown) {
       showToast((e as Error).message || $_('common.error'), 'error');
+      await loadStages();
     }
   }
 
@@ -78,12 +83,17 @@
     if (index === stages.length - 1) return;
     const a = stages[index];
     const b = stages[index + 1];
+    const aOldOrder = a.order;
+    const bOldOrder = b.order;
     try {
-      await dealsApi.updateStage(projectId, a.id, { order: b.order });
-      await dealsApi.updateStage(projectId, b.id, { order: a.order });
+      // Three-step atomic swap: park A at a temp negative order so B can take A's slot without collision
+      await dealsApi.updateStage(projectId, a.id, { order: -1 });
+      await dealsApi.updateStage(projectId, b.id, { order: aOldOrder });
+      await dealsApi.updateStage(projectId, a.id, { order: bOldOrder });
       await loadStages();
     } catch (e: unknown) {
       showToast((e as Error).message || $_('common.error'), 'error');
+      await loadStages();
     }
   }
 
@@ -111,9 +121,9 @@
     } catch (e: unknown) {
       showDeleteModal = false;
       const rawMsg = (e as Error).message || '';
-      // If the API did not return a descriptive message (plain "HTTP NNN"), use the i18n fallback
-      const isPlainHttpError = /^HTTP \d+$/.test(rawMsg);
-      showToast(isPlainHttpError ? $_('crm.pipeline.lastStageError') : rawMsg || $_('common.error'), 'error');
+      // api() client throws "API <status>" — check for 400 (last-stage constraint) vs other errors
+      const is400 = /\b400\b/.test(rawMsg);
+      showToast(is400 ? $_('crm.pipeline.lastStageError') : $_('common.error'), 'error');
     } finally {
       deleting = false;
     }
