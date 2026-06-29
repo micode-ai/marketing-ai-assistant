@@ -24,7 +24,7 @@ describe('ContactsSyncService.materialize', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     prisma = makePrisma();
-    service = new ContactsSyncService(prisma as any);
+    service = new ContactsSyncService(prisma as any, { report: jest.fn() } as any);
   });
 
   it('creates a contact from a subscriber (source SUBSCRIBER)', async () => {
@@ -87,5 +87,32 @@ describe('ContactsSyncService.materialize', () => {
 
     expect(prisma.contact.create).not.toHaveBeenCalled();
     expect(res.created).toBe(0);
+  });
+});
+
+describe('ContactsSyncService.handleCron', () => {
+  it('materializes each active project and reports per-project failures', async () => {
+    const prisma: any = {
+      project: {
+        findMany: jest.fn().mockResolvedValue([
+          { id: 'p1', organizationId: 'org_1', name: 'P1' },
+          { id: 'p2', organizationId: 'org_1', name: 'P2' },
+        ]),
+        findUnique: jest.fn().mockResolvedValue({ organizationId: 'org_1' }),
+      },
+      organization: { findUnique: jest.fn().mockResolvedValue({ subscription: { plan: 'PRO' } }) },
+      emailSubscriber: { findMany: jest.fn().mockResolvedValue([]) },
+      trackedUser: { findMany: jest.fn().mockResolvedValue([]) },
+      contact: { count: jest.fn().mockResolvedValue(0), findUnique: jest.fn(), create: jest.fn(), update: jest.fn() },
+    };
+    const notifier = { report: jest.fn() };
+    const service = new ContactsSyncService(prisma, notifier as any);
+    jest.spyOn(service, 'materialize').mockResolvedValueOnce({ created: 0, updated: 0, capped: false })
+      .mockRejectedValueOnce(new Error('boom'));
+
+    await service.handleCron();
+
+    expect(service.materialize).toHaveBeenCalledTimes(2);
+    expect(notifier.report).toHaveBeenCalledTimes(1); // only the failing project
   });
 });
