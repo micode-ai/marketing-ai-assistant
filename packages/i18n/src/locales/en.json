@@ -1779,6 +1779,56 @@
       "deleteTitle": "Delete Contact",
       "deleteConfirm": "Are you sure you want to delete {name}? This action cannot be undone.",
       "deleteError": "Failed to delete contact"
+    },
+    "nav": {
+      "contacts": "Contacts",
+      "companies": "Companies"
+    },
+    "companies": {
+      "title": "Companies",
+      "add": "Add company",
+      "addSuccess": "Company added",
+      "search": "Search companies...",
+      "empty": "No companies yet",
+      "emptyFiltered": "No companies match your search.",
+      "emptyHint": "Add your first company to organise contacts.",
+      "count": "{count, plural, one {# company} other {# companies}}",
+      "contactCount": "{count, plural, one {# contact} other {# contacts}}",
+      "form": {
+        "name": "Company name",
+        "domain": "Domain",
+        "website": "Website",
+        "notes": "Notes"
+      },
+      "columns": {
+        "name": "Name",
+        "domain": "Domain",
+        "contacts": "Contacts",
+        "owner": "Owner"
+      }
+    },
+    "company": {
+      "title": "Company Details",
+      "backToList": "Back to companies",
+      "notFound": "Company not found",
+      "loadError": "Failed to load company",
+      "details": "Details",
+      "name": "Company name",
+      "domain": "Domain",
+      "website": "Website",
+      "notes": "Notes",
+      "notesPlaceholder": "Add notes about this company...",
+      "owner": "Owner",
+      "contacts": "Contacts",
+      "noContacts": "No contacts in this company",
+      "save": "Save changes",
+      "saving": "Saving...",
+      "saveSuccess": "Company saved",
+      "saveError": "Failed to save company",
+      "delete": "Delete company",
+      "deleteTitle": "Delete Company",
+      "deleteConfirm": "Are you sure you want to delete {name}? This action cannot be undone.",
+      "deleteError": "Failed to delete company"
     }
   }
 }

@@ -25,6 +25,23 @@ export interface ContactsPage {
   pageSize: number;
 }
 
+export interface CrmCompany {
+  id: string;
+  name: string;
+  domain: string | null;
+  website: string | null;
+  notes: string | null;
+  ownerId: string | null;
+  projectId: string;
+  _count?: { contacts: number };
+  contacts?: CrmContact[];
+}
+
+export interface CompaniesPage {
+  items: CrmCompany[];
+  total: number;
+}
+
 export const crmApi = {
   listContacts: (projectId: string, q: Record<string, string | number | undefined> = {}) =>
     api.get<ContactsPage>('/crm/contacts', { projectId, ...q }),
@@ -38,9 +55,11 @@ export const crmApi = {
     api.post<{ created: number; updated: number; capped: boolean }>(`/crm/contacts/sync?projectId=${projectId}`),
   // companies
   listCompanies: (projectId: string, search?: string) =>
-    api.get<{ items: unknown[]; total: number }>('/crm/companies', { projectId, search }),
-  getCompany: (projectId: string, id: string) => api.get<unknown>(`/crm/companies/${id}`, { projectId }),
-  createCompany: (projectId: string, body: unknown) => api.post<unknown>(`/crm/companies?projectId=${projectId}`, body),
-  updateCompany: (projectId: string, id: string, body: unknown) => api.patch<unknown>(`/crm/companies/${id}?projectId=${projectId}`, body),
+    api.get<CompaniesPage>('/crm/companies', { projectId, search }),
+  getCompany: (projectId: string, id: string) => api.get<CrmCompany>(`/crm/companies/${id}`, { projectId }),
+  createCompany: (projectId: string, body: Partial<CrmCompany>) =>
+    api.post<CrmCompany>(`/crm/companies?projectId=${projectId}`, body),
+  updateCompany: (projectId: string, id: string, body: Partial<CrmCompany>) =>
+    api.patch<CrmCompany>(`/crm/companies/${id}?projectId=${projectId}`, body),
   deleteCompany: (projectId: string, id: string) => api.delete(`/crm/companies/${id}?projectId=${projectId}`),
 };

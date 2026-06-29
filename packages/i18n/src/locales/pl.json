@@ -1759,6 +1759,56 @@
       "deleteTitle": "Usuń kontakt",
       "deleteConfirm": "Czy na pewno chcesz usunąć {name}? Tej operacji nie można cofnąć.",
       "deleteError": "Nie udało się usunąć kontaktu"
+    },
+    "nav": {
+      "contacts": "Kontakty",
+      "companies": "Firmy"
+    },
+    "companies": {
+      "title": "Firmy",
+      "add": "Dodaj firmę",
+      "addSuccess": "Firma dodana",
+      "search": "Szukaj firm...",
+      "empty": "Brak firm",
+      "emptyFiltered": "Żadna firma nie pasuje do wyszukiwania.",
+      "emptyHint": "Dodaj pierwszą firmę, aby organizować kontakty.",
+      "count": "{count, plural, one {# firma} few {# firmy} many {# firm} other {# firm}}",
+      "contactCount": "{count, plural, one {# kontakt} few {# kontakty} many {# kontaktów} other {# kontaktów}}",
+      "form": {
+        "name": "Nazwa firmy",
+        "domain": "Domena",
+        "website": "Strona internetowa",
+        "notes": "Notatki"
+      },
+      "columns": {
+        "name": "Nazwa",
+        "domain": "Domena",
+        "contacts": "Kontakty",
+        "owner": "Właściciel"
+      }
+    },
+    "company": {
+      "title": "Szczegóły firmy",
+      "backToList": "Powrót do firm",
+      "notFound": "Nie znaleziono firmy",
+      "loadError": "Nie udało się wczytać firmy",
+      "details": "Szczegóły",
+      "name": "Nazwa firmy",
+      "domain": "Domena",
+      "website": "Strona internetowa",
+      "notes": "Notatki",
+      "notesPlaceholder": "Dodaj notatki o tej firmie...",
+      "owner": "Właściciel",
+      "contacts": "Kontakty",
+      "noContacts": "Brak kontaktów w tej firmie",
+      "save": "Zapisz zmiany",
+      "saving": "Zapisywanie...",
+      "saveSuccess": "Firma zapisana",
+      "saveError": "Nie udało się zapisać firmy",
+      "delete": "Usuń firmę",
+      "deleteTitle": "Usuń firmę",
+      "deleteConfirm": "Czy na pewno chcesz usunąć {name}? Tej operacji nie można cofnąć.",
+      "deleteError": "Nie udało się usunąć firmy"
     }
   }
 }
