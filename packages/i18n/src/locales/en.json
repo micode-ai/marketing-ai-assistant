@@ -1783,7 +1783,8 @@
     },
     "nav": {
       "contacts": "Contacts",
-      "companies": "Companies"
+      "companies": "Companies",
+      "deals": "Deals"
     },
     "companies": {
       "title": "Companies",
@@ -1835,6 +1836,44 @@
       "deleteConfirm": "Are you sure you want to delete {name}? This action cannot be undone.",
       "deleteError": "Failed to delete company"
     },
-    "unassigned": "Unassigned"
+    "unassigned": "Unassigned",
+    "deals": {
+      "title": "Deals",
+      "add": "Add deal",
+      "addSuccess": "Deal added",
+      "empty": "No pipeline stages yet",
+      "emptyHint": "Create pipeline stages to start tracking deals.",
+      "dropHere": "Drop deal here",
+      "win": "Won",
+      "lose": "Lost",
+      "loseTitle": "Mark as Lost",
+      "reopen": "Reopen",
+      "lostReasonPrompt": "Reason for losing",
+      "winSuccess": "Deal marked as won",
+      "loseSuccess": "Deal marked as lost",
+      "value": "Value",
+      "currency": "Currency",
+      "stage": "Stage",
+      "owner": "Owner",
+      "contact": "Contact",
+      "company": "Company",
+      "expectedClose": "Expected close date",
+      "form": {
+        "title": "Deal title"
+      },
+      "status": {
+        "OPEN": "Open",
+        "WON": "Won",
+        "LOST": "Lost"
+      }
+    },
+    "pipeline": {
+      "manageStages": "Manage stages",
+      "forecast": {
+        "weighted": "Weighted pipeline",
+        "open": "Open pipeline",
+        "won": "Won this period"
+      }
+    }
   }
 }
