@@ -101,6 +101,7 @@
     if (status?.connected && status.insightsGranted) {
       await syncIfStale();
       await fetchMetrics();
+      await loadStoredAdvice();
       syncInterval = setInterval(syncAndRefresh, SYNC_INTERVAL_MS);
     }
     loading = false;
@@ -254,6 +255,23 @@
   }
 
   // --- AI advice ---
+  // Restore the last advice persisted server-side so the card survives page
+  // re-entry / tab switches / reloads. Best-effort: stays empty on any failure.
+  async function loadStoredAdvice() {
+    try {
+      const res = await api.get<{ advice: string | null; contextSummary: string | null }>(
+        '/threads/advice',
+        { projectId },
+      );
+      if (res?.advice) {
+        advice = res.advice;
+        contextSummary = res.contextSummary ?? '';
+      }
+    } catch {
+      /* no stored advice yet — keep empty */
+    }
+  }
+
   async function getAdvice() {
     adviceLoading = true;
     adviceError = '';

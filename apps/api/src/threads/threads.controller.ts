@@ -49,4 +49,10 @@ export class ThreadsController {
   ) {
     return this.service.generateAdvice(projectId, body?.language || 'en');
   }
+
+  @Get('advice')
+  @ApiOperation({ summary: 'Get the last persisted Threads advice for a project' })
+  getStoredAdvice(@Query('projectId') projectId: string) {
+    return this.service.getStoredAdvice(projectId);
+  }
 }

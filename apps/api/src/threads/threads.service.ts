@@ -249,9 +249,62 @@ export class ThreadsService {
       contextSummary?: string;
     };
 
+    // Persist the latest non-empty advice so the card survives page re-entry,
+    // tab switches, and reloads. Failures are swallowed — generation still
+    // returns normally.
+    const now = new Date();
+    if (data.advice) {
+      try {
+        await this.prisma.aiAdvice.upsert({
+          where: { projectId_channel: { projectId, channel: 'threads' } },
+          create: {
+            projectId,
+            channel: 'threads',
+            advice: data.advice,
+            contextSummary: data.contextSummary ?? null,
+            language,
+            generatedAt: now,
+          },
+          update: {
+            advice: data.advice,
+            contextSummary: data.contextSummary ?? null,
+            language,
+            generatedAt: now,
+          },
+        });
+      } catch (error) {
+        this.logger.warn(
+          `Threads advice persist failed for project ${projectId}: ${error}`,
+        );
+      }
+    }
+
     return {
       advice: data.advice,
       contextSummary: data.contextSummary,
+      generatedAt: now.getTime(),
+    };
+  }
+
+  /**
+   * Returns the last persisted Threads advice for a project (or nulls if none
+   * has been generated yet). Used to restore the advice card on page entry.
+   */
+  async getStoredAdvice(projectId: string): Promise<{
+    advice: string | null;
+    contextSummary: string | null;
+    generatedAt: number | null;
+  }> {
+    const row = await this.prisma.aiAdvice.findUnique({
+      where: { projectId_channel: { projectId, channel: 'threads' } },
+    });
+    if (!row) {
+      return { advice: null, contextSummary: null, generatedAt: null };
+    }
+    return {
+      advice: row.advice,
+      contextSummary: row.contextSummary ?? null,
+      generatedAt: row.generatedAt.getTime(),
     };
   }
 
