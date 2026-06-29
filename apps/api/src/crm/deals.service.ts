@@ -103,14 +103,107 @@ export class DealsService {
     if (dto.expectedCloseDate !== undefined) {
       data.expectedCloseDate = dto.expectedCloseDate ? new Date(dto.expectedCloseDate) : null;
     }
+    if (existing.status === 'WON' && dto.value !== undefined && existing.financeRecordId) {
+      await this.prisma.financeRecord.update({
+        where: { id: existing.financeRecordId },
+        data: { amount: dto.value, amountInBaseCurrency: dto.value },
+      });
+    }
     return this.prisma.deal.update({ where: { id }, data });
   }
 
   async remove(projectId: string, id: string) {
     const existing = await this.prisma.deal.findFirst({ where: { id, projectId } });
     if (!existing) throw new NotFoundException('Deal not found');
+    if (existing.financeRecordId) {
+      await this.prisma.financeRecord.delete({ where: { id: existing.financeRecordId } });
+    }
     await this.prisma.deal.delete({ where: { id } });
     return { deleted: true as const };
+  }
+
+  private async resolveIncomeCategory(projectId: string): Promise<string> {
+    const sales = await this.prisma.financeCategory.findFirst({
+      where: { projectId, type: 'INCOME', name: 'finances.categories.sales' },
+      select: { id: true },
+    });
+    if (sales) return sales.id;
+    const anyIncome = await this.prisma.financeCategory.findFirst({
+      where: { projectId, type: 'INCOME' },
+      orderBy: { createdAt: 'asc' },
+      select: { id: true },
+    });
+    if (anyIncome) return anyIncome.id;
+    const created = await this.prisma.financeCategory.create({
+      data: {
+        projectId,
+        scope: 'PROJECT',
+        type: 'INCOME',
+        name: 'finances.categories.sales',
+        color: '#34d399',
+        isDefault: false,
+      },
+      select: { id: true },
+    });
+    return created.id;
+  }
+
+  async win(projectId: string, id: string) {
+    const deal = await this.prisma.deal.findFirst({ where: { id, projectId } });
+    if (!deal) throw new NotFoundException('Deal not found');
+    if (deal.status === 'WON') return deal; // idempotent
+    const categoryId = await this.resolveIncomeCategory(projectId);
+    const currency = await this.baseCurrency(projectId);
+    const value = Number(deal.value);
+    const now = new Date();
+    return this.prisma.$transaction(async (tx: any) => {
+      const record = await tx.financeRecord.create({
+        data: {
+          projectId,
+          scope: 'PROJECT',
+          categoryId,
+          type: 'INCOME',
+          amount: value,
+          currency,
+          amountInBaseCurrency: value,
+          exchangeRate: 1,
+          date: now,
+          description: `Deal: ${deal.title}`,
+        },
+      });
+      return tx.deal.update({
+        where: { id },
+        data: { status: 'WON', wonAt: now, lostAt: null, lostReason: null, financeRecordId: record.id },
+      });
+    });
+  }
+
+  async lose(projectId: string, id: string, dto: { lostReason?: string }) {
+    const deal = await this.prisma.deal.findFirst({ where: { id, projectId } });
+    if (!deal) throw new NotFoundException('Deal not found');
+    return this.prisma.$transaction(async (tx: any) => {
+      if (deal.financeRecordId) {
+        await tx.financeRecord.delete({ where: { id: deal.financeRecordId } });
+      }
+      return tx.deal.update({
+        where: { id },
+        data: { status: 'LOST', lostAt: new Date(), wonAt: null, financeRecordId: null, lostReason: dto.lostReason ?? null },
+      });
+    });
+  }
+
+  async reopen(projectId: string, id: string) {
+    const deal = await this.prisma.deal.findFirst({ where: { id, projectId } });
+    if (!deal) throw new NotFoundException('Deal not found');
+    return this.prisma.$transaction(async (tx: any) => {
+      if (deal.financeRecordId) {
+        await tx.financeRecord.delete({ where: { id: deal.financeRecordId } });
+      }
+      return tx.deal.update({
+        where: { id },
+        data: { status: 'OPEN', wonAt: null, lostAt: null, lostReason: null, financeRecordId: null },
+      });
+    });
   }
 
   async forecast(projectId: string) {
