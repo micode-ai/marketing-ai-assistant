@@ -9,6 +9,11 @@ export interface Deal {
   stage?: DealStage | null;
   contact?: { id: string; firstName: string | null; lastName: string | null; email: string | null } | null;
   company?: { id: string; name: string } | null;
+  insight?: { score: number; generatedAt: string } | null;
+}
+export interface DealInsight {
+  id: string; dealId: string; score: number; scoreReason: string; nextStep: string;
+  draftSubject: string | null; draftBody: string; language: string | null; generatedAt: string;
 }
 export interface Forecast { openCount: number; openValue: number; weightedValue: number; wonValuePeriod: number; lostCount: number }
 
@@ -26,4 +31,6 @@ export const dealsApi = {
   reopenDeal: (projectId: string, id: string) => api.post<Deal>(`/crm/deals/${id}/reopen?projectId=${projectId}`),
   deleteDeal: (projectId: string, id: string) => api.delete(`/crm/deals/${id}?projectId=${projectId}`),
   forecast: (projectId: string) => api.get<Forecast>('/crm/deals/forecast', { projectId }),
+  getInsights: (projectId: string, id: string) => api.get<DealInsight | null>(`/crm/deals/${id}/insights`, { projectId }),
+  generateInsights: (projectId: string, id: string, language: string) => api.post<DealInsight>(`/crm/deals/${id}/insights?projectId=${projectId}`, { language }),
 };
