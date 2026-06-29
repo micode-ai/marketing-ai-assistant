@@ -23,6 +23,7 @@ export interface PlanLimits {
   documentsPerMonth: number | 'unlimited';
   integrations: number | 'unlimited';
   contacts: number | 'unlimited';
+  deals: number | 'unlimited';
   checklistTemplates: 'basic' | 'all' | 'all+custom';
   brandVoice: boolean;
   abTesting: boolean;
@@ -39,6 +40,7 @@ export const PLAN_LIMITS: Record<OrgPlan, PlanLimits> = {
     documentsPerMonth: 3,
     integrations: 0,
     contacts: 100,
+    deals: 50,
     checklistTemplates: 'basic',
     brandVoice: false,
     abTesting: false,
@@ -53,6 +55,7 @@ export const PLAN_LIMITS: Record<OrgPlan, PlanLimits> = {
     documentsPerMonth: 30,
     integrations: 3,
     contacts: 2000,
+    deals: 1000,
     checklistTemplates: 'all',
     brandVoice: true,
     abTesting: true,
@@ -67,6 +70,7 @@ export const PLAN_LIMITS: Record<OrgPlan, PlanLimits> = {
     documentsPerMonth: 'unlimited',
     integrations: 'unlimited',
     contacts: 'unlimited',
+    deals: 'unlimited',
     checklistTemplates: 'all+custom',
     brandVoice: true,
     abTesting: true,

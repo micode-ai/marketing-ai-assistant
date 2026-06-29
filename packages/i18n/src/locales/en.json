@@ -1783,7 +1783,8 @@
     },
     "nav": {
       "contacts": "Contacts",
-      "companies": "Companies"
+      "companies": "Companies",
+      "deals": "Deals"
     },
     "companies": {
       "title": "Companies",
@@ -1835,6 +1836,85 @@
       "deleteConfirm": "Are you sure you want to delete {name}? This action cannot be undone.",
       "deleteError": "Failed to delete company"
     },
-    "unassigned": "Unassigned"
+    "unassigned": "Unassigned",
+    "deals": {
+      "title": "Deals",
+      "add": "Add deal",
+      "addSuccess": "Deal added",
+      "empty": "No pipeline stages yet",
+      "emptyHint": "Create pipeline stages to start tracking deals.",
+      "dropHere": "Drop deal here",
+      "win": "Won",
+      "lose": "Lost",
+      "loseTitle": "Mark as Lost",
+      "reopen": "Reopen",
+      "lostReasonPrompt": "Reason for losing",
+      "winSuccess": "Deal marked as won",
+      "loseSuccess": "Deal marked as lost",
+      "value": "Value",
+      "stage": "Stage",
+      "owner": "Owner",
+      "contact": "Contact",
+      "company": "Company",
+      "expectedClose": "Expected close date",
+      "form": {
+        "title": "Deal title"
+      },
+      "openCount": "{count, plural, one {# deal} other {# deals}}",
+      "status": {
+        "OPEN": "Open",
+        "WON": "Won",
+        "LOST": "Lost"
+      }
+    },
+    "deal": {
+      "title": "Deal Details",
+      "backToList": "Back to deals",
+      "notFound": "Deal not found",
+      "loadError": "Failed to load deal",
+      "info": "Deal Info",
+      "details": "Details",
+      "titleLabel": "Title",
+      "save": "Save changes",
+      "saving": "Saving...",
+      "saveSuccess": "Deal saved",
+      "saveError": "Failed to save deal",
+      "delete": "Delete deal",
+      "deleteTitle": "Delete Deal",
+      "deleteConfirm": "Are you sure you want to delete \"{title}\"? This action cannot be undone.",
+      "deleteError": "Failed to delete deal",
+      "winError": "Failed to mark deal as won",
+      "loseError": "Failed to mark deal as lost",
+      "reopenSuccess": "Deal reopened",
+      "reopenError": "Failed to reopen deal",
+      "noStage": "No stage",
+      "noContact": "No contact",
+      "noCompany": "No company",
+      "incomeBooked": "Income booked",
+      "viewFinances": "View finances →",
+      "titlePlaceholder": "Q4 Enterprise Deal",
+      "loseReasonPlaceholder": "Budget constraints, chose competitor..."
+    },
+    "pipeline": {
+      "manageStages": "Manage stages",
+      "stages": "Pipeline Stages",
+      "stageName": "Stage name",
+      "probability": "Probability (%)",
+      "addStage": "Add stage",
+      "deleteTitle": "Delete Stage",
+      "deleteWarning": "Deleting this stage will move all open deals to the previous stage. This action cannot be undone.",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "lastStageError": "Cannot delete the last pipeline stage",
+      "back": "Back to board",
+      "saveSuccess": "Stage saved",
+      "addSuccess": "Stage added",
+      "deleteSuccess": "Stage deleted",
+      "forecast": {
+        "weighted": "Weighted pipeline",
+        "open": "Open pipeline",
+        "won": "Won this period"
+      }
+    }
   }
 }
