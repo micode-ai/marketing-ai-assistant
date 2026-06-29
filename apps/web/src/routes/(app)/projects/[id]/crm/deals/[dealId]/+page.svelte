@@ -7,6 +7,7 @@
   import { crmApi } from '$lib/api/crm';
   import { loadActiveMembers, type TeamMember } from '$lib/api/crm-owners';
   import { organizationIdStore } from '$lib/stores/projects';
+  import CrmTimeline from '$lib/components/crm/CrmTimeline.svelte';
 
   $: projectId = $page.params['id'];
   $: dealId = $page.params['dealId'];
@@ -523,6 +524,11 @@
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- Timeline section -->
+    <div class="mt-8">
+      <CrmTimeline {projectId} dealId={deal.id} />
     </div>
   {/if}
 </div>

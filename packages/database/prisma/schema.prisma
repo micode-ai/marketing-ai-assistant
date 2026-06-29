@@ -306,6 +306,8 @@ model User {
   ownedContacts    Contact[]            @relation("ContactOwner")
   ownedCompanies   Company[]            @relation("CompanyOwner")
   ownedDeals       Deal[]               @relation("DealOwner")
+  activities       Activity[]           @relation("ActivityOwner")
+  tasks            Task[]               @relation("TaskOwner")
 
   @@index([email])
   @@map("users")
@@ -442,6 +444,8 @@ model Project {
   companies         Company[]
   pipelineStages    PipelineStage[]
   deals             Deal[]
+  activities        Activity[]
+  tasks             Task[]
 
   @@index([organizationId])
   @@map("projects")
@@ -1297,7 +1301,9 @@ model Contact {
   project Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   company Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
   owner   User?    @relation("ContactOwner", fields: [ownerId], references: [id], onDelete: SetNull)
-  deals   Deal[]
+  deals      Deal[]
+  activities Activity[]
+  tasks      Task[]
 
   @@unique([projectId, email])
   @@index([projectId])
@@ -1319,8 +1325,10 @@ model Company {
 
   project  Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
   owner    User?     @relation("CompanyOwner", fields: [ownerId], references: [id], onDelete: SetNull)
-  contacts Contact[]
-  deals    Deal[]
+  contacts   Contact[]
+  deals      Deal[]
+  activities Activity[]
+  tasks      Task[]
 
   @@unique([projectId, domain])
   @@index([projectId])
@@ -1373,6 +1381,8 @@ model Deal {
   contact       Contact?       @relation(fields: [contactId], references: [id], onDelete: SetNull)
   company       Company?       @relation(fields: [companyId], references: [id], onDelete: SetNull)
   financeRecord FinanceRecord? @relation("DealFinanceRecord", fields: [financeRecordId], references: [id], onDelete: SetNull)
+  activities    Activity[]
+  tasks         Task[]
 
   @@index([projectId])
   @@index([projectId, status])
@@ -1649,4 +1659,73 @@ model ThreadsMedia {
   @@unique([socialAccountId, threadsMediaId])
   @@index([socialAccountId])
   @@map("threads_media")
+}
+
+// =============================================================================
+// CRM — Activities & Tasks
+// =============================================================================
+
+enum ActivityType {
+  NOTE
+  CALL
+  EMAIL
+  MEETING
+}
+
+enum TaskStatus {
+  OPEN
+  DONE
+}
+
+model Activity {
+  id         String       @id @default(cuid())
+  projectId  String
+  type       ActivityType
+  body       String
+  occurredAt DateTime     @default(now())
+  ownerId    String?
+  contactId  String?
+  dealId     String?
+  companyId  String?
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  project Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  owner   User?    @relation("ActivityOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  contact Contact? @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  deal    Deal?    @relation(fields: [dealId], references: [id], onDelete: SetNull)
+  company Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+
+  @@index([projectId])
+  @@index([contactId])
+  @@index([dealId])
+  @@map("activities")
+}
+
+model Task {
+  id          String     @id @default(cuid())
+  projectId   String
+  title       String
+  description String?
+  dueDate     DateTime?
+  status      TaskStatus @default(OPEN)
+  completedAt DateTime?
+  ownerId     String?
+  contactId   String?
+  dealId      String?
+  companyId   String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  project Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  owner   User?    @relation("TaskOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  contact Contact? @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  deal    Deal?    @relation(fields: [dealId], references: [id], onDelete: SetNull)
+  company Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+
+  @@index([projectId, status])
+  @@index([ownerId, dueDate])
+  @@index([contactId])
+  @@index([dealId])
+  @@map("tasks")
 }

@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 import { Resend } from 'resend';
 import { CronFailureEmailInput, renderCronFailureEmail } from './cron-failure-email';
+import { renderTaskDigestEmail, TaskDigestEmailInput } from './task-digest-email';
 
 @Injectable()
 export class MailService {
@@ -80,6 +81,12 @@ export class MailService {
   async sendCronFailure(params: { to: string } & CronFailureEmailInput) {
     const { to, ...input } = params;
     const { subject, html } = renderCronFailureEmail(input);
+    await this.send({ to, subject, html });
+  }
+
+  async sendTaskDigest(params: { to: string } & TaskDigestEmailInput) {
+    const { to, ...input } = params;
+    const { subject, html } = renderTaskDigestEmail(input);
     await this.send({ to, subject, html });
   }
 }
