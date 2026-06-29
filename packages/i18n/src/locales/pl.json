@@ -1902,6 +1902,7 @@
     "activities": {
       "title": "Aktywność",
       "log": "Zapisz aktywność",
+      "type": "Typ",
       "types": {
         "NOTE": "Notatka",
         "CALL": "Rozmowa",
@@ -1909,7 +1910,13 @@
         "MEETING": "Spotkanie"
       },
       "occurredAt": "Data",
-      "body": "Szczegóły"
+      "body": "Szczegóły",
+      "bodyPlaceholder": "Dodaj szczegóły tej interakcji..."
+    },
+    "timeline": {
+      "heading": "Oś czasu",
+      "empty": "Brak aktywności ani zadań",
+      "logActivitySuccess": "Aktywność zapisana"
     },
     "pipeline": {
       "manageStages": "Zarządzaj etapami",

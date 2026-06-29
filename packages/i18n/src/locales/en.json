@@ -1922,6 +1922,7 @@
     "activities": {
       "title": "Activity",
       "log": "Log activity",
+      "type": "Type",
       "types": {
         "NOTE": "Note",
         "CALL": "Call",
@@ -1929,7 +1930,13 @@
         "MEETING": "Meeting"
       },
       "occurredAt": "Date",
-      "body": "Details"
+      "body": "Details",
+      "bodyPlaceholder": "Add details about this interaction..."
+    },
+    "timeline": {
+      "heading": "Timeline",
+      "empty": "No activities or tasks yet",
+      "logActivitySuccess": "Activity logged"
     },
     "pipeline": {
       "manageStages": "Manage stages",
