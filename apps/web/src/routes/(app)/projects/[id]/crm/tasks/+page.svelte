@@ -177,8 +177,8 @@
           class="w-4 h-4 rounded border-border text-brand focus:ring-brand cursor-pointer"
         />
         <span class="text-sm text-ink-muted">{$_('crm.tasks.myTasks')}</span>
-        <InfoTooltip key="crm.help.taskDigest" side="bottom" />
       </label>
+      <InfoTooltip key="crm.help.taskDigest" side="bottom" />
 
       <button
         on:click={openAddModal}
