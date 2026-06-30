@@ -7,7 +7,7 @@ import {
 import { Prisma } from '@prisma/client';
 import { parse } from 'csv-parse/sync';
 import { PrismaService } from '../database/prisma.service';
-import { PLAN_LIMITS } from '@marketing-ai/shared-types';
+import { PLAN_LIMITS } from '../common/plan-limits';
 
 export interface ListContactsOpts {
   page?: number;
