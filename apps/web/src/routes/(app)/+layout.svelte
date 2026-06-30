@@ -9,39 +9,13 @@
   import Header from '$lib/components/layout/Header.svelte';
   import InvitationsBanner from '$lib/components/layout/InvitationsBanner.svelte';
   import HelpDrawer from '$lib/components/HelpDrawer.svelte';
+  import { helpSlugForPath } from '$lib/help/help-context-map';
 
   let sidebarOpen = true;
   let appReady = false;
   let showHelpDrawer = false;
 
-  const helpContextMap: [RegExp, string][] = [
-    [/\/dashboard/, '01-getting-started'],
-    [/\/projects\/[^/]+\/content/, '03-ai-features'],
-    [/\/projects\/[^/]+\/checklists/, '03-ai-features'],
-    [/\/projects\/[^/]+\/documents/, '03-ai-features'],
-    [/\/projects\/[^/]+\/campaigns/, '03-ai-features'],
-    [/\/projects\/[^/]+\/email/, '04-email-marketing'],
-    [/\/projects\/[^/]+\/seo/, '08-advanced-features'],
-    [/\/projects\/[^/]+\/analytics/, '08-advanced-features'],
-    [/\/projects\/[^/]+\/competitors/, '08-advanced-features'],
-    [/\/projects\/[^/]+\/experiments/, '08-advanced-features'],
-    [/\/projects\/[^/]+\/sequences/, '04-email-marketing'],
-    [/\/projects/, '02-projects'],
-    [/\/ai-chat/, '03-ai-features'],
-    [/\/templates/, '03-ai-features'],
-    [/\/content/, '03-ai-features'],
-    [/\/checklists/, '03-ai-features'],
-    [/\/documents/, '03-ai-features'],
-    [/\/email/, '04-email-marketing'],
-    [/\/settings\/billing/, '05-team-and-billing'],
-    [/\/settings\/team/, '05-team-and-billing'],
-    [/\/settings\/integrations/, '07-social-publishing'],
-    [/\/settings/, '05-team-and-billing'],
-    [/\/analytics/, '08-advanced-features'],
-    [/\/seo/, '08-advanced-features'],
-  ];
-
-  $: helpSlug = helpContextMap.find(([re]) => re.test($page.url.pathname))?.[1] || '01-getting-started';
+  $: helpSlug = helpSlugForPath($page.url.pathname);
   $: isHelpPage = $page.url.pathname.startsWith('/help');
   let innerWidth = 768;
   $: isMobile = innerWidth < 768;

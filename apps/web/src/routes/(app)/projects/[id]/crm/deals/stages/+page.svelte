@@ -3,6 +3,7 @@
   import { _ } from 'svelte-i18n';
   import { onMount } from 'svelte';
   import { dealsApi, type DealStage } from '$lib/api/crm-deals';
+  import InfoTooltip from '$lib/components/InfoTooltip.svelte';
 
   $: projectId = $page.params['id'];
 
@@ -185,7 +186,7 @@
       {$_('crm.pipeline.back')}
     </a>
     <span class="text-ink-subtle text-sm" aria-hidden="true">/</span>
-    <h1 class="text-xl font-bold text-ink">{$_('crm.pipeline.stages')}</h1>
+    <h1 class="text-xl font-bold text-ink">{$_('crm.pipeline.stages')} <InfoTooltip key="crm.help.manageStages" side="bottom" /></h1>
   </div>
 
   {#if loading}
@@ -211,7 +212,7 @@
             {$_('crm.pipeline.stageName')}
           </span>
           <span class="w-28 text-xs font-medium text-ink-muted uppercase tracking-wider">
-            {$_('crm.pipeline.probability')}
+            {$_('crm.pipeline.probability')} <InfoTooltip key="crm.help.stageProbability" />
           </span>
           <span class="sr-only">{$_('common.actions')}</span>
         </div>
