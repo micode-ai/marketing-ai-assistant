@@ -10,6 +10,7 @@
   import { loadActiveMembers, type TeamMember } from '$lib/api/crm-owners';
   import { organizationIdStore } from '$lib/stores/projects';
   import CrmTimeline from '$lib/components/crm/CrmTimeline.svelte';
+  import InfoTooltip from '$lib/components/InfoTooltip.svelte';
 
   $: projectId = $page.params['id'];
   $: dealId = $page.params['dealId'];
@@ -541,7 +542,7 @@
         <!-- Status + Actions card -->
         <div class="bg-surface rounded-xl border border-border">
           <div class="px-5 py-4 border-b border-border">
-            <h2 class="text-xs font-semibold text-ink-muted uppercase tracking-wider">{$_('common.actions')}</h2>
+            <h2 class="text-xs font-semibold text-ink-muted uppercase tracking-wider flex items-center gap-1.5">{$_('common.actions')} <InfoTooltip key="crm.help.dealStatus" /></h2>
           </div>
           <div class="p-5 space-y-3">
             <!-- Status badge -->
@@ -622,7 +623,7 @@
           <!-- Score -->
           <div class="flex items-center gap-3 mb-4">
             <div>
-              <span class="text-xs font-medium text-ink-muted uppercase tracking-wider block mb-1">{$_('crm.insights.score')}</span>
+              <span class="text-xs font-medium text-ink-muted uppercase tracking-wider block mb-1">{$_('crm.insights.score')} <InfoTooltip key="crm.help.aiScore" /></span>
               <div class="flex items-center gap-2">
                 <span class="text-2xl font-bold text-ink">{insight.score}</span>
                 {#if band}
@@ -646,7 +647,7 @@
           <div class="mb-4 p-3 bg-surface-2 rounded-lg">
             <div class="flex items-start justify-between gap-3">
               <div class="flex-1 min-w-0">
-                <span class="text-xs font-medium text-ink-muted uppercase tracking-wider block mb-1">{$_('crm.insights.nextStep')}</span>
+                <span class="text-xs font-medium text-ink-muted uppercase tracking-wider block mb-1">{$_('crm.insights.nextStep')} <InfoTooltip key="crm.help.nextStep" /></span>
                 <p class="text-sm text-ink">{insight.nextStep}</p>
               </div>
               <button
@@ -661,7 +662,7 @@
 
           <!-- Email draft -->
           <div class="mb-4">
-            <span class="text-xs font-medium text-ink-muted uppercase tracking-wider block mb-2">{$_('crm.insights.draft')}</span>
+            <span class="text-xs font-medium text-ink-muted uppercase tracking-wider block mb-2">{$_('crm.insights.draft')} <InfoTooltip key="crm.help.draft" /></span>
             {#if insight.draftSubject}
               <div class="mb-2">
                 <span class="text-xs text-ink-muted block mb-0.5">{$_('crm.insights.subject')}</span>

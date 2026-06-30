@@ -8,6 +8,7 @@
   import { loadActiveMembers, ownerName, type TeamMember } from '$lib/api/crm-owners';
   import { organizationIdStore } from '$lib/stores/projects';
   import CrmTimeline from '$lib/components/crm/CrmTimeline.svelte';
+  import InfoTooltip from '$lib/components/InfoTooltip.svelte';
 
   $: projectId = $page.params['id'];
   $: contactId = $page.params['contactId'];
@@ -440,7 +441,7 @@
             <!-- Owner picker -->
             <div>
               <label for="detail-owner" class="block text-xs font-medium text-ink-muted uppercase tracking-wider mb-1.5">
-                {$_('crm.contact.owner')}
+                {$_('crm.contact.owner')} <InfoTooltip key="crm.help.owner" />
               </label>
               <select
                 id="detail-owner"
@@ -456,7 +457,7 @@
 
             <!-- Source (read-only) -->
             <div>
-              <p class="text-xs font-medium text-ink-muted uppercase tracking-wider mb-1.5">{$_('crm.contact.source')}</p>
+              <p class="text-xs font-medium text-ink-muted uppercase tracking-wider mb-1.5">{$_('crm.contact.source')} <InfoTooltip key="crm.help.source" /></p>
               <p class="text-sm text-ink">{$_(`crm.source.${contact.source}`, { default: contact.source })}</p>
             </div>
 
@@ -522,6 +523,9 @@
 
     <!-- Timeline section -->
     <div class="mt-8">
+      <h2 class="text-xs font-semibold text-ink-muted uppercase tracking-wider mb-3 flex items-center gap-1.5">
+        {$_('crm.timeline.heading')} <InfoTooltip key="crm.help.timeline" />
+      </h2>
       <CrmTimeline {projectId} contactId={contact.id} />
     </div>
   {/if}
