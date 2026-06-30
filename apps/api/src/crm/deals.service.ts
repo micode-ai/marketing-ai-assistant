@@ -1,6 +1,6 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
-import { PLAN_LIMITS } from '@marketing-ai/shared-types';
+import { PLAN_LIMITS } from '../common/plan-limits';
 import { PipelineService } from './pipeline.service';
 
 export interface ListDealsOpts {

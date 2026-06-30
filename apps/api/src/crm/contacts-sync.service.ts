@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../database/prisma.service';
 import { CronFailureNotifier } from '../common/cron-failure-notifier.service';
-import { PLAN_LIMITS } from '@marketing-ai/shared-types';
+import { PLAN_LIMITS } from '../common/plan-limits';
 
 @Injectable()
 export class ContactsSyncService {
