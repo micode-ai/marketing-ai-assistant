@@ -7,6 +7,7 @@
   import { api } from '$lib/api/client';
   import { loadActiveMembers, ownerName, type TeamMember } from '$lib/api/crm-owners';
   import { organizationIdStore } from '$lib/stores/projects';
+  import InfoTooltip from '$lib/components/InfoTooltip.svelte';
 
   $: projectId = $page.params['id'];
 
@@ -245,6 +246,7 @@
         {/if}
         {$_('crm.contacts.syncNow')}
       </button>
+      <InfoTooltip key="crm.help.sync" side="bottom" />
 
       <button
         on:click={openImport}
@@ -263,6 +265,7 @@
         {/if}
         {$_('crm.contacts.import')}
       </button>
+      <InfoTooltip key="crm.help.csvImport" side="bottom" />
 
       <button
         on:click={() => (showAddModal = true)}
@@ -357,7 +360,7 @@
               <th class="text-left text-xs font-medium text-ink-muted uppercase tracking-wider px-5 py-3">{$_('crm.contacts.columns.company')}</th>
               <th class="text-left text-xs font-medium text-ink-muted uppercase tracking-wider px-5 py-3">{$_('crm.contacts.columns.tags')}</th>
               <th class="text-left text-xs font-medium text-ink-muted uppercase tracking-wider px-5 py-3">{$_('crm.contact.owner')}</th>
-              <th class="text-left text-xs font-medium text-ink-muted uppercase tracking-wider px-5 py-3">{$_('crm.contacts.columns.status')}</th>
+              <th class="text-left text-xs font-medium text-ink-muted uppercase tracking-wider px-5 py-3">{$_('crm.contacts.columns.status')} <InfoTooltip key="crm.help.status" /></th>
               <th class="text-left text-xs font-medium text-ink-muted uppercase tracking-wider px-5 py-3">{$_('crm.contacts.columns.lastSeen')}</th>
             </tr>
           </thead>

@@ -10,6 +10,7 @@
   import { loadActiveMembers, ownerName, type TeamMember } from '$lib/api/crm-owners';
   import { organizationIdStore } from '$lib/stores/projects';
   import { currentUser } from '$stores/auth';
+  import InfoTooltip from '$lib/components/InfoTooltip.svelte';
 
   $: projectId = $page.params['id'];
 
@@ -166,7 +167,7 @@
 
   <!-- Header -->
   <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-    <h1 class="text-2xl font-bold text-ink">{$_('crm.tasks.title')}</h1>
+    <h1 class="text-2xl font-bold text-ink">{$_('crm.tasks.title')} <InfoTooltip key="crm.help.taskBuckets" side="bottom" /></h1>
     <div class="flex items-center gap-3">
       <!-- My tasks toggle -->
       <label class="flex items-center gap-2 cursor-pointer select-none">
@@ -177,6 +178,7 @@
         />
         <span class="text-sm text-ink-muted">{$_('crm.tasks.myTasks')}</span>
       </label>
+      <InfoTooltip key="crm.help.taskDigest" side="bottom" />
 
       <button
         on:click={openAddModal}
@@ -217,6 +219,7 @@
         </svg>
       </div>
       <h2 class="text-xl font-semibold text-ink mb-2">{$_('crm.tasks.empty')}</h2>
+      <p class="text-ink-muted mb-6 max-w-sm text-sm">{$_('crm.tasks.emptyHint')}</p>
       <button
         on:click={openAddModal}
         class="mt-4 bg-brand text-white px-6 py-3 rounded-xl font-medium hover:brightness-110 transition-colors duration-150 flex items-center gap-2"

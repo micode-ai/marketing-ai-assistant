@@ -1691,7 +1691,7 @@
       "anonymous": "Anonim",
       "empty": "Brak kontaktów",
       "emptyFiltered": "Żaden kontakt nie pasuje do wybranych filtrów.",
-      "emptyHint": "Dodaj pierwszy kontakt ręcznie, zaimportuj CSV lub zsynchronizuj śledzonych użytkowników.",
+      "emptyHint": "Kliknij Synchronizuj, aby zaimportować subskrybentów i odwiedzających, dodaj kontakt ręcznie lub zaimportuj CSV.",
       "count": "{count, plural, one {# kontakt} few {# kontakty} many {# kontaktów} other {# kontaktów}}",
       "syncResult": "{created} dodanych, {updated} zaktualizowanych",
       "capped": "(z limitem)",
@@ -1881,6 +1881,7 @@
       "title": "Zadania",
       "add": "Dodaj zadanie",
       "empty": "Brak otwartych zadań",
+      "emptyHint": "Dodaj zadanie z osi czasu kontaktu lub transakcji, aby zobaczyć je tutaj.",
       "overdue": "Zaległe",
       "today": "Dziś",
       "upcoming": "Nadchodzące",
@@ -1968,6 +1969,26 @@
         "warm": "Ciepły",
         "cold": "Zimny"
       }
+    },
+    "help": {
+      "sync": "Importuje kontakty z subskrybentów e-mail i zidentyfikowanych odwiedzających stronę. Duplikaty są scalane według adresu e-mail.",
+      "csvImport": "Masowy import kontaktów z pliku CSV. Dostępne w planie Pro i wyższych.",
+      "status": "Cykl życia kontaktu: aktywny, wypisany lub zarchiwizowany.",
+      "source": "Skąd pochodzi kontakt: dodany ręcznie, import CSV, subskrybent e-mail lub śledzony odwiedzający.",
+      "owner": "Członek zespołu odpowiedzialny za ten kontakt.",
+      "timeline": "Rejestruj rozmowy, e-maile, spotkania i notatki oraz dodawaj zadania kontrolne — najnowsze na górze.",
+      "forecast": "Ważona prognoza = suma wartości każdej otwartej transakcji × prawdopodobieństwo etapu.",
+      "stageProbability": "Każdy etap ma prawdopodobieństwo wygrania, używane do ważenia prognozy.",
+      "dragStage": "Przeciągnij kartę transakcji do innej kolumny, aby przesunąć ją przez lejek sprzedaży.",
+      "hotFirst": "Sortuj transakcje tak, aby ocenione przez AI jako 'gorące' pojawiały się jako pierwsze.",
+      "scoreBadge": "Wynik AI prawdopodobieństwa zamknięcia (0–100). Gorący ≥ 70, ciepły 40–69, zimny < 40.",
+      "dealStatus": "Oznacz transakcję jako wygraną lub przegraną. Wygrana księguje przychód w finansach; ponowne otwarcie lub przegrana usuwa go.",
+      "aiScore": "Ocena AI prawdopodobieństwa zamknięcia tej transakcji (0–100) wraz z uzasadnieniem poniżej.",
+      "nextStep": "Sugerowany przez AI następny krok — dodaj go jako zadanie jednym kliknięciem.",
+      "draft": "Szkic wiadomości e-mail przygotowany przez AI — skopiuj go lub zapisz jako aktywność.",
+      "manageStages": "Zmieniaj nazwy, kolejność i prawdopodobieństwo etapów lejka. Usunięcie etapu przenosi jego otwarte transakcje do poprzedniego etapu.",
+      "taskBuckets": "Zadania pogrupowane według terminu: zaległe, na dziś i nadchodzące.",
+      "taskDigest": "Każdego ranka właściciele zadań otrzymują e-mail z podsumowaniem zaległych i bieżących zadań."
     }
   }
 }

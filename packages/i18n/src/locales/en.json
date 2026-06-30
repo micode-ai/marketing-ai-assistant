@@ -1711,7 +1711,7 @@
       "anonymous": "Anonymous",
       "empty": "No contacts yet",
       "emptyFiltered": "No contacts match your current filters.",
-      "emptyHint": "Add your first contact manually, import a CSV, or sync tracked users.",
+      "emptyHint": "Click Sync to import subscribers and site visitors, add a contact manually, or import a CSV.",
       "count": "{count, plural, one {# contact} other {# contacts}}",
       "syncResult": "{created} created, {updated} updated",
       "capped": "(capped)",
@@ -1901,6 +1901,7 @@
       "title": "Tasks",
       "add": "Add task",
       "empty": "No open tasks",
+      "emptyHint": "Add a task from a contact or deal timeline to see it here.",
       "overdue": "Overdue",
       "today": "Today",
       "upcoming": "Upcoming",
@@ -1988,6 +1989,26 @@
         "warm": "Warm",
         "cold": "Cold"
       }
+    },
+    "help": {
+      "sync": "Imports contacts from your email subscribers and identified site visitors. Duplicates are merged by email.",
+      "csvImport": "Bulk-import contacts from a CSV file. Available on Pro and above.",
+      "status": "The contact's lifecycle: active, unsubscribed, or archived.",
+      "source": "Where the contact came from: added manually, CSV import, an email subscriber, or a tracked site visitor.",
+      "owner": "The team member responsible for this contact.",
+      "timeline": "Log calls, emails, meetings and notes, and add follow-up tasks — newest first.",
+      "forecast": "Weighted forecast = the sum of each open deal's value × its stage probability.",
+      "stageProbability": "Each stage has a win probability, used to weight the forecast.",
+      "dragStage": "Drag a deal card to another column to move it through the pipeline.",
+      "hotFirst": "Sort deals so AI-scored 'hot' ones appear first.",
+      "scoreBadge": "AI close-likelihood score (0–100). Hot ≥ 70, warm 40–69, cold < 40.",
+      "dealStatus": "Mark the deal Won or Lost. Winning books an income record in Finance; reopening or losing removes it.",
+      "aiScore": "AI estimate of how likely this deal is to close (0–100), with the reasoning below.",
+      "nextStep": "AI-suggested next action — add it as a task in one click.",
+      "draft": "AI-drafted outreach email — copy it or log it as an activity.",
+      "manageStages": "Rename, reorder and set the probability of pipeline stages. Deleting a stage moves its open deals to the previous stage.",
+      "taskBuckets": "Tasks grouped by due date: overdue, due today, and upcoming.",
+      "taskDigest": "Each morning, task owners get an email digest of their overdue and due-today tasks."
     }
   }
 }
