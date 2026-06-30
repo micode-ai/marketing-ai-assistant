@@ -10,6 +10,7 @@
   import { crmApi, type CrmContact, type CrmCompany } from '$lib/api/crm';
   import { loadActiveMembers, ownerName, type TeamMember } from '$lib/api/crm-owners';
   import { organizationIdStore } from '$lib/stores/projects';
+  import InfoTooltip from '$lib/components/InfoTooltip.svelte';
 
   $: projectId = $page.params['id'];
 
@@ -224,8 +225,9 @@
 
   <!-- Header -->
   <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-    <div>
+    <div class="flex items-center gap-2">
       <h1 class="text-2xl font-bold text-ink">{$_('crm.deals.title')}</h1>
+      <InfoTooltip key="crm.help.scoreBadge" side="bottom" />
     </div>
     <div class="flex items-center gap-2">
       <button
@@ -241,6 +243,7 @@
         </svg>
         {$_('crm.insights.hotFirst')}
       </button>
+      <InfoTooltip key="crm.help.hotFirst" side="bottom" />
       <a
         href="/projects/{projectId}/crm/deals/stages"
         class="border border-border text-ink px-3 py-2 rounded-lg text-sm font-medium hover:bg-surface-2 transition-colors duration-150 flex items-center gap-2"
@@ -251,6 +254,7 @@
         </svg>
         {$_('crm.pipeline.manageStages')}
       </a>
+      <InfoTooltip key="crm.help.dragStage" side="bottom" />
       <button
         on:click={openAddModal}
         class="bg-brand text-white px-3 py-2 rounded-lg text-sm font-medium hover:brightness-110 transition-colors duration-150 flex items-center gap-2 cursor-pointer"
@@ -267,7 +271,7 @@
   {#if forecast}
     <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
       <div class="bg-surface rounded-xl border border-border p-4">
-        <p class="text-xs font-medium text-ink-muted uppercase tracking-wider mb-1">{$_('crm.pipeline.forecast.weighted')}</p>
+        <p class="text-xs font-medium text-ink-muted uppercase tracking-wider mb-1">{$_('crm.pipeline.forecast.weighted')} <InfoTooltip key="crm.help.forecast" /></p>
         <p class="text-xl font-bold text-ink">{formatMoney(forecast.weightedValue, currency, $locale ?? 'en')}</p>
       </div>
       <div class="bg-surface rounded-xl border border-border p-4">
