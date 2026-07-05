@@ -26,6 +26,9 @@ function makePrisma() {
       findMany: jest.fn().mockResolvedValue([]),
       findFirst: jest.fn().mockResolvedValue(null),
     },
+    instagramStory: {
+      findMany: jest.fn().mockResolvedValue([]),
+    },
     project: {
       // resolveAccount derives the org from the project; generateAdvice also
       // reads name/industry — both come from this mock.
@@ -158,7 +161,17 @@ describe('InstagramService', () => {
 
       const metrics = await service.getMetrics('p1', 28);
 
-      expect(metrics).toEqual({ account: [], topPosts: [], worstPosts: [], periodTotals: {} });
+      expect(metrics).toEqual({
+        account: [],
+        topPosts: [],
+        worstPosts: [],
+        periodTotals: {},
+        stories: {
+          list: [],
+          summary: { count: 0, avgReach: 0, avgReplies: 0, avgCompletion: null },
+          daily: [],
+        },
+      });
     });
 
     it('returns account series + top/worst posts ordered by engagementRate', async () => {

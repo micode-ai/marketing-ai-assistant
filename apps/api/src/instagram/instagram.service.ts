@@ -4,6 +4,7 @@ import { PrismaService } from '../database/prisma.service';
 import { InstagramSyncService } from './instagram-sync.service';
 import { decryptData } from '../common/crypto.util';
 import { fetchAccountInsightsTotals, AccountInsights } from './instagram-graph.util';
+import { buildStoriesBlock, StoryMetricRow } from './stories.util';
 
 const INSIGHTS_SCOPE = 'instagram_business_manage_insights';
 const SKIP_IF_RECENT_MS = 10 * 60 * 1000; // 10 minutes
@@ -88,7 +89,17 @@ export class InstagramService {
   async getMetrics(projectId: string, days: number) {
     const account = await this.resolveAccount(projectId);
     if (!account) {
-      return { account: [], topPosts: [], worstPosts: [], periodTotals: {} };
+      return {
+        account: [],
+        topPosts: [],
+        worstPosts: [],
+        periodTotals: {},
+        stories: {
+          list: [],
+          summary: { count: 0, avgReach: 0, avgReplies: 0, avgCompletion: null },
+          daily: [],
+        },
+      };
     }
 
     const since = new Date();
@@ -118,6 +129,13 @@ export class InstagramService {
       .reverse()
       .filter((m) => !topIds.has(m.igMediaId))
       .slice(0, 5);
+
+    // Stories snapshots windowed to the requested period (newest first).
+    const storyRows = await this.prisma.instagramStory.findMany({
+      where: { socialAccountId: account.id, timestamp: { gte: since } },
+      orderBy: { timestamp: 'desc' },
+    });
+    const stories = buildStoriesBlock(storyRows as StoryMetricRow[]);
 
     // Fetch aggregate period totals (metric_type=total_value over the window).
     // Any failure is swallowed — periodTotals is supplementary data.
@@ -157,6 +175,7 @@ export class InstagramService {
       topPosts,
       worstPosts,
       periodTotals,
+      stories,
     };
   }
 
