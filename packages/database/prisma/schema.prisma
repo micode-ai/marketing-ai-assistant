@@ -934,6 +934,7 @@ model SocialAccount {
   projects          ProjectSocialAccount[]
   instagramMetrics      InstagramAccountMetrics[]
   instagramMedia        InstagramMedia[]
+  instagramStories      InstagramStory[]
   threadsAccountMetrics ThreadsAccountMetrics[]
   threadsMedia          ThreadsMedia[]
 
@@ -1635,6 +1636,31 @@ model InstagramMedia {
   @@unique([socialAccountId, igMediaId])
   @@index([socialAccountId])
   @@map("instagram_media")
+}
+
+model InstagramStory {
+  id                String   @id @default(cuid())
+  socialAccountId   String
+  igStoryId         String
+  mediaType         String
+  caption           String?  @db.Text
+  permalink         String?
+  timestamp         DateTime
+  reach             Int?
+  views             Int?
+  replies           Int?
+  shares            Int?
+  totalInteractions Int?
+  tapsForward       Int?
+  tapsBack          Int?
+  exits             Int?
+  lastSyncedAt      DateTime
+
+  socialAccount SocialAccount @relation(fields: [socialAccountId], references: [id], onDelete: Cascade)
+
+  @@unique([socialAccountId, igStoryId])
+  @@index([socialAccountId])
+  @@map("instagram_stories")
 }
 
 // =============================================================================
