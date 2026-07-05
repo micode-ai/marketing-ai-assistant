@@ -98,12 +98,18 @@
     loading = true;
     await checkStatus();
     if (status?.connected && status.insightsGranted) {
-      await syncIfStale();
+      // Render whatever metrics we already have first, then drop `loading` so
+      // the dashboard shell appears. The (potentially multi-second) Meta sync
+      // runs in the background — previously it was awaited here, leaving the
+      // whole tab blank while /instagram/sync was in flight.
       await fetchMetrics();
-      await loadStoredAdvice();
+      loading = false;
+      loadStoredAdvice();
       syncInterval = setInterval(syncAndRefresh, SYNC_INTERVAL_MS);
+      if (isSyncStale(status?.lastSyncAt)) syncAndRefresh();
+    } else {
+      loading = false;
     }
-    loading = false;
   }
 
   async function reinit() {
@@ -132,12 +138,6 @@
       status = await api.get<InstagramStatus>('/instagram/status', { projectId });
     } catch {
       status = { connected: false, insightsGranted: false };
-    }
-  }
-
-  async function syncIfStale() {
-    if (isSyncStale(status?.lastSyncAt)) {
-      await triggerSync();
     }
   }
 
@@ -309,7 +309,28 @@
 </script>
 
 {#if view === 'loading'}
-  <!-- nothing while resolving status (avoids a flash before we know IG is linked) -->
+  <!-- Initial status + metrics load: a metrics-shaped skeleton instead of a
+       blank panel. The IG channel tab only renders once the account is
+       known-connected, so showing this skeleton can't flash for unlinked
+       projects. -->
+  <div class="bg-surface rounded-xl border border-border overflow-hidden mb-6 animate-pulse">
+    <div class="flex items-center justify-between px-5 py-4 border-b border-border">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 bg-surface-2 rounded-lg"></div>
+        <div class="space-y-2">
+          <div class="h-3.5 w-32 bg-surface-2 rounded"></div>
+          <div class="h-2.5 w-20 bg-surface-2 rounded"></div>
+        </div>
+      </div>
+      <div class="h-8 w-24 bg-surface-2 rounded-lg"></div>
+    </div>
+    <div class="p-5 space-y-6">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {#each Array(3) as _skeleton}<div class="bg-surface-2 rounded-xl h-24"></div>{/each}
+      </div>
+      <div class="bg-surface-2 rounded-xl h-64"></div>
+    </div>
+  </div>
 {:else if view === 'hidden'}
   <!-- No Instagram account linked: keep a quiet inline hint -->
   <!-- self-hides; rendered nothing keeps the analytics page clean -->
