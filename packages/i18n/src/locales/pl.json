@@ -936,6 +936,20 @@
   },
   "instagram": {
     "title": "Analityka Instagrama",
+    "stories": {
+      "title": "Relacje",
+      "count": "Relacje",
+      "avgReach": "Śr. zasięg",
+      "avgReplies": "Śr. odpowiedzi",
+      "avgCompletion": "Śr. ukończenie",
+      "trend": "Zasięg relacji w czasie",
+      "date": "Data",
+      "type": "Typ",
+      "replies": "Odpowiedzi",
+      "exits": "Wyjścia",
+      "completion": "Ukończenie",
+      "empty": "Brak relacji w tym okresie. Relacje wygasają po 24 h w API, więc zapisujemy je przy każdej synchronizacji — częstsza synchronizacja (PRO/Enterprise) zbiera ich więcej."
+    },
     "subtitle": "Wyniki konta i postów",
     "syncNow": "Synchronizuj",
     "syncing": "Synchronizacja…",
