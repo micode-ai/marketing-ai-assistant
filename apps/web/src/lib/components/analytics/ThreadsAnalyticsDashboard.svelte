@@ -105,6 +105,12 @@
       // whole tab blank while /threads/sync was in flight.
       await fetchMetrics();
       loading = false;
+      // The <canvas> lives in the connected view, which only renders once
+      // `loading` is false — so renderChart() inside fetchMetrics() above no-ops
+      // on first load (skeleton still shown, canvas not in the DOM). Re-render
+      // now that the connected view and its canvas are mounted.
+      await tick();
+      renderChart();
       loadStoredAdvice();
       syncInterval = setInterval(syncAndRefresh, SYNC_INTERVAL_MS);
       if (isSyncStale(status?.lastSyncAt)) syncAndRefresh();
