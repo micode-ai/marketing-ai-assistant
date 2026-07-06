@@ -131,6 +131,13 @@
       // whole tab blank while /instagram/sync was in flight.
       await fetchMetrics();
       loading = false;
+      // The <canvas> lives in the connected view, which only renders once
+      // `loading` is false — so renderChart() inside fetchMetrics() above no-ops
+      // on first load (skeleton still shown, canvas not in the DOM). Re-render
+      // now that the connected view and its canvases are mounted.
+      await tick();
+      renderChart();
+      renderStoriesChart();
       loadStoredAdvice();
       syncInterval = setInterval(syncAndRefresh, SYNC_INTERVAL_MS);
       if (isSyncStale(status?.lastSyncAt)) syncAndRefresh();
