@@ -6,6 +6,8 @@ import {
   fetchAccountInsightsRange,
   fetchMediaList,
   fetchMediaInsights,
+  fetchStoriesList,
+  fetchStoryInsights,
   InstagramAuthError,
 } from './instagram-graph.util';
 
@@ -18,6 +20,8 @@ jest.mock('./instagram-graph.util', () => {
     fetchAccountInsightsRange: jest.fn(),
     fetchMediaList: jest.fn(),
     fetchMediaInsights: jest.fn(),
+    fetchStoriesList: jest.fn(),
+    fetchStoryInsights: jest.fn(),
   };
 });
 
@@ -34,6 +38,12 @@ const mockFetchMediaList = fetchMediaList as jest.MockedFunction<
 >;
 const mockFetchMediaInsights = fetchMediaInsights as jest.MockedFunction<
   typeof fetchMediaInsights
+>;
+const mockFetchStoriesList = fetchStoriesList as jest.MockedFunction<
+  typeof fetchStoriesList
+>;
+const mockFetchStoryInsights = fetchStoryInsights as jest.MockedFunction<
+  typeof fetchStoryInsights
 >;
 
 // Valid 64-char hex (32-byte) encryption key.
@@ -58,6 +68,9 @@ function makePrisma() {
     instagramMedia: {
       upsert: jest.fn().mockResolvedValue({}),
       findFirst: jest.fn().mockResolvedValue(null),
+    },
+    instagramStory: {
+      upsert: jest.fn().mockResolvedValue({}),
     },
     socialAccount: {
       findMany: jest.fn().mockResolvedValue([]),
@@ -108,6 +121,9 @@ describe('InstagramSyncService', () => {
       config as any,
       notifier as any,
     );
+    // Stories default to none so existing withMedia tests don't hit the real fetch.
+    mockFetchStoriesList.mockResolvedValue([]);
+    mockFetchStoryInsights.mockResolvedValue({});
   });
 
   describe('syncAccount', () => {
@@ -126,7 +142,7 @@ describe('InstagramSyncService', () => {
 
       const result = await service.syncAccount(makeAccount(), false);
 
-      expect(result).toEqual({ accountSynced: true, mediaSynced: 0 });
+      expect(result).toEqual({ accountSynced: true, mediaSynced: 0, storiesSynced: 0 });
       expect(prisma.instagramAccountMetrics.upsert).toHaveBeenCalledTimes(1);
       const arg = prisma.instagramAccountMetrics.upsert.mock.calls[0][0];
       expect(arg.where.socialAccountId_date.socialAccountId).toBe('acc_1');
@@ -167,7 +183,7 @@ describe('InstagramSyncService', () => {
 
       const result = await service.syncAccount(makeAccount(), true);
 
-      expect(result).toEqual({ accountSynced: true, mediaSynced: 1 });
+      expect(result).toEqual({ accountSynced: true, mediaSynced: 1, storiesSynced: 0 });
       expect(prisma.instagramMedia.upsert).toHaveBeenCalledTimes(1);
       const arg = prisma.instagramMedia.upsert.mock.calls[0][0];
       expect(arg.where.socialAccountId_igMediaId).toEqual({
@@ -222,7 +238,7 @@ describe('InstagramSyncService', () => {
         makeAccount({ encryptedTokens }),
         true,
       );
-      expect(result).toEqual({ accountSynced: false, mediaSynced: 0 });
+      expect(result).toEqual({ accountSynced: false, mediaSynced: 0, storiesSynced: 0 });
       expect(prisma.instagramAccountMetrics.upsert).not.toHaveBeenCalled();
     });
 
@@ -249,6 +265,61 @@ describe('InstagramSyncService', () => {
         resourceId: 'acc_1',
         errorCode: 'IG_TOKEN_EXPIRED',
       });
+    });
+
+    it('upserts one row per active story when withMedia', async () => {
+      mockFetchAccountProfile.mockResolvedValue({ followersCount: 100 });
+      mockFetchAccountInsights.mockResolvedValue({ reach: 1000 });
+      mockFetchMediaList.mockResolvedValue([]);
+      mockFetchStoriesList.mockResolvedValue([
+        {
+          id: 'story_1',
+          mediaType: 'VIDEO',
+          permalink: 'https://instagram.com/stories/1',
+          timestamp: '2026-07-05T08:00:00+0000',
+          caption: 'promo',
+        },
+      ]);
+      mockFetchStoryInsights.mockResolvedValue({
+        reach: 900,
+        views: 1200,
+        replies: 4,
+        shares: 2,
+        totalInteractions: 60,
+        tapsForward: 50,
+        tapsBack: 10,
+        exits: 8,
+      });
+
+      const result = await service.syncAccount(makeAccount(), true);
+
+      expect(result).toEqual({ accountSynced: true, mediaSynced: 0, storiesSynced: 1 });
+      expect(prisma.instagramStory.upsert).toHaveBeenCalledTimes(1);
+      const arg = prisma.instagramStory.upsert.mock.calls[0][0];
+      expect(arg.where.socialAccountId_igStoryId).toEqual({
+        socialAccountId: 'acc_1',
+        igStoryId: 'story_1',
+      });
+      expect(arg.create).toMatchObject({
+        socialAccountId: 'acc_1',
+        igStoryId: 'story_1',
+        mediaType: 'VIDEO',
+        reach: 900,
+        exits: 8,
+        tapsForward: 50,
+      });
+      expect(arg.create.timestamp).toBeInstanceOf(Date);
+    });
+
+    it('does NOT fetch stories when withMedia is false', async () => {
+      mockFetchAccountProfile.mockResolvedValue({ followersCount: 100 });
+      mockFetchAccountInsights.mockResolvedValue({});
+
+      const result = await service.syncAccount(makeAccount(), false);
+
+      expect(result.storiesSynced).toBe(0);
+      expect(mockFetchStoriesList).not.toHaveBeenCalled();
+      expect(prisma.instagramStory.upsert).not.toHaveBeenCalled();
     });
   });
 
@@ -396,7 +467,7 @@ describe('InstagramSyncService', () => {
         .mockResolvedValue({ daysWritten: 88 });
       const syncSpy = jest
         .spyOn(service, 'syncAccount')
-        .mockResolvedValue({ accountSynced: true, mediaSynced: 0 });
+        .mockResolvedValue({ accountSynced: true, mediaSynced: 0, storiesSynced: 0 });
 
       await service.handleCron();
 

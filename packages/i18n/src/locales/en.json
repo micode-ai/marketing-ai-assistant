@@ -956,6 +956,20 @@
   },
   "instagram": {
     "title": "Instagram Analytics",
+    "stories": {
+      "title": "Stories",
+      "count": "Stories",
+      "avgReach": "Avg reach",
+      "avgReplies": "Avg replies",
+      "avgCompletion": "Avg completion",
+      "trend": "Story reach over time",
+      "date": "Date",
+      "type": "Type",
+      "replies": "Replies",
+      "exits": "Exits",
+      "completion": "Completion",
+      "empty": "No stories captured for this period. Stories expire after 24h in the API, so they're snapshotted on each sync — more frequent syncing (PRO/Enterprise) captures more."
+    },
     "subtitle": "Account and post performance",
     "syncNow": "Sync now",
     "syncing": "Syncing…",

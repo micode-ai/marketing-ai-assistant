@@ -380,3 +380,129 @@ export async function fetchMediaInsights(
   for (const name of names) metricKeys[name] = MEDIA_METRIC_KEYS[name];
   return fetchInsightsWithTolerance<MediaInsights>(mediaId, token, metricKeys, {});
 }
+
+export interface StoryItem {
+  id: string;
+  mediaType: string;
+  permalink?: string;
+  timestamp: string;
+  caption?: string;
+}
+
+export interface StoryInsights {
+  reach?: number;
+  views?: number;
+  replies?: number;
+  shares?: number;
+  totalInteractions?: number;
+  tapsForward?: number;
+  tapsBack?: number;
+  exits?: number;
+}
+
+// Flat (non-breakdown) story metric name → StoryInsights key.
+const STORY_METRIC_KEYS: Record<string, keyof StoryInsights> = {
+  reach: 'reach',
+  views: 'views',
+  replies: 'replies',
+  shares: 'shares',
+  total_interactions: 'totalInteractions',
+};
+
+/**
+ * GET /{ig-user-id}/stories?fields=id,media_type,permalink,timestamp,caption
+ * Returns only currently-active stories (< 24h). [] on non-auth failure;
+ * auth errors propagate via throwIfAuthError.
+ */
+export async function fetchStoriesList(
+  igUserId: string,
+  token: string,
+): Promise<StoryItem[]> {
+  const params = new URLSearchParams({
+    fields: 'id,media_type,permalink,timestamp,caption',
+    access_token: token,
+  });
+  const res = await fetch(`${GRAPH}/${igUserId}/stories?${params}`);
+  if (!res.ok) {
+    const body = await throwIfAuthError(res);
+    logger.warn(`fetchStoriesList failed for ${igUserId}: ${res.status} ${body}`);
+    return [];
+  }
+  const json = (await res.json()) as {
+    data?: Array<{
+      id: string;
+      media_type: string;
+      permalink?: string;
+      timestamp: string;
+      caption?: string;
+    }>;
+  };
+  return (json.data ?? []).map((s) => {
+    const item: StoryItem = { id: s.id, mediaType: s.media_type, timestamp: s.timestamp };
+    if (typeof s.permalink === 'string') item.permalink = s.permalink;
+    if (typeof s.caption === 'string') item.caption = s.caption;
+    return item;
+  });
+}
+
+/**
+ * Story navigation breakdown (taps_forward/back, exits). A single `navigation`
+ * metric with a `story_navigation_action_type` breakdown. Non-auth failures are
+ * tolerated (return {}) so they never drop the flat metrics; auth propagates.
+ */
+async function fetchStoryNavigation(
+  storyId: string,
+  token: string,
+): Promise<Pick<StoryInsights, 'tapsForward' | 'tapsBack' | 'exits'>> {
+  const params = new URLSearchParams({
+    metric: 'navigation',
+    breakdown: 'story_navigation_action_type',
+    access_token: token,
+  });
+  const res = await fetch(`${GRAPH}/${storyId}/insights?${params}`);
+  if (!res.ok) {
+    await throwIfAuthError(res); // auth → throws; non-auth → falls through
+    return {};
+  }
+  const json = (await res.json()) as {
+    data?: Array<{
+      name: string;
+      total_value?: {
+        breakdowns?: Array<{
+          results?: Array<{ dimension_values?: string[]; value?: number }>;
+        }>;
+      };
+    }>;
+  };
+  const row = (json.data ?? []).find((r) => r.name === 'navigation');
+  const results = row?.total_value?.breakdowns?.[0]?.results ?? [];
+  const out: Pick<StoryInsights, 'tapsForward' | 'tapsBack' | 'exits'> = {};
+  for (const entry of results) {
+    const key = entry.dimension_values?.[0];
+    const val = entry.value;
+    if (typeof val !== 'number' || !key) continue;
+    if (key === 'tap_forward') out.tapsForward = val;
+    else if (key === 'tap_back') out.tapsBack = val;
+    else if (key === 'tap_exit') out.exits = val;
+  }
+  return out;
+}
+
+/**
+ * GET /{story-id}/insights — flat metrics via the shared per-metric tolerance
+ * helper + a separate navigation-breakdown call. A navigation failure never
+ * loses the flat metrics.
+ */
+export async function fetchStoryInsights(
+  storyId: string,
+  token: string,
+): Promise<StoryInsights> {
+  const flat = await fetchInsightsWithTolerance<StoryInsights>(
+    storyId,
+    token,
+    STORY_METRIC_KEYS,
+    {},
+  );
+  const nav = await fetchStoryNavigation(storyId, token);
+  return { ...flat, ...nav };
+}
