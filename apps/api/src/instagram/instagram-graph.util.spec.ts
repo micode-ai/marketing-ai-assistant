@@ -5,6 +5,8 @@ import {
   fetchAccountInsightsRange,
   fetchMediaList,
   fetchMediaInsights,
+  fetchStoriesList,
+  fetchStoryInsights,
   InstagramAuthError,
 } from './instagram-graph.util';
 
@@ -482,6 +484,131 @@ describe('instagram-graph.util', () => {
       await expect(fetchMediaInsights('MEDIA1', 'tok', 'IMAGE')).rejects.toBeInstanceOf(
         InstagramAuthError,
       );
+    });
+  });
+
+  describe('fetchStoriesList', () => {
+    it('maps active stories to StoryItem[]', async () => {
+      const fetchMock = jest.fn().mockResolvedValue(
+        okJson({
+          data: [
+            {
+              id: 's1',
+              media_type: 'VIDEO',
+              permalink: 'https://insta/stories/1',
+              timestamp: '2026-07-05T08:00:00+0000',
+              caption: 'promo',
+            },
+          ],
+        }),
+      );
+      global.fetch = fetchMock as unknown as typeof fetch;
+
+      const result = await fetchStoriesList('IG123', 'tok');
+
+      expect(result).toEqual([
+        {
+          id: 's1',
+          mediaType: 'VIDEO',
+          permalink: 'https://insta/stories/1',
+          timestamp: '2026-07-05T08:00:00+0000',
+          caption: 'promo',
+        },
+      ]);
+      const url = fetchMock.mock.calls[0][0] as string;
+      expect(url).toContain('https://graph.instagram.com/IG123/stories?');
+      expect(url).toContain('fields=id%2Cmedia_type%2Cpermalink%2Ctimestamp%2Ccaption');
+    });
+
+    it('returns [] on a non-ok response', async () => {
+      global.fetch = jest.fn().mockResolvedValue(notOk(400)) as unknown as typeof fetch;
+      expect(await fetchStoriesList('IG123', 'tok')).toEqual([]);
+    });
+
+    it('throws InstagramAuthError on 401', async () => {
+      global.fetch = jest.fn().mockResolvedValue(unauthorized()) as unknown as typeof fetch;
+      await expect(fetchStoriesList('IG123', 'tok')).rejects.toBeInstanceOf(
+        InstagramAuthError,
+      );
+    });
+  });
+
+  describe('fetchStoryInsights', () => {
+    it('parses flat metrics + navigation breakdown into taps/exits', async () => {
+      const fetchMock = jest.fn().mockImplementation((url: string) => {
+        const metric = metricOf(url);
+        if (metric === 'navigation') {
+          return Promise.resolve(
+            okJson({
+              data: [
+                {
+                  name: 'navigation',
+                  total_value: {
+                    value: 68,
+                    breakdowns: [
+                      {
+                        dimension_keys: ['story_navigation_action_type'],
+                        results: [
+                          { dimension_values: ['tap_forward'], value: 50 },
+                          { dimension_values: ['tap_back'], value: 10 },
+                          { dimension_values: ['tap_exit'], value: 8 },
+                          { dimension_values: ['swipe_forward'], value: 3 },
+                        ],
+                      },
+                    ],
+                  },
+                },
+              ],
+            }),
+          );
+        }
+        // Flat metrics batch.
+        return Promise.resolve(
+          okJson({
+            data: [
+              { name: 'reach', total_value: { value: 900 } },
+              { name: 'views', total_value: { value: 1200 } },
+              { name: 'replies', total_value: { value: 4 } },
+              { name: 'shares', total_value: { value: 2 } },
+              { name: 'total_interactions', total_value: { value: 60 } },
+            ],
+          }),
+        );
+      });
+      global.fetch = fetchMock as unknown as typeof fetch;
+
+      const result = await fetchStoryInsights('STORY1', 'tok');
+
+      expect(result).toEqual({
+        reach: 900,
+        views: 1200,
+        replies: 4,
+        shares: 2,
+        totalInteractions: 60,
+        tapsForward: 50,
+        tapsBack: 10,
+        exits: 8,
+      });
+      const navUrl = fetchMock.mock.calls
+        .map((c) => c[0] as string)
+        .find((u) => metricOf(u) === 'navigation')!;
+      expect(navUrl).toContain('breakdown=story_navigation_action_type');
+    });
+
+    it('keeps flat metrics when navigation fails (non-auth)', async () => {
+      const fetchMock = jest.fn().mockImplementation((url: string) => {
+        const metric = metricOf(url);
+        if (metric === 'navigation') return Promise.resolve(notOk(400));
+        return Promise.resolve(
+          okJson({ data: [{ name: 'reach', total_value: { value: 500 } }] }),
+        );
+      });
+      global.fetch = fetchMock as unknown as typeof fetch;
+
+      const result = await fetchStoryInsights('STORY1', 'tok');
+      expect(result.reach).toBe(500);
+      expect(result).not.toHaveProperty('tapsForward');
+      expect(result).not.toHaveProperty('exits');
     });
   });
 });

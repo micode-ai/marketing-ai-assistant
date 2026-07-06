@@ -38,6 +38,25 @@
     engagementRate: number | null;
   }
 
+  interface StoryRow {
+    igStoryId: string;
+    mediaType: string;
+    caption: string | null;
+    permalink: string | null;
+    timestamp: string;
+    reach: number | null;
+    views: number | null;
+    replies: number | null;
+    exits: number | null;
+    completion: number | null;
+  }
+
+  interface StoriesBlock {
+    list: StoryRow[];
+    summary: { count: number; avgReach: number; avgReplies: number; avgCompletion: number | null };
+    daily: Array<{ date: string; avgReach: number; count: number }>;
+  }
+
   interface Metrics {
     account: AccountPoint[];
     topPosts: MediaPost[];
@@ -48,12 +67,17 @@
       accountsEngaged?: number;
       totalInteractions?: number;
     };
+    stories?: StoriesBlock;
+  }
+
+  function emptyStories(): StoriesBlock {
+    return { list: [], summary: { count: 0, avgReach: 0, avgReplies: 0, avgCompletion: null }, daily: [] };
   }
 
   const SYNC_INTERVAL_MS = 5 * 60 * 1000; // periodic refresh while mounted
 
   let status: InstagramStatus | null = null;
-  let metrics: Metrics = { account: [], topPosts: [], worstPosts: [], periodTotals: {} };
+  let metrics: Metrics = { account: [], topPosts: [], worstPosts: [], periodTotals: {}, stories: emptyStories() };
   let loading = true;
   let dataLoading = false;
   let syncing = false;
@@ -63,6 +87,9 @@
   let ChartJS: any = null;
   let chartCanvas: HTMLCanvasElement;
   let chart: any = null;
+  // Stories trend chart
+  let storiesChartCanvas: HTMLCanvasElement;
+  let storiesChart: any = null;
 
   // AI advice
   let advice = '';
@@ -116,7 +143,7 @@
     if (syncInterval) { clearInterval(syncInterval); syncInterval = null; }
     destroyChart();
     status = null;
-    metrics = { account: [], topPosts: [], worstPosts: [] };
+    metrics = { account: [], topPosts: [], worstPosts: [], periodTotals: {}, stories: emptyStories() };
     advice = '';
     contextSummary = '';
     adviceError = '';
@@ -131,6 +158,8 @@
   function destroyChart() {
     chart?.destroy();
     chart = null;
+    storiesChart?.destroy();
+    storiesChart = null;
   }
 
   async function checkStatus() {
@@ -164,8 +193,9 @@
       metrics = await api.get<Metrics>('/instagram/metrics', { projectId, days });
       await tick();
       renderChart();
+      renderStoriesChart();
     } catch {
-      metrics = { account: [], topPosts: [], worstPosts: [], periodTotals: {} };
+      metrics = { account: [], topPosts: [], worstPosts: [], periodTotals: {}, stories: emptyStories() };
     } finally {
       dataLoading = false;
     }
@@ -226,6 +256,40 @@
     });
   }
 
+  function renderStoriesChart() {
+    const daily = metrics.stories?.daily ?? [];
+    if (!ChartJS || !storiesChartCanvas || daily.length === 0) return;
+    storiesChart?.destroy();
+    storiesChart = new ChartJS(storiesChartCanvas, {
+      type: 'line',
+      data: {
+        labels: daily.map((d) =>
+          new Date(d.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+        ),
+        datasets: [
+          {
+            label: $_('instagram.stories.avgReach'),
+            data: daily.map((d) => d.avgReach),
+            borderColor: '#F59E0B',
+            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+            fill: true,
+            tension: 0.3,
+            pointRadius: daily.length <= 30 ? 2 : 0,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'top' } },
+        scales: {
+          x: { ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 12 } },
+          y: { beginAtZero: true },
+        },
+      },
+    });
+  }
+
   // --- KPIs ---
   $: currentFollowers = metrics.account.length
     ? metrics.account[metrics.account.length - 1].followersCount ?? 0
@@ -243,6 +307,11 @@
   function formatEngagement(rate: number | null | undefined): string {
     if (rate == null) return '—';
     return (rate * 100).toFixed(1) + '%';
+  }
+
+  function formatPct(v: number | null | undefined): string {
+    if (v == null) return '—';
+    return Math.round(v * 100) + '%';
   }
 
   function truncate(text: string | null, len = 60): string {
@@ -468,6 +537,81 @@
               {/if}
             </div>
           {/each}
+        </div>
+
+        <!-- Stories -->
+        <div>
+          <h3 class="text-sm font-semibold text-ink mb-3">{$_('instagram.stories.title')}</h3>
+          {#if (metrics.stories?.summary.count ?? 0) === 0}
+            <div class="text-sm text-ink-subtle py-6 px-4 text-center bg-surface-2 rounded-xl">{$_('instagram.stories.empty')}</div>
+          {:else}
+            <!-- KPI strip -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+              <div class="bg-surface border border-border rounded-xl p-4 border-t-4 border-t-amber-400">
+                <div class="text-xs text-ink-muted mb-1">{$_('instagram.stories.count')}</div>
+                <div class="text-2xl font-bold text-ink">{metrics.stories?.summary.count ?? 0}</div>
+              </div>
+              <div class="bg-surface border border-border rounded-xl p-4 border-t-4 border-t-amber-400">
+                <div class="text-xs text-ink-muted mb-1">{$_('instagram.stories.avgReach')}</div>
+                <div class="text-2xl font-bold text-ink">{formatNumber(metrics.stories?.summary.avgReach)}</div>
+              </div>
+              <div class="bg-surface border border-border rounded-xl p-4 border-t-4 border-t-amber-400">
+                <div class="text-xs text-ink-muted mb-1">{$_('instagram.stories.avgReplies')}</div>
+                <div class="text-2xl font-bold text-ink">{formatNumber(metrics.stories?.summary.avgReplies)}</div>
+              </div>
+              <div class="bg-surface border border-border rounded-xl p-4 border-t-4 border-t-amber-400">
+                <div class="text-xs text-ink-muted mb-1">{$_('instagram.stories.avgCompletion')}</div>
+                <div class="text-2xl font-bold text-ink">{formatPct(metrics.stories?.summary.avgCompletion)}</div>
+              </div>
+            </div>
+
+            <!-- Trend -->
+            <div class="mb-4">
+              <div class="relative" style="height: 220px;">
+                <canvas bind:this={storiesChartCanvas} style="width: 100%; height: 100%;"></canvas>
+              </div>
+            </div>
+
+            <!-- Recent stories table -->
+            <div class="rounded-xl border border-border overflow-x-auto">
+              <table class="w-full text-sm min-w-[520px]">
+                <thead>
+                  <tr class="bg-surface-2 border-b border-border">
+                    <th class="text-left px-3 py-2.5 text-xs font-semibold text-ink-muted">{$_('instagram.stories.date')}</th>
+                    <th class="text-left px-3 py-2.5 text-xs font-semibold text-ink-muted">{$_('instagram.stories.type')}</th>
+                    <th class="text-right px-3 py-2.5 text-xs font-semibold text-ink-muted">{$_('instagram.reach')}</th>
+                    <th class="text-right px-3 py-2.5 text-xs font-semibold text-ink-muted">{$_('instagram.views')}</th>
+                    <th class="text-right px-3 py-2.5 text-xs font-semibold text-ink-muted">{$_('instagram.stories.replies')}</th>
+                    <th class="text-right px-3 py-2.5 text-xs font-semibold text-ink-muted">{$_('instagram.stories.exits')}</th>
+                    <th class="text-right px-3 py-2.5 text-xs font-semibold text-ink-muted">{$_('instagram.stories.completion')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {#each metrics.stories?.list ?? [] as story (story.igStoryId)}
+                    <tr class="border-b border-border hover:bg-surface-2">
+                      <td class="px-3 py-2 text-ink">
+                        {#if story.permalink}
+                          <a href={story.permalink} target="_blank" rel="noopener noreferrer" class="text-brand hover:underline">
+                            {new Date(story.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                          </a>
+                        {:else}
+                          {new Date(story.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                        {/if}
+                      </td>
+                      <td class="px-3 py-2">
+                        <span class="inline-block px-2 py-0.5 text-[10px] font-medium rounded-full bg-amber-500/12 text-amber-700">{story.mediaType}</span>
+                      </td>
+                      <td class="px-3 py-2 text-right text-ink font-medium">{formatNumber(story.reach)}</td>
+                      <td class="px-3 py-2 text-right text-ink-muted">{formatNumber(story.views)}</td>
+                      <td class="px-3 py-2 text-right text-ink-muted">{formatNumber(story.replies)}</td>
+                      <td class="px-3 py-2 text-right text-ink-muted">{formatNumber(story.exits)}</td>
+                      <td class="px-3 py-2 text-right text-ink-muted">{formatPct(story.completion)}</td>
+                    </tr>
+                  {/each}
+                </tbody>
+              </table>
+            </div>
+          {/if}
         </div>
 
         <!-- AI advice -->

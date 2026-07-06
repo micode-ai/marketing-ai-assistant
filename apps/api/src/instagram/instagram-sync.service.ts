@@ -10,6 +10,8 @@ import {
   fetchAccountInsightsRange,
   fetchMediaList,
   fetchMediaInsights,
+  fetchStoriesList,
+  fetchStoryInsights,
   InstagramAuthError,
   DailyInsightRow,
 } from './instagram-graph.util';
@@ -19,6 +21,7 @@ const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
 export interface SyncAccountResult {
   accountSynced: boolean;
   mediaSynced: number;
+  storiesSynced: number;
 }
 
 /**
@@ -73,14 +76,14 @@ export class InstagramSyncService {
       this.logger.warn(
         `Failed to decrypt tokens for IG account ${account.id}: ${e}`,
       );
-      return { accountSynced: false, mediaSynced: 0 };
+      return { accountSynced: false, mediaSynced: 0, storiesSynced: 0 };
     }
 
     if (!accessToken || !igUserId) {
       this.logger.warn(
         `IG account ${account.id} missing accessToken/igUserId — skipping`,
       );
-      return { accountSynced: false, mediaSynced: 0 };
+      return { accountSynced: false, mediaSynced: 0, storiesSynced: 0 };
     }
 
     try {
@@ -108,6 +111,7 @@ export class InstagramSyncService {
       });
 
       let mediaSynced = 0;
+      let storiesSynced = 0;
 
       // --- Media metrics ---
       if (withMedia) {
@@ -163,18 +167,62 @@ export class InstagramSyncService {
           });
           mediaSynced++;
         }
+
+        // --- Stories (piggyback on the media plan-throttle) ---
+        storiesSynced = await this.syncStories(igUserId, accessToken, account.id);
       }
 
       this.logger.log(
-        `Synced IG account ${account.id} (media: ${mediaSynced})`,
+        `Synced IG account ${account.id} (media: ${mediaSynced}, stories: ${storiesSynced})`,
       );
-      return { accountSynced: true, mediaSynced };
+      return { accountSynced: true, mediaSynced, storiesSynced };
     } catch (error) {
       if (this.isAuthError(error)) {
         await this.handleAuthError(account, error);
       }
       throw error;
     }
+  }
+
+  /**
+   * Fetch currently-active stories (< 24h) and upsert one row per story with the
+   * latest metric snapshot. Metrics only grow, so the last poll before a story
+   * expires yields near-final numbers. Returns the number of stories upserted.
+   */
+  private async syncStories(
+    igUserId: string,
+    accessToken: string,
+    socialAccountId: string,
+  ): Promise<number> {
+    const stories = await fetchStoriesList(igUserId, accessToken);
+    let count = 0;
+    for (const story of stories) {
+      const insights = await fetchStoryInsights(story.id, accessToken);
+      const data = {
+        mediaType: story.mediaType,
+        caption: story.caption ?? null,
+        permalink: story.permalink ?? null,
+        timestamp: new Date(story.timestamp),
+        reach: insights.reach ?? null,
+        views: insights.views ?? null,
+        replies: insights.replies ?? null,
+        shares: insights.shares ?? null,
+        totalInteractions: insights.totalInteractions ?? null,
+        tapsForward: insights.tapsForward ?? null,
+        tapsBack: insights.tapsBack ?? null,
+        exits: insights.exits ?? null,
+        lastSyncedAt: new Date(),
+      };
+      await this.prisma.instagramStory.upsert({
+        where: {
+          socialAccountId_igStoryId: { socialAccountId, igStoryId: story.id },
+        },
+        create: { socialAccountId, igStoryId: story.id, ...data },
+        update: data,
+      });
+      count++;
+    }
+    return count;
   }
 
   /**
