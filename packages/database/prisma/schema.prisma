@@ -938,6 +938,8 @@ model SocialAccount {
   instagramStories      InstagramStory[]
   threadsAccountMetrics ThreadsAccountMetrics[]
   threadsMedia          ThreadsMedia[]
+  tiktokAccountMetrics  TikTokAccountMetrics[]
+  tiktokMedia           TikTokMedia[]
 
   @@unique([organizationId, platform, accountId])
   @@index([organizationId])
@@ -1709,6 +1711,60 @@ model ThreadsMedia {
   @@unique([socialAccountId, threadsMediaId])
   @@index([socialAccountId])
   @@map("threads_media")
+}
+
+// =============================================================================
+// TikTok Analytics
+// =============================================================================
+
+/// One row per account per day. TikTok's Display API exposes only LIFETIME
+/// counters, so each row is a cumulative snapshot taken that day — not a daily
+/// delta. Period figures are therefore `last - first`, never a sum of rows, and
+/// there is no way to backfill history: it starts accruing at connection time.
+model TikTokAccountMetrics {
+  id              String   @id @default(cuid())
+  socialAccountId String
+  date            DateTime @db.Date
+  followersCount  Int?
+  followingCount  Int?
+  likesCount      Int?
+  videoCount      Int?
+  views           Int?
+  likes           Int?
+  comments        Int?
+  shares          Int?
+  createdAt       DateTime @default(now())
+
+  socialAccount SocialAccount @relation(fields: [socialAccountId], references: [id], onDelete: Cascade)
+
+  @@unique([socialAccountId, date])
+  @@index([socialAccountId])
+  @@map("tiktok_account_metrics")
+}
+
+model TikTokMedia {
+  id              String   @id @default(cuid())
+  socialAccountId String
+  tiktokVideoId   String
+  title           String?
+  description     String?  @db.Text
+  coverImageUrl   String?
+  shareUrl        String?
+  embedLink       String?
+  duration        Int?
+  timestamp       DateTime
+  viewCount       Int?
+  likeCount       Int?
+  commentCount    Int?
+  shareCount      Int?
+  engagementRate  Float?
+  lastSyncedAt    DateTime
+
+  socialAccount SocialAccount @relation(fields: [socialAccountId], references: [id], onDelete: Cascade)
+
+  @@unique([socialAccountId, tiktokVideoId])
+  @@index([socialAccountId])
+  @@map("tiktok_media")
 }
 
 // =============================================================================
