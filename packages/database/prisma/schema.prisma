@@ -1606,6 +1606,7 @@ model InstagramAccountMetrics {
   followersCount    Int?
   reach             Int?
   views             Int?
+  likes             Int?
   accountsEngaged   Int?
   totalInteractions Int?
   createdAt         DateTime @default(now())

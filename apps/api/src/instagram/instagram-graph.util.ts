@@ -54,6 +54,7 @@ export interface AccountProfile {
 export interface AccountInsights {
   reach?: number;
   views?: number;
+  likes?: number;
   accountsEngaged?: number;
   totalInteractions?: number;
 }
@@ -128,9 +129,16 @@ export async function fetchAccountProfile(
 }
 
 // API metric name → AccountInsights key.
+//
+// `likes` is a total_value-only metric (like accounts_engaged / total_interactions):
+// Meta exposes NO per-day time series for it — only `reach` supports
+// metric_type=time_series. So this map drives the total_value calls
+// (fetchAccountInsights / fetchAccountInsightsTotals) but must NOT be used to
+// build the metric list of fetchAccountInsightsRange, which asks for a series.
 const ACCOUNT_METRIC_KEYS: Record<string, keyof AccountInsights> = {
   reach: 'reach',
   views: 'views',
+  likes: 'likes',
   accounts_engaged: 'accountsEngaged',
   total_interactions: 'totalInteractions',
 };
@@ -209,7 +217,7 @@ async function fetchInsightsWithTolerance<T>(
 }
 
 /**
- * GET /{igUserId}/insights?metric=reach,views,accounts_engaged,total_interactions
+ * GET /{igUserId}/insights?metric=reach,views,likes,accounts_engaged,total_interactions
  *   &period=day&metric_type=total_value&since=<sinceUnix>&until=<untilUnix>
  *
  * Returns the aggregate totals for the requested time window. Uses the same
@@ -231,7 +239,7 @@ export async function fetchAccountInsightsTotals(
 }
 
 /**
- * GET /{igUserId}/insights?metric=reach,views,accounts_engaged,total_interactions
+ * GET /{igUserId}/insights?metric=reach,views,likes,accounts_engaged,total_interactions
  *   &period=day&metric_type=total_value
  */
 export async function fetchAccountInsights(

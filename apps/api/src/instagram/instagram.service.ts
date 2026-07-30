@@ -93,6 +93,7 @@ export class InstagramService {
         account: [],
         topPosts: [],
         worstPosts: [],
+        recentPosts: [],
         periodTotals: {},
         stories: {
           list: [],
@@ -129,6 +130,26 @@ export class InstagramService {
       .reverse()
       .filter((m) => !topIds.has(m.igMediaId))
       .slice(0, 5);
+
+    // Per-post likes/comments for the engagement chart. Unlike the rated tables
+    // this is NOT filtered by engagementRate — a post with likes but no reach
+    // insight still belongs on a likes chart. Newest-first from the DB (so the
+    // cap keeps the most recent posts), then reversed to chronological order.
+    const recentMedia = await this.prisma.instagramMedia.findMany({
+      where: { socialAccountId: account.id, timestamp: { gte: since } },
+      orderBy: { timestamp: 'desc' },
+      take: 50,
+      select: {
+        igMediaId: true,
+        mediaType: true,
+        caption: true,
+        permalink: true,
+        timestamp: true,
+        likeCount: true,
+        commentsCount: true,
+      },
+    });
+    const recentPosts = [...recentMedia].reverse();
 
     // Stories snapshots windowed to the requested period (newest first).
     const storyRows = await this.prisma.instagramStory.findMany({
@@ -169,11 +190,13 @@ export class InstagramService {
         followersCount: m.followersCount,
         reach: m.reach,
         views: m.views,
+        likes: m.likes,
         accountsEngaged: m.accountsEngaged,
         totalInteractions: m.totalInteractions,
       })),
       topPosts,
       worstPosts,
+      recentPosts,
       periodTotals,
       stories,
     };
