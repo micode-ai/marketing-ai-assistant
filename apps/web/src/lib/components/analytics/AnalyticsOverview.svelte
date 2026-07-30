@@ -8,7 +8,7 @@
   export let projectId: string;
   export let days: number = 30;
   export let expanded = false;
-  export let connected: { gsc: boolean; instagram: boolean; threads: boolean; app: boolean };
+  export let connected: { gsc: boolean; instagram: boolean; threads: boolean; tiktok?: boolean; app: boolean };
 
   const dispatch = createEventDispatcher<{ goto: string }>();
 
@@ -29,10 +29,11 @@
   let prevDays = days;
 
   // Channel quick-link headline stats
-  let channelStats: { gsc: string; instagram: string; threads: string; app: string } = {
+  let channelStats: { gsc: string; instagram: string; threads: string; tiktok: string; app: string } = {
     gsc: '',
     instagram: '',
     threads: '',
+    tiktok: '',
     app: '',
   };
 
@@ -83,6 +84,9 @@
       }
       if (connected.threads) {
         fetches.push(api.get<any>('/threads/metrics', { projectId, days }));
+      }
+      if (connected.tiktok) {
+        fetches.push(api.get<any>('/tiktok/metrics', { projectId, days }));
       }
 
       const results = await Promise.allSettled(fetches);
@@ -161,10 +165,36 @@
         }
       }
 
+      // TikTok
+      let tiktokData: { connected: boolean; views?: number; viewsChange?: number } = { connected: false };
+      if (connected.tiktok) {
+        const r = results[idx++];
+        if (r.status === 'fulfilled' && r.value) {
+          const account: any[] = Array.isArray(r.value.account) ? r.value.account : [];
+          // Snapshots hold LIFETIME view counts, so period views are last - first.
+          // Summing them would count the same views once per day.
+          const values = account
+            .map((a) => a.views)
+            .filter((v: unknown): v is number => typeof v === 'number');
+          const views =
+            values.length > 1
+              ? Math.max(0, values[values.length - 1] - values[0])
+              : (values[0] ?? 0);
+          tiktokData = { connected: true, views, viewsChange: 0 };
+          channelStats.tiktok = formatNumber(views) + ' ' + $_('tiktok.views');
+        }
+      }
+
       // Explicit reassignment so Svelte reactivity picks up in-place mutations
       channelStats = { ...channelStats };
 
-      cards = buildSummaryCards({ totals, gsc: gscData, instagram: igData, threads: threadsData });
+      cards = buildSummaryCards({
+        totals,
+        gsc: gscData,
+        instagram: igData,
+        threads: threadsData,
+        tiktok: tiktokData,
+      });
     } catch (e) {
       error = String(e);
     } finally {
@@ -284,6 +314,7 @@
     { id: 'gsc', labelKey: 'analytics.tabSearch', condition: () => connected.gsc },
     { id: 'instagram', labelKey: 'instagram.title', condition: () => connected.instagram },
     { id: 'threads', labelKey: 'threads.title', condition: () => connected.threads },
+    { id: 'tiktok', labelKey: 'tiktok.title', condition: () => !!connected.tiktok },
     { id: 'app', labelKey: 'analytics.tabApp', condition: () => connected.app },
   ];
 </script>
@@ -357,7 +388,7 @@
     </div>
 
     <!-- Channel quick-links -->
-    {#if connected.gsc || connected.instagram || connected.threads || connected.app}
+    {#if connected.gsc || connected.instagram || connected.threads || connected.tiktok || connected.app}
       <div class="bg-surface rounded-xl border border-border p-5">
         <h3 class="text-sm font-semibold text-ink mb-4">{$_('analytics.channelsDrilldown')}</h3>
         <div class="divide-y divide-border">

@@ -192,6 +192,17 @@ Content agent supports **multilingual generation**: pass `languages: ['en', 'pl'
 - `TIKTOK_DIRECT_POST_ENABLED` (default off) picks `MEDIA_UPLOAD` (lands in the creator's TikTok drafts, no audit needed) vs `DIRECT_POST` (requires passing TikTok's Content Posting audit — before that TikTok forces `SELF_ONLY` and caps posting at 5 users/24 h). `pickPrivacyLevel` degrades to whatever `creator_info` allows rather than erroring.
 - Env: `TIKTOK_CLIENT_KEY`, `TIKTOK_CLIENT_SECRET`, `TIKTOK_DIRECT_POST_ENABLED`.
 
+### TikTok Analytics
+- Files: `apps/api/src/tiktok/tiktok-sync.service.ts`, `tiktok.service.ts`, `tiktok.controller.ts` (project-scoped, `ProjectAccessGuard`); the OAuth controller stays org-scoped in the same module.
+- Endpoints: `GET /tiktok/status` (`{connected, accountName, accountId, lastSyncAt, statsGranted}`), `GET /tiktok/metrics?days=`, `POST /tiktok/sync`, `POST /tiktok/advice`, `GET /tiktok/advice`.
+- **Display API returns LIFETIME counters only** — no daily series, no completion rate, no traffic-source or audience split. So `TikTokAccountMetrics` rows are *cumulative snapshots dated by day*, and period figures must be `last − first`, never a sum of rows. `apps/web/src/lib/components/analytics/tiktok-dashboard-state.ts` owns that maths (`periodDelta`, `deltaSeries`, `followerChange`) and is unit-tested; deltas clamp at 0 because a deleted video lowers the lifetime total.
+- **No backfill is possible** — history starts at connection time. The dashboard says so (`tiktok.historyStarts`) instead of looking broken, and the trend chart needs ≥2 snapshots.
+- Snapshot aggregate counters are summed from stored `TikTokMedia` rows, not from the current fetch, so a partially failed pagination doesn't show a sudden drop.
+- Sync: `@Cron('15 * * * *')`, plan-throttled like Threads (FREE once/day, PRO 6h, ENTERPRISE hourly); per-video metrics on all plans. Videos: 2 pages × 20. Token always via `TikTokTokenService.getValidAccessToken`.
+- Cron failure codes: `TIKTOK_SYNC_FAILED` (non-auth) — auth errors are reported once as `TIKTOK_TOKEN_EXPIRED` by the token service.
+- AI advice: ai-agent `POST /generate-tiktok-advice` (`tiktok-advice-agent.ts`), persisted in `AiAdvice` with `channel: 'tiktok'`. The prompt states figures are already period growth and forbids inventing watch time / completion rate / demographics.
+- Frontend: `TikTokAnalyticsDashboard.svelte` + `tiktok-dashboard-state.ts`; `tiktok` channel tab on the project analytics page; TikTok views card in `AnalyticsOverview`. i18n namespace `tiktok.*`.
+
 ### SEO Module
 - Files: `apps/api/src/seo/seo.service.ts`, `gsc-sync.service.ts`, `competitor-suggestion.service.ts`, `rank-tracking.cron.ts`, `seo.controller.ts`, `seo.module.ts`.
 - Endpoints: `GET/POST/PATCH/DELETE /seo/keywords*`, `GET/POST/DELETE /seo/competitors*`, `POST /seo/keywords/sync-from-gsc`, `POST /seo/keywords/:id/rank`.

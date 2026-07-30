@@ -8,7 +8,7 @@ export interface SummaryCard {
   value: number;
   change: number;
   trend: 'up' | 'down' | 'stable';
-  channel: 'site' | 'gsc' | 'instagram' | 'threads';
+  channel: 'site' | 'gsc' | 'instagram' | 'threads' | 'tiktok';
 }
 
 export interface BuildSummaryCardsInput {
@@ -20,6 +20,8 @@ export interface BuildSummaryCardsInput {
   gsc: { connected: boolean; clicks?: number; clicksChange?: number };
   instagram: { connected: boolean; followers?: number; followersChange?: number };
   threads: { connected: boolean; engagement?: number; engagementChange?: number };
+  /** Optional so existing callers that predate the TikTok channel still compile. */
+  tiktok?: { connected: boolean; views?: number; viewsChange?: number };
 }
 
 function deriveTrend(provided: string | undefined, change: number): 'up' | 'down' | 'stable' {
@@ -89,6 +91,18 @@ export function buildSummaryCards(input: BuildSummaryCardsInput): SummaryCard[] 
       change: input.threads.engagementChange ?? 0,
       trend: deriveTrend(undefined, input.threads.engagementChange ?? 0),
       channel: 'threads',
+    });
+  }
+
+  if (input.tiktok?.connected) {
+    cards.push({
+      key: 'tiktokViews',
+      labelKey: 'analytics.tiktokViews',
+      hintKey: 'hints.metric.tiktokViews',
+      value: input.tiktok.views ?? 0,
+      change: input.tiktok.viewsChange ?? 0,
+      trend: deriveTrend(undefined, input.tiktok.viewsChange ?? 0),
+      channel: 'tiktok',
     });
   }
 

@@ -149,6 +149,99 @@ export async function fetchTikTokUser(accessToken: string): Promise<TikTokUser> 
   };
 }
 
+const VIDEO_FIELDS = [
+  'id',
+  'title',
+  'video_description',
+  'duration',
+  'cover_image_url',
+  'share_url',
+  'embed_link',
+  'create_time',
+  'view_count',
+  'like_count',
+  'comment_count',
+  'share_count',
+];
+
+export interface TikTokVideo {
+  id: string;
+  title?: string;
+  description?: string;
+  coverImageUrl?: string;
+  shareUrl?: string;
+  embedLink?: string;
+  duration?: number;
+  /** TikTok returns create_time as unix seconds. */
+  timestamp: Date;
+  viewCount?: number;
+  likeCount?: number;
+  commentCount?: number;
+  shareCount?: number;
+}
+
+export interface TikTokVideoPage {
+  videos: TikTokVideo[];
+  /** Pass back on the next call to continue paging. */
+  cursor?: number;
+  hasMore: boolean;
+}
+
+/**
+ * One page of the authorized user's videos with their lifetime counters. These
+ * are cumulative totals — the Display API has no per-day breakdown, which is
+ * why the sync stores dated snapshots and the UI derives deltas from them.
+ */
+export async function fetchTikTokVideoList(
+  accessToken: string,
+  opts: { maxCount?: number; cursor?: number } = {},
+): Promise<TikTokVideoPage> {
+  const body: Record<string, unknown> = { max_count: opts.maxCount ?? 20 };
+  if (opts.cursor !== undefined) body.cursor = opts.cursor;
+
+  const params = new URLSearchParams({ fields: VIDEO_FIELDS.join(',') });
+  const res = await fetch(`${OPEN_API}/v2/video/list/?${params}`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json; charset=UTF-8',
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (res.status === 401) {
+    throw new TikTokAuthError('video/list failed: HTTP 401', 'access_token_invalid');
+  }
+
+  const json = await res.json().catch(() => ({}));
+  const data = parseTikTokEnvelope<{
+    videos?: Array<Record<string, any>>;
+    cursor?: number;
+    has_more?: boolean;
+  }>(json, 'video/list');
+
+  const videos = (data.videos ?? []).map((v) => ({
+    id: String(v.id ?? ''),
+    title: v.title,
+    description: v.video_description,
+    coverImageUrl: v.cover_image_url,
+    shareUrl: v.share_url,
+    embedLink: v.embed_link,
+    duration: v.duration,
+    timestamp: new Date(Number(v.create_time ?? 0) * 1000),
+    viewCount: v.view_count,
+    likeCount: v.like_count,
+    commentCount: v.comment_count,
+    shareCount: v.share_count,
+  }));
+
+  return {
+    videos,
+    cursor: data.cursor,
+    hasMore: Boolean(data.has_more),
+  };
+}
+
 // ─── Content Posting API ────────────────────────────────────────────────────
 
 export interface CreatorInfo {
