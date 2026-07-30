@@ -59,6 +59,7 @@ enum SocialPlatform {
   GOOGLE_PLAY
   GOOGLE_CSE
   THREADS
+  TIKTOK
 }
 
 enum CampaignType {

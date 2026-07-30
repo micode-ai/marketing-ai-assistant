@@ -870,6 +870,15 @@
       "connected": "Threads connected successfully",
       "error": "Could not connect Threads. Please try again.",
       "noAccount": "No Threads account is linked to this profile."
+    },
+    "tiktok": {
+      "connect": "Connect TikTok",
+      "description": "Connect a TikTok account to publish videos and photo posts, and to collect analytics.",
+      "connected": "TikTok connected successfully",
+      "error": "Could not connect TikTok. Please try again.",
+      "noAccount": "No TikTok account is linked to this profile.",
+      "accessDenied": "You declined the TikTok authorization request.",
+      "draftsMode": "TikTok posts are sent to your TikTok drafts, where you finish and publish them in the app. Direct publishing turns on once this app passes TikTok's content posting review."
     }
   },
   "analytics": {

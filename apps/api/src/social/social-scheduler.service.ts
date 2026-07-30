@@ -55,9 +55,11 @@ export class SocialSchedulerService {
             data: { status: 'FAILED', error: r.error },
           });
 
-          // FB token errors are already reported inside SocialService — avoid double emails.
-          const isFbReauthMsg = r.error === 'Account requires reauthentication';
-          if (!isFbReauthMsg) {
+          // Avoid double emails: an already-skipped account carries the fixed
+          // reauth message, and a token error detected mid-publish (Meta or
+          // TikTok) was already reported by SocialService itself.
+          const isReauthSkip = r.error === 'Account requires reauthentication';
+          if (!isReauthSkip && !r.reported) {
             const webUrl = (this.config.get<string>('WEB_URL') || 'http://localhost:5173').replace(/\/$/, '');
             await this.notifier.report({
               organizationId: pub.socialAccount.organizationId,

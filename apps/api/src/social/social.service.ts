@@ -6,6 +6,8 @@ import { TwitterApi } from 'twitter-api-v2';
 import { encryptData, decryptData } from '../common/crypto.util';
 import { CronFailureNotifier } from '../common/cron-failure-notifier.service';
 import { extractImageUrls, stripMarkdown, resolvePublishMedia } from './content-parser.util';
+import { TikTokPublishService } from '../tiktok/tiktok-publish.service';
+import { TikTokAuthError } from '../tiktok/tiktok-api.util';
 
 @Injectable()
 export class SocialService {
@@ -13,6 +15,7 @@ export class SocialService {
     private prisma: PrismaService,
     private config: ConfigService,
     private notifier: CronFailureNotifier,
+    private tiktokPublish: TikTokPublishService,
   ) {}
 
   async findAccounts(organizationId: string) {
@@ -247,14 +250,28 @@ export class SocialService {
   async publishToAccount(
     content: any,
     account: any,
-  ): Promise<{ status: 'PUBLISHED' | 'FAILED'; platformPostId?: string; platformPostUrl?: string; error?: string }> {
+  ): Promise<{
+    status: 'PUBLISHED' | 'FAILED';
+    platformPostId?: string;
+    platformPostUrl?: string;
+    error?: string;
+    /** Set when this method already sent a cron-failure notification for the error,
+     *  so callers (SocialSchedulerService) don't email about the same thing twice. */
+    reported?: boolean;
+  }> {
     if (account.status !== 'ACTIVE') {
       return { status: 'FAILED', error: 'Account requires reauthentication' };
     }
     try {
-      const supported = ['LINKEDIN', 'TWITTER', 'FACEBOOK', 'TELEGRAM', 'INSTAGRAM', 'THREADS'];
+      const supported = ['LINKEDIN', 'TWITTER', 'FACEBOOK', 'TELEGRAM', 'INSTAGRAM', 'THREADS', 'TIKTOK'];
       if (!supported.includes(account.platform)) {
         throw new Error(`Publishing to ${account.platform} is not yet supported`);
+      }
+      // TikTok owns its own token handling (24h access tokens refreshed on demand),
+      // so it takes the account rather than a decrypted token blob.
+      if (account.platform === 'TIKTOK') {
+        const tt = await this.tiktokPublish.publish(content, account);
+        return { status: 'PUBLISHED', platformPostId: tt.postId, platformPostUrl: tt.postUrl };
       }
       const tokens = this.decryptTokens(account.encryptedTokens);
       let result: { postId?: string; postUrl?: string };
@@ -274,7 +291,13 @@ export class SocialService {
         ['FACEBOOK', 'INSTAGRAM', 'THREADS'].includes(account.platform) &&
         (metaCode === 190 || data?.error?.type === 'OAuthException');
 
-      if (isMetaTokenExpired) {
+      // TikTok signals a dead connection with a typed error. A refresh failure is
+      // already reported inside TikTokTokenService, but a token rejected mid-flow
+      // (revoked between refresh and publish) surfaces here.
+      const isTikTokTokenExpired =
+        account.platform === 'TIKTOK' && err instanceof TikTokAuthError;
+
+      if (isMetaTokenExpired || isTikTokTokenExpired) {
         try {
           await this.prisma.socialAccount.update({
             where: { id: account.id },
@@ -295,14 +318,16 @@ export class SocialService {
               ? 'IG_TOKEN_EXPIRED'
               : account.platform === 'THREADS'
                 ? 'THREADS_TOKEN_EXPIRED'
-                : 'FB_TOKEN_EXPIRED',
+                : account.platform === 'TIKTOK'
+                  ? 'TIKTOK_TOKEN_EXPIRED'
+                  : 'FB_TOKEN_EXPIRED',
           error,
           actionUrl: `${webUrl}/settings/integrations`,
         });
       }
 
       console.error('[social.publishToAccount] failed', { platform: account.platform, status: err?.response?.status, data, message: err?.message });
-      return { status: 'FAILED', error };
+      return { status: 'FAILED', error, reported: isMetaTokenExpired || isTikTokTokenExpired };
     }
   }
 

@@ -5,9 +5,18 @@ import axios from 'axios';
 import { SocialService } from './social.service';
 import { PrismaService } from '../database/prisma.service';
 import { CronFailureNotifier } from '../common/cron-failure-notifier.service';
+import { TikTokPublishService } from '../tiktok/tiktok-publish.service';
+import { TikTokAuthError } from '../tiktok/tiktok-api.util';
 
 jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
+
+// TikTok publishing lives in its own service (24h tokens, chunked upload), so the
+// SocialService specs only need to assert the delegation and the error mapping.
+const mockTikTokPublish = {
+  publish: jest.fn(),
+  directPostEnabled: jest.fn().mockReturnValue(false),
+} as any;
 
 describe('SocialService.publishToAccount', () => {
   let service: SocialService;
@@ -20,6 +29,7 @@ describe('SocialService.publishToAccount', () => {
     const mod: TestingModule = await Test.createTestingModule({
       providers: [
         SocialService,
+        { provide: TikTokPublishService, useValue: mockTikTokPublish },
         { provide: PrismaService, useValue: prisma },
         { provide: ConfigService, useValue: config },
         { provide: CronFailureNotifier, useValue: notifier },
@@ -94,6 +104,89 @@ describe('SocialService.publishToAccount', () => {
 
     decryptSpy.mockRestore();
   });
+
+  it('delegates a TikTok publish to TikTokPublishService without decrypting tokens', async () => {
+    const decryptSpy = jest.spyOn(SocialService.prototype as any, 'decryptTokens');
+    mockTikTokPublish.publish.mockResolvedValue({
+      postId: '777',
+      postUrl: 'https://www.tiktok.com/@brand/video/777',
+      draft: false,
+    });
+
+    const account = {
+      id: 'acc-tt',
+      organizationId: 'org1',
+      platform: 'TIKTOK',
+      accountName: 'brand',
+      accountId: 'oid1',
+      encryptedTokens: 'iv:blob',
+      status: 'ACTIVE',
+    };
+    const content = { id: 'c1', body: 'hi', mediaUrls: ['https://cdn/x.mp4'] };
+
+    const result = await (service as any).publishToAccount(content, account);
+
+    expect(mockTikTokPublish.publish).toHaveBeenCalledWith(content, account);
+    expect(decryptSpy).not.toHaveBeenCalled();
+    expect(result).toEqual({
+      status: 'PUBLISHED',
+      platformPostId: '777',
+      platformPostUrl: 'https://www.tiktok.com/@brand/video/777',
+    });
+
+    decryptSpy.mockRestore();
+  });
+
+  it('flips TikTok account to REAUTH_REQUIRED and reports TIKTOK_TOKEN_EXPIRED on TikTokAuthError', async () => {
+    mockTikTokPublish.publish.mockRejectedValue(
+      new TikTokAuthError('user/info failed: access_token_invalid', 'access_token_invalid'),
+    );
+
+    const account = {
+      id: 'acc-tt',
+      organizationId: 'org1',
+      platform: 'TIKTOK',
+      accountName: 'brand',
+      accountId: 'oid1',
+      encryptedTokens: 'iv:blob',
+      status: 'ACTIVE',
+    };
+
+    const result = await (service as any).publishToAccount({ id: 'c1', body: 'hi' }, account);
+
+    expect(result.status).toBe('FAILED');
+    expect(prisma.socialAccount.update).toHaveBeenCalledWith({
+      where: { id: 'acc-tt' },
+      data: { status: 'REAUTH_REQUIRED' },
+    });
+    expect(notifier.report).toHaveBeenCalledWith(
+      expect.objectContaining({ errorCode: 'TIKTOK_TOKEN_EXPIRED', resourceId: 'acc-tt' }),
+    );
+  });
+
+  it('does not flip the account for a non-auth TikTok failure (e.g. spam risk)', async () => {
+    mockTikTokPublish.publish.mockRejectedValue(
+      new Error('video/init failed: spam_risk_too_many_posts'),
+    );
+
+    const result = await (service as any).publishToAccount(
+      { id: 'c1', body: 'hi' },
+      {
+        id: 'acc-tt',
+        organizationId: 'org1',
+        platform: 'TIKTOK',
+        accountName: 'brand',
+        accountId: 'oid1',
+        encryptedTokens: 'iv:blob',
+        status: 'ACTIVE',
+      },
+    );
+
+    expect(result.status).toBe('FAILED');
+    expect(result.error).toMatch(/spam_risk_too_many_posts/);
+    expect(prisma.socialAccount.update).not.toHaveBeenCalled();
+    expect(notifier.report).not.toHaveBeenCalled();
+  });
 });
 
 describe('SocialService.upsertOAuthAccount', () => {
@@ -105,6 +198,7 @@ describe('SocialService.upsertOAuthAccount', () => {
     const mod: TestingModule = await Test.createTestingModule({
       providers: [
         SocialService,
+        { provide: TikTokPublishService, useValue: mockTikTokPublish },
         { provide: PrismaService, useValue: prisma },
         { provide: ConfigService, useValue: { get: jest.fn().mockReturnValue('a'.repeat(64)) } },
         { provide: CronFailureNotifier, useValue: { report: jest.fn() } },
@@ -151,6 +245,7 @@ describe('SocialService.updateAccount', () => {
     const mod: TestingModule = await Test.createTestingModule({
       providers: [
         SocialService,
+        { provide: TikTokPublishService, useValue: mockTikTokPublish },
         { provide: PrismaService, useValue: prisma },
         { provide: ConfigService, useValue: { get: jest.fn().mockReturnValue('a'.repeat(64)) } },
         { provide: CronFailureNotifier, useValue: { report: jest.fn() } },
@@ -187,6 +282,7 @@ describe('SocialService.publishToInstagram', () => {
     const mod: TestingModule = await Test.createTestingModule({
       providers: [
         SocialService,
+        { provide: TikTokPublishService, useValue: mockTikTokPublish },
         { provide: PrismaService, useValue: prisma },
         { provide: ConfigService, useValue: config },
         { provide: CronFailureNotifier, useValue: { report: jest.fn() } },
@@ -293,6 +389,7 @@ describe('SocialService.publishToThreads', () => {
     const mod: TestingModule = await Test.createTestingModule({
       providers: [
         SocialService,
+        { provide: TikTokPublishService, useValue: mockTikTokPublish },
         { provide: PrismaService, useValue: prisma },
         { provide: ConfigService, useValue: config },
         { provide: CronFailureNotifier, useValue: notifier },
@@ -372,6 +469,7 @@ describe('SocialService.cancelPublication', () => {
     const mod: TestingModule = await Test.createTestingModule({
       providers: [
         SocialService,
+        { provide: TikTokPublishService, useValue: mockTikTokPublish },
         { provide: PrismaService, useValue: prisma },
         { provide: ConfigService, useValue: { get: jest.fn() } },
         { provide: CronFailureNotifier, useValue: { report: jest.fn() } },

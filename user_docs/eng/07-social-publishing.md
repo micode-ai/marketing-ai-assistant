@@ -12,6 +12,7 @@ Marketing AI Assistant lets you publish content directly to social media platfor
 | Twitter/X | Manual API credentials | Tweets via Twitter API v2 |
 | Facebook | OAuth 2.0 (select page) | Page posts via Graph API v19 |
 | Telegram | Manual (bot token + chat ID) | Messages via Telegram Bot API |
+| TikTok | OAuth 2.0 (click Connect) | Videos and photo posts via Content Posting API |
 
 ## Connecting Accounts
 
@@ -58,6 +59,20 @@ You need a Twitter Developer account with API access to get these credentials.
    - **Bot Token** — from BotFather
    - **Chat ID** — the channel or group ID
 3. Click **Save**
+
+### TikTok
+
+1. Click **Connect** on the TikTok card
+2. You'll be redirected to TikTok to authorize
+3. Grant the requested permissions — publishing and analytics are covered by one authorization
+4. You'll be redirected back with the account connected
+
+**Required env vars:** `TIKTOK_CLIENT_KEY`, `TIKTOK_CLIENT_SECRET`
+
+**Two things TikTok does differently:**
+
+- **Every post needs media.** TikTok has no text-only post type, so content published to TikTok must include a video or at least one image. Text-only content fails with a clear message instead of being silently dropped.
+- **Drafts vs. direct publishing.** TikTok requires apps to pass a content-posting review before they may publish publicly on a creator's behalf. Until that review is granted, TikTok posts are delivered to your **drafts inside the TikTok app**, where you finish and publish them yourself. The TikTok card on the Integrations page tells you which mode is active.
 
 ## Publishing Content
 
@@ -139,6 +154,10 @@ When a Facebook access token becomes invalid, the system automatically:
 3. Sends an email to every OWNER and ADMIN of the organization describing the error, in each recipient's preferred language.
 
 To fix it, click the orange **Reconnect** button on the account card and paste a fresh long-lived Page Access Token. A long-lived Page token, once generated, does not expire as long as the page admin does not revoke permission.
+
+### Reconnect Required (TikTok)
+
+TikTok access tokens last only 24 hours, so the app refreshes them for you automatically using a refresh token that stays valid for a year. You only see a **Reconnect required** badge when that refresh token is revoked or expires — for example if you removed the app's access from your TikTok account. Click **Reconnect** on the TikTok card to re-authorize; nothing else is lost.
 
 ## Security
 
