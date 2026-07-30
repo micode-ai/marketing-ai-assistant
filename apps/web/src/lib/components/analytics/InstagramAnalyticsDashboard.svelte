@@ -8,9 +8,11 @@
   import {
     resolveInstagramView,
     isSyncStale,
+    lastKnown,
     type InstagramStatus,
   } from './instagram-dashboard-state';
   import { pickTotal } from './pick-total';
+  import { buildPostsEngagementSeries, type RecentPost } from './instagram-posts-chart';
 
   export let projectId: string;
   export let days: number = 30;
@@ -20,6 +22,7 @@
     followersCount: number | null;
     reach: number | null;
     views: number | null;
+    likes: number | null;
     accountsEngaged: number | null;
     totalInteractions: number | null;
   }
@@ -61,13 +64,26 @@
     account: AccountPoint[];
     topPosts: MediaPost[];
     worstPosts: MediaPost[];
+    recentPosts: RecentPost[];
     periodTotals?: {
       reach?: number;
       views?: number;
+      likes?: number;
       accountsEngaged?: number;
       totalInteractions?: number;
     };
     stories?: StoriesBlock;
+  }
+
+  function emptyMetrics(): Metrics {
+    return {
+      account: [],
+      topPosts: [],
+      worstPosts: [],
+      recentPosts: [],
+      periodTotals: {},
+      stories: emptyStories(),
+    };
   }
 
   function emptyStories(): StoriesBlock {
@@ -77,7 +93,7 @@
   const SYNC_INTERVAL_MS = 5 * 60 * 1000; // periodic refresh while mounted
 
   let status: InstagramStatus | null = null;
-  let metrics: Metrics = { account: [], topPosts: [], worstPosts: [], periodTotals: {}, stories: emptyStories() };
+  let metrics: Metrics = emptyMetrics();
   let loading = true;
   let dataLoading = false;
   let syncing = false;
@@ -87,6 +103,14 @@
   let ChartJS: any = null;
   let chartCanvas: HTMLCanvasElement;
   let chart: any = null;
+  // Engagement (likes / interactions) trend chart — separate from the
+  // followers/reach/views chart because likes are an order of magnitude smaller
+  // than reach, so on a shared axis the likes line flattens to the baseline.
+  let engagementChartCanvas: HTMLCanvasElement;
+  let engagementChart: any = null;
+  // Per-post likes/comments bar chart
+  let postsChartCanvas: HTMLCanvasElement;
+  let postsChart: any = null;
   // Stories trend chart
   let storiesChartCanvas: HTMLCanvasElement;
   let storiesChart: any = null;
@@ -136,8 +160,7 @@
       // on first load (skeleton still shown, canvas not in the DOM). Re-render
       // now that the connected view and its canvases are mounted.
       await tick();
-      renderChart();
-      renderStoriesChart();
+      renderAllCharts();
       loadStoredAdvice();
       syncInterval = setInterval(syncAndRefresh, SYNC_INTERVAL_MS);
       if (isSyncStale(status?.lastSyncAt)) syncAndRefresh();
@@ -150,7 +173,7 @@
     if (syncInterval) { clearInterval(syncInterval); syncInterval = null; }
     destroyChart();
     status = null;
-    metrics = { account: [], topPosts: [], worstPosts: [], periodTotals: {}, stories: emptyStories() };
+    metrics = emptyMetrics();
     advice = '';
     contextSummary = '';
     adviceError = '';
@@ -165,6 +188,10 @@
   function destroyChart() {
     chart?.destroy();
     chart = null;
+    engagementChart?.destroy();
+    engagementChart = null;
+    postsChart?.destroy();
+    postsChart = null;
     storiesChart?.destroy();
     storiesChart = null;
   }
@@ -199,52 +226,71 @@
     try {
       metrics = await api.get<Metrics>('/instagram/metrics', { projectId, days });
       await tick();
-      renderChart();
-      renderStoriesChart();
+      renderAllCharts();
     } catch {
-      metrics = { account: [], topPosts: [], worstPosts: [], periodTotals: {}, stories: emptyStories() };
+      metrics = emptyMetrics();
     } finally {
       dataLoading = false;
     }
   }
 
+  /** Locale-aware short date label shared by every chart on this dashboard. */
+  function shortDate(value: string): string {
+    return new Date(value).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  }
+
+  function renderAllCharts() {
+    renderChart();
+    renderEngagementChart();
+    renderPostsChart();
+    renderStoriesChart();
+  }
+
   function renderChart() {
     if (!ChartJS || !chartCanvas || metrics.account.length === 0) return;
-    destroyChart();
-    const labels = metrics.account.map((d) =>
-      new Date(d.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
-    );
+    chart?.destroy();
+    chart = null;
+    const labels = metrics.account.map((d) => shortDate(d.date));
     chart = new ChartJS(chartCanvas, {
       type: 'line',
       data: {
         labels,
+        // Missing values are passed as null, never 0. Only `reach` has a daily
+        // time series in the Graph API, so days that came from the 90-day
+        // backfill carry reach and nothing else — coercing those to 0 drew
+        // followers and views collapsing to zero across the whole backfilled
+        // stretch, which reads as "we lost all our followers" instead of
+        // "not measured". `spanGaps` keeps the line continuous across them.
         datasets: [
           {
             label: $_('instagram.followers'),
-            data: metrics.account.map((d) => d.followersCount ?? 0),
+            data: metrics.account.map((d) => d.followersCount),
             borderColor: '#EC4899',
             backgroundColor: 'rgba(236, 72, 153, 0.1)',
             fill: true,
             tension: 0.3,
+            spanGaps: true,
             pointRadius: days <= 30 ? 2 : 0,
             yAxisID: 'y1',
           },
           {
             label: $_('instagram.reach'),
-            data: metrics.account.map((d) => d.reach ?? 0),
+            data: metrics.account.map((d) => d.reach),
             borderColor: '#8B5CF6',
             backgroundColor: 'rgba(139, 92, 246, 0.1)',
             fill: false,
             tension: 0.3,
+            spanGaps: true,
             pointRadius: days <= 30 ? 2 : 0,
           },
           {
             label: $_('instagram.views'),
-            data: metrics.account.map((d) => d.views ?? 0),
+            data: metrics.account.map((d) => d.views),
             borderColor: '#3B82F6',
             backgroundColor: 'rgba(59, 130, 246, 0.1)',
             fill: false,
             tension: 0.3,
+            spanGaps: true,
             pointRadius: days <= 30 ? 2 : 0,
           },
         ],
@@ -258,6 +304,117 @@
           x: { ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 12 } },
           y: { type: 'linear', position: 'left', beginAtZero: true },
           y1: { type: 'linear', position: 'right', beginAtZero: false, grid: { drawOnChartArea: false } },
+        },
+      },
+    });
+  }
+
+  /**
+   * Likes / interactions / engaged accounts over time. Nulls are passed through
+   * (not coerced to 0) with `spanGaps` so a day the sync missed reads as a gap
+   * instead of a fake drop to zero — likes only exist for days synced after the
+   * metric was added, and Meta cannot backfill them.
+   */
+  function renderEngagementChart() {
+    if (!ChartJS || !engagementChartCanvas || !hasEngagementSeries) return;
+    engagementChart?.destroy();
+    engagementChart = null;
+    engagementChart = new ChartJS(engagementChartCanvas, {
+      type: 'line',
+      data: {
+        labels: metrics.account.map((d) => shortDate(d.date)),
+        datasets: [
+          {
+            label: $_('instagram.likes'),
+            data: metrics.account.map((d) => d.likes),
+            borderColor: '#F43F5E',
+            backgroundColor: 'rgba(244, 63, 94, 0.12)',
+            fill: true,
+            tension: 0.3,
+            spanGaps: true,
+            pointRadius: days <= 30 ? 2 : 0,
+          },
+          {
+            label: $_('instagram.interactions'),
+            data: metrics.account.map((d) => d.totalInteractions),
+            borderColor: '#14B8A6',
+            backgroundColor: 'rgba(20, 184, 166, 0.1)',
+            fill: false,
+            tension: 0.3,
+            spanGaps: true,
+            pointRadius: days <= 30 ? 2 : 0,
+          },
+          {
+            // Off by default — toggled from the legend. Keeps the chart readable
+            // while still exposing a metric we already collect.
+            label: $_('instagram.accountsEngaged'),
+            data: metrics.account.map((d) => d.accountsEngaged),
+            borderColor: '#6366F1',
+            backgroundColor: 'rgba(99, 102, 241, 0.1)',
+            fill: false,
+            tension: 0.3,
+            spanGaps: true,
+            hidden: true,
+            pointRadius: days <= 30 ? 2 : 0,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: { legend: { position: 'top' } },
+        scales: {
+          x: { ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 12 } },
+          y: { beginAtZero: true },
+        },
+      },
+    });
+  }
+
+  /** Likes + comments per published post (stacked bars, chronological). */
+  function renderPostsChart() {
+    if (!ChartJS || !postsChartCanvas || postsSeries.count === 0) return;
+    postsChart?.destroy();
+    postsChart = null;
+    const captions = postsSeries.captions;
+    postsChart = new ChartJS(postsChartCanvas, {
+      type: 'bar',
+      data: {
+        labels: postsSeries.labels,
+        datasets: [
+          {
+            label: $_('instagram.likes'),
+            data: postsSeries.likes,
+            backgroundColor: '#EC4899',
+            borderRadius: 3,
+          },
+          {
+            label: $_('instagram.comments'),
+            data: postsSeries.comments,
+            backgroundColor: '#C4B5FD',
+            borderRadius: 3,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { position: 'top' },
+          tooltip: {
+            callbacks: {
+              afterTitle: (items: Array<{ dataIndex: number }>) => {
+                const caption = captions[items[0]?.dataIndex ?? 0] ?? '';
+                return caption ? truncate(caption, 70) : '';
+              },
+            },
+          },
+        },
+        scales: {
+          x: { stacked: true, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 12 } },
+          y: { stacked: true, beginAtZero: true },
         },
       },
     });
@@ -298,11 +455,31 @@
   }
 
   // --- KPIs ---
-  $: currentFollowers = metrics.account.length
-    ? metrics.account[metrics.account.length - 1].followersCount ?? 0
-    : 0;
+  // Last *known* follower count, not the last row's: a backfilled newest row
+  // would otherwise report 0 followers.
+  $: currentFollowers = lastKnown(metrics.account.map((d) => d.followersCount));
   $: totalReach = pickTotal(metrics.periodTotals?.reach, metrics.account.reduce((s, d) => s + (d.reach ?? 0), 0));
   $: totalViews = pickTotal(metrics.periodTotals?.views, metrics.account.reduce((s, d) => s + (d.views ?? 0), 0));
+  $: totalLikes = pickTotal(metrics.periodTotals?.likes, metrics.account.reduce((s, d) => s + (d.likes ?? 0), 0));
+  $: totalInteractions = pickTotal(
+    metrics.periodTotals?.totalInteractions,
+    metrics.account.reduce((s, d) => s + (d.totalInteractions ?? 0), 0),
+  );
+  $: totalEngaged = pickTotal(
+    metrics.periodTotals?.accountsEngaged,
+    metrics.account.reduce((s, d) => s + (d.accountsEngaged ?? 0), 0),
+  );
+
+  // --- Engagement trend ---
+  $: likesPoints = metrics.account.filter((d) => d.likes != null).length;
+  $: hasEngagementSeries =
+    likesPoints > 0 || metrics.account.some((d) => d.totalInteractions != null);
+  // Meta serves no daily likes history, so the series only grows from the first
+  // sync onwards — say so until there's a week of it.
+  $: showLikesHistoryNote = likesPoints < 7;
+
+  // --- Per-post engagement ---
+  $: postsSeries = buildPostsEngagementSeries(metrics.recentPosts, shortDate);
 
   function formatNumber(n: number | null | undefined): string {
     const v = n ?? 0;
@@ -401,8 +578,8 @@
       <div class="h-8 w-24 bg-surface-2 rounded-lg"></div>
     </div>
     <div class="p-5 space-y-6">
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {#each Array(3) as _skeleton}<div class="bg-surface-2 rounded-xl h-24"></div>{/each}
+      <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-4">
+        {#each Array(6) as _skeleton}<div class="bg-surface-2 rounded-xl h-24"></div>{/each}
       </div>
       <div class="bg-surface-2 rounded-xl h-64"></div>
     </div>
@@ -465,8 +642,8 @@
 
     {#if dataLoading && metrics.account.length === 0}
       <div class="p-5 space-y-6 animate-pulse">
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {#each Array(3) as _skeleton}<div class="bg-surface-2 rounded-xl h-24"></div>{/each}
+        <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-4">
+          {#each Array(6) as _skeleton}<div class="bg-surface-2 rounded-xl h-24"></div>{/each}
         </div>
         <div class="bg-surface-2 rounded-xl h-64"></div>
       </div>
@@ -475,7 +652,7 @@
     {:else}
       <div class="p-5 space-y-6">
         <!-- KPI cards -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-4">
           <div class="bg-surface border border-border rounded-xl p-4 border-t-4 border-t-pink-400">
             <div class="text-xs text-ink-muted mb-1">{$_('instagram.currentFollowers')}</div>
             <div class="text-2xl font-bold text-ink">{formatNumber(currentFollowers)}</div>
@@ -488,6 +665,18 @@
             <div class="text-xs text-ink-muted mb-1">{$_('instagram.totalViews')}</div>
             <div class="text-2xl font-bold text-ink">{formatNumber(totalViews)}</div>
           </div>
+          <div class="bg-surface border border-border rounded-xl p-4 border-t-4 border-t-rose-400">
+            <div class="text-xs text-ink-muted mb-1">{$_('instagram.totalLikes')}</div>
+            <div class="text-2xl font-bold text-ink">{formatNumber(totalLikes)}</div>
+          </div>
+          <div class="bg-surface border border-border rounded-xl p-4 border-t-4 border-t-teal-400">
+            <div class="text-xs text-ink-muted mb-1">{$_('instagram.interactions')}</div>
+            <div class="text-2xl font-bold text-ink">{formatNumber(totalInteractions)}</div>
+          </div>
+          <div class="bg-surface border border-border rounded-xl p-4 border-t-4 border-t-indigo-400">
+            <div class="text-xs text-ink-muted mb-1">{$_('instagram.accountsEngaged')}</div>
+            <div class="text-2xl font-bold text-ink">{formatNumber(totalEngaged)}</div>
+          </div>
         </div>
 
         <!-- Trend chart -->
@@ -496,6 +685,42 @@
           <div class="relative" style="height: 264px;">
             <canvas bind:this={chartCanvas} style="width: 100%; height: 100%;"></canvas>
           </div>
+        </div>
+
+        <!-- Engagement trend (likes / interactions) -->
+        <div>
+          <h3 class="text-sm font-semibold text-ink mb-3">{$_('instagram.engagementTrend')}</h3>
+          {#if hasEngagementSeries}
+            <div class="relative" style="height: 240px;">
+              <canvas bind:this={engagementChartCanvas} style="width: 100%; height: 100%;"></canvas>
+            </div>
+          {:else}
+            <div class="text-sm text-ink-subtle py-6 px-4 text-center bg-surface-2 rounded-xl">
+              {$_('instagram.likesHistoryNote')}
+            </div>
+          {/if}
+          {#if hasEngagementSeries && showLikesHistoryNote}
+            <p class="text-xs text-ink-subtle mt-2">{$_('instagram.likesHistoryNote')}</p>
+          {/if}
+        </div>
+
+        <!-- Likes & comments per post -->
+        <div>
+          <div class="flex items-baseline justify-between mb-3 gap-3">
+            <h3 class="text-sm font-semibold text-ink">{$_('instagram.postsEngagement')}</h3>
+            {#if postsSeries.count > 0}
+              <span class="text-xs text-ink-muted">
+                {$_('instagram.avgLikesPerPost', { values: { count: formatNumber(postsSeries.avgLikes) } })}
+              </span>
+            {/if}
+          </div>
+          {#if postsSeries.count === 0}
+            <div class="text-sm text-ink-subtle py-6 px-4 text-center bg-surface-2 rounded-xl">{$_('instagram.noPosts')}</div>
+          {:else}
+            <div class="relative" style="height: 240px;">
+              <canvas bind:this={postsChartCanvas} style="width: 100%; height: 100%;"></canvas>
+            </div>
+          {/if}
         </div>
 
         <!-- Posts & Reels -->

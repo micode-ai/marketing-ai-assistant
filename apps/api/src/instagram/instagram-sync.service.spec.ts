@@ -135,6 +135,7 @@ describe('InstagramSyncService', () => {
       mockFetchAccountInsights.mockResolvedValue({
         reach: 5000,
         views: 8000,
+        likes: 620,
         accountsEngaged: 300,
         totalInteractions: 450,
       });
@@ -151,9 +152,12 @@ describe('InstagramSyncService', () => {
         followersCount: 1200,
         reach: 5000,
         views: 8000,
+        likes: 620,
         accountsEngaged: 300,
         totalInteractions: 450,
       });
+      // The daily total_value snapshot is the only source of the likes trend.
+      expect(arg.update.likes).toBe(620);
       // date truncated to midnight UTC
       const d: Date = arg.create.date;
       expect(d.getUTCHours()).toBe(0);

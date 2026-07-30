@@ -86,6 +86,7 @@ describe('instagram-graph.util', () => {
           data: [
             { name: 'reach', total_value: { value: 100 } },
             { name: 'views', total_value: { value: 200 } },
+            { name: 'likes', total_value: { value: 25 } },
             { name: 'accounts_engaged', total_value: { value: 30 } },
             { name: 'total_interactions', total_value: { value: 40 } },
           ],
@@ -98,13 +99,14 @@ describe('instagram-graph.util', () => {
       expect(result).toEqual({
         reach: 100,
         views: 200,
+        likes: 25,
         accountsEngaged: 30,
         totalInteractions: 40,
       });
       // Single batched request.
       expect(fetchMock).toHaveBeenCalledTimes(1);
       const url = fetchMock.mock.calls[0][0] as string;
-      expect(metricOf(url)).toBe('reach,views,accounts_engaged,total_interactions');
+      expect(metricOf(url)).toBe('reach,views,likes,accounts_engaged,total_interactions');
       expect(url).toContain('period=day');
       expect(url).toContain('metric_type=total_value');
     });
@@ -121,7 +123,7 @@ describe('instagram-graph.util', () => {
     it('per-metric tolerance: batch fails, retries individually and skips the failing metric', async () => {
       const fetchMock = jest.fn().mockImplementation((url: string) => {
         const metric = metricOf(url);
-        // Batched request (all four) fails.
+        // Batched request (all five) fails.
         if (metric.includes(',')) return Promise.resolve(notOk(400));
         // `views` keeps failing individually; the rest succeed.
         if (metric === 'views') return Promise.resolve(notOk(400));
@@ -133,17 +135,23 @@ describe('instagram-graph.util', () => {
 
       const result = await fetchAccountInsights('IG123', 'tok');
 
-      // views omitted; the other three present.
-      expect(result).toEqual({ reach: 5, accountsEngaged: 5, totalInteractions: 5 });
+      // views omitted; the other four present.
+      expect(result).toEqual({
+        reach: 5,
+        likes: 5,
+        accountsEngaged: 5,
+        totalInteractions: 5,
+      });
       expect(result).not.toHaveProperty('views');
 
-      // Assert the individual retry URLs were called: 1 batch + 4 individual.
-      expect(fetchMock).toHaveBeenCalledTimes(5);
+      // Assert the individual retry URLs were called: 1 batch + 5 individual.
+      expect(fetchMock).toHaveBeenCalledTimes(6);
       const calledMetrics = fetchMock.mock.calls.map((c) => metricOf(c[0] as string));
       expect(calledMetrics).toEqual([
-        'reach,views,accounts_engaged,total_interactions',
+        'reach,views,likes,accounts_engaged,total_interactions',
         'reach',
         'views',
+        'likes',
         'accounts_engaged',
         'total_interactions',
       ]);
@@ -368,6 +376,23 @@ describe('instagram-graph.util', () => {
 
       expect(callCount).toBe(2);
       expect(rows.find((r) => r.date === '2026-07-31')).toBeDefined();
+    });
+
+    it('requests reach only — every other account metric is total_value-only', async () => {
+      const calls: string[] = [];
+      global.fetch = jest.fn(async (url: string) => {
+        calls.push(url);
+        return { ok: true, json: async () => ({ data: [] }) };
+      }) as unknown as typeof fetch;
+
+      const since = Math.floor(Date.UTC(2026, 5, 1) / 1000);
+      await fetchAccountInsightsRange('ig1', 'tok', since, since + 86400);
+
+      expect(calls.length).toBeGreaterThan(0);
+      // Graph answers 200 and silently omits total_value-only metrics from a
+      // time-series request, so asking for them yields nothing but traffic —
+      // and would hide how little the backfill actually covers.
+      expect(calls.every((u) => metricOf(u) === 'reach')).toBe(true);
     });
   });
 

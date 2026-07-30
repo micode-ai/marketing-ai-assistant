@@ -98,6 +98,10 @@ export class InstagramSyncService {
         followersCount: profile.followersCount ?? null,
         reach: insights.reach ?? null,
         views: insights.views ?? null,
+        // Account-level `likes` has no time series in the Graph API, so this
+        // daily total_value snapshot is the ONLY way the likes trend is built —
+        // it accumulates from the first sync forward and can't be backfilled.
+        likes: insights.likes ?? null,
         accountsEngaged: insights.accountsEngaged ?? null,
         totalInteractions: insights.totalInteractions ?? null,
       };

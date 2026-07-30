@@ -165,6 +165,7 @@ describe('InstagramService', () => {
         account: [],
         topPosts: [],
         worstPosts: [],
+        recentPosts: [],
         periodTotals: {},
         stories: {
           list: [],
@@ -182,6 +183,7 @@ describe('InstagramService', () => {
           followersCount: 100,
           reach: 500,
           views: 800,
+          likes: 45,
           accountsEngaged: 60,
           totalInteractions: 90,
         },
@@ -204,6 +206,7 @@ describe('InstagramService', () => {
       expect(metrics.account[0]).toMatchObject({
         followersCount: 100,
         reach: 500,
+        likes: 45,
       });
       expect(metrics.topPosts.map((m: any) => m.igMediaId)).toEqual([
         'a',
@@ -237,6 +240,41 @@ describe('InstagramService', () => {
       expect(metrics.worstPosts).toEqual([]);
     });
 
+    it('returns recentPosts chronologically from a second, unfiltered media query', async () => {
+      prisma.projectSocialAccount.findMany.mockResolvedValue([igLink()]);
+      // Newest-first from the DB; the service reverses to chronological order.
+      prisma.instagramMedia.findMany.mockResolvedValue([
+        { igMediaId: 'newest', timestamp: new Date('2026-06-20T00:00:00Z'), likeCount: 30 },
+        { igMediaId: 'oldest', timestamp: new Date('2026-06-18T00:00:00Z'), likeCount: 10 },
+      ]);
+
+      const metrics = await service.getMetrics('p1', 28);
+
+      expect(metrics.recentPosts.map((m: any) => m.igMediaId)).toEqual(['oldest', 'newest']);
+
+      // The chart query must NOT inherit the engagementRate filter — a post with
+      // likes but no reach insight still belongs on a likes chart.
+      const chartArgs = prisma.instagramMedia.findMany.mock.calls[1][0];
+      expect(chartArgs.orderBy).toEqual({ timestamp: 'desc' });
+      expect(chartArgs.where.engagementRate).toBeUndefined();
+      expect(chartArgs.where.timestamp.gte).toBeInstanceOf(Date);
+      expect(chartArgs.take).toBe(50);
+    });
+
+    it('does not let the recentPosts reversal disturb the rated post order', async () => {
+      prisma.projectSocialAccount.findMany.mockResolvedValue([igLink()]);
+      // Both queries hit the same mock — the service must not mutate the rows.
+      prisma.instagramMedia.findMany.mockResolvedValue([
+        { igMediaId: 'a', engagementRate: 0.6, timestamp: new Date('2026-06-20T00:00:00Z'), likeCount: 5 },
+        { igMediaId: 'b', engagementRate: 0.1, timestamp: new Date('2026-06-19T00:00:00Z'), likeCount: 1 },
+      ]);
+
+      const metrics = await service.getMetrics('p1', 28);
+
+      expect(metrics.topPosts.map((m: any) => m.igMediaId)).toEqual(['a', 'b']);
+      expect(metrics.recentPosts.map((m: any) => m.igMediaId)).toEqual(['b', 'a']);
+    });
+
     it('includes periodTotals from fetchAccountInsightsTotals when tokens decrypt successfully', async () => {
       prisma.projectSocialAccount.findMany.mockResolvedValue([igLink()]);
       (decryptData as jest.Mock).mockReturnValue({
@@ -246,6 +284,7 @@ describe('InstagramService', () => {
       (fetchAccountInsightsTotals as jest.Mock).mockResolvedValue({
         reach: 400,
         views: 1200,
+        likes: 95,
         accountsEngaged: 80,
         totalInteractions: 150,
       });
@@ -255,6 +294,7 @@ describe('InstagramService', () => {
       expect(metrics.periodTotals).toEqual({
         reach: 400,
         views: 1200,
+        likes: 95,
         accountsEngaged: 80,
         totalInteractions: 150,
       });
