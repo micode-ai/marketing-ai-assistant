@@ -96,6 +96,32 @@ describe('SocialSchedulerService.processDue', () => {
     expect(mockNotifier.report).not.toHaveBeenCalled();
   });
 
+  it('does NOT re-notify when the publish result is already reported (token error mid-publish)', async () => {
+    mockPrisma.contentPublication.findMany.mockResolvedValue([
+      {
+        id: 'pub4',
+        platform: 'TIKTOK',
+        content: { id: 'c4', projectId: 'proj1' },
+        socialAccount: { id: 'a4', platform: 'TIKTOK', accountName: 'brand', organizationId: 'org1', encryptedTokens: '{}' },
+      },
+    ]);
+    // SocialService flipped the account and emailed already; the message itself is
+    // TikTok's, not the fixed reauth string, so only the flag can prevent a second email.
+    mockSocial.publishToAccount.mockResolvedValue({
+      status: 'FAILED',
+      error: 'user/info failed: access_token_invalid',
+      reported: true,
+    });
+
+    await svc.processDue();
+
+    expect(mockPrisma.contentPublication.updateMany).toHaveBeenCalledWith({
+      where: { id: 'pub4', status: 'PENDING' },
+      data: expect.objectContaining({ status: 'FAILED' }),
+    });
+    expect(mockNotifier.report).not.toHaveBeenCalled();
+  });
+
   it('skips when already processing (re-entrancy guard)', async () => {
     (svc as any).processing = true;
     await svc.processDue();

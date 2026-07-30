@@ -8,6 +8,7 @@ export type CronName =
   | 'instagram-sync'
   | 'meta-token-refresh'
   | 'threads-sync'
+  | 'tiktok-token-refresh'
   | 'crm-contacts-sync'
   | 'crm-task-digest';
 
@@ -48,6 +49,7 @@ const STRINGS: Record<'en' | 'pl' | 'ru', Strings> = {
       'instagram-sync': 'Instagram analytics sync',
       'meta-token-refresh': 'Meta token refresh',
       'threads-sync': 'Threads analytics sync',
+      'tiktok-token-refresh': 'TikTok token refresh',
       'crm-contacts-sync': 'CRM contacts sync',
       'crm-task-digest': 'CRM task digest',
     },
@@ -71,6 +73,7 @@ const STRINGS: Record<'en' | 'pl' | 'ru', Strings> = {
       'instagram-sync': 'Synchronizacja analityki Instagram',
       'meta-token-refresh': 'Odświeżanie tokenów Meta',
       'threads-sync': 'Synchronizacja analityki Threads',
+      'tiktok-token-refresh': 'Odświeżanie tokenów TikTok',
       'crm-contacts-sync': 'Synchronizacja kontaktów CRM',
       'crm-task-digest': 'Podsumowanie zadań CRM',
     },
@@ -94,6 +97,7 @@ const STRINGS: Record<'en' | 'pl' | 'ru', Strings> = {
       'instagram-sync': 'Синхронизация аналитики Instagram',
       'meta-token-refresh': 'Обновление токенов Meta',
       'threads-sync': 'Синхронизация аналитики Threads',
+      'tiktok-token-refresh': 'Обновление токенов TikTok',
       'crm-contacts-sync': 'Синхронизация контактов CRM',
       'crm-task-digest': 'Дайджест задач CRM',
     },

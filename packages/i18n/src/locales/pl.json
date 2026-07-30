@@ -850,6 +850,15 @@
       "connected": "Threads połączony pomyślnie",
       "error": "Nie udało się połączyć Threads. Spróbuj ponownie.",
       "noAccount": "Żadne konto Threads nie jest połączone z tym profilem."
+    },
+    "tiktok": {
+      "connect": "Połącz TikTok",
+      "description": "Połącz konto TikTok, aby publikować filmy i posty ze zdjęciami oraz zbierać analitykę.",
+      "connected": "TikTok połączony pomyślnie",
+      "error": "Nie udało się połączyć TikTok. Spróbuj ponownie.",
+      "noAccount": "Żadne konto TikTok nie jest połączone z tym profilem.",
+      "accessDenied": "Odrzuciłeś prośbę o autoryzację TikTok.",
+      "draftsMode": "Posty TikTok trafiają do wersji roboczych w aplikacji TikTok, gdzie je kończysz i publikujesz. Publikowanie bezpośrednie włączy się po przejściu weryfikacji publikowania treści przez TikTok."
     }
   },
   "analytics": {

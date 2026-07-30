@@ -12,6 +12,7 @@ Marketing AI Assistant umozliwia publikowanie tresci bezposrednio na platformach
 | Twitter/X | Reczne dane API | Tweety przez Twitter API v2 |
 | Facebook | OAuth 2.0 (wybierz strone) | Posty na stronie przez Graph API v19 |
 | Telegram | Reczne (token bota + ID czatu) | Wiadomosci przez Telegram Bot API |
+| TikTok | OAuth 2.0 (kliknij Polacz) | Filmy i posty ze zdjeciami przez Content Posting API |
 
 ## Laczenie kont
 
@@ -58,6 +59,20 @@ Potrzebujesz konta Twitter Developer z dostepem do API, aby uzyskac te dane uwie
    - **Bot Token** — z BotFather
    - **Chat ID** — identyfikator kanalu lub grupy
 3. Kliknij **Zapisz**
+
+### TikTok
+
+1. Kliknij **Polacz** na karcie TikTok
+2. Zostaniesz przekierowany do TikTok w celu autoryzacji
+3. Przyznaj wymagane uprawnienia — jedna autoryzacja obejmuje publikowanie i analityke
+4. Wrocisz do aplikacji z podlaczonym kontem
+
+**Wymagane zmienne srodowiskowe:** `TIKTOK_CLIENT_KEY`, `TIKTOK_CLIENT_SECRET`
+
+**Dwie rzeczy, ktore TikTok robi inaczej:**
+
+- **Kazdy post wymaga mediow.** TikTok nie ma postow tekstowych, wiec tresc publikowana na TikTok musi zawierac film albo co najmniej jedno zdjecie. Tresc bez mediow konczy sie jasnym komunikatem bledu, a nie cichym pominieciem.
+- **Wersje robocze kontra publikowanie bezposrednie.** TikTok wymaga, aby aplikacja przeszla weryfikacje publikowania tresci, zanim bedzie moc publikowac publicznie w imieniu tworcy. Do tego czasu posty trafiaja do **wersji roboczych w aplikacji TikTok**, gdzie sam je konczysz i publikujesz. Karta TikTok w integracjach pokazuje, ktory tryb jest aktywny.
 
 ## Publikowanie tresci
 
@@ -139,6 +154,10 @@ Gdy token dostepu do Facebooka staje sie nieprawidlowy, system automatycznie:
 3. Wysyla email do wszystkich wlascicieli i administratorow organizacji z opisem bledu — w jezyku kazdego odbiorcy.
 
 Aby to naprawic, kliknij pomaranczowy przycisk **Polacz ponownie** na karcie konta i wklej nowy dlugoterminowy Page Access Token. Dlugoterminowy token strony — raz wygenerowany — nie wygasa, dopoki administrator strony nie cofnie uprawnien.
+
+### Wymagane ponowne polaczenie (TikTok)
+
+Token dostepu TikTok zyje tylko 24 godziny, dlatego aplikacja odswieza go automatycznie za pomoca tokenu odswiezania waznego rok. Odznake **Wymagane ponowne polaczenie** zobaczysz tylko wtedy, gdy ten token odswiezania zostanie odwolany lub wygasnie — na przyklad gdy usuniesz dostep aplikacji w ustawieniach TikTok. Kliknij **Polacz ponownie** na karcie TikTok, aby autoryzowac ponownie; nic wiecej nie jest tracone.
 
 ## Bezpieczenstwo
 

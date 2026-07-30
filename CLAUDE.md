@@ -182,6 +182,16 @@ Content agent supports **multilingual generation**: pass `languages: ['en', 'pl'
 - When Facebook Graph returns an `OAuthException` (code 190 or `type === 'OAuthException'`), the service flips the account to `REAUTH_REQUIRED` and emits a `CronFailureNotifier.report` with `errorCode: 'FB_TOKEN_EXPIRED'`. `SocialSchedulerService` then does NOT re-notify for that specific failure to avoid double emails.
 - UI: `/settings/integrations` shows an orange "Reconnect required" banner + swaps the "Edit" button text for "Reconnect" when a Facebook account is in `REAUTH_REQUIRED`. i18n keys: `social.reauthRequired.{badge,description,cta}` in all three locales.
 
+### TikTok Publishing
+- Modules: `apps/api/src/tiktok/`. `TikTokPublishModule` holds the shared services (OAuth, token, publish) and is imported by `SocialModule`; `TikTokModule` adds the OAuth controller + refresh cron and imports `SocialModule`. The split exists to avoid a circular module dependency.
+- OAuth v2: authorize on `www.tiktok.com/v2/auth/authorize/`, token + refresh on `open.tiktokapis.com/v2/oauth/token/` (form-encoded). Access token 24 h, refresh token 365 days, and **a refresh can return a new refresh token** which must replace the stored one.
+- `TikTokTokenService.getValidAccessToken` is the only way to get a token: refreshes inside a 5-minute skew window, persists the rotated pair, flips to `REAUTH_REQUIRED` + reports `TIKTOK_TOKEN_EXPIRED` on failure. Daily `@Cron('30 4 * * *')` backstop in `tiktok-token-refresh.service.ts`.
+- Endpoints: `GET /tiktok/auth-url` (OWNER/ADMIN), `GET /tiktok/callback` (`@Public()`, HMAC-signed state), `GET /tiktok/capabilities` (`{configured, directPost}` — the web app uses this for the drafts-mode hint).
+- Publishing (`tiktok-publish.service.ts`): `creator_info/query` pre-flight → video via `FILE_UPLOAD` (chunked `PUT`, count rounded **down** so the last chunk absorbs the remainder) or photos via `PULL_FROM_URL` → poll `status/fetch` until `PUBLISH_COMPLETE` / `SEND_TO_USER_INBOX`.
+- **TikTok has no text-only post type** — content without media fails fast. Photo posts are `PULL_FROM_URL` only, so the media URL prefix must be verified in the developer portal; videos need no verification.
+- `TIKTOK_DIRECT_POST_ENABLED` (default off) picks `MEDIA_UPLOAD` (lands in the creator's TikTok drafts, no audit needed) vs `DIRECT_POST` (requires passing TikTok's Content Posting audit — before that TikTok forces `SELF_ONLY` and caps posting at 5 users/24 h). `pickPrivacyLevel` degrades to whatever `creator_info` allows rather than erroring.
+- Env: `TIKTOK_CLIENT_KEY`, `TIKTOK_CLIENT_SECRET`, `TIKTOK_DIRECT_POST_ENABLED`.
+
 ### SEO Module
 - Files: `apps/api/src/seo/seo.service.ts`, `gsc-sync.service.ts`, `competitor-suggestion.service.ts`, `rank-tracking.cron.ts`, `seo.controller.ts`, `seo.module.ts`.
 - Endpoints: `GET/POST/PATCH/DELETE /seo/keywords*`, `GET/POST/DELETE /seo/competitors*`, `POST /seo/keywords/sync-from-gsc`, `POST /seo/keywords/:id/rank`.
