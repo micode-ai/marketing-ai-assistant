@@ -6,6 +6,7 @@ import { generateReplyRouter } from './routes/generate-reply';
 import { seoAdviceRouter } from './routes/seo-advice';
 import { instagramAdviceRouter } from './routes/instagram-advice';
 import { threadsAdviceRouter } from './routes/threads-advice';
+import { tiktokAdviceRouter } from './routes/tiktok-advice';
 import { analyticsRecommendationsRouter } from './routes/analytics-recommendations';
 import { dealInsightsRouter } from './routes/deal-insights';
 
@@ -19,6 +20,7 @@ app.use('/generate-reply', generateReplyRouter);
 app.use('/seo-advice', seoAdviceRouter);
 app.use('/generate-instagram-advice', instagramAdviceRouter);
 app.use('/generate-threads-advice', threadsAdviceRouter);
+app.use('/generate-tiktok-advice', tiktokAdviceRouter);
 app.use('/analytics-recommendations', analyticsRecommendationsRouter);
 app.use('/deal-insights', dealInsightsRouter);
 
