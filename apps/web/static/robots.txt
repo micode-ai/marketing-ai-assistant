@@ -1,0 +1,38 @@
+# robots.txt for emarketingai.pl
+#
+# Public marketing / auth-entry pages are crawlable. The authenticated
+# application (everything a signed-in user sees) has no SEO value and is
+# kept out of the crawl so Google stops reporting app URLs as redirects
+# or "crawled - currently not indexed".
+#
+# NOTE: JS/CSS under /_app/ is intentionally NOT blocked — Googlebot must
+# fetch it to render the client-side app for the pages we do allow.
+
+User-agent: *
+
+# Authenticated application areas
+Disallow: /dashboard
+Disallow: /projects
+Disallow: /settings
+Disallow: /analytics
+Disallow: /ai-chat
+Disallow: /calendar
+Disallow: /campaigns
+Disallow: /checklists
+Disallow: /competitors
+Disallow: /content
+Disallow: /documents
+Disallow: /email
+Disallow: /experiments
+Disallow: /finances
+Disallow: /help
+Disallow: /onboarding
+Disallow: /seo
+Disallow: /sequences
+Disallow: /templates
+
+# Auth internals (no reason to index)
+Disallow: /auth/
+Disallow: /forgot-password
+
+Sitemap: https://emarketingai.pl/sitemap.xml
