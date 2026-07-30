@@ -378,7 +378,7 @@ describe('instagram-graph.util', () => {
       expect(rows.find((r) => r.date === '2026-07-31')).toBeDefined();
     });
 
-    it('never asks for likes — it is a total_value-only metric with no time series', async () => {
+    it('requests reach only — every other account metric is total_value-only', async () => {
       const calls: string[] = [];
       global.fetch = jest.fn(async (url: string) => {
         calls.push(url);
@@ -389,9 +389,10 @@ describe('instagram-graph.util', () => {
       await fetchAccountInsightsRange('ig1', 'tok', since, since + 86400);
 
       expect(calls.length).toBeGreaterThan(0);
-      // Adding `likes` here would make Graph reject the whole chunk, silently
-      // killing the reach/views backfill along with it.
-      expect(calls.every((u) => !metricOf(u).split(',').includes('likes'))).toBe(true);
+      // Graph answers 200 and silently omits total_value-only metrics from a
+      // time-series request, so asking for them yields nothing but traffic —
+      // and would hide how little the backfill actually covers.
+      expect(calls.every((u) => metricOf(u) === 'reach')).toBe(true);
     });
   });
 

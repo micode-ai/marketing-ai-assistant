@@ -253,11 +253,15 @@ export async function fetchAccountInsights(
 }
 
 /**
- * Fetch daily account insights for a date range by chunking into spans of
- * ≤ 30 days. Uses the time-series form of the insights API (no
- * `metric_type=total_value`) so each metric row exposes a `values[]` array
- * with one entry per day. Auth errors propagate via InstagramAuthError;
- * non-auth failures for a given chunk are skipped gracefully.
+ * Fetch daily `reach` for a date range by chunking into spans of ≤ 30 days.
+ * Uses the time-series form of the insights API (no `metric_type=total_value`)
+ * so the metric row exposes a `values[]` array with one entry per day. Auth
+ * errors propagate via InstagramAuthError; non-auth failures for a given chunk
+ * are skipped gracefully.
+ *
+ * Only `reach` is requested: every other account metric is total_value-only, so
+ * a backfilled day carries reach and nothing else. Callers must treat the other
+ * fields as absent (not zero) for backfilled days.
  *
  * @param sinceUnix  Unix timestamp (seconds) for the start of the range (inclusive).
  * @param untilUnix  Unix timestamp (seconds) for the end of the range (exclusive).
@@ -276,7 +280,14 @@ export async function fetchAccountInsightsRange(
     const u = Math.min(s + CHUNK_SECS, untilUnix);
 
     const params = new URLSearchParams({
-      metric: 'reach,views,accounts_engaged,total_interactions',
+      // `reach` ONLY — it is the sole account metric with a daily time series.
+      // Confirmed against production data: of 123 stored days, all 123 had
+      // `reach` while `views`/`accounts_engaged`/`totalInteractions` were set
+      // only on the 34 days covered by the daily total_value sync. Graph does
+      // not error on the extra metrics, it answers 200 and silently omits them,
+      // so asking for them was pure wasted traffic that also made the backfill
+      // look like it covered more than it did.
+      metric: 'reach',
       period: 'day',
       since: String(s),
       until: String(u),

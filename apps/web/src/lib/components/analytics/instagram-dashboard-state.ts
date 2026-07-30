@@ -28,6 +28,22 @@ export function resolveInstagramView(opts: {
   return 'connected';
 }
 
+/**
+ * Latest non-null value in a daily series, or 0 when there is none.
+ *
+ * Needed because only `reach` has a daily time series in the Graph API: days
+ * that came from the 90-day backfill carry reach and nothing else. Reading the
+ * last row blindly therefore reports 0 followers whenever the newest row is a
+ * backfilled one.
+ */
+export function lastKnown(values: Array<number | null | undefined>): number {
+  for (let i = values.length - 1; i >= 0; i--) {
+    const v = values[i];
+    if (typeof v === 'number' && Number.isFinite(v)) return v;
+  }
+  return 0;
+}
+
 const STALE_MS = 10 * 60 * 1000; // 10 minutes
 
 /** True when the last sync is missing or older than ~10 minutes. */

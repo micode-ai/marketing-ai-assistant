@@ -8,6 +8,7 @@
   import {
     resolveInstagramView,
     isSyncStale,
+    lastKnown,
     type InstagramStatus,
   } from './instagram-dashboard-state';
   import { pickTotal } from './pick-total';
@@ -254,33 +255,42 @@
       type: 'line',
       data: {
         labels,
+        // Missing values are passed as null, never 0. Only `reach` has a daily
+        // time series in the Graph API, so days that came from the 90-day
+        // backfill carry reach and nothing else — coercing those to 0 drew
+        // followers and views collapsing to zero across the whole backfilled
+        // stretch, which reads as "we lost all our followers" instead of
+        // "not measured". `spanGaps` keeps the line continuous across them.
         datasets: [
           {
             label: $_('instagram.followers'),
-            data: metrics.account.map((d) => d.followersCount ?? 0),
+            data: metrics.account.map((d) => d.followersCount),
             borderColor: '#EC4899',
             backgroundColor: 'rgba(236, 72, 153, 0.1)',
             fill: true,
             tension: 0.3,
+            spanGaps: true,
             pointRadius: days <= 30 ? 2 : 0,
             yAxisID: 'y1',
           },
           {
             label: $_('instagram.reach'),
-            data: metrics.account.map((d) => d.reach ?? 0),
+            data: metrics.account.map((d) => d.reach),
             borderColor: '#8B5CF6',
             backgroundColor: 'rgba(139, 92, 246, 0.1)',
             fill: false,
             tension: 0.3,
+            spanGaps: true,
             pointRadius: days <= 30 ? 2 : 0,
           },
           {
             label: $_('instagram.views'),
-            data: metrics.account.map((d) => d.views ?? 0),
+            data: metrics.account.map((d) => d.views),
             borderColor: '#3B82F6',
             backgroundColor: 'rgba(59, 130, 246, 0.1)',
             fill: false,
             tension: 0.3,
+            spanGaps: true,
             pointRadius: days <= 30 ? 2 : 0,
           },
         ],
@@ -445,9 +455,9 @@
   }
 
   // --- KPIs ---
-  $: currentFollowers = metrics.account.length
-    ? metrics.account[metrics.account.length - 1].followersCount ?? 0
-    : 0;
+  // Last *known* follower count, not the last row's: a backfilled newest row
+  // would otherwise report 0 followers.
+  $: currentFollowers = lastKnown(metrics.account.map((d) => d.followersCount));
   $: totalReach = pickTotal(metrics.periodTotals?.reach, metrics.account.reduce((s, d) => s + (d.reach ?? 0), 0));
   $: totalViews = pickTotal(metrics.periodTotals?.views, metrics.account.reduce((s, d) => s + (d.views ?? 0), 0));
   $: totalLikes = pickTotal(metrics.periodTotals?.likes, metrics.account.reduce((s, d) => s + (d.likes ?? 0), 0));
