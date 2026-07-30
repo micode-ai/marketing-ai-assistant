@@ -3,6 +3,7 @@ import {
   DEFAULT_CHUNK_SIZE,
   fetchPublishStatus,
   fetchTikTokUser,
+  fetchTikTokVideoList,
   initPhotoPost,
   initVideoUpload,
   parseTikTokEnvelope,
@@ -117,6 +118,67 @@ describe('tiktok-api.util', () => {
       })) as unknown as typeof fetch;
 
       await expect(fetchTikTokUser('tok')).rejects.toBeInstanceOf(TikTokAuthError);
+    });
+  });
+
+  describe('fetchTikTokVideoList', () => {
+    it('requests the counter fields and maps a page, converting create_time to a Date', async () => {
+      const calls = mockEnvelope({
+        videos: [
+          {
+            id: 'v1',
+            title: 'Launch',
+            video_description: 'desc',
+            duration: 31,
+            cover_image_url: 'https://cdn/c.jpg',
+            share_url: 'https://www.tiktok.com/@brand/video/v1',
+            embed_link: 'https://www.tiktok.com/embed/v1',
+            create_time: 1751000000,
+            view_count: 5000,
+            like_count: 400,
+            comment_count: 25,
+            share_count: 12,
+          },
+        ],
+        cursor: 20,
+        has_more: true,
+      });
+
+      const page = await fetchTikTokVideoList('tok', { maxCount: 20 });
+
+      expect(calls[0].url).toContain('/v2/video/list/');
+      const fields = new URL(calls[0].url).searchParams.get('fields') ?? '';
+      expect(fields).toContain('view_count');
+      expect(fields).toContain('share_count');
+      expect(JSON.parse(calls[0].init.body)).toEqual({ max_count: 20 });
+
+      expect(page.hasMore).toBe(true);
+      expect(page.cursor).toBe(20);
+      expect(page.videos[0]).toMatchObject({
+        id: 'v1',
+        title: 'Launch',
+        description: 'desc',
+        viewCount: 5000,
+        shareCount: 12,
+      });
+      expect(page.videos[0]!.timestamp.toISOString()).toBe(
+        new Date(1751000000 * 1000).toISOString(),
+      );
+    });
+
+    it('forwards a cursor when continuing pagination', async () => {
+      const calls = mockEnvelope({ videos: [], has_more: false });
+      await fetchTikTokVideoList('tok', { cursor: 20 });
+      expect(JSON.parse(calls[0].init.body)).toEqual({ max_count: 20, cursor: 20 });
+    });
+
+    it('returns an empty page instead of throwing when the account has no videos', async () => {
+      mockEnvelope({});
+      await expect(fetchTikTokVideoList('tok')).resolves.toEqual({
+        videos: [],
+        cursor: undefined,
+        hasMore: false,
+      });
     });
   });
 

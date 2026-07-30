@@ -69,6 +69,15 @@ Potrzebujesz konta Twitter Developer z dostepem do API, aby uzyskac te dane uwie
 
 **Wymagane zmienne srodowiskowe:** `TIKTOK_CLIENT_KEY`, `TIKTOK_CLIENT_SECRET`
 
+### Analityka TikTok
+
+Gdy konto TikTok jest powiazane z projektem, na stronie **Analityka** pojawia sie zakladka **TikTok**: obserwujacy, przyrost wyswietlen, polubien, komentarzy i udostepnien w wybranym okresie, wykres dziennego przyrostu oraz najlepsze i najslabsze filmy wedlug zaangazowania. Jest tez karta **rekomendacji AI**, ktora czyta Twoje realne liczby i podpowiada, co i kiedy publikowac.
+
+Dwa ograniczenia pochodza od samego TikToka, nie od nas:
+
+- **Historia zaczyna sie w dniu podlaczenia.** API TikTok podaje tylko sumy od poczatku, dlatego aplikacja zapisuje dzienna migawke i liczy przyrost miedzy migawkami. Wczesniejszych dni nie da sie pobrac wstecz, a wykres trendu potrzebuje co najmniej dwoch dni.
+- **Czas ogladania, procent ukonczen, zrodla ruchu i dane demograficzne widowni nie sa dostepne** przez API. Po nie zajrzyj do TikTok Studio.
+
 **Dwie rzeczy, ktore TikTok robi inaczej:**
 
 - **Kazdy post wymaga mediow.** TikTok nie ma postow tekstowych, wiec tresc publikowana na TikTok musi zawierac film albo co najmniej jedno zdjecie. Tresc bez mediow konczy sie jasnym komunikatem bledu, a nie cichym pominieciem.

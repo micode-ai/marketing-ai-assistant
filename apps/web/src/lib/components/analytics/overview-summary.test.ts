@@ -18,4 +18,32 @@ describe('buildSummaryCards', () => {
     const conv = cards.find((c) => c.key === 'conversions');
     expect(conv?.trend).toBe('down');
   });
+
+  it('adds a TikTok views card when TikTok is connected', () => {
+    const cards = buildSummaryCards({
+      totals: { total: { visitors: 1, conversions: 1 }, change: { visitors: 0, conversions: 0 } },
+      gsc: { connected: false },
+      instagram: { connected: false },
+      threads: { connected: false },
+      tiktok: { connected: true, views: 3000, viewsChange: 4 },
+    });
+
+    const tiktok = cards.find((c) => c.key === 'tiktokViews');
+    expect(tiktok).toMatchObject({ value: 3000, channel: 'tiktok', trend: 'up' });
+  });
+
+  it('omits the TikTok card when the channel is absent or disconnected', () => {
+    const base = {
+      totals: { total: { visitors: 1, conversions: 1 }, change: { visitors: 0, conversions: 0 } },
+      gsc: { connected: false },
+      instagram: { connected: false },
+      threads: { connected: false },
+    };
+
+    // Callers written before the TikTok channel omit the field entirely.
+    expect(buildSummaryCards(base).map((c) => c.key)).not.toContain('tiktokViews');
+    expect(
+      buildSummaryCards({ ...base, tiktok: { connected: false } }).map((c) => c.key),
+    ).not.toContain('tiktokViews');
+  });
 });

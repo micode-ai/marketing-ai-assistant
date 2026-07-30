@@ -69,6 +69,15 @@ You need a Twitter Developer account with API access to get these credentials.
 
 **Required env vars:** `TIKTOK_CLIENT_KEY`, `TIKTOK_CLIENT_SECRET`
 
+### TikTok analytics
+
+Once a TikTok account is linked to a project, the project's **Analytics** page grows a **TikTok** tab showing followers, views, likes, comments and shares gained over the selected period, a daily-growth chart, and your best and weakest videos by engagement rate. There is also an **AI recommendations** card that reads your real numbers and suggests what and when to post.
+
+Two limits come from TikTok itself, not from us:
+
+- **History starts on the day you connect.** TikTok's API reports only all-time totals, so the app takes a daily snapshot and derives growth from consecutive snapshots. Earlier days cannot be fetched retroactively, and the trend chart needs at least two days before it can draw anything.
+- **Watch time, completion rate, traffic sources and audience demographics are not available** through the API. For those, open TikTok Studio directly.
+
 **Two things TikTok does differently:**
 
 - **Every post needs media.** TikTok has no text-only post type, so content published to TikTok must include a video or at least one image. Text-only content fails with a clear message instead of being silently dropped.

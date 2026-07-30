@@ -8,6 +8,7 @@
   import SearchConsolePanel from '$lib/components/analytics/SearchConsolePanel.svelte';
   import InstagramAnalyticsDashboard from '$lib/components/analytics/InstagramAnalyticsDashboard.svelte';
   import ThreadsAnalyticsDashboard from '$lib/components/analytics/ThreadsAnalyticsDashboard.svelte';
+  import TikTokAnalyticsDashboard from '$lib/components/analytics/TikTokAnalyticsDashboard.svelte';
   import AnalyticsOverview from '$lib/components/analytics/AnalyticsOverview.svelte';
   import AnalyticsRecommendations from '$lib/components/analytics/AnalyticsRecommendations.svelte';
   import InfoTooltip from '$lib/components/InfoTooltip.svelte';
@@ -43,6 +44,7 @@
     surfacesLoaded = false;
     igConnected = false;
     threadsConnected = false;
+    tiktokConnected = false;
     activeChannel = 'overview';
     await detectSurfaces();
   }
@@ -54,7 +56,7 @@
   let activeTab: 'overview' | 'utm' | 'funnel' | 'pages' = 'overview';
 
   // Channel tab model
-  type ChannelId = 'overview' | 'website' | 'search' | 'instagram' | 'threads' | 'app';
+  type ChannelId = 'overview' | 'website' | 'search' | 'instagram' | 'threads' | 'tiktok' | 'app';
   let activeChannel: ChannelId = 'overview';
 
   let dailyData: any[] = [];
@@ -317,6 +319,7 @@
   let gscConnected = false;
   let igConnected = false;
   let threadsConnected = false;
+  let tiktokConnected = false;
   let surfacesLoaded = false;
   let webLoaded = false;
 
@@ -332,22 +335,25 @@
     if (gscConnected) tabs.push({ id: 'search', labelKey: 'analytics.tabSearch' });
     if (igConnected) tabs.push({ id: 'instagram', labelKey: 'analytics.tabInstagram' });
     if (threadsConnected) tabs.push({ id: 'threads', labelKey: 'analytics.tabThreads' });
+    if (tiktokConnected) tabs.push({ id: 'tiktok', labelKey: 'analytics.tabTikTok' });
     if (showApp) tabs.push({ id: 'app', labelKey: 'analytics.tabApp' });
     return tabs;
   })();
 
   async function detectSurfaces() {
-    const [play, gsc, ig, threads] = await Promise.allSettled([
+    const [play, gsc, ig, threads, tiktok] = await Promise.allSettled([
       api.get<any>('/google-play/status', { projectId }),
       api.get<any>('/google/integration', { projectId }),
       api.get<any>('/instagram/status', { projectId }),
       api.get<any>('/threads/status', { projectId }),
+      api.get<any>('/tiktok/status', { projectId }),
     ]);
     appConnected = play.status === 'fulfilled' && !!play.value?.connected;
     gscConnected =
       gsc.status === 'fulfilled' && !!(gsc.value?.accessToken && gsc.value?.siteUrl);
     igConnected = ig.status === 'fulfilled' && !!ig.value?.connected;
     threadsConnected = threads.status === 'fulfilled' && !!threads.value?.connected;
+    tiktokConnected = tiktok.status === 'fulfilled' && !!tiktok.value?.connected;
     surfacesLoaded = true;
   }
 
@@ -389,7 +395,7 @@
         projectId={projectId ?? ''}
         days={selectedPeriod}
         expanded={false}
-        connected={{ gsc: gscConnected, instagram: igConnected, threads: threadsConnected, app: showApp }}
+        connected={{ gsc: gscConnected, instagram: igConnected, threads: threadsConnected, tiktok: tiktokConnected, app: showApp }}
         on:goto={(e) => {
           const ch = (e.detail === 'gsc' ? 'search' : e.detail) as ChannelId;
           switchChannel(ch);
@@ -415,7 +421,7 @@
         projectId={projectId ?? ''}
         days={selectedPeriod}
         expanded={true}
-        connected={{ gsc: gscConnected, instagram: igConnected, threads: threadsConnected, app: showApp }}
+        connected={{ gsc: gscConnected, instagram: igConnected, threads: threadsConnected, tiktok: tiktokConnected, app: showApp }}
         on:goto={(e) => {
           const ch = (e.detail === 'gsc' ? 'search' : e.detail) as ChannelId;
           switchChannel(ch);
@@ -648,6 +654,9 @@
 
     {:else if activeChannel === 'threads'}
       <ThreadsAnalyticsDashboard projectId={projectId ?? ''} days={selectedPeriod} />
+
+    {:else if activeChannel === 'tiktok'}
+      <TikTokAnalyticsDashboard projectId={projectId ?? ''} days={selectedPeriod} />
 
     {:else if activeChannel === 'app'}
       <MobileAnalyticsDashboard projectId={projectId ?? ''} days={selectedPeriod} />
