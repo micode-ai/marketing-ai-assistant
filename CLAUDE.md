@@ -191,6 +191,7 @@ Content agent supports **multilingual generation**: pass `languages: ['en', 'pl'
 - **TikTok has no text-only post type** — content without media fails fast. Photo posts are `PULL_FROM_URL` only, so the media URL prefix must be verified in the developer portal; videos need no verification.
 - `TIKTOK_DIRECT_POST_ENABLED` (default off) picks `MEDIA_UPLOAD` (lands in the creator's TikTok drafts, no audit needed) vs `DIRECT_POST` (requires passing TikTok's Content Posting audit — before that TikTok forces `SELF_ONLY` and caps posting at 5 users/24 h). `pickPrivacyLevel` degrades to whatever `creator_info` allows rather than erroring.
 - Env: `TIKTOK_CLIENT_KEY`, `TIKTOK_CLIENT_SECRET`, `TIKTOK_DIRECT_POST_ENABLED`.
+- Setup runbook (portal products/scopes, redirect URI, sandbox target users, prod env, verification) + internals: `docs/eng/12-tiktok-integration.md` and `docs/ru/12-tiktok-integration.md`. User-facing docs: "TikTok" sections in `user_docs/*/07-social-publishing.md`.
 
 ### TikTok Analytics
 - Files: `apps/api/src/tiktok/tiktok-sync.service.ts`, `tiktok.service.ts`, `tiktok.controller.ts` (project-scoped, `ProjectAccessGuard`); the OAuth controller stays org-scoped in the same module.
