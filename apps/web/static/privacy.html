@@ -40,7 +40,7 @@
     </header>
 
     <h1>Privacy Policy</h1>
-    <p class="muted">Last updated: 27 June 2026</p>
+    <p class="muted">Last updated: 30 July 2026</p>
 
     <p>
       This Privacy Policy explains how <strong>eMarketingAI</strong> ("we", "us", "the Service"),
@@ -67,11 +67,11 @@
       </tr>
       <tr>
         <td>Connected-account credentials</td>
-        <td>OAuth access and refresh tokens for services you choose to connect (Instagram, Meta/Facebook, LinkedIn, Google Search Console, Google Play). Tokens are stored encrypted (AES-256) and used only to act on your behalf.</td>
+        <td>OAuth access and refresh tokens for services you choose to connect (Instagram, Meta/Facebook, Threads, TikTok, LinkedIn, Telegram, Google Search Console, Google Play). Tokens are stored encrypted (AES-256) and used only to act on your behalf.</td>
       </tr>
       <tr>
         <td>Platform profile data</td>
-        <td>Basic profile information returned by a connected account (e.g. Instagram business account ID and username) needed to publish and read analytics.</td>
+        <td>Basic profile information returned by a connected account (e.g. Instagram business account ID and username, TikTok open ID, username, display name and avatar) needed to publish and read analytics.</td>
       </tr>
       <tr>
         <td>Content and marketing data</td>
@@ -115,18 +115,44 @@
       settings or directly in your Instagram/Facebook account settings.
     </p>
 
-    <h2>5. Third-party services (sub-processors)</h2>
+    <h2>5. TikTok data</h2>
+    <p>
+      When you connect a TikTok account, we use TikTok's official APIs (Login Kit, Content Posting
+      API, Display API). With your authorization we may:
+    </p>
+    <ul>
+      <li>Read your basic profile information — open ID, username, display name and avatar — to show
+        which account is connected and to build links to your published videos;</li>
+      <li>Publish videos and photo posts that you create in eMarketingAI, either directly to your
+        profile or to your TikTok drafts, depending on how the integration is configured;</li>
+      <li>Read your account statistics (follower, following, like and video counts) and per-video
+        metrics (views, likes, comments, shares) to display analytics for your own content.</li>
+    </ul>
+    <p>
+      We request only the scopes needed for these features
+      (<code>user.info.basic</code>, <code>user.info.profile</code>, <code>user.info.stats</code>,
+      <code>video.list</code>, <code>video.publish</code>, <code>video.upload</code>).
+      Because TikTok reports lifetime totals only, we store a dated snapshot of these counters once
+      a day so that growth over a period can be shown; this data is visible only to your own
+      organization. We never post without your explicit action or a schedule you configured, and we
+      do not sell or share this data with third parties for advertising. You can revoke access at
+      any time from your eMarketingAI integration settings or in your TikTok account settings, and
+      deleting the connection removes the stored snapshots.
+    </p>
+
+    <h2>6. Third-party services (sub-processors)</h2>
     <p>We share data with the following providers only to the extent necessary to operate the Service:</p>
     <ul>
       <li><strong>Meta Platforms</strong> — publishing and analytics for connected Instagram/Facebook accounts.</li>
       <li><strong>Google</strong> — Search Console and Google Play data for connected projects.</li>
+      <li><strong>TikTok</strong> — publishing and analytics for connected TikTok accounts.</li>
       <li><strong>LinkedIn</strong> — publishing for connected LinkedIn accounts.</li>
       <li><strong>OpenAI</strong> — generating AI content you request (prompts and context you submit).</li>
       <li><strong>Stripe</strong> — subscription billing and payment processing.</li>
       <li><strong>Cloud hosting and email delivery providers</strong> — running the Service and sending transactional email.</li>
     </ul>
 
-    <h2>6. Data retention</h2>
+    <h2>7. Data retention</h2>
     <p>
       We keep your personal data for as long as your account is active and as needed to provide the
       Service. Connected-account tokens are kept until you disconnect the account or delete your
@@ -134,7 +160,7 @@
       anonymise your personal data within 30 days, except where retention is required by law.
     </p>
 
-    <h2>7. Your rights</h2>
+    <h2>8. Your rights</h2>
     <p>
       Depending on your jurisdiction (including the EU/EEA under the GDPR) you may have the right to
       access, correct, export, restrict or delete your personal data, and to withdraw consent.
@@ -143,7 +169,7 @@
       <a href="https://emarketingai.pl/data-deletion.html">data deletion instructions</a>.
     </p>
 
-    <h2>8. Data security</h2>
+    <h2>9. Data security</h2>
     <p>
       We use industry-standard safeguards including encryption in transit (HTTPS), encryption at
       rest for sensitive credentials (AES-256), access controls and the principle of least
@@ -151,19 +177,19 @@
       protect your information.
     </p>
 
-    <h2>9. Children</h2>
+    <h2>10. Children</h2>
     <p>
       The Service is not directed to children under 16, and we do not knowingly collect their
       personal data.
     </p>
 
-    <h2>10. Changes to this policy</h2>
+    <h2>11. Changes to this policy</h2>
     <p>
       We may update this Privacy Policy from time to time. Material changes will be reflected by the
       "Last updated" date above and, where appropriate, communicated to you.
     </p>
 
-    <h2>11. Contact</h2>
+    <h2>12. Contact</h2>
     <p>
       Questions about this policy or your data? Email
       <a href="mailto:perevertkinma@gmail.com">perevertkinma@gmail.com</a>.
