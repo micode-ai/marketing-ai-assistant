@@ -3,7 +3,7 @@ import { Controller, Post, Delete, Param, Body, UploadedFile, UseInterceptors } 
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiConsumes } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
-import { UploadsService } from './uploads.service';
+import { UploadsService, VIDEO_MAX_BYTES } from './uploads.service';
 
 @ApiTags('uploads')
 @Controller('uploads')
@@ -16,6 +16,22 @@ export class UploadsController {
   // eslint-disable-next-line no-undef
   async uploadImage(@UploadedFile() file: Express.Multer.File) {
     return this.uploadsService.saveFile(file);
+  }
+
+  @Post('video')
+  // The multer limit rejects an oversized upload before the whole file is
+  // buffered in memory; the service still re-checks, since a proxy can lie.
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: VIDEO_MAX_BYTES } }))
+  @ApiConsumes('multipart/form-data')
+  // eslint-disable-next-line no-undef
+  async uploadVideo(@UploadedFile() file: Express.Multer.File) {
+    return this.uploadsService.saveVideo(file);
+  }
+
+  @Delete('video/:filename')
+  async deleteVideo(@Param('filename') filename: string) {
+    await this.uploadsService.deleteVideo(filename);
+    return { ok: true };
   }
 
   @Delete('image/:filename')
