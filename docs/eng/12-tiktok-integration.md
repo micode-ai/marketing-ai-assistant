@@ -44,6 +44,17 @@ User
 
 ## Setup
 
+### The order, and why it looks blocked
+
+The portal makes this feel circular: adding products asks you to complete App details, and App details demands a demo video you cannot record until the products are added. The **sandbox** breaks the loop.
+
+App review is not what makes the integration work — it is what lets strangers use it. The client key and secret exist from the moment the app is created; products and scopes work immediately inside a sandbox for accounts listed as target users; review moves the app out of the sandbox, lifting both the "your own accounts only" limit and the forced `SELF_ONLY` visibility.
+
+The submission form says so itself: "If your app has not been approved before, you are required to use a sandbox environment to demonstrate the integration." TikTok expects the integration to be working *before* you submit.
+
+Hence the order: **sandbox → products and scopes inside it → keys on the server → connect and test-post → record the video → only then App review**. The "Please fill out the required field" errors appearing on every field at once are submit-time validation, not save-time.
+
+
 ### Step 1 — Register the app
 
 In the [TikTok Developer Portal](https://developers.tiktok.com), create an app.
@@ -97,7 +108,13 @@ This is `API_URL` + `/api/tiktok/callback`. Precision matters twice: TikTok vali
 
 ### Step 3 — Sandbox and target users
 
-Until the app passes review it lives in a sandbox: only TikTok accounts added as *target users* (up to 10) can authorize it. Add the account you intend to publish from, otherwise the Connect step fails with no useful reason. TikTok also requires the integration to be demonstrated in the sandbox before the app can be submitted for review.
+A sandbox is an environment for trying the integration out without submitting the app for review. Create one and add the account you intend to publish from as a **target user** (up to 10 accounts). Without this the Connect step fails with no useful reason.
+
+A sandbox has **its own App details and its own set of products**, configured separately from the production app and without a demo video. That is why products and scopes are added here rather than in the review form.
+
+Check **which key pair** you put on the server: the sandbox is configured separately and its credentials are not interchangeable with the production ones. The symptom of a mismatch is coming back from TikTok with `?tiktok=error&reason=exchange_failed`.
+
+**A limitation worth knowing up front:** a sandbox does not offer Content Posting API access for public videos. Direct posting to a profile therefore cannot be demonstrated from it — the recording will show the drafts path (`video.upload`). This does not block submission: the explanation text in step 6 states plainly that `video.publish` only switches on after approval, so the reviewer sees a consistent story.
 
 ### Step 4 — Server configuration
 
@@ -109,16 +126,17 @@ TIKTOK_CLIENT_SECRET=<client secret>
 TIKTOK_DIRECT_POST_ENABLED=false
 ```
 
-Recreate the containers:
+**Editing the file alone changes nothing** — a running container reads its environment only when it is created. Recreate the api service:
 
 ```bash
 cd /opt/marketing-ai && docker compose -f docker-compose.prod.yml \
-  --env-file .env.production up -d --force-recreate
+  --env-file .env.production up -d --force-recreate api
 ```
 
-Then verify — the deploy pipeline does **not** health-check the api:
+Symptom of skipping this: the variables are in the file, but `docker ps` reports `Up 13 days` — the process never saw them and `/tiktok/auth-url` keeps returning 503. Verify the process environment, not the file (the deploy pipeline does **not** health-check the api):
 
 ```bash
+docker exec marketing-ai-api-prod printenv | grep TIKTOK_   # all three must be here
 docker ps                      # marketing-ai-api-prod must be Up, not Restarting
 curl -o /dev/null -w '%{http_code}\n' https://emarketingai.pl/api/users/me   # expect 401
 ```
