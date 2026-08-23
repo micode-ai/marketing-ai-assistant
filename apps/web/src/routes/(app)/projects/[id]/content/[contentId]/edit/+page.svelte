@@ -4,6 +4,7 @@
   import { _ } from 'svelte-i18n';
   import { api } from '$lib/api/client';
   import MarkdownEditor from '$lib/components/MarkdownEditor.svelte';
+  import MediaAttachments from '$lib/components/MediaAttachments.svelte';
   import { onMount } from 'svelte';
 
   $: projectId = $page.params['id'];
@@ -37,6 +38,8 @@
   onMount(async () => {
     try {
       content = await api.get<any>(`/content/${contentId}`);
+      // MediaAttachments binds straight into this array, so never leave it undefined.
+      content.mediaUrls = content.mediaUrls ?? [];
       await loadProjectAccounts();
       if (content?.scheduledAt && content.status !== 'PUBLISHED') {
         scheduleEnabled = true;
@@ -98,11 +101,10 @@
     }
   }
 
-  function removeImage(index: number) {
-    const url = content.mediaUrls[index];
-    content.mediaUrls = content.mediaUrls.filter((_: any, i: number) => i !== index);
+  /** The editor can embed an attachment in the markdown; drop it when removed. */
+  function stripMediaFromBody(url: string) {
     content.body = content.body.replace(new RegExp(`!\\[.*?\\]\\(${url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\)`, 'g'), '');
-    content = content;
+    content = content; // trigger reactivity
   }
 </script>
 
@@ -167,23 +169,12 @@
       </button>
     </div>
 
-    <!-- Attached images -->
-    {#if content.mediaUrls?.length}
-      <div class="mt-3">
-        <p class="text-sm text-ink-muted mb-1">{$_('content.attachedImages')}</p>
-        <div class="flex flex-wrap gap-2">
-          {#each content.mediaUrls as url, i}
-            <div class="relative group">
-              <img src={url} alt="" class="w-20 h-20 object-cover rounded border border-border" />
-              <button
-                on:click={() => removeImage(i)}
-                class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs leading-none flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-              >x</button>
-            </div>
-          {/each}
-        </div>
-      </div>
-    {/if}
+    <div class="mt-3 space-y-3">
+      <MediaAttachments
+        bind:urls={content.mediaUrls}
+        on:removed={(e) => stripMediaFromBody(e.detail.url)}
+      />
+    </div>
 
     <!-- Schedule -->
     {#if content.status !== 'PUBLISHED'}
