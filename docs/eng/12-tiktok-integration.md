@@ -116,6 +116,14 @@ A sandbox has **its own App details and its own set of products**, configured se
 
 Check **which key pair** you put on the server: the sandbox is configured separately and its credentials are not interchangeable with the production ones. The symptom of a mismatch is coming back from TikTok with `?tiktok=error&reason=exchange_failed`.
 
+**Scopes in a sandbox.** Five are granted: `user.info.basic`, `user.info.profile`, `user.info.stats`, `video.list`, `video.upload`. **`video.publish` is not available in a sandbox at all.** And TikTok rejects the entire authorize request if it asks for even one scope the app does not have — the consent screen fails with `scope` and no account can be connected. So while working against a sandbox, set on the server:
+
+```
+TIKTOK_SCOPES="user.info.basic,user.info.profile,user.info.stats,video.list,video.upload"
+```
+
+Remove the variable after approval and all six are requested again. The code is built for this: the callback stores the scopes TikTok actually granted rather than the requested ones, and the analytics tab gates on `user.info.stats` + `video.list`.
+
 **A limitation worth knowing up front:** a sandbox does not offer Content Posting API access for public videos. Direct posting to a profile therefore cannot be demonstrated from it — the recording will show the drafts path (`video.upload`). This does not block submission: the explanation text in step 6 states plainly that `video.publish` only switches on after approval, so the reviewer sees a consistent story.
 
 ### Step 4 — Server configuration
@@ -342,3 +350,4 @@ There is deliberately no `periodTotals` field: TikTok has no aggregate-over-a-wi
 | `TIKTOK_CLIENT_KEY` | — | Client key from the developer portal |
 | `TIKTOK_CLIENT_SECRET` | — | Client secret |
 | `TIKTOK_DIRECT_POST_ENABLED` | `false` | `true` publishes to the profile; `false` sends to drafts |
+| `TIKTOK_SCOPES` | unset | Comma-separated scopes to request. Unset requests all six. Needed for a sandbox, which is not granted `video.publish` |
