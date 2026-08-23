@@ -91,8 +91,14 @@ export class TikTokPublishService {
       );
     }
 
-    const creator = await queryCreatorInfo(accessToken);
     const directPost = this.directPostEnabled();
+
+    // creator_info/query requires the video.publish scope and exists to tell us
+    // which privacy levels the creator allows. A draft carries no post_info, so
+    // the answer is unused — and calling it without video.publish (a sandbox
+    // never grants it) returns HTTP 401, which used to abort the whole publish
+    // and mark the account as needing reauthentication.
+    const creator = directPost ? await queryCreatorInfo(accessToken) : null;
 
     const { publishId, draft } = videos.length > 0
       ? await this.startVideoPublish(accessToken, videos[0]!, content, creator, directPost)
@@ -103,7 +109,7 @@ export class TikTokPublishService {
 
     return {
       postId,
-      postUrl: draft ? '' : this.buildPostUrl(creator.username || account.accountName, postId),
+      postUrl: draft ? '' : this.buildPostUrl(creator?.username || account.accountName, postId),
       draft,
     };
   }
@@ -114,7 +120,7 @@ export class TikTokPublishService {
     accessToken: string,
     videoUrl: string,
     content: { title?: string; body?: string },
-    creator: CreatorInfo,
+    creator: CreatorInfo | null,
     directPost: boolean,
   ): Promise<{ publishId: string; draft: boolean }> {
     const buffer = await this.downloadVideo(videoUrl);
@@ -125,7 +131,7 @@ export class TikTokPublishService {
       chunkSize: plan.chunkSize,
       totalChunkCount: plan.totalChunkCount,
       // Omitting postInfo switches the util to the inbox (draft) endpoint.
-      postInfo: directPost
+      postInfo: directPost && creator
         ? {
             title: this.videoCaption(content),
             privacyLevel: this.pickPrivacyLevel(creator.privacyLevelOptions),
@@ -203,7 +209,7 @@ export class TikTokPublishService {
     accessToken: string,
     images: string[],
     content: { title?: string; body?: string },
-    creator: CreatorInfo,
+    creator: CreatorInfo | null,
     directPost: boolean,
   ): Promise<{ publishId: string; draft: boolean }> {
     // Photos are PULL_FROM_URL only: TikTok fetches each URL itself, which fails
@@ -226,8 +232,10 @@ export class TikTokPublishService {
       postInfo: {
         title: (content.title || body).slice(0, PHOTO_TITLE_MAX),
         description: body.slice(0, PHOTO_DESCRIPTION_MAX),
-        privacyLevel: this.pickPrivacyLevel(creator.privacyLevelOptions),
-        disableComment: creator.commentDisabled,
+        // Ignored by initPhotoPost unless the mode is DIRECT_POST, which is the
+        // only mode where creator info was fetched.
+        privacyLevel: creator ? this.pickPrivacyLevel(creator.privacyLevelOptions) : undefined,
+        disableComment: creator?.commentDisabled ?? false,
       },
     });
 

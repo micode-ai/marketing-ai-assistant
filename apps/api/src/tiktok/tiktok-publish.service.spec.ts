@@ -129,6 +129,9 @@ describe('TikTokPublishService', () => {
 
       expect(calls.some((c) => c.url.includes('/v2/post/publish/inbox/video/init/'))).toBe(true);
       expect(bodyOf('/init/').post_info).toBeUndefined();
+      // creator_info needs video.publish, which a sandbox never grants — and a
+      // draft has no privacy level to pick, so it must not be called at all.
+      expect(calls.some((c) => c.url.includes('creator_info/query'))).toBe(false);
       expect(bodyOf('/init/').source_info).toMatchObject({
         source: 'FILE_UPLOAD',
         video_size: 1024,
@@ -220,6 +223,34 @@ describe('TikTokPublishService', () => {
       const put = calls.find((c) => c.url.startsWith('https://upload.tiktok'))!;
       expect(put.init.headers['Content-Type']).toBe('video/quicktime');
     });
+  });
+
+  it('publishes a draft even when creator_info would reject the token', async () => {
+    // Exactly the production failure: five sandbox scopes, no video.publish, so
+    // creator_info answers HTTP 401. The draft path must never touch it.
+    global.fetch = jest.fn(async (url: string, init: any = {}) => {
+      calls.push({ url, init });
+      if (url.includes('creator_info/query')) {
+        return { ok: false, status: 401, json: async () => ({}) };
+      }
+      if (url.includes('/init/')) return envelope({ publish_id: 'pub9', upload_url: 'https://upload.tiktok/9' });
+      if (url.includes('status/fetch')) return envelope({ status: 'SEND_TO_USER_INBOX' });
+      if (url.startsWith('https://upload.tiktok')) return { ok: true, status: 201, text: async () => '' };
+      return {
+        ok: true,
+        status: 200,
+        headers: { get: () => '1024' },
+        arrayBuffer: async () => new ArrayBuffer(1024),
+      };
+    }) as unknown as typeof fetch;
+
+    const result = await makeService().publish(
+      { body: 'caption', mediaUrls: ['https://cdn.example.com/a.mp4'] },
+      account,
+    );
+
+    expect(result).toEqual({ postId: 'pub9', postUrl: '', draft: true });
+    expect(calls.some((c) => c.url.includes('creator_info/query'))).toBe(false);
   });
 
   describe('photos', () => {
