@@ -141,16 +141,13 @@ export class TikTokService {
       throw new BadRequestException('TikTok not connected');
     }
 
-    const newest = await this.prisma.tikTokAccountMetrics.findFirst({
-      where: { socialAccountId: account.id },
-      orderBy: { createdAt: 'desc' },
-      select: { createdAt: true },
-    });
+    // getLastSyncAt, not the snapshot's createdAt: there is one snapshot row per
+    // day and later syncs only update it, so createdAt freezes at the first sync
+    // of the day and the guard stops guarding. An open dashboard polls every five
+    // minutes, so this used to hit TikTok all day and bypass the plan throttle.
+    const lastSyncAt = await this.getLastSyncAt(account.id);
 
-    if (
-      newest?.createdAt &&
-      Date.now() - new Date(newest.createdAt).getTime() < SKIP_IF_RECENT_MS
-    ) {
+    if (lastSyncAt && Date.now() - lastSyncAt.getTime() < SKIP_IF_RECENT_MS) {
       return { skipped: true };
     }
 
