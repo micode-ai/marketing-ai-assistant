@@ -6,6 +6,14 @@ on:
   pull_request:
     branches: [main, development]
 
+# Cancel superseded checks on the same ref — but only where nothing is
+# deployed. Workflow-level cancellation kills the whole run including a
+# running deploy job, so on `development` (the only branch that deploys)
+# runs are left to finish and the deploy job below serializes them instead.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/development' }}
+
 env:
   NODE_VERSION: '20'
   NODE_OPTIONS: '--max-old-space-size=4096'
@@ -93,6 +101,16 @@ jobs:
     needs: build
     if: github.ref == 'refs/heads/development' && github.event_name == 'push'
     environment: staging
+
+    # One deploy at a time. Merging several PRs in a row used to start a deploy
+    # per merge, all of them building Docker images on the same VPS at once:
+    # they starved each other and every run died on the 10-minute SSH timeout.
+    # cancel-in-progress stays false on purpose — killing the SSH session
+    # mid-"docker compose up" can leave containers stopped, so queueing is the
+    # safe behaviour even though it means the odd redundant deploy.
+    concurrency:
+      group: deploy-${{ github.ref }}
+      cancel-in-progress: false
 
     steps:
       - name: Deploy via SSH
