@@ -75,11 +75,13 @@ The description is shown to the user **on the consent screen** — it is what th
 
 Then add three products:
 
-| Product | Why |
-|---------|-----|
-| **Login Kit** | OAuth itself — nothing else works without it |
-| **Content Posting API** | The `/v2/post/publish/*` endpoints |
-| **Display API** | `/v2/user/info/` and `/v2/video/list/` — the analytics tab |
+| Product | What to configure inside it | Why it is needed |
+|---------|-----------------------------|------------------|
+| **Login Kit** | Platform → switch **Web** on, then Redirect URI: `https://emarketingai.pl/api/tiktok/callback` | OAuth itself — nothing else works without it |
+| **Content Posting API** | Nothing to fill in. Leave the Direct Post switch, if present, **off** — the app publishes to drafts by default. Domain verification for `https://emarketingai.pl/` is needed only for photo posts | The `/v2/post/publish/*` endpoints |
+| **Display API** | No settings — the product is simply added | `/v2/user/info/` and `/v2/video/list/` — the analytics tab |
+
+The portal issues the Client key and Client secret itself — nothing to fill in there; they are copied from here onto the server (step 4).
 
 Enable exactly these scopes — they are what `TIKTOK_SCOPES` requests:
 
