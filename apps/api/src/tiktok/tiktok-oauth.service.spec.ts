@@ -51,6 +51,36 @@ describe('TikTokOAuthService', () => {
         /TIKTOK_CLIENT_KEY/,
       );
     });
+
+    it('honours a TIKTOK_SCOPES override — a sandbox cannot be granted video.publish', () => {
+      const svc = makeService({
+        ...configured,
+        TIKTOK_SCOPES: 'user.info.basic,user.info.profile,user.info.stats,video.list,video.upload',
+      });
+      const scope = new URL(svc.getAuthUrl('https://x/cb', 's')).searchParams.get('scope') ?? '';
+
+      expect(scope.split(',')).toEqual([
+        'user.info.basic',
+        'user.info.profile',
+        'user.info.stats',
+        'video.list',
+        'video.upload',
+      ]);
+      // Asking for a scope the app does not have makes TikTok reject the whole
+      // authorize request, so the override must not leak the default extra scope.
+      expect(scope).not.toContain('video.publish');
+    });
+
+    it('trims whitespace and drops empty entries in the override', () => {
+      const svc = makeService({ ...configured, TIKTOK_SCOPES: ' video.list , ,user.info.basic ' });
+      expect(svc.requestedScopes()).toEqual(['video.list', 'user.info.basic']);
+    });
+
+    it('falls back to the defaults when the override is unset or unusable', () => {
+      expect(makeService(configured).requestedScopes()).toEqual(TIKTOK_SCOPES);
+      expect(makeService({ ...configured, TIKTOK_SCOPES: '' }).requestedScopes()).toEqual(TIKTOK_SCOPES);
+      expect(makeService({ ...configured, TIKTOK_SCOPES: ' , , ' }).requestedScopes()).toEqual(TIKTOK_SCOPES);
+    });
   });
 
   describe('exchangeCode', () => {

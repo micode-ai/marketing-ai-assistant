@@ -10,9 +10,17 @@ const AUTHORIZE_URL = 'https://www.tiktok.com/v2/auth/authorize/';
 const TOKEN_URL = 'https://open.tiktokapis.com/v2/oauth/token/';
 
 /**
- * Scopes requested at connect time. Publishing needs video.publish (direct post)
- * and video.upload (inbox drafts); analytics needs the user.info.* trio plus
- * video.list. Requesting them together means one authorization covers both.
+ * Scopes requested at connect time by default. Publishing needs video.publish
+ * (direct post) and video.upload (inbox drafts); analytics needs the user.info.*
+ * trio plus video.list. Requesting them together means one authorization covers
+ * both.
+ *
+ * Override with the TIKTOK_SCOPES env var when the app cannot be granted the full
+ * set — a sandbox, for instance, does not offer video.publish at all, and TikTok
+ * rejects the whole authorize request if it asks for even one scope the app does
+ * not have (the consent screen fails with "scope"). Features degrade on their
+ * own: only the scopes TikTok actually granted are stored, and the analytics tab
+ * gates on them.
  */
 export const TIKTOK_SCOPES = [
   'user.info.basic',
@@ -57,12 +65,31 @@ export class TikTokOAuthService {
     return { clientKey, clientSecret };
   }
 
+  /**
+   * Scopes to request: the TIKTOK_SCOPES env var when set, otherwise the full
+   * default set. An override that parses to nothing usable is ignored rather
+   * than sending an empty scope param, which TikTok rejects outright.
+   */
+  requestedScopes(): string[] {
+    const raw = this.config.get<string>('TIKTOK_SCOPES');
+    if (!raw) return TIKTOK_SCOPES;
+    const parsed = raw
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (parsed.length === 0) {
+      this.logger.warn('TIKTOK_SCOPES is set but empty — falling back to the default scopes');
+      return TIKTOK_SCOPES;
+    }
+    return parsed;
+  }
+
   getAuthUrl(redirectUri: string, state: string): string {
     const { clientKey } = this.creds();
     const params = new URLSearchParams({
       client_key: clientKey,
       response_type: 'code',
-      scope: TIKTOK_SCOPES.join(','),
+      scope: this.requestedScopes().join(','),
       redirect_uri: redirectUri,
       state,
     });
