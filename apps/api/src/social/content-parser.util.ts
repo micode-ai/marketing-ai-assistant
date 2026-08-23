@@ -35,7 +35,7 @@ export function stripMarkdown(body: string): string {
     .trim();
 }
 
-const VIDEO_EXT = /\.(mp4|mov|m4v)(\?.*)?$/i;
+const VIDEO_EXT = /\.(mp4|mov|m4v|webm)(\?.*)?$/i;
 
 export function resolvePublishMedia(
   content: { body?: string; mediaUrls?: string[] },
