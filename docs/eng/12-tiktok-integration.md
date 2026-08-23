@@ -46,7 +46,23 @@ User
 
 ### Step 1 — Register the app
 
-In the [TikTok Developer Portal](https://developers.tiktok.com), create an app and add three products:
+In the [TikTok Developer Portal](https://developers.tiktok.com), create an app.
+
+**Basic information — ready-made values:**
+
+| Field | Value |
+|-------|-------|
+| App name | `eMarketingAI` |
+| App icon | 1024 × 1024 px, JPEG/JPG/PNG, up to 5 MB; square, no transparency |
+| Category | closest to marketing / business productivity (affects internal classification only) |
+| Description | `Plan, create and publish marketing content, then track how your TikTok videos perform - all in one workspace.` — 109 of 120 characters |
+| Terms of Service URL | `https://emarketingai.pl/terms` |
+| Privacy Policy URL | `https://emarketingai.pl/privacy` |
+| Platforms | **Web** only, website `https://emarketingai.pl` |
+
+The description is shown to the user **on the consent screen** — it is what they read while deciding whether to grant access. Both legal URLs are mandatory for apps created after 9 September 2024, and both must open without a login.
+
+Then add three products:
 
 | Product | Why |
 |---------|-----|
@@ -74,6 +90,8 @@ Register exactly:
 ```
 https://emarketingai.pl/api/tiktok/callback
 ```
+
+The input field only appears **once the Web toggle is switched on inside the Login Kit block** — before that the portal shows "Turn on Configure for Web to add your redirect URIs" and there is nowhere to paste it.
 
 This is `API_URL` + `/api/tiktok/callback`. Precision matters twice: TikTok validates the URI on redirect *and* again during the code exchange, because `exchangeCode` sends the same `redirect_uri`. A mismatch of even a trailing slash yields `invalid_grant` **after** the user has already consented, which looks like "it went through but nothing connected".
 
@@ -110,6 +128,52 @@ curl -o /dev/null -w '%{http_code}\n' https://emarketingai.pl/api/users/me   # e
 ### Step 5 — Connect the account
 
 `/settings/integrations` → **Connect TikTok** → authorize. On success the account appears with a green "Connected" badge and the project analytics page grows a TikTok tab.
+
+### Step 6 — Submit for review
+
+The last step, and only once the integration actually works in the sandbox: before that there is nothing to record in the demo video.
+
+**Explanation.** The field "Explain how each product and scope works within your app or website" is filled in per product, 1000 characters each. Ready-made texts — the reviewer compares them against the demo video, so each one states which user action triggers the call and exactly which fields are read:
+
+Login Kit (873 characters):
+
+```
+Login Kit is how a user connects their own TikTok account to eMarketingAI. In Settings > Integrations the user presses "Connect TikTok" and is redirected to TikTok's authorization page. After they approve, TikTok returns to our callback and we store the resulting tokens encrypted (AES-256).
+
+user.info.basic: we read the open ID to identify the connected account, plus display name and avatar, so the user can see at a glance which TikTok account is linked - in the integrations list and in the analytics header.
+
+user.info.profile: we read the username to build links to published videos (tiktok.com/@username/video/ID), so the user can open a post they published from our app.
+
+We do not use this data for advertising, do not sell it and do not share it with third parties. The user can disconnect at any time in Settings > Integrations, which deletes the stored tokens.
+```
+
+Content Posting API (932 characters):
+
+```
+Content Posting API publishes content the user has already created in eMarketingAI to their own TikTok account. The user opens a post, presses Publish and selects the connected TikTok account, or schedules it for later. Nothing is ever sent to TikTok without that explicit action.
+
+Before every publish we call creator_info/query and respect what it returns: we only use a privacy level the creator allows, and we mirror their comment, duet and stitch settings instead of overriding them.
+
+video.upload: our default mode - the video is uploaded to the creator's TikTok inbox as a draft, and the creator reviews, finishes and publishes it inside the TikTok app.
+
+video.publish: used only if direct posting is enabled after approval - the post goes to the creator's profile, with the caption taken from the content they wrote in our app.
+
+Videos are uploaded in chunks from our server; photo posts are pulled from our verified domain.
+```
+
+Display API (889 characters):
+
+```
+Display API powers the TikTok tab on our project analytics page. It shows the user how their own TikTok content performs, alongside the same view for their other connected channels.
+
+user.info.stats: we read follower count, following count, total likes and video count to display account KPIs and follower growth.
+
+video.list: we read the user's own videos with title, cover image, share URL, duration, create time and their view, like, comment and share counts. From these we show best and worst performing videos by engagement rate, and a per-video table.
+
+Because the API returns lifetime totals only, we store one dated snapshot per day and derive growth over a period as the difference between snapshots - without that, no trend could be shown at all. Data is fetched at most once an hour, covers only the account the user connected, and is visible only inside their own organization.
+```
+
+**Demo video.** mp4 or mov, up to 50 MB, one to five files. End-to-end flow on the `emarketingai.pl` domain: connect the account → create a post → publish → result in TikTok → analytics tab. The key requirement: **every selected product and scope must be visible in the video** — an unused scope that is never demonstrated delays the review. The six scopes above are chosen so each one is genuinely used and visible in the UI.
 
 ---
 
