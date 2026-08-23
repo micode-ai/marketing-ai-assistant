@@ -44,15 +44,44 @@ User
 
 ## Setup
 
+### The order, and why it looks blocked
+
+The portal makes this feel circular: adding products asks you to complete App details, and App details demands a demo video you cannot record until the products are added. The **sandbox** breaks the loop.
+
+App review is not what makes the integration work — it is what lets strangers use it. The client key and secret exist from the moment the app is created; products and scopes work immediately inside a sandbox for accounts listed as target users; review moves the app out of the sandbox, lifting both the "your own accounts only" limit and the forced `SELF_ONLY` visibility.
+
+The submission form says so itself: "If your app has not been approved before, you are required to use a sandbox environment to demonstrate the integration." TikTok expects the integration to be working *before* you submit.
+
+Hence the order: **sandbox → products and scopes inside it → keys on the server → connect and test-post → record the video → only then App review**. The "Please fill out the required field" errors appearing on every field at once are submit-time validation, not save-time.
+
+
 ### Step 1 — Register the app
 
-In the [TikTok Developer Portal](https://developers.tiktok.com), create an app and add three products:
+In the [TikTok Developer Portal](https://developers.tiktok.com), create an app.
 
-| Product | Why |
-|---------|-----|
-| **Login Kit** | OAuth itself — nothing else works without it |
-| **Content Posting API** | The `/v2/post/publish/*` endpoints |
-| **Display API** | `/v2/user/info/` and `/v2/video/list/` — the analytics tab |
+**Basic information — ready-made values:**
+
+| Field | Value |
+|-------|-------|
+| App name | `eMarketingAI` |
+| App icon | 1024 × 1024 px, JPEG/JPG/PNG, up to 5 MB; square, no transparency |
+| Category | closest to marketing / business productivity (affects internal classification only) |
+| Description | `Plan, create and publish marketing content, then track how your TikTok videos perform - all in one workspace.` — 109 of 120 characters |
+| Terms of Service URL | `https://emarketingai.pl/terms` |
+| Privacy Policy URL | `https://emarketingai.pl/privacy` |
+| Platforms | **Web** only, website `https://emarketingai.pl` |
+
+The description is shown to the user **on the consent screen** — it is what they read while deciding whether to grant access. Both legal URLs are mandatory for apps created after 9 September 2024, and both must open without a login.
+
+Then add three products:
+
+| Product | What to configure inside it | Why it is needed |
+|---------|-----------------------------|------------------|
+| **Login Kit** | Platform → switch **Web** on, then Redirect URI: `https://emarketingai.pl/api/tiktok/callback` | OAuth itself — nothing else works without it |
+| **Content Posting API** | Nothing to fill in. Leave the Direct Post switch, if present, **off** — the app publishes to drafts by default. Domain verification for `https://emarketingai.pl/` is needed only for photo posts | The `/v2/post/publish/*` endpoints |
+| **Display API** | No settings — the product is simply added | `/v2/user/info/` and `/v2/video/list/` — the analytics tab |
+
+The portal issues the Client key and Client secret itself — nothing to fill in there; they are copied from here onto the server (step 4).
 
 Enable exactly these scopes — they are what `TIKTOK_SCOPES` requests:
 
@@ -75,11 +104,27 @@ Register exactly:
 https://emarketingai.pl/api/tiktok/callback
 ```
 
+The input field only appears **once the Web toggle is switched on inside the Login Kit block** — before that the portal shows "Turn on Configure for Web to add your redirect URIs" and there is nowhere to paste it.
+
 This is `API_URL` + `/api/tiktok/callback`. Precision matters twice: TikTok validates the URI on redirect *and* again during the code exchange, because `exchangeCode` sends the same `redirect_uri`. A mismatch of even a trailing slash yields `invalid_grant` **after** the user has already consented, which looks like "it went through but nothing connected".
 
 ### Step 3 — Sandbox and target users
 
-Until the app passes review it lives in a sandbox: only TikTok accounts added as *target users* (up to 10) can authorize it. Add the account you intend to publish from, otherwise the Connect step fails with no useful reason. TikTok also requires the integration to be demonstrated in the sandbox before the app can be submitted for review.
+A sandbox is an environment for trying the integration out without submitting the app for review. Create one and add the account you intend to publish from as a **target user** (up to 10 accounts). Without this the Connect step fails with no useful reason.
+
+A sandbox has **its own App details and its own set of products**, configured separately from the production app and without a demo video. That is why products and scopes are added here rather than in the review form.
+
+Check **which key pair** you put on the server: the sandbox is configured separately and its credentials are not interchangeable with the production ones. The symptom of a mismatch is coming back from TikTok with `?tiktok=error&reason=exchange_failed`.
+
+**Scopes in a sandbox.** Five are granted: `user.info.basic`, `user.info.profile`, `user.info.stats`, `video.list`, `video.upload`. **`video.publish` is not available in a sandbox at all.** And TikTok rejects the entire authorize request if it asks for even one scope the app does not have — the consent screen fails with `scope` and no account can be connected. So while working against a sandbox, set on the server:
+
+```
+TIKTOK_SCOPES="user.info.basic,user.info.profile,user.info.stats,video.list,video.upload"
+```
+
+Remove the variable after approval and all six are requested again. The code is built for this: the callback stores the scopes TikTok actually granted rather than the requested ones, and the analytics tab gates on `user.info.stats` + `video.list`.
+
+**A limitation worth knowing up front:** a sandbox does not offer Content Posting API access for public videos. Direct posting to a profile therefore cannot be demonstrated from it — the recording will show the drafts path (`video.upload`). This does not block submission: the explanation text in step 6 states plainly that `video.publish` only switches on after approval, so the reviewer sees a consistent story.
 
 ### Step 4 — Server configuration
 
@@ -91,16 +136,17 @@ TIKTOK_CLIENT_SECRET=<client secret>
 TIKTOK_DIRECT_POST_ENABLED=false
 ```
 
-Recreate the containers:
+**Editing the file alone changes nothing** — a running container reads its environment only when it is created. Recreate the api service:
 
 ```bash
 cd /opt/marketing-ai && docker compose -f docker-compose.prod.yml \
-  --env-file .env.production up -d --force-recreate
+  --env-file .env.production up -d --force-recreate api
 ```
 
-Then verify — the deploy pipeline does **not** health-check the api:
+Symptom of skipping this: the variables are in the file, but `docker ps` reports `Up 13 days` — the process never saw them and `/tiktok/auth-url` keeps returning 503. Verify the process environment, not the file (the deploy pipeline does **not** health-check the api):
 
 ```bash
+docker exec marketing-ai-api-prod printenv | grep TIKTOK_   # all three must be here
 docker ps                      # marketing-ai-api-prod must be Up, not Restarting
 curl -o /dev/null -w '%{http_code}\n' https://emarketingai.pl/api/users/me   # expect 401
 ```
@@ -110,6 +156,52 @@ curl -o /dev/null -w '%{http_code}\n' https://emarketingai.pl/api/users/me   # e
 ### Step 5 — Connect the account
 
 `/settings/integrations` → **Connect TikTok** → authorize. On success the account appears with a green "Connected" badge and the project analytics page grows a TikTok tab.
+
+### Step 6 — Submit for review
+
+The last step, and only once the integration actually works in the sandbox: before that there is nothing to record in the demo video.
+
+**Explanation.** The field "Explain how each product and scope works within your app or website" is filled in per product, 1000 characters each. Ready-made texts — the reviewer compares them against the demo video, so each one states which user action triggers the call and exactly which fields are read:
+
+Login Kit (873 characters):
+
+```
+Login Kit is how a user connects their own TikTok account to eMarketingAI. In Settings > Integrations the user presses "Connect TikTok" and is redirected to TikTok's authorization page. After they approve, TikTok returns to our callback and we store the resulting tokens encrypted (AES-256).
+
+user.info.basic: we read the open ID to identify the connected account, plus display name and avatar, so the user can see at a glance which TikTok account is linked - in the integrations list and in the analytics header.
+
+user.info.profile: we read the username to build links to published videos (tiktok.com/@username/video/ID), so the user can open a post they published from our app.
+
+We do not use this data for advertising, do not sell it and do not share it with third parties. The user can disconnect at any time in Settings > Integrations, which deletes the stored tokens.
+```
+
+Content Posting API (932 characters):
+
+```
+Content Posting API publishes content the user has already created in eMarketingAI to their own TikTok account. The user opens a post, presses Publish and selects the connected TikTok account, or schedules it for later. Nothing is ever sent to TikTok without that explicit action.
+
+Before every publish we call creator_info/query and respect what it returns: we only use a privacy level the creator allows, and we mirror their comment, duet and stitch settings instead of overriding them.
+
+video.upload: our default mode - the video is uploaded to the creator's TikTok inbox as a draft, and the creator reviews, finishes and publishes it inside the TikTok app.
+
+video.publish: used only if direct posting is enabled after approval - the post goes to the creator's profile, with the caption taken from the content they wrote in our app.
+
+Videos are uploaded in chunks from our server; photo posts are pulled from our verified domain.
+```
+
+Display API (889 characters):
+
+```
+Display API powers the TikTok tab on our project analytics page. It shows the user how their own TikTok content performs, alongside the same view for their other connected channels.
+
+user.info.stats: we read follower count, following count, total likes and video count to display account KPIs and follower growth.
+
+video.list: we read the user's own videos with title, cover image, share URL, duration, create time and their view, like, comment and share counts. From these we show best and worst performing videos by engagement rate, and a per-video table.
+
+Because the API returns lifetime totals only, we store one dated snapshot per day and derive growth over a period as the difference between snapshots - without that, no trend could be shown at all. Data is fetched at most once an hour, covers only the account the user connected, and is visible only inside their own organization.
+```
+
+**Demo video.** mp4 or mov, up to 50 MB, one to five files. End-to-end flow on the `emarketingai.pl` domain: connect the account → create a post → publish → result in TikTok → analytics tab. The key requirement: **every selected product and scope must be visible in the video** — an unused scope that is never demonstrated delays the review. The six scopes above are chosen so each one is genuinely used and visible in the UI.
 
 ---
 
@@ -258,3 +350,4 @@ There is deliberately no `periodTotals` field: TikTok has no aggregate-over-a-wi
 | `TIKTOK_CLIENT_KEY` | — | Client key from the developer portal |
 | `TIKTOK_CLIENT_SECRET` | — | Client secret |
 | `TIKTOK_DIRECT_POST_ENABLED` | `false` | `true` publishes to the profile; `false` sends to drafts |
+| `TIKTOK_SCOPES` | unset | Comma-separated scopes to request. Unset requests all six. Needed for a sandbox, which is not granted `video.publish` |

@@ -44,15 +44,44 @@ TikTok — полноценный канал: контент публикует�
 
 ## Настройка
 
+### Порядок и почему он такой
+
+Портал устроен так, что кажется, будто всё заблокировано: чтобы добавить продукты, просит заполнить App details, а там требует демо-видео, которое нечего снимать, пока продукты не добавлены. Петля разрывается **песочницей**.
+
+App review нужен не для того, чтобы интеграция заработала, а чтобы её увидели посторонние. Client key и secret выдаются сразу при создании приложения; продукты и скоупы работают в песочнице немедленно — для аккаунтов из target users; ревью выводит приложение из песочницы в продакшн, снимая ограничение «только свои аккаунты» и `SELF_ONLY`.
+
+Подтверждение — в самой форме подачи: «If your app has not been approved before, you are required to use a sandbox environment to demonstrate the integration». TikTok требует снимать ролик **из песочницы**, то есть ожидает, что к моменту подачи всё уже работает.
+
+Отсюда порядок: **песочница → продукты и скоупы в ней → ключи на сервер → подключение и тестовый пост → запись видео → и только теперь App review**. Сообщения «Please fill out the required field» на всех полях сразу — это валидация отправки, а не сохранения.
+
+
 ### Шаг 1 — зарегистрировать приложение
 
-В [TikTok Developer Portal](https://developers.tiktok.com) создайте приложение и добавьте три продукта:
+В [TikTok Developer Portal](https://developers.tiktok.com) создайте приложение.
 
-| Продукт | Зачем |
-|---------|-------|
-| **Login Kit** | Сам OAuth — без него не работает ничего остальное |
-| **Content Posting API** | Эндпоинты `/v2/post/publish/*` |
-| **Display API** | `/v2/user/info/` и `/v2/video/list/` — вкладка аналитики |
+**Basic information — готовые значения:**
+
+| Поле | Значение |
+|------|----------|
+| App name | `eMarketingAI` |
+| App icon | 1024 × 1024 px, JPEG/JPG/PNG, до 5 МБ; квадрат без прозрачности |
+| Category | ближайшее к маркетингу / бизнес-продуктивности (влияет только на внутреннюю классификацию) |
+| Description | `Plan, create and publish marketing content, then track how your TikTok videos perform - all in one workspace.` — 109 из 120 символов |
+| Terms of Service URL | `https://emarketingai.pl/terms` |
+| Privacy Policy URL | `https://emarketingai.pl/privacy` |
+| Platforms | только **Web**, сайт `https://emarketingai.pl` |
+
+Description показывается пользователю **на экране согласия** — по нему человек решает, давать доступ или нет. Обе юридические ссылки обязательны для приложений, созданных после 9 сентября 2024, и обе должны открываться без логина.
+
+Затем добавьте три продукта:
+
+| Продукт | Что настроить внутри | Зачем нужен |
+|---------|----------------------|-------------|
+| **Login Kit** | Platform → включить **Web**, затем Redirect URI: `https://emarketingai.pl/api/tiktok/callback` | Сам OAuth — без него не работает ничего остальное |
+| **Content Posting API** | Ничего не заполнять. Переключатель Direct Post, если он есть, оставить **выключенным** — приложение по умолчанию публикует в черновики. Верификация домена `https://emarketingai.pl/` нужна только для фото-постов | Эндпоинты `/v2/post/publish/*` |
+| **Display API** | Настроек нет — продукт просто добавляется | `/v2/user/info/` и `/v2/video/list/` — вкладка аналитики |
+
+Client key и Client secret портал выдаёт сам — заполнять их не нужно, они копируются отсюда на сервер (шаг 4).
 
 Включите ровно эти скоупы — именно их запрашивает `TIKTOK_SCOPES`:
 
@@ -75,11 +104,27 @@ TikTok — полноценный канал: контент публикует�
 https://emarketingai.pl/api/tiktok/callback
 ```
 
+Поле ввода появляется **только после того, как в блоке Login Kit включён переключатель Web** — до этого портал показывает подсказку «Turn on Configure for Web to add your redirect URIs», и вписать URI некуда.
+
 Это `API_URL` + `/api/tiktok/callback`. Точность важна дважды: TikTok сверяет URI при редиректе **и** ещё раз при обмене кода, потому что `exchangeCode` отправляет тот же `redirect_uri`. Расхождение даже в завершающем слэше даёт `invalid_grant` уже **после** согласия пользователя — со стороны выглядит как «всё прошло, но ничего не подключилось».
 
 ### Шаг 3 — песочница и target users
 
-Пока приложение не прошло ревью, оно живёт в песочнице: авторизоваться могут только аккаунты, добавленные как *target users* (до 10). Добавьте тот аккаунт, из которого собираетесь публиковать, иначе шаг подключения упрётся в отказ без внятной причины. TikTok также требует продемонстрировать интеграцию в песочнице перед подачей приложения на ревью.
+Песочница — среда, которая позволяет попробовать интеграцию, не отправляя приложение на ревью. Создайте её и добавьте аккаунт, из которого будете публиковать, в **target users** (до 10 аккаунтов). Без этого подключение упрётся в отказ без внятной причины.
+
+У песочницы **свои App details и свой набор продуктов** — настраиваются отдельно от продакшн-приложения и без демо-видео. Именно поэтому продукты и скоупы добавляются здесь, а не в форме ревью.
+
+Проверьте, **какую пару ключей** кладёте на сервер: конфигурация песочницы отдельная, и её ключи не взаимозаменяемы с боевыми. Симптом несовпадения — возврат из TikTok с `?tiktok=error&reason=exchange_failed`.
+
+**Скоупы в песочнице.** Выдаются пять: `user.info.basic`, `user.info.profile`, `user.info.stats`, `video.list`, `video.upload`. **`video.publish` в песочнице недоступен вовсе.** А TikTok отклоняет запрос авторизации целиком, если в нём есть хотя бы один невыданный скоуп — экран согласия падает с ошибкой `scope`, подключить аккаунт нельзя никак. Поэтому на время работы с песочницей задайте на сервере:
+
+```
+TIKTOK_SCOPES="user.info.basic,user.info.profile,user.info.stats,video.list,video.upload"
+```
+
+После одобрения переменную убирают, и снова запрашиваются все шесть. Код к этому готов: колбэк сохраняет фактически выданные скоупы, а не запрошенные, и вкладка аналитики гейтится на `user.info.stats` + `video.list`.
+
+**Ограничение, которое важно знать заранее:** в песочнице Content Posting API не даёт публичных видео. Прямую публикацию в профиль оттуда продемонстрировать нельзя — в ролике будет виден путь через черновики (`video.upload`). Подаче это не мешает: текст объяснения в шаге 6 прямо говорит, что `video.publish` включается только после одобрения, и ревьюер видит согласованную картину.
 
 ### Шаг 4 — конфигурация сервера
 
@@ -91,16 +136,17 @@ TIKTOK_CLIENT_SECRET=<client secret>
 TIKTOK_DIRECT_POST_ENABLED=false
 ```
 
-Пересоздайте контейнеры:
+**Правка файла сама по себе ничего не меняет** — работающий контейнер читает окружение только при создании. Пересоздайте api:
 
 ```bash
 cd /opt/marketing-ai && docker compose -f docker-compose.prod.yml \
-  --env-file .env.production up -d --force-recreate
+  --env-file .env.production up -d --force-recreate api
 ```
 
-Затем проверьте — пайплайн деплоя **не** делает хелсчек api:
+Симптом пропущенного шага: переменные в файле есть, а `docker ps` показывает `Up 13 days` — значит процесс их не видит и `/tiktok/auth-url` продолжает отдавать 503. Проверять надо не файл, а окружение процесса (пайплайн деплоя хелсчек api **не** делает):
 
 ```bash
+docker exec marketing-ai-api-prod printenv | grep TIKTOK_   # три переменные должны быть здесь
 docker ps                      # marketing-ai-api-prod должен быть Up, не Restarting
 curl -o /dev/null -w '%{http_code}\n' https://emarketingai.pl/api/users/me   # ожидается 401
 ```
@@ -110,6 +156,52 @@ curl -o /dev/null -w '%{http_code}\n' https://emarketingai.pl/api/users/me   # �
 ### Шаг 5 — подключить аккаунт
 
 `/settings/integrations` → **Подключить TikTok** → авторизация. При успехе аккаунт появляется с зелёной плашкой «Подключено», а на странице аналитики проекта возникает вкладка TikTok.
+
+### Шаг 6 — подача на ревью
+
+Последний шаг, и только после того, как интеграция реально заработала в песочнице: раньше нечего показывать в демо-видео.
+
+**Explanation.** Поле «Explain how each product and scope works within your app or website» заполняется по каждому продукту отдельно, лимит 1000 символов. Готовые тексты — ревьюер сверяет их с демо-видео, поэтому в каждом указано, по какому действию пользователя срабатывает вызов и какие именно поля читаются:
+
+Login Kit (873 символа):
+
+```
+Login Kit is how a user connects their own TikTok account to eMarketingAI. In Settings > Integrations the user presses "Connect TikTok" and is redirected to TikTok's authorization page. After they approve, TikTok returns to our callback and we store the resulting tokens encrypted (AES-256).
+
+user.info.basic: we read the open ID to identify the connected account, plus display name and avatar, so the user can see at a glance which TikTok account is linked - in the integrations list and in the analytics header.
+
+user.info.profile: we read the username to build links to published videos (tiktok.com/@username/video/ID), so the user can open a post they published from our app.
+
+We do not use this data for advertising, do not sell it and do not share it with third parties. The user can disconnect at any time in Settings > Integrations, which deletes the stored tokens.
+```
+
+Content Posting API (932 символа):
+
+```
+Content Posting API publishes content the user has already created in eMarketingAI to their own TikTok account. The user opens a post, presses Publish and selects the connected TikTok account, or schedules it for later. Nothing is ever sent to TikTok without that explicit action.
+
+Before every publish we call creator_info/query and respect what it returns: we only use a privacy level the creator allows, and we mirror their comment, duet and stitch settings instead of overriding them.
+
+video.upload: our default mode - the video is uploaded to the creator's TikTok inbox as a draft, and the creator reviews, finishes and publishes it inside the TikTok app.
+
+video.publish: used only if direct posting is enabled after approval - the post goes to the creator's profile, with the caption taken from the content they wrote in our app.
+
+Videos are uploaded in chunks from our server; photo posts are pulled from our verified domain.
+```
+
+Display API (889 символов):
+
+```
+Display API powers the TikTok tab on our project analytics page. It shows the user how their own TikTok content performs, alongside the same view for their other connected channels.
+
+user.info.stats: we read follower count, following count, total likes and video count to display account KPIs and follower growth.
+
+video.list: we read the user's own videos with title, cover image, share URL, duration, create time and their view, like, comment and share counts. From these we show best and worst performing videos by engagement rate, and a per-video table.
+
+Because the API returns lifetime totals only, we store one dated snapshot per day and derive growth over a period as the difference between snapshots - without that, no trend could be shown at all. Data is fetched at most once an hour, covers only the account the user connected, and is visible only inside their own organization.
+```
+
+**Демо-видео.** mp4 или mov, до 50 МБ, от одного до пяти файлов. Сквозной сценарий на домене `emarketingai.pl`: подключение аккаунта → создание поста → публикация → результат в TikTok → вкладка аналитики. Ключевое требование: **все выбранные продукты и скоупы должны быть видны в видео** — лишний скоуп, который не демонстрируется, затягивает ревью. Набор из шести скоупов выше подобран так, что каждый реально используется и виден в интерфейсе.
 
 ---
 
@@ -258,3 +350,4 @@ model TikTokMedia {            // последнее известное сост
 | `TIKTOK_CLIENT_KEY` | — | Client key из портала разработчика |
 | `TIKTOK_CLIENT_SECRET` | — | Client secret |
 | `TIKTOK_DIRECT_POST_ENABLED` | `false` | `true` — публикация в профиль, `false` — в черновики |
+| `TIKTOK_SCOPES` | не задана | Запрашиваемые скоупы через запятую. Пусто — все шесть. Нужна для песочницы, где `video.publish` не выдаётся |
