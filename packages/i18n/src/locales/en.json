@@ -317,6 +317,8 @@
     "generateAllLanguages": "Generate in all languages",
     "attachedImages": "Attached images",
     "attachedMedia": "Attached media",
+    "tiktokHint": "TikTok needs a video (or photos) — the video is the post, and the text is only its caption. Attach the video below.",
+    "tiktokPublishHint": "TikTok: the post goes to your TikTok drafts, where you finish and publish it. The caption is written there too — text from here is not carried over for video posts.",
     "attachVideo": "Attach video",
     "attachVideoHint": "mp4, mov or webm, up to 100 MB. Required for TikTok — it has no text-only posts.",
     "uploadingVideo": "Uploading…",

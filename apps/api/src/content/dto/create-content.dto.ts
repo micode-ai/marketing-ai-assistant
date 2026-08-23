@@ -1,5 +1,6 @@
 import { IsString, IsEnum, IsOptional, IsArray, IsBoolean, IsDateString, IsIn } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { SocialPlatform } from '@prisma/client';
 
 export class CreateContentDto {
   @ApiProperty()
@@ -28,14 +29,19 @@ export class CreateContentDto {
   @IsArray()
   mediaUrls?: string[];
 
-  @ApiPropertyOptional()
+  // Validated against the database enum instead of a copy of it. The hand-kept
+  // list drifted twice — first missing THREADS, then TIKTOK — and each time the
+  // only symptom was "platform must be one of the following values" at the
+  // moment someone tried to publish.
+  @ApiPropertyOptional({ enum: SocialPlatform })
   @IsOptional()
-  @IsEnum(['TWITTER', 'LINKEDIN', 'FACEBOOK', 'INSTAGRAM', 'THREADS', 'GOOGLE', 'TELEGRAM'])
+  @IsEnum(SocialPlatform)
   platform?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ enum: SocialPlatform, isArray: true })
   @IsOptional()
   @IsArray()
+  @IsEnum(SocialPlatform, { each: true })
   platforms?: string[];
 
   @ApiPropertyOptional()

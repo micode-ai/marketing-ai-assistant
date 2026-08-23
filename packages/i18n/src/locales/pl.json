@@ -315,6 +315,8 @@
     "generateAllLanguages": "Generuj we wszystkich językach",
     "attachedImages": "Załączone obrazy",
     "attachedMedia": "Załączone media",
+    "tiktokHint": "TikTok wymaga wideo (lub zdjęć) — wideo jest postem, a tekst tylko jego podpisem. Załącz wideo poniżej.",
+    "tiktokPublishHint": "TikTok: post trafia do wersji roboczych w aplikacji TikTok, gdzie go kończysz i publikujesz. Podpis piszesz tam — tekst z tego miejsca nie jest przenoszony dla postów wideo.",
     "attachVideo": "Załącz wideo",
     "attachVideoHint": "mp4, mov lub webm, do 100 MB. Wymagane dla TikTok — nie ma tam postów tekstowych.",
     "uploadingVideo": "Przesyłanie…",
