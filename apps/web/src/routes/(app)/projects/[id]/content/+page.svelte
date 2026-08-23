@@ -1070,6 +1070,11 @@
         <!-- Account selection -->
         <div class="p-6 space-y-2">
           <p class="text-sm text-ink-muted mb-3">{$_('social.publishToDesc')}</p>
+          {#if socialAccounts.some((a) => a.platform === 'TIKTOK' && selectedAccountIds.includes(a.id))}
+            <p class="text-xs text-amber-700 bg-amber-500/10 border border-amber-500/30 rounded-lg p-2.5 mb-3">
+              {$_('content.tiktokPublishHint')}
+            </p>
+          {/if}
           {#each socialAccounts as account}
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -1274,6 +1279,14 @@
               </button>
             {/each}
           </div>
+          {#if createPlatforms.includes('TIKTOK')}
+            <!-- TikTok inverts the usual shape: the video is the post, the text is
+                 only its caption — and in drafts mode the caption is written in
+                 the TikTok app, so it never leaves our side. Say so up front. -->
+            <p class="text-xs text-amber-700 bg-amber-500/10 border border-amber-500/30 rounded-lg p-2.5 mt-2">
+              {$_('content.tiktokHint')}
+            </p>
+          {/if}
         </div>
 
         <label class="flex items-center gap-2">
