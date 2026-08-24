@@ -46,6 +46,14 @@ describe('TikTokOAuthService', () => {
       expect(scope).toContain('video.list');
     });
 
+    it('disables auto-auth so the consent screen always names the account and scopes', () => {
+      const url = new URL(makeService(configured).getAuthUrl('https://x/cb', 's'));
+
+      // Without this TikTok reuses the browser session silently, which would
+      // bind the wrong account when a user connects a second one.
+      expect(url.searchParams.get('disable_auto_auth')).toBe('1');
+    });
+
     it('throws when credentials are missing', () => {
       expect(() => makeService({}).getAuthUrl('https://x/cb', 's')).toThrow(
         /TIKTOK_CLIENT_KEY/,

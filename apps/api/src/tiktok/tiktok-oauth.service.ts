@@ -92,6 +92,11 @@ export class TikTokOAuthService {
       scope: this.requestedScopes().join(','),
       redirect_uri: redirectUri,
       state,
+      // Always render TikTok's authorization page. With auto-auth (the default)
+      // TikTok silently reuses whatever session the browser holds, so a user
+      // adding a second account would bind the first one without ever seeing
+      // which account or which permissions were granted.
+      disable_auto_auth: '1',
     });
     return `${AUTHORIZE_URL}?${params}`;
   }

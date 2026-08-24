@@ -208,7 +208,12 @@ Because the API returns lifetime totals only, we store one dated snapshot per da
 ## How connecting works
 
 1. `GET /tiktok/auth-url` — checks the caller is OWNER or ADMIN, then signs a `state` with HMAC over `ENCRYPTION_KEY` (10-minute TTL). The state carries the organization id, so the callback cannot be tricked into attaching the account elsewhere.
-2. Redirect to `www.tiktok.com/v2/auth/authorize/`.
+2. Redirect to `www.tiktok.com/v2/auth/authorize/`, always with `disable_auto_auth=1`.
+   TikTok's default is to skip the authorization page whenever the browser already
+   holds a valid session, which silently binds *that* account — so a user connecting a
+   second account would get the first one attached without ever seeing which account or
+   which permissions were granted. It also makes the consent screen impossible to
+   demonstrate in an App Review recording once the app has been authorized once.
 3. `GET /tiktok/callback` — `@Public()`, because TikTok's redirect carries no bearer token. It verifies the state signature, exchanges the code, fetches the profile, and calls `upsertOAuthAccount`.
 
 The account is stored with the scopes TikTok **actually granted**, not the ones requested. A user can decline individual permissions, and `statsGranted` requires both `user.info.stats` and `video.list` — otherwise the analytics tab shows a reconnect banner instead of empty charts.
