@@ -168,6 +168,19 @@ describe('TikTokService', () => {
       expect(syncService.syncAccount).not.toHaveBeenCalled();
     });
 
+    it('skips based on the last sync, not the day-old snapshot row', async () => {
+      // One snapshot per day, updated in place: createdAt freezes at the first
+      // sync of the day, so it cannot tell us when we last talked to TikTok.
+      // Media lastSyncedAt moves on every sync and is what the guard must read.
+      prisma.tikTokAccountMetrics.findFirst.mockResolvedValue({
+        createdAt: new Date(Date.now() - 6 * 60 * 60 * 1000),
+      });
+      prisma.tikTokMedia.findFirst.mockResolvedValue({ lastSyncedAt: new Date() });
+
+      await expect(service.triggerSync('p1')).resolves.toEqual({ skipped: true });
+      expect(syncService.syncAccount).not.toHaveBeenCalled();
+    });
+
     it('syncs when the last run is older than the guard window', async () => {
       prisma.tikTokAccountMetrics.findFirst.mockResolvedValue({
         createdAt: new Date(Date.now() - 60 * 60 * 1000),
