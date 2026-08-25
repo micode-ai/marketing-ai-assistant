@@ -87,6 +87,17 @@ function makePrisma() {
   };
 }
 
+function makeGoogle() {
+  return {
+    fetchSearchConsoleSummary: jest.fn().mockResolvedValue({
+      totals: { clicks: 412, impressions: 9540, ctr: 0.0432, position: 18.37 },
+      topQueries: [
+        { query: 'crm software', clicks: 90, impressions: 1200, ctr: 0.075, position: 4.2 },
+      ],
+    }),
+  };
+}
+
 function makeNotifier() {
   return { report: jest.fn() };
 }
@@ -103,6 +114,7 @@ describe('AnalyticsService', () => {
   let prisma: ReturnType<typeof makePrisma>;
   let notifier: ReturnType<typeof makeNotifier>;
   let config: ReturnType<typeof makeConfig>;
+  let google: ReturnType<typeof makeGoogle>;
   let service: AnalyticsService;
 
   beforeEach(() => {
@@ -110,7 +122,13 @@ describe('AnalyticsService', () => {
     prisma = makePrisma();
     notifier = makeNotifier();
     config = makeConfig();
-    service = new AnalyticsService(prisma as any, notifier as any, config as any);
+    google = makeGoogle();
+    service = new AnalyticsService(
+      prisma as any,
+      notifier as any,
+      config as any,
+      google as any,
+    );
   });
 
   // =========================================================================
@@ -304,6 +322,78 @@ describe('AnalyticsService', () => {
 
       const body = JSON.parse((mockFetch.mock.calls[0] as any)[1].body);
       expect(body.data.gsc.connected).toBe(false);
+    });
+
+    it('carries Search Console figures when the integration is present', async () => {
+      prisma.projectApiKey.findFirst.mockResolvedValue({ id: 'gkey' });
+      const mockFetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ recommendations: [] }),
+      });
+      global.fetch = mockFetch as any;
+
+      await service.generateRecommendations('proj_1', 'en', 14);
+
+      expect(google.fetchSearchConsoleSummary).toHaveBeenCalledWith('proj_1', 14);
+      const body = JSON.parse((mockFetch.mock.calls[0] as any)[1].body);
+      expect(body.data.gsc).toMatchObject({
+        connected: true,
+        clicks: 412,
+        impressions: 9540,
+        // Converted from Google's fraction so it compares with the other rates.
+        ctr: 4.32,
+        avgPosition: 18.4,
+        lagDays: 2,
+      });
+      expect(body.data.gsc.topQueries[0].query).toBe('crm software');
+    });
+
+    it('keeps the digest when Search Console fails', async () => {
+      // A Google outage must not fail the endpoint, and must not read as zero
+      // search traffic either.
+      prisma.projectApiKey.findFirst.mockResolvedValue({ id: 'gkey' });
+      google.fetchSearchConsoleSummary.mockRejectedValue(new Error('502 from Google'));
+      const mockFetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ recommendations: [] }),
+      });
+      global.fetch = mockFetch as any;
+
+      await service.generateRecommendations('proj_1', 'en');
+
+      const body = JSON.parse((mockFetch.mock.calls[0] as any)[1].body);
+      expect(body.data.gsc.connected).toBe(true);
+      expect(body.data.gsc.clicks).toBeNull();
+      expect(body.data.web).toBeDefined();
+    });
+
+    it('treats GSC_NOT_CONFIGURED as not connected', async () => {
+      prisma.projectApiKey.findFirst.mockResolvedValue({ id: 'gkey' });
+      google.fetchSearchConsoleSummary.mockRejectedValue(
+        Object.assign(new Error('GSC_NOT_CONFIGURED'), { code: 'GSC_NOT_CONFIGURED' }),
+      );
+      const mockFetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ recommendations: [] }),
+      });
+      global.fetch = mockFetch as any;
+
+      await service.generateRecommendations('proj_1', 'en');
+
+      const body = JSON.parse((mockFetch.mock.calls[0] as any)[1].body);
+      expect(body.data.gsc.connected).toBe(false);
+    });
+
+    it('does not call Google when no integration row exists', async () => {
+      const mockFetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ recommendations: [] }),
+      });
+      global.fetch = mockFetch as any;
+
+      await service.generateRecommendations('proj_1', 'en');
+
+      expect(google.fetchSearchConsoleSummary).not.toHaveBeenCalled();
     });
 
     it('detects Instagram connected via linked social account', async () => {

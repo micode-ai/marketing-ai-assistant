@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, Optional } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../database/prisma.service';
@@ -11,6 +11,16 @@ import {
 import { buildSeoDigest, SeoDigest } from './seo-digest.util';
 import { buildEmailDigest, EmailDigest } from './email-digest.util';
 import { buildAppDigest, AppDigest, EMPTY_APP_DIGEST } from './app-digest.util';
+import { buildGscDigest, GscDigest, EMPTY_GSC_DIGEST } from './gsc-digest.util';
+import { GoogleIntegrationsService } from '../google-integrations/google-integrations.service';
+
+/**
+ * How long the recommendations wait for Search Console. The summary is six
+ * parallel Google queries behind a one-hour cache, so a cold call is the
+ * slowest thing in the digest and an outage would otherwise hold the whole
+ * endpoint open. Past this we ship the digest without the figures.
+ */
+const GSC_TIMEOUT_MS = 8000;
 
 /** Start of the reporting window, snapped to a UTC day boundary. */
 function periodStart(days: number): Date {
@@ -28,6 +38,7 @@ export class AnalyticsService {
     private prisma: PrismaService,
     private notifier: CronFailureNotifier,
     private config: ConfigService,
+    @Optional() private google?: GoogleIntegrationsService,
   ) {}
 
   async getMetrics(
@@ -272,12 +283,11 @@ export class AnalyticsService {
       conversionRate: s.conversionRate as number,
     }));
 
-    // GSC: cheap existence check only — clicks/avgPosition skipped (spec §7)
+    // Whether a Google integration row exists at all. The figures come from
+    // loadGscDigest below, which may still fail and leave this as the only
+    // thing we can say about the channel.
     const gscConnected =
       gscKeyResult.status === 'fulfilled' && gscKeyResult.value !== null;
-    this.logger.log(
-      `[recommendations] project=${projectId} GSC connected=${gscConnected}; clicks/avgPosition degraded to connected-only flag (spec §7)`,
-    );
 
     const socialLinks =
       socialLinksResult.status === 'fulfilled'
@@ -288,7 +298,7 @@ export class AnalyticsService {
         .filter((l: any) => l.socialAccount?.platform === platform)
         .map((l: any) => l.socialAccount.id as string);
 
-    const [social, extra] = await Promise.all([
+    const [social, extra, gsc] = await Promise.all([
       this.loadSocialDigests(
         projectId,
         {
@@ -299,6 +309,7 @@ export class AnalyticsService {
         periodDays,
       ),
       this.loadOwnedDigests(projectId, periodDays),
+      this.loadGscDigest(projectId, periodDays, gscConnected),
     ]);
 
     const digest = {
@@ -306,7 +317,7 @@ export class AnalyticsService {
       web: { visitors, conversions, conversionRate },
       funnel: funnelSteps,
       topUtm,
-      gsc: { connected: gscConnected },
+      gsc,
       instagram: social.instagram,
       threads: social.threads,
       tiktok: social.tiktok,
@@ -373,6 +384,52 @@ export class AnalyticsService {
     }
 
     return { recommendations, generatedAt: now.getTime(), periodDays };
+  }
+
+  /**
+   * Fetches the Search Console figures, or gives up quietly.
+   *
+   * This is the only digest source that leaves the building. It is bounded by a
+   * timeout, and every failure — no integration, revoked token, Google outage,
+   * slow response — degrades to `connected` with null figures rather than
+   * failing the request or, worse, reporting zero search traffic.
+   */
+  private async loadGscDigest(
+    projectId: string,
+    periodDays: number,
+    connected: boolean,
+  ): Promise<GscDigest> {
+    if (!connected || !this.google) return { ...EMPTY_GSC_DIGEST, connected };
+
+    // eslint-disable-next-line no-undef
+    let timer: NodeJS.Timeout | undefined;
+    try {
+      const summary = await Promise.race([
+        this.google.fetchSearchConsoleSummary(projectId, periodDays),
+        new Promise<never>((_, reject) => {
+          timer = setTimeout(
+            () => reject(new Error(`GSC_TIMEOUT after ${GSC_TIMEOUT_MS}ms`)),
+            GSC_TIMEOUT_MS,
+          );
+        }),
+      ]);
+      return buildGscDigest(summary, true);
+    } catch (error) {
+      const code = (error as { code?: string })?.code;
+      if (code === 'GSC_NOT_CONFIGURED') {
+        // A Google API key row exists but Search Console itself was never
+        // configured (no site selected) — that is "not connected", not a fault.
+        return { ...EMPTY_GSC_DIGEST };
+      }
+      this.logger.warn(
+        `[recommendations] project=${projectId} search console figures unavailable: ${error}`,
+      );
+      return { ...EMPTY_GSC_DIGEST, connected: true };
+    } finally {
+      // Without this the pending timer keeps the process awake for its full
+      // duration after a fast success.
+      if (timer) clearTimeout(timer);
+    }
   }
 
   /**
