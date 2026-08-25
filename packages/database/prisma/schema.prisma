@@ -480,6 +480,9 @@ model AnalyticsRecommendation {
   project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   recommendations Json
   language        String?
+  /// Reporting window the cards were computed over, so the UI can tell when a
+  /// stored set no longer matches the period selected on the page.
+  periodDays      Int?
   generatedAt     DateTime @default(now())
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt

@@ -428,7 +428,7 @@
         }}
       />
 
-      <AnalyticsRecommendations projectId={projectId ?? ''} />
+      <AnalyticsRecommendations projectId={projectId ?? ''} days={selectedPeriod} />
 
     {:else if activeChannel === 'website'}
       <!-- Website sub-tab bar -->

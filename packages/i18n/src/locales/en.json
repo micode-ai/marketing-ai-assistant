@@ -972,7 +972,8 @@
         "conversion": "Conversion",
         "web": "Web",
         "general": "General"
-      }
+      },
+      "periodMismatch": "Computed over {days} days — refresh to match the selected period"
     }
   },
   "instagram": {

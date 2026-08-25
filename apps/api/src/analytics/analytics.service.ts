@@ -8,6 +8,17 @@ import {
   EMPTY_CHANNEL_DIGEST,
   SocialChannelDigest,
 } from './social-digest.util';
+import { buildSeoDigest, SeoDigest } from './seo-digest.util';
+import { buildEmailDigest, EmailDigest } from './email-digest.util';
+import { buildAppDigest, AppDigest, EMPTY_APP_DIGEST } from './app-digest.util';
+
+/** Start of the reporting window, snapped to a UTC day boundary. */
+function periodStart(days: number): Date {
+  const since = new Date();
+  since.setUTCDate(since.getUTCDate() - days);
+  since.setUTCHours(0, 0, 0, 0);
+  return since;
+}
 
 @Injectable()
 export class AnalyticsService {
@@ -176,7 +187,14 @@ export class AnalyticsService {
   async generateRecommendations(
     projectId: string,
     language: string,
-  ): Promise<{ recommendations: any[]; generatedAt: number }> {
+    days = 30,
+  ): Promise<{ recommendations: any[]; generatedAt: number; periodDays: number }> {
+    // The analytics page has one global period selector and every chart follows
+    // it; the recommendations used to ignore it and always compute 30 days, so
+    // the cards silently disagreed with the charts above them.
+    const periodDays = Number.isFinite(days)
+      ? Math.min(Math.max(Math.trunc(days), 1), 365)
+      : 30;
     const [
       projectResult,
       metricsTotalsResult,
@@ -195,9 +213,9 @@ export class AnalyticsService {
         where: { id: projectId },
         select: { name: true, industry: true, projectType: true },
       }),
-      this.getMetricsTotals({ projectId }, 30),
-      this.getFunnel({ projectId }, 30),
-      this.getUtmBreakdown({ projectId }, 30),
+      this.getMetricsTotals({ projectId }, periodDays),
+      this.getFunnel({ projectId }, periodDays),
+      this.getUtmBreakdown({ projectId }, periodDays),
       this.prisma.content.count({ where: { projectId } }),
       this.prisma.content.count({ where: { projectId, status: 'PUBLISHED' as any } }),
       this.prisma.campaign.count({ where: { projectId } }),
@@ -270,14 +288,21 @@ export class AnalyticsService {
         .filter((l: any) => l.socialAccount?.platform === platform)
         .map((l: any) => l.socialAccount.id as string);
 
-    const social = await this.loadSocialDigests(projectId, {
-      instagram: accountIdsByPlatform('INSTAGRAM'),
-      threads: accountIdsByPlatform('THREADS'),
-      tiktok: accountIdsByPlatform('TIKTOK'),
-    });
+    const [social, extra] = await Promise.all([
+      this.loadSocialDigests(
+        projectId,
+        {
+          instagram: accountIdsByPlatform('INSTAGRAM'),
+          threads: accountIdsByPlatform('THREADS'),
+          tiktok: accountIdsByPlatform('TIKTOK'),
+        },
+        periodDays,
+      ),
+      this.loadOwnedDigests(projectId, periodDays),
+    ]);
 
     const digest = {
-      periodDays: 30,
+      periodDays,
       web: { visitors, conversions, conversionRate },
       funnel: funnelSteps,
       topUtm,
@@ -285,6 +310,9 @@ export class AnalyticsService {
       instagram: social.instagram,
       threads: social.threads,
       tiktok: social.tiktok,
+      seo: extra.seo,
+      email: extra.email,
+      app: extra.app,
       counts: {
         content: contentTotalResult.status === 'fulfilled' ? contentTotalResult.value : 0,
         contentPublished: contentPublishedResult.status === 'fulfilled' ? contentPublishedResult.value : 0,
@@ -334,8 +362,8 @@ export class AnalyticsService {
       try {
         await this.prisma.analyticsRecommendation.upsert({
           where: { projectId },
-          create: { projectId, recommendations, language, generatedAt: now },
-          update: { recommendations, language, generatedAt: now },
+          create: { projectId, recommendations, language, generatedAt: now, periodDays },
+          update: { recommendations, language, generatedAt: now, periodDays },
         });
       } catch (error) {
         this.logger.warn(
@@ -344,7 +372,89 @@ export class AnalyticsService {
       }
     }
 
-    return { recommendations, generatedAt: now.getTime() };
+    return { recommendations, generatedAt: now.getTime(), periodDays };
+  }
+
+  /**
+   * Loads the digest blocks that come from our own tables: SEO positions, email
+   * activity and Play Console figures.
+   *
+   * Each block is settled independently — a project with no app should not lose
+   * its SEO numbers because the app query failed.
+   */
+  private async loadOwnedDigests(
+    projectId: string,
+    periodDays: number,
+  ): Promise<{ seo: SeoDigest; email: EmailDigest; app: AppDigest }> {
+    const since = periodStart(periodDays);
+
+    const loadSeo = async (): Promise<SeoDigest> => {
+      const keywords = await this.prisma.keyword.findMany({
+        where: { projectId },
+        select: { id: true, keyword: true, currentRank: true, isTracking: true },
+      });
+      if (keywords.length === 0) return buildSeoDigest([], []);
+
+      const history = await this.prisma.keywordRankHistory.findMany({
+        where: { keywordId: { in: keywords.map((k) => k.id) }, date: { gte: since } },
+        orderBy: { date: 'asc' },
+        select: { keywordId: true, rank: true },
+      });
+      return buildSeoDigest(keywords, history);
+    };
+
+    const loadEmail = async (): Promise<EmailDigest> => {
+      const [lists, subscribers, campaigns] = await Promise.all([
+        this.prisma.emailList.count({ where: { projectId } }),
+        this.prisma.emailSubscriber.count({
+          where: { list: { projectId }, status: 'ACTIVE' as any },
+        }),
+        this.prisma.emailCampaign.findMany({
+          where: { list: { projectId }, sentAt: { gte: since } },
+          select: { stats: true },
+        }),
+      ]);
+      return buildEmailDigest({ lists, subscribers, campaigns });
+    };
+
+    const loadApp = async (): Promise<AppDigest> => {
+      // A Play connection is what makes the block meaningful — without it the
+      // absence of installs is "not connected", not "nobody installed it".
+      const key = await this.prisma.projectApiKey.findFirst({
+        where: { projectId, platform: 'GOOGLE_PLAY' as any },
+        select: { id: true },
+      });
+      const [metrics, reviews] = await Promise.all([
+        this.prisma.appStoreMetrics.findMany({
+          where: { projectId, date: { gte: since } },
+          orderBy: { date: 'asc' },
+        }),
+        this.prisma.appReview.findMany({
+          where: { projectId, reviewCreatedAt: { gte: since } },
+          select: { starRating: true, isReplied: true },
+        }),
+      ]);
+      const connected = key !== null || metrics.length > 0 || reviews.length > 0;
+      return buildAppDigest(metrics, reviews, connected);
+    };
+
+    const [seo, email, app] = await Promise.allSettled([loadSeo(), loadEmail(), loadApp()]);
+
+    const warn = (label: string, reason: unknown) =>
+      this.logger.warn(`[recommendations] project=${projectId} ${label} failed: ${reason}`);
+
+    if (seo.status === 'rejected') warn('seo', seo.reason);
+    if (email.status === 'rejected') warn('email', email.reason);
+    if (app.status === 'rejected') warn('app', app.reason);
+
+    return {
+      seo: seo.status === 'fulfilled' ? seo.value : buildSeoDigest([], []),
+      email:
+        email.status === 'fulfilled'
+          ? email.value
+          : buildEmailDigest({ lists: 0, subscribers: 0, campaigns: [] }),
+      app: app.status === 'fulfilled' ? app.value : { ...EMPTY_APP_DIGEST },
+    };
   }
 
   /**
@@ -358,14 +468,13 @@ export class AnalyticsService {
   private async loadSocialDigests(
     projectId: string,
     ids: { instagram: string[]; threads: string[]; tiktok: string[] },
+    periodDays: number,
   ): Promise<{
     instagram: SocialChannelDigest;
     threads: SocialChannelDigest;
     tiktok: SocialChannelDigest;
   }> {
-    const since = new Date();
-    since.setUTCDate(since.getUTCDate() - 30);
-    since.setUTCHours(0, 0, 0, 0);
+    const since = periodStart(periodDays);
 
     const snapshotArgs = (accountIds: string[]) => ({
       where: { socialAccountId: { in: accountIds }, date: { gte: since } },
@@ -470,12 +579,13 @@ export class AnalyticsService {
     recommendations: any[];
     generatedAt: number | null;
     language: string | null;
+    periodDays: number | null;
   }> {
     const row = await this.prisma.analyticsRecommendation.findUnique({
       where: { projectId },
     });
     if (!row) {
-      return { recommendations: [], generatedAt: null, language: null };
+      return { recommendations: [], generatedAt: null, language: null, periodDays: null };
     }
     const recommendations = Array.isArray(row.recommendations)
       ? (row.recommendations as any[])
@@ -484,6 +594,7 @@ export class AnalyticsService {
       recommendations,
       generatedAt: row.generatedAt.getTime(),
       language: row.language ?? null,
+      periodDays: row.periodDays ?? null,
     };
   }
 

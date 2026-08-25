@@ -39,6 +39,39 @@ export interface AnalyticsDigest {
   instagram: SocialChannelDigest;
   threads: SocialChannelDigest;
   tiktok: SocialChannelDigest;
+  seo: {
+    keywords: number;
+    tracked: number;
+    ranked: number;
+    top3: number;
+    top10: number;
+    top50: number;
+    avgRank: number | null;
+    improved: number;
+    declined: number;
+    topMovers: Array<{ keyword: string; rank: number | null; change: number }>;
+  };
+  email: {
+    lists: number;
+    subscribers: number;
+    campaignsSent: number;
+    emailsSent: number | null;
+    openTracking: boolean;
+  };
+  app: {
+    connected: boolean;
+    installs: number | null;
+    uninstalls: number | null;
+    netInstalls: number | null;
+    activeDeviceInstalls: number | null;
+    storeListingVisitors: number | null;
+    storeConversionRate: number | null;
+    crashRate: number | null;
+    anrRate: number | null;
+    averageRating: number | null;
+    totalRatings: number | null;
+    reviews: { total: number; unanswered: number; avgRating: number | null };
+  };
   counts: {
     content: number;
     contentPublished: number;
@@ -85,6 +118,20 @@ How to read the social blocks (instagram, threads, tiktok):
 - "accounts" is how many accounts of that channel the project has connected; the figures cover all of them together.
 - "avgEngagementRate" is a percentage, averaged over posts.
 - null means not measured — say so if it matters, never treat it as zero. A channel with connected: false is not set up at all.
+
+How to read the seo block:
+- Rank is a search position, so LOWER IS BETTER and 1 is the best possible value. "change" in topMovers is positions gained: +16 means the keyword climbed from 20 to 4, and a negative change means it dropped. Never describe a smaller rank number as worse.
+- "ranked" counts keywords holding any position; "keywords" minus "ranked" are not found in the results at all. top3/top10/top50 are cumulative, so a keyword at position 2 is counted in all three.
+- avgRank covers only the ranked keywords — unranked ones are excluded rather than counted as zero.
+
+How to read the email block:
+- "openTracking": false means the product does not measure opens or clicks at all. That is why no open or click figures are given. Do NOT assume the emails are unopened, and do not recommend rewriting subject lines to fix an open rate you cannot see. Recommending that open tracking be added is fair game.
+- "emailsSent" is null when no campaign recorded a count, not zero.
+
+How to read the app block (Google Play):
+- "connected": false means the project has no Play integration — say nothing about app performance in that case.
+- installs, uninstalls and storeListingVisitors are period totals. netInstalls can be negative. activeDeviceInstalls, averageRating and totalRatings are the current levels, not sums. crashRate and anrRate are the latest measured rates, and a lower rate is better.
+- "reviews.unanswered" is directly actionable: unanswered store reviews are visible to every future installer.
 
 Your job here is the cross-channel view. The user already gets separate per-channel advice inside each channel's own dashboard, so:
 - Prefer recommendations that only make sense across channels: move what works on the strongest channel to the weakest, reuse a high-engagement post as an ad or a landing page, connect a channel that is missing, align the website funnel with where the audience actually comes from.

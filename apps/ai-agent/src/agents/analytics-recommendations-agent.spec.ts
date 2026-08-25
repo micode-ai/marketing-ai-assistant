@@ -10,6 +10,14 @@ const input: AnalyticsRecommendationsInput = {
       postsInPeriod: 0, views: null, likes: null, comments: null, shares: null, avgEngagementRate: null },
     tiktok: { connected: true, accounts: 1, followers: 12, followerChange: null,
       postsInPeriod: 1, views: 812, likes: 9, comments: 1, shares: 0, avgEngagementRate: 1.23 },
+    seo: { keywords: 12, tracked: 10, ranked: 8, top3: 1, top10: 3, top50: 7,
+      avgRank: 18.4, improved: 2, declined: 1,
+      topMovers: [{ keyword: 'crm software', rank: 4, change: 16 }] },
+    email: { lists: 2, subscribers: 340, campaignsSent: 2, emailsSent: 340, openTracking: false },
+    app: { connected: false, installs: null, uninstalls: null, netInstalls: null,
+      activeDeviceInstalls: null, storeListingVisitors: null, storeConversionRate: null,
+      crashRate: null, anrRate: null, averageRating: null, totalRatings: null,
+      reviews: { total: 0, unanswered: 0, avgRating: null } },
     projectType: 'WEBSITE',
     counts: { content: 4, contentPublished: 4, campaigns: 1, keywords: 0, competitors: 0, emailLists: 0 } },
 };
@@ -44,6 +52,29 @@ describe('buildRecommendationsPrompt', () => {
     // exists for what only makes sense across channels.
     expect(systemPrompt.toLowerCase()).toContain('cross-channel');
     expect(systemPrompt.toLowerCase()).toMatch(/brand/);
+  });
+
+  it('spells out that a lower search position is better', () => {
+    const { systemPrompt, userPrompt } = buildRecommendationsPrompt(input);
+
+    // Handed raw positions, a model reads "20 -> 4" as a decline unless told.
+    expect(systemPrompt.toUpperCase()).toContain('LOWER IS BETTER');
+    expect(systemPrompt).toContain('positions gained');
+    expect(userPrompt).toContain('crm software');
+  });
+
+  it('warns that email opens are not tracked rather than zero', () => {
+    const { systemPrompt } = buildRecommendationsPrompt(input);
+
+    expect(systemPrompt).toContain('openTracking');
+    expect(systemPrompt.toLowerCase()).toContain('does not measure opens');
+  });
+
+  it('explains which app figures are levels and which are period totals', () => {
+    const { systemPrompt } = buildRecommendationsPrompt(input);
+
+    expect(systemPrompt.toLowerCase()).toContain('not sums');
+    expect(systemPrompt).toContain('reviews.unanswered');
   });
 });
 
