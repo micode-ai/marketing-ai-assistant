@@ -3,6 +3,11 @@ import { Cron } from '@nestjs/schedule';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../database/prisma.service';
 import { CronFailureNotifier } from '../common/cron-failure-notifier.service';
+import {
+  buildChannelDigest,
+  EMPTY_CHANNEL_DIGEST,
+  SocialChannelDigest,
+} from './social-digest.util';
 
 @Injectable()
 export class AnalyticsService {
@@ -205,7 +210,7 @@ export class AnalyticsService {
       }),
       this.prisma.projectSocialAccount.findMany({
         where: { projectId },
-        include: { socialAccount: { select: { platform: true } } },
+        include: { socialAccount: { select: { id: true, platform: true } } },
       }),
     ]);
 
@@ -256,19 +261,20 @@ export class AnalyticsService {
       `[recommendations] project=${projectId} GSC connected=${gscConnected}; clicks/avgPosition degraded to connected-only flag (spec §7)`,
     );
 
-    // Instagram / Threads: existence check via linked social accounts only (spec §7)
     const socialLinks =
       socialLinksResult.status === 'fulfilled'
         ? (socialLinksResult.value as any[])
         : [];
-    const linkedPlatforms = new Set(
-      socialLinks.map((l: any) => l.socialAccount?.platform),
-    );
-    const igConnected = linkedPlatforms.has('INSTAGRAM');
-    const threadsConnected = linkedPlatforms.has('THREADS');
-    this.logger.log(
-      `[recommendations] project=${projectId} IG=${igConnected}, Threads=${threadsConnected}; follower/engagement metrics degraded to connected-only (spec §7)`,
-    );
+    const accountIdsByPlatform = (platform: string): string[] =>
+      socialLinks
+        .filter((l: any) => l.socialAccount?.platform === platform)
+        .map((l: any) => l.socialAccount.id as string);
+
+    const social = await this.loadSocialDigests(projectId, {
+      instagram: accountIdsByPlatform('INSTAGRAM'),
+      threads: accountIdsByPlatform('THREADS'),
+      tiktok: accountIdsByPlatform('TIKTOK'),
+    });
 
     const digest = {
       periodDays: 30,
@@ -276,8 +282,9 @@ export class AnalyticsService {
       funnel: funnelSteps,
       topUtm,
       gsc: { connected: gscConnected },
-      instagram: { connected: igConnected },
-      threads: { connected: threadsConnected },
+      instagram: social.instagram,
+      threads: social.threads,
+      tiktok: social.tiktok,
       counts: {
         content: contentTotalResult.status === 'fulfilled' ? contentTotalResult.value : 0,
         contentPublished: contentPublishedResult.status === 'fulfilled' ? contentPublishedResult.value : 0,
@@ -338,6 +345,120 @@ export class AnalyticsService {
     }
 
     return { recommendations, generatedAt: now.getTime() };
+  }
+
+  /**
+   * Loads the real per-channel figures for the recommendations digest.
+   *
+   * Followers come from the account snapshots, engagement from the post rows —
+   * see `social-digest.util.ts` for why mixing those up would double-count.
+   * Each channel is fetched independently so one failing channel degrades to an
+   * empty block instead of losing the whole digest.
+   */
+  private async loadSocialDigests(
+    projectId: string,
+    ids: { instagram: string[]; threads: string[]; tiktok: string[] },
+  ): Promise<{
+    instagram: SocialChannelDigest;
+    threads: SocialChannelDigest;
+    tiktok: SocialChannelDigest;
+  }> {
+    const since = new Date();
+    since.setUTCDate(since.getUTCDate() - 30);
+    since.setUTCHours(0, 0, 0, 0);
+
+    const snapshotArgs = (accountIds: string[]) => ({
+      where: { socialAccountId: { in: accountIds }, date: { gte: since } },
+      orderBy: { date: 'asc' as const },
+      select: { socialAccountId: true, followersCount: true },
+    });
+    const postArgs = (accountIds: string[]) => ({
+      where: { socialAccountId: { in: accountIds }, timestamp: { gte: since } },
+    });
+
+    const load = async (
+      platform: 'instagram' | 'threads' | 'tiktok',
+    ): Promise<SocialChannelDigest> => {
+      const accountIds = ids[platform];
+      if (accountIds.length === 0) return { ...EMPTY_CHANNEL_DIGEST };
+
+      if (platform === 'instagram') {
+        const [snapshots, media] = await Promise.all([
+          this.prisma.instagramAccountMetrics.findMany(snapshotArgs(accountIds)),
+          this.prisma.instagramMedia.findMany(postArgs(accountIds)),
+        ]);
+        return buildChannelDigest({
+          accounts: accountIds.length,
+          snapshots,
+          posts: media.map((m) => ({
+            views: m.views,
+            likes: m.likeCount,
+            comments: m.commentsCount,
+            shares: m.shares,
+            engagementRate: m.engagementRate,
+          })),
+        });
+      }
+
+      if (platform === 'threads') {
+        const [snapshots, media] = await Promise.all([
+          this.prisma.threadsAccountMetrics.findMany(snapshotArgs(accountIds)),
+          this.prisma.threadsMedia.findMany(postArgs(accountIds)),
+        ]);
+        return buildChannelDigest({
+          accounts: accountIds.length,
+          snapshots,
+          posts: media.map((m) => ({
+            views: m.views,
+            likes: m.likes,
+            // Threads calls them replies; the digest keeps one vocabulary so the
+            // model can compare channels without a glossary.
+            comments: m.replies,
+            shares: m.shares,
+            engagementRate: m.engagementRate,
+          })),
+        });
+      }
+
+      const [snapshots, media] = await Promise.all([
+        this.prisma.tikTokAccountMetrics.findMany(snapshotArgs(accountIds)),
+        this.prisma.tikTokMedia.findMany(postArgs(accountIds)),
+      ]);
+      return buildChannelDigest({
+        accounts: accountIds.length,
+        snapshots,
+        posts: media.map((m) => ({
+          views: m.viewCount,
+          likes: m.likeCount,
+          comments: m.commentCount,
+          shares: m.shareCount,
+          engagementRate: m.engagementRate,
+        })),
+      });
+    };
+
+    const [instagram, threads, tiktok] = await Promise.allSettled([
+      load('instagram'),
+      load('threads'),
+      load('tiktok'),
+    ]);
+
+    const unwrap = (
+      result: PromiseSettledResult<SocialChannelDigest>,
+      label: string,
+    ): SocialChannelDigest => {
+      if (result.status === 'fulfilled') return result.value;
+      this.logger.warn(
+        `[recommendations] project=${projectId} ${label} metrics failed: ${result.reason}`,
+      );
+      return { ...EMPTY_CHANNEL_DIGEST };
+    };
+
+    return {
+      instagram: unwrap(instagram, 'instagram'),
+      threads: unwrap(threads, 'threads'),
+      tiktok: unwrap(tiktok, 'tiktok'),
+    };
   }
 
   /**

@@ -36,6 +36,24 @@ function makePrisma() {
     projectSocialAccount: {
       findMany: jest.fn().mockResolvedValue([]),
     },
+    instagramAccountMetrics: {
+      findMany: jest.fn().mockResolvedValue([]),
+    },
+    instagramMedia: {
+      findMany: jest.fn().mockResolvedValue([]),
+    },
+    threadsAccountMetrics: {
+      findMany: jest.fn().mockResolvedValue([]),
+    },
+    threadsMedia: {
+      findMany: jest.fn().mockResolvedValue([]),
+    },
+    tikTokAccountMetrics: {
+      findMany: jest.fn().mockResolvedValue([]),
+    },
+    tikTokMedia: {
+      findMany: jest.fn().mockResolvedValue([]),
+    },
     analyticsRecommendation: {
       upsert: jest.fn().mockResolvedValue({}),
       findUnique: jest.fn().mockResolvedValue(null),
@@ -274,7 +292,7 @@ describe('AnalyticsService', () => {
 
     it('detects Instagram connected via linked social account', async () => {
       prisma.projectSocialAccount.findMany.mockResolvedValue([
-        { socialAccount: { platform: 'INSTAGRAM' } },
+        { socialAccount: { id: 'ig_1', platform: 'INSTAGRAM' } },
       ]);
       const mockFetch = jest.fn().mockResolvedValue({
         ok: true,
@@ -289,9 +307,119 @@ describe('AnalyticsService', () => {
       expect(body.data.threads.connected).toBe(false);
     });
 
+    it('carries real Instagram figures, not just a connected flag', async () => {
+      prisma.projectSocialAccount.findMany.mockResolvedValue([
+        { socialAccount: { id: 'ig_1', platform: 'INSTAGRAM' } },
+      ]);
+      prisma.instagramAccountMetrics.findMany.mockResolvedValue([
+        { socialAccountId: 'ig_1', followersCount: 1000 },
+        { socialAccountId: 'ig_1', followersCount: 1080 },
+      ]);
+      prisma.instagramMedia.findMany.mockResolvedValue([
+        { views: 4000, likeCount: 210, commentsCount: 12, shares: 5, engagementRate: 4.5 },
+        { views: 2000, likeCount: 90, commentsCount: 3, shares: 1, engagementRate: 3.5 },
+      ]);
+      const mockFetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ recommendations: [] }),
+      });
+      global.fetch = mockFetch as any;
+
+      await service.generateRecommendations('proj_1', 'en');
+
+      const body = JSON.parse((mockFetch.mock.calls[0] as any)[1].body);
+      expect(body.data.instagram).toMatchObject({
+        connected: true,
+        accounts: 1,
+        followers: 1080,
+        followerChange: 80,
+        postsInPeriod: 2,
+        views: 6000,
+        likes: 300,
+        comments: 15,
+        avgEngagementRate: 4,
+      });
+    });
+
+    it('includes TikTok in the digest', async () => {
+      // TikTok was absent from the digest entirely, so the cross-channel advice
+      // could not even tell the channel existed (issue #170).
+      prisma.projectSocialAccount.findMany.mockResolvedValue([
+        { socialAccount: { id: 'tt_1', platform: 'TIKTOK' } },
+      ]);
+      prisma.tikTokAccountMetrics.findMany.mockResolvedValue([
+        { socialAccountId: 'tt_1', followersCount: 12 },
+      ]);
+      prisma.tikTokMedia.findMany.mockResolvedValue([
+        { viewCount: 812, likeCount: 9, commentCount: 1, shareCount: 0, engagementRate: 1.23 },
+      ]);
+      const mockFetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ recommendations: [] }),
+      });
+      global.fetch = mockFetch as any;
+
+      await service.generateRecommendations('proj_1', 'en');
+
+      const body = JSON.parse((mockFetch.mock.calls[0] as any)[1].body);
+      expect(body.data.tiktok).toMatchObject({
+        connected: true,
+        followers: 12,
+        views: 812,
+        postsInPeriod: 1,
+      });
+      // One snapshot is a level, not a trend.
+      expect(body.data.tiktok.followerChange).toBeNull();
+    });
+
+    it('aggregates two accounts of the same channel', async () => {
+      prisma.projectSocialAccount.findMany.mockResolvedValue([
+        { socialAccount: { id: 'ig_1', platform: 'INSTAGRAM' } },
+        { socialAccount: { id: 'ig_2', platform: 'INSTAGRAM' } },
+      ]);
+      prisma.instagramAccountMetrics.findMany.mockResolvedValue([
+        { socialAccountId: 'ig_1', followersCount: 500 },
+        { socialAccountId: 'ig_2', followersCount: 300 },
+      ]);
+      const mockFetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ recommendations: [] }),
+      });
+      global.fetch = mockFetch as any;
+
+      await service.generateRecommendations('proj_1', 'en');
+
+      const body = JSON.parse((mockFetch.mock.calls[0] as any)[1].body);
+      expect(body.data.instagram.accounts).toBe(2);
+      expect(body.data.instagram.followers).toBe(800);
+    });
+
+    it('degrades one failing channel instead of losing the digest', async () => {
+      prisma.projectSocialAccount.findMany.mockResolvedValue([
+        { socialAccount: { id: 'ig_1', platform: 'INSTAGRAM' } },
+        { socialAccount: { id: 'tt_1', platform: 'TIKTOK' } },
+      ]);
+      prisma.instagramAccountMetrics.findMany.mockRejectedValue(new Error('db down'));
+      prisma.tikTokAccountMetrics.findMany.mockResolvedValue([
+        { socialAccountId: 'tt_1', followersCount: 12 },
+      ]);
+      const mockFetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ recommendations: [] }),
+      });
+      global.fetch = mockFetch as any;
+
+      await service.generateRecommendations('proj_1', 'en');
+
+      const body = JSON.parse((mockFetch.mock.calls[0] as any)[1].body);
+      expect(body.data.instagram.connected).toBe(false);
+      expect(body.data.tiktok.followers).toBe(12);
+      expect(body.data.web).toBeDefined();
+    });
+
     it('detects Threads connected via linked social account', async () => {
       prisma.projectSocialAccount.findMany.mockResolvedValue([
-        { socialAccount: { platform: 'THREADS' } },
+        { socialAccount: { id: 'th_1', platform: 'THREADS' } },
       ]);
       const mockFetch = jest.fn().mockResolvedValue({
         ok: true,
