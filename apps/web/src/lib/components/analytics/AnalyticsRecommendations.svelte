@@ -4,6 +4,7 @@
   import { api } from '$lib/api/client';
 
   export let projectId: string;
+  export let days: number = 30;
 
   interface Recommendation {
     id: string;
@@ -19,6 +20,9 @@
   let loading = false;
   let error = '';
   let generatedAt: number | null = null;
+  // The period the cards on screen were computed over — not necessarily the one
+  // selected now, since a stored set survives a period change.
+  let computedForDays: number | null = null;
 
   const storageKey = () => `analytics_reco_${projectId}`;
 
@@ -31,6 +35,8 @@
         if (parsed?.recommendations && Array.isArray(parsed.recommendations)) {
           recommendations = parsed.recommendations;
           generatedAt = typeof parsed.generatedAt === 'number' ? parsed.generatedAt : null;
+          computedForDays =
+            typeof parsed.computedForDays === 'number' ? parsed.computedForDays : null;
         }
       }
     } catch {
@@ -42,14 +48,19 @@
     // (offline / none stored yet) we keep whatever the local cache provided.
     if (!projectId) return;
     try {
-      const stored = await api.get<{ recommendations: Recommendation[]; generatedAt: number | null }>(
-        '/analytics/recommendations',
-        { projectId },
-      );
+      const stored = await api.get<{
+        recommendations: Recommendation[];
+        generatedAt: number | null;
+        periodDays: number | null;
+      }>('/analytics/recommendations', { projectId });
       if (stored?.recommendations?.length) {
         recommendations = sortByPriority(stored.recommendations);
         generatedAt = stored.generatedAt ?? generatedAt;
-        localStorage.setItem(storageKey(), JSON.stringify({ recommendations, generatedAt }));
+        computedForDays = stored.periodDays ?? null;
+        localStorage.setItem(
+          storageKey(),
+          JSON.stringify({ recommendations, generatedAt, computedForDays }),
+        );
       }
     } catch {
       // keep the local cache
@@ -66,10 +77,14 @@
     loading = true;
     error = '';
     try {
-      const result = await api.post<{ recommendations: Recommendation[]; generatedAt?: number }>(
-        `/analytics/recommendations?projectId=${projectId}`,
-        { language: $locale || 'en' },
-      );
+      const result = await api.post<{
+        recommendations: Recommendation[];
+        generatedAt?: number;
+        periodDays?: number;
+      }>(`/analytics/recommendations?projectId=${projectId}`, {
+        language: $locale || 'en',
+        days,
+      });
       const recs = sortByPriority(result.recommendations ?? []);
       if (recs.length === 0) {
         // Don't clobber a previously cached good result with an empty response
@@ -80,7 +95,11 @@
         // The server persists the result and returns its timestamp; fall back to
         // the local clock if it's absent.
         generatedAt = result.generatedAt ?? Date.now();
-        localStorage.setItem(storageKey(), JSON.stringify({ recommendations, generatedAt }));
+        computedForDays = result.periodDays ?? days;
+        localStorage.setItem(
+          storageKey(),
+          JSON.stringify({ recommendations, generatedAt, computedForDays }),
+        );
       }
     } catch (e: any) {
       error = e?.message || $_('analytics.recommendations.error');
@@ -137,7 +156,14 @@
       <p class="text-bad text-sm mb-3">{$_('analytics.recommendations.error')}</p>
     {/if}
     {#if generatedAt}
-      <p class="text-xs text-ink-subtle mb-4">{$_('analytics.recommendations.generatedAt', { values: { date: formatDate(generatedAt) } })}</p>
+      <p class="text-xs text-ink-subtle mb-4">
+        {$_('analytics.recommendations.generatedAt', { values: { date: formatDate(generatedAt) } })}
+        {#if computedForDays !== null && computedForDays !== days}
+          <!-- A stored set survives a period change, so say which window it
+               actually describes instead of letting it look current. -->
+          <span class="text-warn">{$_('analytics.recommendations.periodMismatch', { values: { days: computedForDays } })}</span>
+        {/if}
+      </p>
     {/if}
     <div class="space-y-3">
       {#each recommendations as rec (rec.id)}

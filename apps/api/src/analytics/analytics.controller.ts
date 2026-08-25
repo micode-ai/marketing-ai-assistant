@@ -145,9 +145,13 @@ export class AnalyticsController {
   @ApiOperation({ summary: 'Generate AI recommendations from cross-channel analytics digest' })
   getRecommendations(
     @Query('projectId') projectId: string,
-    @Body() body: { language?: string },
+    @Body() body: { language?: string; days?: number },
   ) {
-    return this.analyticsService.generateRecommendations(projectId, body?.language || 'en');
+    return this.analyticsService.generateRecommendations(
+      projectId,
+      body?.language || 'en',
+      Number(body?.days) || 30,
+    );
   }
 
   @Get('recommendations')

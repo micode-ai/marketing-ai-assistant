@@ -952,7 +952,8 @@
         "conversion": "Konwersja",
         "web": "Web",
         "general": "Ogólne"
-      }
+      },
+      "periodMismatch": "Policzone za {days} dni — odśwież, aby dopasować do wybranego okresu"
     }
   },
   "instagram": {

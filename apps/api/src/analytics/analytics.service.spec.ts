@@ -21,9 +21,6 @@ function makePrisma() {
     campaign: {
       count: jest.fn().mockResolvedValue(0),
     },
-    keyword: {
-      count: jest.fn().mockResolvedValue(0),
-    },
     competitor: {
       count: jest.fn().mockResolvedValue(0),
     },
@@ -52,6 +49,25 @@ function makePrisma() {
       findMany: jest.fn().mockResolvedValue([]),
     },
     tikTokMedia: {
+      findMany: jest.fn().mockResolvedValue([]),
+    },
+    keyword: {
+      count: jest.fn().mockResolvedValue(0),
+      findMany: jest.fn().mockResolvedValue([]),
+    },
+    keywordRankHistory: {
+      findMany: jest.fn().mockResolvedValue([]),
+    },
+    emailCampaign: {
+      findMany: jest.fn().mockResolvedValue([]),
+    },
+    emailSubscriber: {
+      count: jest.fn().mockResolvedValue(0),
+    },
+    appStoreMetrics: {
+      findMany: jest.fn().mockResolvedValue([]),
+    },
+    appReview: {
       findMany: jest.fn().mockResolvedValue([]),
     },
     analyticsRecommendation: {
@@ -417,6 +433,157 @@ describe('AnalyticsService', () => {
       expect(body.data.web).toBeDefined();
     });
 
+    it('carries keyword positions, not just a keyword count', async () => {
+      prisma.keyword.findMany.mockResolvedValue([
+        { id: 'k1', keyword: 'crm software', currentRank: 4, isTracking: true },
+        { id: 'k2', keyword: 'invoicing', currentRank: 31, isTracking: true },
+        { id: 'k3', keyword: 'unranked', currentRank: null, isTracking: false },
+      ]);
+      prisma.keywordRankHistory.findMany.mockResolvedValue([
+        { keywordId: 'k1', rank: 20 },
+        { keywordId: 'k1', rank: 4 },
+        { keywordId: 'k2', rank: 9 },
+        { keywordId: 'k2', rank: 31 },
+      ]);
+      const mockFetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ recommendations: [] }),
+      });
+      global.fetch = mockFetch as any;
+
+      await service.generateRecommendations('proj_1', 'en');
+
+      const body = JSON.parse((mockFetch.mock.calls[0] as any)[1].body);
+      expect(body.data.seo).toMatchObject({
+        keywords: 3,
+        tracked: 2,
+        ranked: 2,
+        top10: 1,
+        improved: 1,
+        declined: 1,
+      });
+      expect(body.data.seo.topMovers[0]).toEqual({
+        keyword: 'invoicing',
+        rank: 31,
+        change: -22,
+      });
+    });
+
+    it('sends email activity without the untracked opens and clicks', async () => {
+      prisma.emailList.count.mockResolvedValue(2);
+      prisma.emailSubscriber.count.mockResolvedValue(340);
+      prisma.emailCampaign.findMany.mockResolvedValue([
+        { stats: { sent: 200, opens: 0, clicks: 0 } },
+        { stats: { sent: 140, opens: 0, clicks: 0 } },
+      ]);
+      const mockFetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ recommendations: [] }),
+      });
+      global.fetch = mockFetch as any;
+
+      await service.generateRecommendations('proj_1', 'en');
+
+      const body = JSON.parse((mockFetch.mock.calls[0] as any)[1].body);
+      expect(body.data.email).toEqual({
+        lists: 2,
+        subscribers: 340,
+        campaignsSent: 2,
+        emailsSent: 340,
+        openTracking: false,
+      });
+      // The zeros are absence of tracking, not absence of engagement.
+      expect(body.data.email).not.toHaveProperty('opens');
+    });
+
+    it('carries Play figures for a mobile app project', async () => {
+      prisma.projectApiKey.findFirst.mockResolvedValue({ id: 'key_1' });
+      prisma.appStoreMetrics.findMany.mockResolvedValue([
+        {
+          installs: 40, uninstalls: 5, activeDeviceInstalls: 900,
+          storeListingVisitors: 300, storeListingConversions: 12.5,
+          crashRate: 1.2, anrRate: 0.3, averageRating: 4.4, totalRatings: 88,
+        },
+        {
+          installs: 60, uninstalls: 9, activeDeviceInstalls: 950,
+          storeListingVisitors: 340, storeListingConversions: 13.1,
+          crashRate: 0.8, anrRate: 0.2, averageRating: 4.5, totalRatings: 95,
+        },
+      ]);
+      prisma.appReview.findMany.mockResolvedValue([
+        { starRating: 5, isReplied: true },
+        { starRating: 2, isReplied: false },
+      ]);
+      const mockFetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ recommendations: [] }),
+      });
+      global.fetch = mockFetch as any;
+
+      await service.generateRecommendations('proj_1', 'en');
+
+      const body = JSON.parse((mockFetch.mock.calls[0] as any)[1].body);
+      expect(body.data.app).toMatchObject({
+        connected: true,
+        installs: 100,
+        uninstalls: 14,
+        netInstalls: 86,
+        // A level, not a sum of the daily rows.
+        activeDeviceInstalls: 950,
+        crashRate: 0.8,
+        averageRating: 4.5,
+      });
+      expect(body.data.app.reviews).toEqual({ total: 2, unanswered: 1, avgRating: 3.5 });
+    });
+
+    it('marks the app block disconnected without a Play integration', async () => {
+      const mockFetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ recommendations: [] }),
+      });
+      global.fetch = mockFetch as any;
+
+      await service.generateRecommendations('proj_1', 'en');
+
+      const body = JSON.parse((mockFetch.mock.calls[0] as any)[1].body);
+      expect(body.data.app.connected).toBe(false);
+      expect(body.data.app.installs).toBeNull();
+    });
+
+    it('honours the requested period instead of always using 30 days', async () => {
+      // A non-empty result, because the service only persists when the agent
+      // actually returned cards.
+      const mockFetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ recommendations: [{ title: 'Do a thing', priority: 'high' }] }),
+      });
+      global.fetch = mockFetch as any;
+
+      const result = await service.generateRecommendations('proj_1', 'en', 7);
+
+      const body = JSON.parse((mockFetch.mock.calls[0] as any)[1].body);
+      expect(body.data.periodDays).toBe(7);
+      expect(result.periodDays).toBe(7);
+      expect(prisma.analyticsRecommendation.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          create: expect.objectContaining({ periodDays: 7 }),
+          update: expect.objectContaining({ periodDays: 7 }),
+        }),
+      );
+    });
+
+    it('clamps an absurd period instead of querying it', async () => {
+      const mockFetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ recommendations: [] }),
+      });
+      global.fetch = mockFetch as any;
+
+      const result = await service.generateRecommendations('proj_1', 'en', 99999);
+
+      expect(result.periodDays).toBe(365);
+    });
+
     it('detects Threads connected via linked social account', async () => {
       prisma.projectSocialAccount.findMany.mockResolvedValue([
         { socialAccount: { id: 'th_1', platform: 'THREADS' } },
@@ -482,6 +649,7 @@ describe('AnalyticsService', () => {
         recommendations: [{ title: 'Stored', priority: 'HIGH' }],
         language: 'ru',
         generatedAt: when,
+        periodDays: 7,
       });
 
       const result = await service.getStoredRecommendations('proj_1');
@@ -490,7 +658,23 @@ describe('AnalyticsService', () => {
         recommendations: [{ title: 'Stored', priority: 'HIGH' }],
         generatedAt: when.getTime(),
         language: 'ru',
+        // Returned so the page can say the cards describe a different window
+        // than the one currently selected.
+        periodDays: 7,
       });
+    });
+
+    it('reports a null period for rows written before the column existed', async () => {
+      prisma.analyticsRecommendation.findUnique.mockResolvedValue({
+        recommendations: [{ title: 'Old', priority: 'LOW' }],
+        language: 'en',
+        generatedAt: new Date('2026-06-01T00:00:00Z'),
+        periodDays: null,
+      });
+
+      const result = await service.getStoredRecommendations('proj_1');
+
+      expect(result.periodDays).toBeNull();
     });
 
     it('returns an empty set when nothing is stored', async () => {
@@ -498,7 +682,7 @@ describe('AnalyticsService', () => {
 
       const result = await service.getStoredRecommendations('proj_1');
 
-      expect(result).toEqual({ recommendations: [], generatedAt: null, language: null });
+      expect(result).toEqual({ recommendations: [], generatedAt: null, language: null, periodDays: null });
     });
   });
 });
