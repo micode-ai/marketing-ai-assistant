@@ -588,18 +588,24 @@ describe('AnalyticsService', () => {
 
     it('carries Play figures for a mobile app project', async () => {
       prisma.projectApiKey.findFirst.mockResolvedValue({ id: 'key_1' });
-      prisma.appStoreMetrics.findMany.mockResolvedValue([
-        {
-          installs: 40, uninstalls: 5, activeDeviceInstalls: 900,
-          storeListingVisitors: 300, storeListingConversions: 12.5,
-          crashRate: 1.2, anrRate: 0.3, averageRating: 4.4, totalRatings: 88,
-        },
-        {
-          installs: 60, uninstalls: 9, activeDeviceInstalls: 950,
-          storeListingVisitors: 340, storeListingConversions: 13.1,
-          crashRate: 0.8, anrRate: 0.2, averageRating: 4.5, totalRatings: 95,
-        },
-      ]);
+      const older = {
+        installs: 40, uninstalls: 5, activeDeviceInstalls: 900,
+        storeListingVisitors: 300, storeListingConversions: 12.5,
+        crashRate: 1.2, anrRate: 0.3, averageRating: 4.4, totalRatings: 88,
+      };
+      const newer = {
+        installs: 60, uninstalls: 9, activeDeviceInstalls: 950,
+        storeListingVisitors: 340, storeListingConversions: 13.1,
+        crashRate: 0.8, anrRate: 0.2, averageRating: 4.5, totalRatings: 95,
+      };
+      // The two queries differ in direction: the window is read ascending, the
+      // level lookback descending. Mocking both the same way hides ordering
+      // bugs, so mirror the real orderBy.
+      prisma.appStoreMetrics.findMany.mockImplementation((args: any) =>
+        Promise.resolve(
+          args?.orderBy?.date === 'desc' ? [newer, older] : [older, newer],
+        ),
+      );
       prisma.appReview.findMany.mockResolvedValue([
         { starRating: 5, isReplied: true },
         { starRating: 2, isReplied: false },
@@ -624,6 +630,36 @@ describe('AnalyticsService', () => {
         averageRating: 4.5,
       });
       expect(body.data.app.reviews).toEqual({ total: 2, unanswered: 1, avgRating: 3.5 });
+    });
+
+    it('reads the install base from before the window when the window is empty', async () => {
+      // Production case behind #182: the last real Play reading predated the
+      // 30-day window, and the block reported a live app as having no installs.
+      prisma.projectApiKey.findFirst.mockResolvedValue({ id: 'key_1' });
+      prisma.appStoreMetrics.findMany.mockImplementation((args: any) =>
+        Promise.resolve(
+          args?.where?.date
+            ? [] // nothing inside the window
+            : [{
+                installs: 0, uninstalls: 0, activeDeviceInstalls: 15,
+                storeListingVisitors: 0, storeListingConversions: 0,
+                crashRate: 0, anrRate: 0, averageRating: 4.8, totalRatings: 12,
+              }],
+        ),
+      );
+      const mockFetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ recommendations: [] }),
+      });
+      global.fetch = mockFetch as any;
+
+      await service.generateRecommendations('proj_1', 'en');
+
+      const body = JSON.parse((mockFetch.mock.calls[0] as any)[1].body);
+      expect(body.data.app.activeDeviceInstalls).toBe(15);
+      expect(body.data.app.averageRating).toBe(4.8);
+      // A gap in the window is not a month of zero installs.
+      expect(body.data.app.installs).toBeNull();
     });
 
     it('marks the app block disconnected without a Play integration', async () => {

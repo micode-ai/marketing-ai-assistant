@@ -22,6 +22,13 @@ import { GoogleIntegrationsService } from '../google-integrations/google-integra
  */
 const GSC_TIMEOUT_MS = 8000;
 
+/**
+ * How far back the app levels may look for their last real reading. Bounded so
+ * a project with years of daily rows does not drag the whole digest, and large
+ * enough to see past a run of placeholder zeros in the Play export.
+ */
+const APP_LEVEL_LOOKBACK_ROWS = 60;
+
 /** Start of the reporting window, snapped to a UTC day boundary. */
 function periodStart(days: number): Date {
   const since = new Date();
@@ -481,18 +488,33 @@ export class AnalyticsService {
         where: { projectId, platform: 'GOOGLE_PLAY' as any },
         select: { id: true },
       });
-      const [metrics, reviews] = await Promise.all([
+      const [periodRows, recentRows, reviews] = await Promise.all([
         this.prisma.appStoreMetrics.findMany({
           where: { projectId, date: { gte: since } },
           orderBy: { date: 'asc' },
+        }),
+        // Levels — install base, rating, crash rate — are the last thing we
+        // know, not a property of the window. Play exports also write zeros for
+        // days with no data, so one row is not enough to find a real reading:
+        // this tail is scanned backwards until a non-zero turns up.
+        this.prisma.appStoreMetrics.findMany({
+          where: { projectId },
+          orderBy: { date: 'desc' },
+          take: APP_LEVEL_LOOKBACK_ROWS,
         }),
         this.prisma.appReview.findMany({
           where: { projectId, reviewCreatedAt: { gte: since } },
           select: { starRating: true, isReplied: true },
         }),
       ]);
-      const connected = key !== null || metrics.length > 0 || reviews.length > 0;
-      return buildAppDigest(metrics, reviews, connected);
+      const connected = key !== null || recentRows.length > 0 || reviews.length > 0;
+      return buildAppDigest({
+        periodRows,
+        // Reversed: the util scans levels from the end of an ascending array.
+        levelRows: [...recentRows].reverse(),
+        reviews,
+        connected,
+      });
     };
 
     const [seo, email, app] = await Promise.allSettled([loadSeo(), loadEmail(), loadApp()]);

@@ -152,6 +152,7 @@ How to read the email block:
 How to read the app block (Google Play):
 - "connected": false means the project has no Play integration — say nothing about app performance in that case.
 - installs, uninstalls and storeListingVisitors are period totals. netInstalls can be negative. activeDeviceInstalls, averageRating and totalRatings are the current levels, not sums. crashRate and anrRate are the latest measured rates, and a lower rate is better.
+- A level may have been measured before the period started — it is the most recent reading we have, not a figure for the window. So an app can show an install base with null installs for the period: that means the app exists and gained nothing recently, or that Play reported nothing recently. Never read null installs as "the app has no users" when activeDeviceInstalls says otherwise.
 - "reviews.unanswered" is directly actionable: unanswered store reviews are visible to every future installer.
 
 Your job here is the cross-channel view. The user already gets separate per-channel advice inside each channel's own dashboard, so:

@@ -80,6 +80,15 @@ describe('buildRecommendationsPrompt', () => {
     expect(systemPrompt).toContain('reviews.unanswered');
   });
 
+  it('warns that an app level may predate the period', () => {
+    const { systemPrompt } = buildRecommendationsPrompt(input);
+
+    // Otherwise "installs: null, activeDeviceInstalls: 15" reads as an app with
+    // no users, and the advice tells the user to launch what is already live.
+    expect(systemPrompt.toLowerCase()).toContain('before the period started');
+    expect(systemPrompt).toContain('the app has no users');
+  });
+
   it('warns that Search Console lags behind today', () => {
     const { systemPrompt, userPrompt } = buildRecommendationsPrompt(input);
 
