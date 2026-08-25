@@ -3,7 +3,10 @@ import { buildRecommendationsPrompt, parseRecommendations, type AnalyticsRecomme
 const input: AnalyticsRecommendationsInput = {
   projectName: 'MiCode', industry: 'SaaS', projectType: 'WEBSITE', language: 'en',
   data: { periodDays: 30, web: { visitors: 54, conversions: 0, conversionRate: 0 },
-    funnel: [], topUtm: [], gsc: { connected: true, clicks: 9 },
+    funnel: [], topUtm: [],
+    gsc: { connected: true, clicks: 412, impressions: 9540, ctr: 4.32, avgPosition: 18.4,
+      topQueries: [{ query: 'crm software', clicks: 90, impressions: 1200, position: 4.2 }],
+      lagDays: 2 },
     instagram: { connected: true, accounts: 1, followers: 1080, followerChange: 80,
       postsInPeriod: 2, views: 6000, likes: 300, comments: 15, shares: 6, avgEngagementRate: 4 },
     threads: { connected: false, accounts: 0, followers: null, followerChange: null,
@@ -75,6 +78,15 @@ describe('buildRecommendationsPrompt', () => {
 
     expect(systemPrompt.toLowerCase()).toContain('not sums');
     expect(systemPrompt).toContain('reviews.unanswered');
+  });
+
+  it('warns that Search Console lags behind today', () => {
+    const { systemPrompt, userPrompt } = buildRecommendationsPrompt(input);
+
+    // Comparing lagging GSC clicks against same-day visitors looks like a crash.
+    expect(systemPrompt).toContain('lagDays');
+    expect(systemPrompt.toLowerCase()).toContain('do not compare gsc clicks');
+    expect(userPrompt).toContain('9540');
   });
 });
 

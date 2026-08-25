@@ -35,7 +35,21 @@ export interface AnalyticsDigest {
   web: { visitors: number; conversions: number; conversionRate: number };
   funnel: Array<{ step: string; count: number; dropOffPct: number }>;
   topUtm: Array<{ source: string; medium: string; visits: number; conversionRate: number }>;
-  gsc: { connected: boolean; clicks?: number; avgPosition?: number };
+  gsc: {
+    connected: boolean;
+    clicks: number | null;
+    impressions: number | null;
+    /** Percent, already converted from the fraction Google returns. */
+    ctr: number | null;
+    avgPosition: number | null;
+    topQueries: Array<{
+      query: string;
+      clicks: number;
+      impressions: number;
+      position: number;
+    }>;
+    lagDays: number;
+  };
   instagram: SocialChannelDigest;
   threads: SocialChannelDigest;
   tiktok: SocialChannelDigest;
@@ -123,6 +137,13 @@ How to read the seo block:
 - Rank is a search position, so LOWER IS BETTER and 1 is the best possible value. "change" in topMovers is positions gained: +16 means the keyword climbed from 20 to 4, and a negative change means it dropped. Never describe a smaller rank number as worse.
 - "ranked" counts keywords holding any position; "keywords" minus "ranked" are not found in the results at all. top3/top10/top50 are cumulative, so a keyword at position 2 is counted in all three.
 - avgRank covers only the ranked keywords — unranked ones are excluded rather than counted as zero.
+
+How to read the gsc block (Google Search Console):
+- Position is a search rank, so the same rule as the seo block applies: LOWER IS BETTER.
+- "ctr" is a percent, directly comparable with the social engagement rates.
+- "lagDays" is how many days short of today the window stops — Search Console does not report the most recent days. Do NOT compare gsc clicks against website visitors for the same dates and conclude search traffic collapsed; the windows do not line up.
+- "connected": true with null figures means the integration exists but the numbers could not be fetched right now. Recommend using the channel if it fits, but do not state any search figures.
+- High impressions with few clicks on a query means the listing is seen and not chosen — a title and description problem, not a ranking one. A query ranking just outside the top 10 is the cheapest ranking win available.
 
 How to read the email block:
 - "openTracking": false means the product does not measure opens or clicks at all. That is why no open or click figures are given. Do NOT assume the emails are unopened, and do not recommend rewriting subject lines to fix an open rate you cannot see. Recommending that open tracking be added is fair game.
