@@ -111,7 +111,7 @@ describe('TikTokService', () => {
       await service.getStatus('p1');
 
       expect(prisma.projectSocialAccount.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({ orderBy: { createdAt: 'asc' } }),
+        expect.objectContaining({ orderBy: { socialAccount: { createdAt: 'asc' } } }),
       );
     });
 

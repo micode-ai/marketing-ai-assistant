@@ -59,7 +59,10 @@ export async function listProjectSocialAccounts(
   const links = (await prisma.projectSocialAccount.findMany({
     where: { projectId },
     // Stable order: without it the "first" account changed between requests.
-    orderBy: { createdAt: 'asc' },
+    // Ordered by the account, not the link — ProjectSocialAccount is a bare
+    // two-column join table with no timestamp of its own, and asking it for
+    // `createdAt` made Prisma reject the whole query.
+    orderBy: { socialAccount: { createdAt: 'asc' } },
     include: {
       socialAccount: {
         select: {
