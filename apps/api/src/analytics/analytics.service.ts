@@ -465,6 +465,20 @@ export class AnalyticsService {
    * report over one unsupported metric, so it is asked for separately and is
    * allowed to fail alone.
    */
+  /**
+   * The same Analytics block the digest uses, exposed for the dashboard.
+   *
+   * One producer for both consumers on purpose: a panel computing its own
+   * version would drift from the figures the recommendations are built on, and
+   * then the cards and the chart above them would disagree.
+   */
+  async getGa4Overview(projectId: string, days = 30): Promise<Ga4Digest> {
+    const periodDays = Number.isFinite(days)
+      ? Math.min(Math.max(Math.trunc(days), 1), 365)
+      : 30;
+    return this.loadGa4Digest(projectId, periodDays);
+  }
+
   private async loadGa4Digest(projectId: string, periodDays: number): Promise<Ga4Digest> {
     if (!this.google) return { ...EMPTY_GA4_DIGEST };
 

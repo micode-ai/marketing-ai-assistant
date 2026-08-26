@@ -6,6 +6,7 @@
   import SectionHint from '$lib/components/SectionHint.svelte';
   import MobileAnalyticsDashboard from '$lib/components/analytics/MobileAnalyticsDashboard.svelte';
   import SearchConsolePanel from '$lib/components/analytics/SearchConsolePanel.svelte';
+  import Ga4Dashboard from '$lib/components/analytics/Ga4Dashboard.svelte';
   import InstagramAnalyticsDashboard from '$lib/components/analytics/InstagramAnalyticsDashboard.svelte';
   import ThreadsAnalyticsDashboard from '$lib/components/analytics/ThreadsAnalyticsDashboard.svelte';
   import TikTokAnalyticsDashboard from '$lib/components/analytics/TikTokAnalyticsDashboard.svelte';
@@ -56,7 +57,7 @@
   let activeTab: 'overview' | 'utm' | 'funnel' | 'pages' = 'overview';
 
   // Channel tab model
-  type ChannelId = 'overview' | 'website' | 'search' | 'instagram' | 'threads' | 'tiktok' | 'app';
+  type ChannelId = 'overview' | 'website' | 'search' | 'analytics' | 'instagram' | 'threads' | 'tiktok' | 'app';
   let activeChannel: ChannelId = 'overview';
 
   let dailyData: any[] = [];
@@ -320,6 +321,7 @@
   let igConnected = false;
   let threadsConnected = false;
   let tiktokConnected = false;
+  let ga4Connected = false;
   let surfacesLoaded = false;
   let webLoaded = false;
 
@@ -333,6 +335,7 @@
     ];
     if (showWeb) tabs.push({ id: 'website', labelKey: 'analytics.tabWebsite' });
     if (gscConnected) tabs.push({ id: 'search', labelKey: 'analytics.tabSearch' });
+    if (ga4Connected) tabs.push({ id: 'analytics', labelKey: 'analytics.tabGa4' });
     if (igConnected) tabs.push({ id: 'instagram', labelKey: 'analytics.tabInstagram' });
     if (threadsConnected) tabs.push({ id: 'threads', labelKey: 'analytics.tabThreads' });
     if (tiktokConnected) tabs.push({ id: 'tiktok', labelKey: 'analytics.tabTikTok' });
@@ -351,6 +354,9 @@
     appConnected = play.status === 'fulfilled' && !!play.value?.connected;
     gscConnected =
       gsc.status === 'fulfilled' && !!(gsc.value?.connected && gsc.value?.siteUrl);
+    // Same Google connection, separate resource: a property must be chosen
+    // before Analytics can report anything.
+    ga4Connected = gsc.status === 'fulfilled' && !!(gsc.value?.connected && gsc.value?.propertyId);
     igConnected = ig.status === 'fulfilled' && !!ig.value?.connected;
     threadsConnected = threads.status === 'fulfilled' && !!threads.value?.connected;
     tiktokConnected = tiktok.status === 'fulfilled' && !!tiktok.value?.connected;
@@ -649,6 +655,8 @@
     {:else if activeChannel === 'search'}
       <SearchConsolePanel projectId={projectId ?? ''} days={selectedPeriod} />
 
+    {:else if activeChannel === 'analytics'}
+      <Ga4Dashboard projectId={projectId ?? ''} days={selectedPeriod} />
     {:else if activeChannel === 'instagram'}
       <InstagramAnalyticsDashboard projectId={projectId ?? ''} days={selectedPeriod} />
 

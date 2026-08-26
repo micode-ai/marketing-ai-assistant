@@ -154,6 +154,16 @@ export class AnalyticsController {
     );
   }
 
+  @Get('ga4')
+  @UseGuards(ProjectAccessGuard)
+  @ApiOperation({ summary: 'Google Analytics overview for the project' })
+  getGa4(
+    @Query('projectId') projectId: string,
+    @Query('days') days?: string,
+  ) {
+    return this.analyticsService.getGa4Overview(projectId, Number(days) || 30);
+  }
+
   @Get('recommendations')
   @UseGuards(ProjectAccessGuard)
   @ApiOperation({ summary: 'Get the last persisted AI recommendations for a project' })

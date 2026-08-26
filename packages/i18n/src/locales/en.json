@@ -977,6 +977,21 @@
     },
     "accountSwitcher": {
       "label": "Account"
+    },
+    "tabGa4": "Analytics",
+    "ga4": {
+      "sessions": "Sessions",
+      "users": "Users",
+      "newUsers": "New users",
+      "pageViews": "Page views",
+      "engagementRate": "Engagement rate",
+      "keyEvents": "Key events",
+      "channels": "Traffic channels",
+      "landingPages": "Landing pages",
+      "notConnected": "No Analytics property is selected for this project.",
+      "goToSettings": "Choose one in settings",
+      "noData": "Analytics returned no data for this period — the property may be new or the tag may not be installed.",
+      "differsFromTracker": "These figures come from Google Analytics and will differ from the Website tab, which uses our own tracking script."
     }
   },
   "instagram": {
