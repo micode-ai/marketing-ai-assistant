@@ -154,9 +154,43 @@ describe('MetaOAuthController', () => {
     it('returns null for a tampered signature', () => {
       const ctrl = controller as any;
       const state: string = ctrl.signState({ organizationId: 'org-1', platform: 'INSTAGRAM' });
-      // flip last character of signature
-      const tampered = state.slice(0, -1) + (state.endsWith('A') ? 'B' : 'A');
+      const dot = state.lastIndexOf('.');
+      // Flip a byte of the decoded signature, not a character of its encoding.
+      // Flipping the last character only touched base64url's slack bits, so
+      // ~7% of runs produced a different string that decoded to the same 32
+      // bytes and verified — a flake `continue-on-error` hid for months.
+      const sig = Buffer.from(state.slice(dot + 1), 'base64url');
+      sig[0] ^= 0xff;
+      const tampered = `${state.slice(0, dot)}.${sig.toString('base64url')}`;
+
       expect(ctrl.verifyState(tampered)).toBeNull();
+    });
+
+    it('returns null for a non-canonical encoding of a valid signature', () => {
+      const ctrl = controller as any;
+      const state: string = ctrl.signState({ organizationId: 'org-1', platform: 'INSTAGRAM' });
+      const dot = state.lastIndexOf('.');
+      const sigB64 = state.slice(dot + 1);
+      // Set the slack bits of the final character. The bytes are unchanged, so
+      // a buffer comparison accepted this; the encoding differs, so a string
+      // comparison does not. A signature should be one string, not a family.
+      const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+      const lastIdx = alphabet.indexOf(sigB64[sigB64.length - 1]);
+      const variant = alphabet[lastIdx | 0b01];
+      if (variant === sigB64[sigB64.length - 1]) return; // already non-canonical
+      const restated = `${state.slice(0, dot)}.${sigB64.slice(0, -1)}${variant}`;
+
+      expect(ctrl.verifyState(restated)).toBeNull();
+    });
+
+    it('accepts its own signature every time', () => {
+      const ctrl = controller as any;
+      // The flake was in the tampering, so prove the happy path is stable over
+      // many distinct digests rather than one lucky payload.
+      for (let i = 0; i < 200; i += 1) {
+        const state = ctrl.signState({ organizationId: `org-${i}`, platform: 'INSTAGRAM' });
+        expect(ctrl.verifyState(state)).toMatchObject({ organizationId: `org-${i}` });
+      }
     });
 
     it('returns null for an expired state (ts > 10 min old)', () => {
