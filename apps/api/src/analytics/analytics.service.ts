@@ -222,7 +222,7 @@ export class AnalyticsService {
       contentPublishedResult,
       campaignCountResult,
       keywordCountResult,
-      competitorCountResult,
+      competitorsResult,
       emailListCountResult,
       gscKeyResult,
       socialLinksResult,
@@ -238,7 +238,11 @@ export class AnalyticsService {
       this.prisma.content.count({ where: { projectId, status: 'PUBLISHED' as any } }),
       this.prisma.campaign.count({ where: { projectId } }),
       this.prisma.keyword.count({ where: { projectId } }),
-      this.prisma.competitor.count({ where: { projectId } }),
+      this.prisma.competitor.findMany({
+        where: { projectId, status: 'ACTIVE' as any },
+        select: { name: true, websiteUrl: true },
+        take: 5,
+      }),
       this.prisma.emailList.count({ where: { projectId } }),
       this.prisma.projectApiKey.findFirst({
         where: { projectId, platform: 'GOOGLE' as any },
@@ -259,7 +263,7 @@ export class AnalyticsService {
     [
       projectResult, metricsTotalsResult, funnelResult, utmResult,
       contentTotalResult, contentPublishedResult, campaignCountResult,
-      keywordCountResult, competitorCountResult, emailListCountResult,
+      keywordCountResult, competitorsResult, emailListCountResult,
       gscKeyResult, socialLinksResult,
     ].forEach((r, i) => {
       if (r.status === 'rejected') {
@@ -296,6 +300,11 @@ export class AnalyticsService {
     const gscConnected =
       gscKeyResult.status === 'fulfilled' && gscKeyResult.value !== null;
 
+    const competitors =
+      competitorsResult.status === 'fulfilled'
+        ? (competitorsResult.value as Array<{ name: string; websiteUrl: string }>)
+        : [];
+
     const socialLinks =
       socialLinksResult.status === 'fulfilled'
         ? (socialLinksResult.value as any[])
@@ -328,6 +337,8 @@ export class AnalyticsService {
       instagram: social.instagram,
       threads: social.threads,
       tiktok: social.tiktok,
+      // Named, so the advice can say which competitor to look at.
+      competitors,
       seo: extra.seo,
       email: extra.email,
       app: extra.app,
@@ -336,7 +347,7 @@ export class AnalyticsService {
         contentPublished: contentPublishedResult.status === 'fulfilled' ? contentPublishedResult.value : 0,
         campaigns: campaignCountResult.status === 'fulfilled' ? campaignCountResult.value : 0,
         keywords: keywordCountResult.status === 'fulfilled' ? keywordCountResult.value : 0,
-        competitors: competitorCountResult.status === 'fulfilled' ? competitorCountResult.value : 0,
+        competitors: competitors.length,
         emailLists: emailListCountResult.status === 'fulfilled' ? emailListCountResult.value : 0,
       },
       projectType: project?.projectType ?? 'WEBSITE',
@@ -409,10 +420,47 @@ export class AnalyticsService {
     if (!connected || !this.google) return { ...EMPTY_GSC_DIGEST, connected };
 
     // eslint-disable-next-line no-undef
+    // Two independent calls: the summary gives the totals, the insights give the
+    // named findings the SEO page already computes. They are settled separately
+    // so losing one does not blank the other — and the insights are the half
+    // that makes the advice specific, so they are worth their own attempt.
+    const [summary, insights] = await Promise.all([
+      this.withGscTimeout(
+        () => this.google!.fetchSearchConsoleSummary(projectId, periodDays),
+        projectId,
+        'figures',
+      ),
+      this.withGscTimeout(
+        () => this.google!.computeGscInsights(projectId, { days: periodDays }),
+        projectId,
+        'insights',
+      ),
+    ]);
+
+    if (summary === 'not-configured' || insights === 'not-configured') {
+      // A Google API key row exists but Search Console itself was never
+      // configured (no site selected) — that is "not connected", not a fault.
+      return { ...EMPTY_GSC_DIGEST };
+    }
+
+    return buildGscDigest(summary, true, insights);
+  }
+
+  /**
+   * Runs one Search Console call under a deadline, mapping every outcome to
+   * something the digest can use: the value, `null` for "tried and failed", or
+   * `'not-configured'` for "there is nothing to try".
+   */
+  private async withGscTimeout<T>(
+    call: () => Promise<T>,
+    projectId: string,
+    label: string,
+  ): Promise<T | null | 'not-configured'> {
+    // eslint-disable-next-line no-undef
     let timer: NodeJS.Timeout | undefined;
     try {
-      const summary = await Promise.race([
-        this.google.fetchSearchConsoleSummary(projectId, periodDays),
+      return await Promise.race([
+        call(),
         new Promise<never>((_, reject) => {
           timer = setTimeout(
             () => reject(new Error(`GSC_TIMEOUT after ${GSC_TIMEOUT_MS}ms`)),
@@ -420,18 +468,12 @@ export class AnalyticsService {
           );
         }),
       ]);
-      return buildGscDigest(summary, true);
     } catch (error) {
-      const code = (error as { code?: string })?.code;
-      if (code === 'GSC_NOT_CONFIGURED') {
-        // A Google API key row exists but Search Console itself was never
-        // configured (no site selected) — that is "not connected", not a fault.
-        return { ...EMPTY_GSC_DIGEST };
-      }
+      if ((error as { code?: string })?.code === 'GSC_NOT_CONFIGURED') return 'not-configured';
       this.logger.warn(
-        `[recommendations] project=${projectId} search console figures unavailable: ${error}`,
+        `[recommendations] project=${projectId} search console ${label} unavailable: ${error}`,
       );
-      return { ...EMPTY_GSC_DIGEST, connected: true };
+      return null;
     } finally {
       // Without this the pending timer keeps the process awake for its full
       // duration after a fast success.
@@ -584,6 +626,8 @@ export class AnalyticsService {
             comments: m.commentsCount,
             shares: m.shares,
             engagementRate: m.engagementRate,
+            label: m.caption,
+            url: m.permalink,
           })),
         });
       }
@@ -604,6 +648,8 @@ export class AnalyticsService {
             comments: m.replies,
             shares: m.shares,
             engagementRate: m.engagementRate,
+            label: m.text,
+            url: m.permalink,
           })),
         });
       }
@@ -621,6 +667,8 @@ export class AnalyticsService {
           comments: m.commentCount,
           shares: m.shareCount,
           engagementRate: m.engagementRate,
+          label: m.title || m.description,
+          url: m.shareUrl,
         })),
       });
     };

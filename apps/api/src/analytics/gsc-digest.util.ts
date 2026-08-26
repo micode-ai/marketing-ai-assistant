@@ -24,6 +24,32 @@ export interface GscSummaryLike {
     ctr: number;
     position: number;
   }>;
+  topPages?: Array<{
+    page: string;
+    clicks: number;
+    impressions: number;
+    ctr: number;
+    position: number;
+  }>;
+}
+
+/**
+ * The insights the SEO page already computes. Named and quantified, which is
+ * the point: "average position 25.1" cannot be acted on, "you lose 40 clicks a
+ * month on this query" can.
+ */
+export interface GscInsightsLike {
+  strikingDistance: Array<{ key: string; clicks: number; impressions: number; position: number }>;
+  lowCtr: Array<{ key: string; clicks: number; impressions: number; position: number; missedClicks: number }>;
+  cannibalization: Array<{
+    query: string;
+    totalImpressions: number;
+    pages: Array<{ page: string; clicks: number; impressions: number; position: number }>;
+  }>;
+  moversQueries: {
+    gainers: Array<{ key: string; clicks: number; positionDelta?: number; clicksDelta?: number }>;
+    losers: Array<{ key: string; clicks: number; positionDelta?: number; clicksDelta?: number }>;
+  };
 }
 
 export interface GscQueryDigest {
@@ -42,6 +68,17 @@ export interface GscDigest {
   /** Average position — lower is better. */
   avgPosition: number | null;
   topQueries: GscQueryDigest[];
+  topPages: Array<{ page: string; clicks: number; impressions: number; position: number }>;
+  /** Queries at 11-20: a ranking win that needs a nudge, not a new page. */
+  strikingDistance: Array<{ query: string; impressions: number; position: number }>;
+  /** Top-10 queries earning fewer clicks than the position should give. */
+  lowCtr: Array<{ query: string; position: number; missedClicks: number }>;
+  /** Queries where our own pages compete with each other. */
+  cannibalization: Array<{ query: string; pages: string[] }>;
+  movers: {
+    gainers: Array<{ query: string; clicks: number }>;
+    losers: Array<{ query: string; clicks: number }>;
+  };
   /** Days the reporting window stops short of today. */
   lagDays: number;
 }
@@ -56,6 +93,11 @@ export const EMPTY_GSC_DIGEST: GscDigest = {
   ctr: null,
   avgPosition: null,
   topQueries: [],
+  topPages: [],
+  strikingDistance: [],
+  lowCtr: [],
+  cannibalization: [],
+  movers: { gainers: [], losers: [] },
   lagDays: GSC_LAG_DAYS,
 };
 
@@ -71,11 +113,13 @@ const round = (value: number, places: number): number =>
 export function buildGscDigest(
   summary: GscSummaryLike | null,
   connected: boolean,
+  insights?: GscInsightsLike | null,
 ): GscDigest {
   if (!connected) return { ...EMPTY_GSC_DIGEST };
-  if (!summary) return { ...EMPTY_GSC_DIGEST, connected: true };
+  if (!summary) return { ...EMPTY_GSC_DIGEST, connected: true, ...insightBlock(insights) };
 
   return {
+    ...insightBlock(insights),
     connected: true,
     clicks: Math.round(summary.totals.clicks ?? 0),
     impressions: Math.round(summary.totals.impressions ?? 0),
@@ -87,6 +131,56 @@ export function buildGscDigest(
       impressions: Math.round(row.impressions ?? 0),
       position: round(row.position ?? 0, 1),
     })),
+    // Already in the summary response — it was being fetched and discarded.
+    topPages: (summary.topPages ?? []).slice(0, MAX_QUERIES).map((row) => ({
+      page: row.page,
+      clicks: Math.round(row.clicks ?? 0),
+      impressions: Math.round(row.impressions ?? 0),
+      position: round(row.position ?? 0, 1),
+    })),
     lagDays: GSC_LAG_DAYS,
+  };
+}
+
+/**
+ * Trims the insights to what a prompt can carry. Each list is capped hard: the
+ * value is in naming two or three specific things, and a long list only makes
+ * the model summarise instead of pick.
+ */
+function insightBlock(insights?: GscInsightsLike | null): Pick<
+  GscDigest,
+  'strikingDistance' | 'lowCtr' | 'cannibalization' | 'movers'
+> {
+  if (!insights) {
+    return { strikingDistance: [], lowCtr: [], cannibalization: [], movers: { gainers: [], losers: [] } };
+  }
+
+  return {
+    strikingDistance: (insights.strikingDistance ?? []).slice(0, 3).map((r) => ({
+      query: r.key,
+      impressions: Math.round(r.impressions ?? 0),
+      position: round(r.position ?? 0, 1),
+    })),
+    lowCtr: (insights.lowCtr ?? []).slice(0, 3).map((r) => ({
+      query: r.key,
+      position: round(r.position ?? 0, 1),
+      missedClicks: Math.round(r.missedClicks ?? 0),
+    })),
+    cannibalization: (insights.cannibalization ?? []).slice(0, 2).map((r) => ({
+      query: r.query,
+      // Page URLs only: the per-page click split is detail the model does not
+      // need to name the problem.
+      pages: (r.pages ?? []).slice(0, 3).map((p) => p.page),
+    })),
+    movers: {
+      gainers: (insights.moversQueries?.gainers ?? []).slice(0, 3).map((r) => ({
+        query: r.key,
+        clicks: Math.round(r.clicks ?? 0),
+      })),
+      losers: (insights.moversQueries?.losers ?? []).slice(0, 3).map((r) => ({
+        query: r.key,
+        clicks: Math.round(r.clicks ?? 0),
+      })),
+    },
   };
 }

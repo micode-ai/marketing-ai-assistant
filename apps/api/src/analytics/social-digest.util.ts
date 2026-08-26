@@ -28,6 +28,17 @@ export interface SocialPostRow {
   comments?: number | null;
   shares?: number | null;
   engagementRate?: number | null;
+  /** Caption, text or title — whatever the platform calls the words. */
+  label?: string | null;
+  url?: string | null;
+}
+
+/** One post, named, so advice can point at it instead of at an average. */
+export interface NamedPost {
+  label: string;
+  url: string | null;
+  views: number | null;
+  engagementRate: number | null;
 }
 
 export interface SocialChannelDigest {
@@ -45,6 +56,16 @@ export interface SocialChannelDigest {
   shares: number | null;
   /** Percent, averaged over the posts that carry a rate. */
   avgEngagementRate: number | null;
+  /**
+   * The two best and two worst posts of the period by engagement rate.
+   *
+   * Aggregates can only produce aggregate advice: "engagement is higher on
+   * Instagram" is not something a person can act on, while "this post did four
+   * times the median, do more of it" is. Kept short on purpose — a long list
+   * makes the model summarise instead of pick.
+   */
+  bestPosts: NamedPost[];
+  worstPosts: NamedPost[];
 }
 
 export const EMPTY_CHANNEL_DIGEST: SocialChannelDigest = {
@@ -58,6 +79,8 @@ export const EMPTY_CHANNEL_DIGEST: SocialChannelDigest = {
   comments: null,
   shares: null,
   avgEngagementRate: null,
+  bestPosts: [],
+  worstPosts: [],
 };
 
 /** Sum of the non-null values, or null when nothing was measured at all. */
@@ -134,6 +157,42 @@ export function postStats(rows: SocialPostRow[]): {
   };
 }
 
+const NAMED_POSTS = 2;
+const LABEL_MAX = 120;
+
+/** Trims a caption to something a prompt can carry without losing the subject. */
+function toNamedPost(row: SocialPostRow): NamedPost {
+  const raw = (row.label ?? '').replace(/\s+/g, ' ').trim();
+  return {
+    label: raw.length > LABEL_MAX ? `${raw.slice(0, LABEL_MAX - 1)}…` : raw || '(no caption)',
+    url: row.url ?? null,
+    views: typeof row.views === 'number' ? row.views : null,
+    engagementRate: typeof row.engagementRate === 'number' ? row.engagementRate : null,
+  };
+}
+
+/**
+ * Best and worst by engagement rate, over the posts that have one.
+ *
+ * Worst excludes anything already named as best, so a channel with two posts
+ * does not list the same post as its triumph and its problem.
+ */
+function namedPosts(posts: SocialPostRow[]): { bestPosts: NamedPost[]; worstPosts: NamedPost[] } {
+  const rated = posts
+    .filter((p) => typeof p.engagementRate === 'number')
+    .sort((a, b) => (b.engagementRate as number) - (a.engagementRate as number));
+
+  const bestPosts = rated.slice(0, NAMED_POSTS).map(toNamedPost);
+  const bestKeys = new Set(rated.slice(0, NAMED_POSTS));
+  const worstPosts = [...rated]
+    .reverse()
+    .filter((p) => !bestKeys.has(p))
+    .slice(0, NAMED_POSTS)
+    .map(toNamedPost);
+
+  return { bestPosts, worstPosts };
+}
+
 export function buildChannelDigest(args: {
   accounts: number;
   snapshots: SocialSnapshotRow[];
@@ -149,5 +208,6 @@ export function buildChannelDigest(args: {
     followers,
     followerChange: change,
     ...postStats(args.posts),
+    ...namedPosts(args.posts),
   };
 }
