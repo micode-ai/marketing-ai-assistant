@@ -92,15 +92,30 @@ export interface AnalyticsDigest {
   };
   ga4: {
     connected: boolean;
+    lagHours: number;
     sessions: number | null;
     users: number | null;
     newUsers: number | null;
     pageViews: number | null;
     /** Percent of engaged sessions. */
     engagementRate: number | null;
+    /** Seconds. */
+    avgSessionDuration: number | null;
     keyEvents: number | null;
-    topSources: Array<{ source: string; sessions: number }>;
-    topLandingPages: Array<{ page: string; sessions: number }>;
+    keyEventsConfigured: boolean;
+    previous: { sessions: number | null; users: number | null; keyEvents: number | null } | null;
+    change: { sessions: number | null; users: number | null; keyEvents: number | null } | null;
+    channels: Array<{ channel: string; sessions: number }>;
+    sources: Array<{ source: string; medium: string; sessions: number }>;
+    landingPages: Array<{
+      page: string;
+      sessions: number;
+      keyEvents: number | null;
+      engagementRate: number | null;
+    }>;
+    devices: Array<{ device: string; sessions: number; engagementRate: number | null }>;
+    events: Array<{ event: string; count: number }>;
+    countries: Array<{ country: string; sessions: number }>;
   };
   competitors: Array<{ name: string; websiteUrl: string }>;
   app: {
@@ -180,8 +195,15 @@ How to read the ga4 block (Google Analytics 4), and how it relates to "web":
 - "web" and "ga4" measure the same website by different means. "web" is our own tracking script; "ga4" is Google Analytics, which filters bots, counts sessions by its own rules and only sees pages carrying its tag. They will NOT agree, and that is expected — never add them together, and never present one as correcting the other.
 - When ga4.connected is true, prefer ga4 for traffic and behaviour: it is the measurement the user already trusts elsewhere. Use "web" for conversions and funnel steps, which are ours and which ga4 may not track.
 - If the two disagree sharply, that is itself worth a recommendation — a tag missing from part of the site, or tracking that was never finished.
-- "engagementRate" is a percent. "keyEvents" is GA4's conversion count and is null when the property does not populate it — that means not measured, not zero conversions.
-- "topSources" are channel groups (Organic Search, Direct, Referral…), not individual referrers. "topLandingPages" is where sessions started, which is where to act.
+- "engagementRate" is a percent, "avgSessionDuration" is in seconds.
+- "change" is the percent difference against "previous", the window of equal length immediately before this one. A change of null with a previous value of 0 means growth from nothing — say "from zero", never a percentage. Prefer stating the direction and both numbers over a bare percentage.
+- "keyEventsConfigured": false means the property records no key events at all — conversions were never set up. That is NOT zero conversions, and recommending that conversion tracking be configured is one of the most valuable things you can say about such a property. When it is true, keyEvents is a real count and 0 means nobody converted.
+- "channels" are groupings (Organic Search, Direct, Referral…). "sources" is the real attribution — source plus medium — and is what to name when advising on a specific traffic route.
+- "landingPages" carry sessions, key events and engagement per page. A page with many sessions and no key events, or engagement far below the site average, is the specific thing to fix — name the path.
+- "devices" carry engagement per device. A large gap between mobile and desktop is usually the biggest single finding on a site and is worth raising on its own.
+- "events" are the event names the property actually records, biggest first. If nothing but page_view appears, the site measures no behaviour, which is worth saying.
+- "countries" are the top session sources by country — relevant to language and regional content.
+- "lagHours" is how long GA4 keeps revising recent figures. Do not treat the last day or two as settled.
 - ga4.connected false means no Analytics property is configured for this project. Recommending that it be connected is fair, but do not state any Analytics figures.
 
 How to read the gsc block (Google Search Console):

@@ -262,7 +262,29 @@ export class GoogleIntegrationsService {
     endDate: string,
     dimensions: string[] = ['date'],
     metrics: string[] = ['sessions', 'totalUsers', 'screenPageViews'],
+    opts: {
+      /** Sort by this metric, descending — otherwise GA4 orders by dimension. */
+      orderByMetric?: string;
+      limit?: number;
+      /**
+       * A second window, returned as extra rows tagged with `dateRange`. GA4
+       * accepts several ranges in one request, so a comparison costs nothing
+       * beyond parsing — and a figure without its previous value is not a
+       * finding, only a number.
+       */
+      compareStartDate?: string;
+      compareEndDate?: string;
+    } = {},
   ): Promise<GA4MetricRow[]> {
+    const dateRanges = [{ startDate, endDate, name: 'current' }];
+    if (opts.compareStartDate && opts.compareEndDate) {
+      dateRanges.push({
+        startDate: opts.compareStartDate,
+        endDate: opts.compareEndDate,
+        name: 'previous',
+      });
+    }
+
     const response = await fetch(
       `https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:runReport`,
       {
@@ -272,9 +294,13 @@ export class GoogleIntegrationsService {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          dateRanges: [{ startDate, endDate }],
+          dateRanges,
           dimensions: dimensions.map((name) => ({ name })),
           metrics: metrics.map((name) => ({ name })),
+          ...(opts.orderByMetric
+            ? { orderBys: [{ desc: true, metric: { metricName: opts.orderByMetric } }] }
+            : {}),
+          ...(opts.limit ? { limit: opts.limit } : {}),
         }),
       },
     );
@@ -292,10 +318,19 @@ export class GoogleIntegrationsService {
       }>;
     };
 
+    // With two date ranges GA4 appends a `dateRange` dimension of its own, so
+    // the requested dimensions keep their positions and the range lands last.
+    const comparing = dateRanges.length > 1;
+
     return (data.rows || []).map((row) => ({
-      dimensions: Object.fromEntries(
-        dimensions.map((d, i) => [d, row.dimensionValues[i]?.value || '']),
-      ),
+      dimensions: {
+        ...Object.fromEntries(
+          dimensions.map((d, i) => [d, row.dimensionValues[i]?.value || '']),
+        ),
+        ...(comparing
+          ? { dateRange: row.dimensionValues[dimensions.length]?.value || 'current' }
+          : {}),
+      },
       metrics: Object.fromEntries(
         metrics.map((m, i) => [m, parseFloat(row.metricValues[i]?.value || '0')]),
       ),

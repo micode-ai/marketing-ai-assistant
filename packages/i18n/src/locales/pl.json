@@ -971,7 +971,16 @@
       "notConnected": "Dla tego projektu nie wybrano usługi Analytics.",
       "goToSettings": "Wybierz w ustawieniach",
       "noData": "Analytics nie zwrócił danych za ten okres — usługa może być nowa lub tag nie jest zainstalowany.",
-      "differsFromTracker": "Te dane pochodzą z Google Analytics i będą różnić się od zakładki Witryna, która korzysta z naszego skryptu."
+      "differsFromTracker": "Te dane pochodzą z Google Analytics i będą różnić się od zakładki Witryna, która korzysta z naszego skryptu.",
+      "sources": "Źródła ruchu",
+      "page": "Strona",
+      "devices": "Urządzenia",
+      "events": "Zdarzenia",
+      "countries": "Kraje",
+      "avgDuration": "Śr. sesja",
+      "fromZero": "z zera",
+      "keyEventsNotConfigured": "W tej usłudze nie skonfigurowano zdarzeń kluczowych — konwersje nie są mierzone.",
+      "lag": "GA4 koryguje dane z ostatnich {hours} godzin."
     }
   },
   "instagram": {

@@ -395,13 +395,19 @@ describe('AnalyticsService', () => {
         (_token: string, _property: string, _start: string, _end: string, dims: string[]) =>
           Promise.resolve(
             dims.length === 0
-              ? [{
-                  dimensions: {},
-                  metrics: {
-                    sessions: 1240, totalUsers: 980, newUsers: 610,
-                    screenPageViews: 3100, engagementRate: 0.6428, keyEvents: 47,
+              ? [
+                  {
+                    dimensions: { dateRange: 'current' },
+                    metrics: {
+                      sessions: 1240, totalUsers: 980, newUsers: 610,
+                      screenPageViews: 3100, engagementRate: 0.6428, keyEvents: 47,
+                    },
                   },
-                }]
+                  {
+                    dimensions: { dateRange: 'previous' },
+                    metrics: { sessions: 620, totalUsers: 500, keyEvents: 20 },
+                  },
+                ]
               : [{ dimensions: { [dims[0]]: 'Organic Search' }, metrics: { sessions: 700 } }],
           ),
       );
@@ -416,12 +422,21 @@ describe('AnalyticsService', () => {
       expect(google.fetchGA4Report).toHaveBeenCalledWith(
         'tok-for-proj-1', '123456', expect.any(String), expect.any(String),
         [], expect.arrayContaining(['sessions']),
+        // The totals report asks for the preceding window too — a figure
+        // without its previous value is a number, not a finding.
+        expect.objectContaining({
+          compareStartDate: expect.any(String),
+          compareEndDate: expect.any(String),
+        }),
       );
       const ga4 = JSON.parse((mockFetch.mock.calls[0] as any)[1].body).data.ga4;
       expect(ga4).toMatchObject({ connected: true, sessions: 1240, users: 980 });
       // Stated as a percent, like every other rate in the digest.
       expect(ga4.engagementRate).toBe(64.3);
-      expect(ga4.topSources[0]).toEqual({ source: 'Organic Search', sessions: 700 });
+      expect(ga4.channels[0]).toEqual({ channel: 'Organic Search', sessions: 700 });
+      // Sessions doubled against the preceding window.
+      expect(ga4.change.sessions).toBe(100);
+      expect(ga4.previous.sessions).toBe(620);
     });
 
     it('keeps the rest of Analytics when one of its reports fails', async () => {
