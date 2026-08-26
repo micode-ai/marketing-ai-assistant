@@ -44,8 +44,13 @@ export class MetaOAuthController {
       const expectedB64 = Buffer.from(
         crypto.createHmac('sha256', secret).update(body).digest(),
       ).toString('base64url');
-      const sigBuf = Buffer.from(sigB64, 'base64url');
-      const expectedBuf = Buffer.from(expectedB64, 'base64url');
+      // Compare the encodings, not the decoded bytes. base64url carries slack
+      // bits in its final character — a sha256 digest is 43 characters whose
+      // last one holds only 4 significant bits — so two different strings decode
+      // to the same 32 bytes. Comparing buffers accepted both, which meant a
+      // signature was not uniquely determined by the payload.
+      const sigBuf = Buffer.from(sigB64, 'utf-8');
+      const expectedBuf = Buffer.from(expectedB64, 'utf-8');
       if (sigBuf.length !== expectedBuf.length) return null;
       if (!crypto.timingSafeEqual(sigBuf, expectedBuf)) return null;
       const parsed = JSON.parse(Buffer.from(body, 'base64url').toString('utf-8'));
