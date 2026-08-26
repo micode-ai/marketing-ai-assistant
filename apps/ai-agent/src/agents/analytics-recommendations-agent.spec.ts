@@ -186,6 +186,40 @@ describe('buildRecommendationsPrompt', () => {
     expect(systemPrompt.toLowerCase()).toContain('from zero');
   });
 
+  it('leads with the ranked findings when they are supplied', () => {
+    const { systemPrompt, userPrompt } = buildRecommendationsPrompt({
+      ...input,
+      findings: [
+        { id: 'lowctr:crm', severity: 'high', source: 'gsc',
+          fact: '"crm" ranks 3.2 but loses about 84 clicks a month to a weak snippet.' },
+        { id: 'tiktok:silent', severity: 'low', source: 'tiktok',
+          fact: 'tiktok is connected but nothing was published this period.' },
+      ],
+    });
+
+    // Findings come first in the prompt, ahead of the digest they were derived
+    // from — the model reads the shortlist before the haystack.
+    expect(userPrompt.indexOf('Findings, already ranked')).toBeLessThan(
+      userPrompt.indexOf('Full analytics digest'),
+    );
+    expect(userPrompt).toContain('[high] (gsc)');
+    expect(userPrompt).toContain('84 clicks');
+    expect(systemPrompt.toLowerCase()).toContain('do not restate a finding');
+  });
+
+  it('omits the findings section when there are none', () => {
+    const { userPrompt } = buildRecommendationsPrompt({ ...input, findings: [] });
+
+    expect(userPrompt).not.toContain('Findings, already ranked');
+    expect(userPrompt).toContain('Full analytics digest');
+  });
+
+  it('tells the model not to manufacture urgency from an empty list', () => {
+    const { systemPrompt } = buildRecommendationsPrompt(input);
+
+    expect(systemPrompt.toLowerCase()).toContain('do not manufacture urgency');
+  });
+
   it('warns that Search Console lags behind today', () => {
     const { systemPrompt, userPrompt } = buildRecommendationsPrompt(input);
 

@@ -462,6 +462,26 @@ describe('AnalyticsService', () => {
       expect(ga4.keyEvents).toBeNull();
     });
 
+    it('sends ranked findings alongside the digest', async () => {
+      prisma.projectApiKey.findFirst.mockResolvedValue({ id: 'gkey' });
+      const mockFetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ recommendations: [] }),
+      });
+      global.fetch = mockFetch as any;
+
+      await service.generateRecommendations('proj_1', 'en');
+
+      const body = JSON.parse((mockFetch.mock.calls[0] as any)[1].body);
+      expect(Array.isArray(body.findings)).toBe(true);
+      // The mocked GSC insights carry a low-CTR query, which is the highest
+      // severity thing in this fixture.
+      expect(body.findings[0]).toMatchObject({ severity: 'high', source: 'gsc' });
+      expect(body.findings[0].fact).toContain('crm dla firm');
+      // The digest still travels — the findings say where to look, not everything.
+      expect(body.data.gsc.clicks).toBe(412);
+    });
+
     it('carries the named search findings, not just the averages', async () => {
       prisma.projectApiKey.findFirst.mockResolvedValue({ id: 'gkey' });
       const mockFetch = jest.fn().mockResolvedValue({
