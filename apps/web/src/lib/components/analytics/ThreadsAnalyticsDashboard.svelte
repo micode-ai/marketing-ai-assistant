@@ -5,6 +5,7 @@
   import { marked } from 'marked';
   import DOMPurify from 'dompurify';
   import { api } from '$lib/api/client';
+  import AccountSwitcher from './AccountSwitcher.svelte';
   import {
     resolveThreadsView,
     isSyncStale,
@@ -54,6 +55,7 @@
   const SYNC_INTERVAL_MS = 5 * 60 * 1000; // periodic refresh while mounted
 
   let status: ThreadsStatus | null = null;
+  let selectedAccountId: string | null = null;
   let metrics: Metrics = { account: [], topPosts: [], worstPosts: [], periodTotals: {} };
   let loading = true;
   let dataLoading = false;
@@ -119,6 +121,20 @@
     }
   }
 
+  // The server decides the default account; adopting it keeps the select in
+  // step with the figures actually shown.
+  function adoptSelection() {
+    if (!selectedAccountId && status?.selectedAccountId) {
+      selectedAccountId = status.selectedAccountId;
+    }
+  }
+
+  async function switchAccount(event: CustomEvent<string>) {
+    if (event.detail === selectedAccountId) return;
+    selectedAccountId = event.detail;
+    await reinit();
+  }
+
   async function reinit() {
     if (syncInterval) { clearInterval(syncInterval); syncInterval = null; }
     destroyChart();
@@ -142,7 +158,8 @@
 
   async function checkStatus() {
     try {
-      status = await api.get<ThreadsStatus>('/threads/status', { projectId });
+      status = await api.get<ThreadsStatus>('/threads/status', { projectId, ...(selectedAccountId ? { accountId: selectedAccountId } : {}) });
+      adoptSelection();
     } catch {
       status = { connected: false, insightsGranted: false };
     }
@@ -151,7 +168,7 @@
   async function triggerSync() {
     syncing = true;
     try {
-      await api.post('/threads/sync?projectId=' + projectId);
+      await api.post('/threads/sync?projectId=' + projectId + (selectedAccountId ? '&accountId=' + selectedAccountId : ''));
       await checkStatus();
     } catch {
       /* best effort — keep showing existing data */
@@ -168,7 +185,7 @@
   async function fetchMetrics() {
     dataLoading = true;
     try {
-      metrics = await api.get<Metrics>('/threads/metrics', { projectId, days });
+      metrics = await api.get<Metrics>('/threads/metrics', { projectId, days, ...(selectedAccountId ? { accountId: selectedAccountId } : {}) });
       await tick();
       renderChart();
     } catch {
@@ -377,6 +394,12 @@
         </div>
       </div>
       <div class="flex items-center gap-3">
+        <div class="flex items-center gap-3">
+          <AccountSwitcher
+            accounts={status?.accounts ?? []}
+            selectedId={selectedAccountId}
+            on:change={switchAccount}
+          />
         <button on:click={syncAndRefresh} disabled={syncing}
           class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-ink-muted border border-border rounded-lg hover:bg-surface-2 transition-colors disabled:opacity-40 cursor-pointer">
           {#if syncing}
@@ -392,6 +415,7 @@
             {$_('threads.syncNow')}
           {/if}
         </button>
+      </div>
       </div>
     </div>
 

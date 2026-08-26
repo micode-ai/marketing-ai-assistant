@@ -105,7 +105,7 @@ describe('InstagramService', () => {
 
       const status = await service.getStatus('p1');
 
-      expect(status).toEqual({ connected: false, insightsGranted: false });
+      expect(status).toEqual({ connected: false, insightsGranted: false, accounts: [], selectedAccountId: null });
     });
 
     it('returns connected with insightsGranted true when scope present', async () => {

@@ -2,6 +2,10 @@
 // connection-state branching can be unit-tested without a DOM render harness.
 
 export interface InstagramStatus {
+  /** Every account of this channel linked to the project. */
+  accounts?: Array<{ id: string; accountName: string; accountId: string }>;
+  /** Which of them the figures describe — our id, not the platform's. */
+  selectedAccountId?: string | null;
   connected: boolean;
   accountName?: string;
   accountId?: string;

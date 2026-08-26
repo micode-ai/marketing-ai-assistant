@@ -974,6 +974,9 @@
         "general": "General"
       },
       "periodMismatch": "Computed over {days} days — refresh to match the selected period"
+    },
+    "accountSwitcher": {
+      "label": "Account"
     }
   },
   "instagram": {

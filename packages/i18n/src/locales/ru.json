@@ -852,6 +852,9 @@
         "general": "Общее"
       },
       "periodMismatch": "Посчитано за {days} дней — обновите, чтобы совпало с выбранным периодом"
+    },
+    "accountSwitcher": {
+      "label": "Аккаунт"
     }
   },
   "instagram": {
