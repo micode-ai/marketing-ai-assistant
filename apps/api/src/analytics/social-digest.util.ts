@@ -167,7 +167,10 @@ function toNamedPost(row: SocialPostRow): NamedPost {
     label: raw.length > LABEL_MAX ? `${raw.slice(0, LABEL_MAX - 1)}…` : raw || '(no caption)',
     url: row.url ?? null,
     views: typeof row.views === 'number' ? row.views : null,
-    engagementRate: typeof row.engagementRate === 'number' ? row.engagementRate : null,
+    // Rounded like every other rate in the digest. Raw it arrives as
+    // 0.1176470588235294, and the model quotes it back to the user verbatim.
+    engagementRate:
+      typeof row.engagementRate === 'number' ? Number(row.engagementRate.toFixed(2)) : null,
   };
 }
 

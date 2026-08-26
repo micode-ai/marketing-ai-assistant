@@ -855,6 +855,21 @@
     },
     "accountSwitcher": {
       "label": "Аккаунт"
+    },
+    "tabGa4": "Analytics",
+    "ga4": {
+      "sessions": "Сеансы",
+      "users": "Пользователи",
+      "newUsers": "Новые пользователи",
+      "pageViews": "Просмотры страниц",
+      "engagementRate": "Вовлечённость",
+      "keyEvents": "Ключевые события",
+      "channels": "Каналы трафика",
+      "landingPages": "Страницы входа",
+      "notConnected": "Для этого проекта не выбран ресурс Analytics.",
+      "goToSettings": "Выбрать в настройках",
+      "noData": "Analytics не вернул данные за этот период — ресурс может быть новым или тег не установлен.",
+      "differsFromTracker": "Эти цифры из Google Analytics и будут отличаться от вкладки «Сайт», где используется наш собственный скрипт."
     }
   },
   "instagram": {

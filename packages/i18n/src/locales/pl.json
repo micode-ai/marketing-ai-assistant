@@ -957,6 +957,21 @@
     },
     "accountSwitcher": {
       "label": "Konto"
+    },
+    "tabGa4": "Analytics",
+    "ga4": {
+      "sessions": "Sesje",
+      "users": "Użytkownicy",
+      "newUsers": "Nowi użytkownicy",
+      "pageViews": "Odsłony",
+      "engagementRate": "Współczynnik zaangażowania",
+      "keyEvents": "Zdarzenia kluczowe",
+      "channels": "Kanały ruchu",
+      "landingPages": "Strony docelowe",
+      "notConnected": "Dla tego projektu nie wybrano usługi Analytics.",
+      "goToSettings": "Wybierz w ustawieniach",
+      "noData": "Analytics nie zwrócił danych za ten okres — usługa może być nowa lub tag nie jest zainstalowany.",
+      "differsFromTracker": "Te dane pochodzą z Google Analytics i będą różnić się od zakładki Witryna, która korzysta z naszego skryptu."
     }
   },
   "instagram": {

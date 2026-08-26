@@ -235,6 +235,17 @@ describe('buildChannelDigest', () => {
       expect(label.endsWith('…')).toBe(true);
     });
 
+    it('rounds the per-post rate so it is not quoted back raw', () => {
+      // Production showed a recommendation containing "0.1176470588235294".
+      const digest = buildChannelDigest({
+        accounts: 1,
+        snapshots: [],
+        posts: [post('Jeden agent', 0.1176470588235294, 17)],
+      });
+
+      expect(digest.bestPosts[0].engagementRate).toBe(0.12);
+    });
+
     it('falls back to a placeholder when a post has no words at all', () => {
       const digest = buildChannelDigest({
         accounts: 1,
