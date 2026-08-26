@@ -581,7 +581,15 @@ export class AnalyticsService {
       countries: rows(countries),
     });
 
-    this.ga4Cache.set(cacheKey, { data: digest, fetchedAt: Date.now() });
+    // Only a result with figures is worth an hour. Caching an empty answer made
+    // the panel keep saying "no data" long after data arrived: a property is
+    // usually connected minutes before its first report lands, so the negative
+    // answer is exactly the one that goes stale fastest.
+    if (digest.sessions !== null) {
+      this.ga4Cache.set(cacheKey, { data: digest, fetchedAt: Date.now() });
+    } else {
+      this.ga4Cache.delete(cacheKey);
+    }
     return digest;
   }
 

@@ -502,6 +502,45 @@ describe('AnalyticsService', () => {
       expect(gsc.topPages[0].page).toBe('/pricing');
     });
 
+    it('does not cache an empty Analytics answer', async () => {
+      // A property is connected minutes before its first report lands, so the
+      // empty answer is the one that goes stale fastest. Caching it made the
+      // panel keep saying "no data" for an hour after data arrived.
+      google.getIntegration.mockResolvedValue({ accessToken: 'tok', propertyId: '551758332' });
+      google.fetchGA4Report.mockResolvedValue([]);
+      const mockFetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ recommendations: [] }),
+      });
+      global.fetch = mockFetch as any;
+
+      await service.getGa4Overview('proj_1', 30);
+      const callsAfterEmpty = google.fetchGA4Report.mock.calls.length;
+
+      // Data arrives; a second look must actually go and ask again.
+      google.fetchGA4Report.mockResolvedValue([
+        { dimensions: {}, metrics: { sessions: 12, totalUsers: 9 } },
+      ]);
+      const second = await service.getGa4Overview('proj_1', 30);
+
+      expect(google.fetchGA4Report.mock.calls.length).toBeGreaterThan(callsAfterEmpty);
+      expect(second.sessions).toBe(12);
+    });
+
+    it('caches an answer that has figures', async () => {
+      google.getIntegration.mockResolvedValue({ accessToken: 'tok', propertyId: '551758332' });
+      google.fetchGA4Report.mockResolvedValue([
+        { dimensions: {}, metrics: { sessions: 12, totalUsers: 9 } },
+      ]);
+
+      await service.getGa4Overview('proj_2', 30);
+      const afterFirst = google.fetchGA4Report.mock.calls.length;
+      await service.getGa4Overview('proj_2', 30);
+
+      // Eight reports per look is worth avoiding when the answer is real.
+      expect(google.fetchGA4Report.mock.calls.length).toBe(afterFirst);
+    });
+
     it('keeps the averages when only the insights call fails', async () => {
       prisma.projectApiKey.findFirst.mockResolvedValue({ id: 'gkey' });
       google.computeGscInsights.mockRejectedValue(new Error('500 from Google'));
