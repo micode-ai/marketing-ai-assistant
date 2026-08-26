@@ -138,15 +138,38 @@ export class GoogleIntegrationsController {
   }
 
   @Post('config')
+  @ApiOperation({ summary: 'Set the Search Console site or the GA4 property' })
   async saveConfig(
     @Body() dto: { projectId: string; type: 'gsc' | 'ga4'; siteUrl?: string; propertyId?: string },
   ) {
-    const existing = await this.googleService.getIntegration(dto.projectId);
-    return this.googleService.saveIntegration(dto.projectId, dto.type, {
-      ...existing,
-      siteUrl: dto.siteUrl,
-      propertyId: dto.propertyId,
-    });
+    // Only what was actually supplied. Assigning both unconditionally meant
+    // saving a GA4 property wrote siteUrl: undefined and unconfigured Search
+    // Console — the two settings share one row and must not overwrite each other.
+    const patch: Record<string, unknown> = {};
+    if (dto.siteUrl !== undefined) patch.siteUrl = dto.siteUrl;
+    if (dto.propertyId !== undefined) patch.propertyId = dto.propertyId;
+
+    await this.googleService.saveIntegration(dto.projectId, dto.type, patch);
+    return this.googleService.getIntegrationView(dto.projectId);
+  }
+
+  @Get('ga4/properties')
+  @UseGuards(ProjectAccessGuard)
+  @ApiOperation({ summary: 'List the GA4 properties this connection can read' })
+  async listGa4Properties(@Query('projectId') projectId: string) {
+    const config = await this.googleService.getIntegration(projectId);
+    if (!config?.accessToken) return { properties: [] };
+
+    let accessToken = config.accessToken as string;
+    if (new Date(config.expiresAt as string) < new Date() && config.refreshToken) {
+      accessToken = await this.googleService.refreshAccessToken(config.refreshToken as string);
+      await this.googleService.saveIntegration(projectId, 'ga4', {
+        accessToken,
+        expiresAt: new Date(Date.now() + 3600 * 1000).toISOString(),
+      });
+    }
+
+    return { properties: await this.googleService.listGa4Properties(accessToken) };
   }
 
   @Get('search-console/summary')

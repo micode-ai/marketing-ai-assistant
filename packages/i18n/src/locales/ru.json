@@ -1493,6 +1493,13 @@
       "device": "Устройство",
       "loadError": "Не удалось загрузить данные Search Console.",
       "retry": "Повторить"
+    },
+    "ga4Config": {
+      "property": "Google Analytics 4",
+      "propertyHelper": "ресурс, из которого читаются отчёты",
+      "noProperties": "Для этого аккаунта Google нет доступных ресурсов GA4",
+      "notSelected": "Не выбран",
+      "saveSuccess": "Ресурс Analytics сохранён"
     }
   },
   "projectExport": {

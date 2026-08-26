@@ -1495,6 +1495,13 @@
       "device": "Urządzenie",
       "loadError": "Nie udało się załadować danych Search Console.",
       "retry": "Spróbuj ponownie"
+    },
+    "ga4Config": {
+      "property": "Google Analytics 4",
+      "propertyHelper": "usługa, z której czytane są raporty",
+      "noProperties": "Brak dostępnych usług GA4 na tym koncie Google",
+      "notSelected": "Nie wybrano",
+      "saveSuccess": "Usługa Analytics zapisana"
     }
   },
   "projectExport": {

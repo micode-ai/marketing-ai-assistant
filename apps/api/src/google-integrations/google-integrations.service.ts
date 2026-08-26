@@ -174,6 +174,51 @@ export class GoogleIntegrationsService {
   }
 
   /**
+   * The GA4 properties this token can read.
+   *
+   * GA4 has no equivalent of Search Console's sites.list: a report needs a
+   * numeric property id, and there is nowhere in the product to get one. Without
+   * this a user would have to dig the number out of the Analytics admin UI and
+   * paste it, which is exactly the kind of step that makes an integration go
+   * unused. accountSummaries returns accounts with their properties in one call.
+   */
+  async listGa4Properties(
+    accessToken: string,
+  ): Promise<Array<{ propertyId: string; displayName: string; account: string }>> {
+    const response = await fetch(
+      'https://analyticsadmin.googleapis.com/v1beta/accountSummaries?pageSize=200',
+      { headers: { Authorization: `Bearer ${accessToken}` } },
+    );
+    if (!response.ok) {
+      const err = await response.text();
+      this.logger.warn(`GA4 accountSummaries error: ${err}`);
+      return [];
+    }
+
+    const data = (await response.json()) as {
+      accountSummaries?: Array<{
+        displayName?: string;
+        propertySummaries?: Array<{ property?: string; displayName?: string }>;
+      }>;
+    };
+
+    const properties: Array<{ propertyId: string; displayName: string; account: string }> = [];
+    for (const account of data.accountSummaries ?? []) {
+      for (const property of account.propertySummaries ?? []) {
+        // "properties/123456" — the API wants the bare number in report calls.
+        const propertyId = (property.property ?? '').split('/').pop() ?? '';
+        if (!propertyId) continue;
+        properties.push({
+          propertyId,
+          displayName: property.displayName ?? propertyId,
+          account: account.displayName ?? '',
+        });
+      }
+    }
+    return properties;
+  }
+
+  /**
    * Fetch Search Console performance data
    */
   async fetchSearchConsoleData(
@@ -265,17 +310,26 @@ export class GoogleIntegrationsService {
     type: 'gsc' | 'ga4',
     config: Record<string, unknown>,
   ) {
-    // Store as ProjectApiKey with GOOGLE platform
+    // One row per project holds both integrations, because both ride the same
+    // OAuth grant. So this merges rather than replaces: saving a GA4 property
+    // used to overwrite the whole payload, taking accessToken, refreshToken and
+    // siteUrl with it — configuring Analytics would have disconnected Search
+    // Console and required a fresh OAuth round.
     const existing = await this.prisma.projectApiKey.findUnique({
       where: { projectId_platform: { projectId, platform: 'GOOGLE' } },
     });
 
-    const encryptedKey = Buffer.from(JSON.stringify({ type, ...config })).toString('base64');
+    const current = existing ? await this.getIntegration(projectId) : null;
+    const encryptedKey = Buffer.from(
+      JSON.stringify({ ...(current ?? {}), ...config, type }),
+    ).toString('base64');
 
     if (existing) {
+      // Union, not replacement: a project can have both gsc and ga4 configured.
+      const scopes = Array.from(new Set([...(existing.scopes ?? []), type]));
       return this.prisma.projectApiKey.update({
         where: { id: existing.id },
-        data: { encryptedKey, scopes: [type] },
+        data: { encryptedKey, scopes },
       });
     }
 

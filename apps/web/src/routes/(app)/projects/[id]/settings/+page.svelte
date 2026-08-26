@@ -39,6 +39,8 @@
     gscConfig = null;
     gscSiteUrl = '';
     gscSites = [];
+    ga4Properties = [];
+    ga4PropertyId = '';
 
     if (!$organizationIdStore) { loading = false; return; }
     try {
@@ -99,6 +101,12 @@
   let gscLoading = false;
   let gscSiteUrl = '';
   let gscSites: Array<{ siteUrl: string; permissionLevel: string }> = [];
+  // GA4 rides the same OAuth grant as Search Console — analytics.readonly is
+  // already requested — so this only needs a property, not another connection.
+  let ga4Properties: Array<{ propertyId: string; displayName: string; account: string }> = [];
+  let ga4PropertiesLoading = false;
+  let ga4PropertyId = '';
+  let ga4Saving = false;
   let gscSitesLoading = false;
   let gscSaving = false;
   let gscDisconnecting = false;
@@ -374,8 +382,9 @@
       const result = await api.get<any>('/google/integration', { projectId });
       gscConfig = result;
       gscSiteUrl = result?.siteUrl || '';
+      ga4PropertyId = result?.propertyId || '';
       if (result?.connected) {
-        await fetchGscSites();
+        await Promise.all([fetchGscSites(), fetchGa4Properties()]);
       }
     } catch {
       gscConfig = null;
@@ -446,6 +455,37 @@
       window.location.href = result.url;
     } catch (e: any) {
       gscError = e.message || 'Failed to start Google OAuth';
+    }
+  }
+
+  async function fetchGa4Properties() {
+    ga4PropertiesLoading = true;
+    try {
+      const { properties } = await api.get<{
+        properties: Array<{ propertyId: string; displayName: string; account: string }>;
+      }>('/google/ga4/properties', { projectId });
+      ga4Properties = properties;
+    } catch {
+      ga4Properties = [];
+    } finally {
+      ga4PropertiesLoading = false;
+    }
+  }
+
+  async function saveGa4Property() {
+    if (!ga4PropertyId) return;
+    ga4Saving = true;
+    gscError = '';
+    try {
+      await api.post('/google/config', { projectId, type: 'ga4', propertyId: ga4PropertyId });
+      gscSuccess = $_('seo.ga4Config.saveSuccess');
+      setTimeout(() => { gscSuccess = ''; }, 3000);
+      await fetchGscConfig();
+    } catch (e: any) {
+      gscError = e.message || $_('seo.syncFailed');
+      setTimeout(() => { gscError = ''; }, 5000);
+    } finally {
+      ga4Saving = false;
     }
   }
 
@@ -710,6 +750,42 @@
                 Project website: <span class="font-medium">{projectWebsite}</span> — pre-selected the matching property if available.
               </p>
             {/if}
+          {/if}
+        </div>
+
+        <!-- Google Analytics 4. Same connection, separate resource: a report
+             needs a numeric property id, so it has to be chosen explicitly. -->
+        <div class="mt-4">
+          <label class="block text-xs font-medium text-ink-muted mb-1.5" for="ga4-property">
+            {$_('seo.ga4Config.property')}
+            <span class="font-normal text-ink-subtle ml-1">— {$_('seo.ga4Config.propertyHelper')}</span>
+          </label>
+          {#if ga4PropertiesLoading}
+            <div class="h-10 bg-surface-2 rounded-lg animate-pulse"></div>
+          {:else if ga4Properties.length === 0}
+            <p class="text-xs text-ink-muted">{$_('seo.ga4Config.noProperties')}</p>
+          {:else}
+            <div class="flex gap-2">
+              <select
+                id="ga4-property"
+                bind:value={ga4PropertyId}
+                class="flex-1 px-3 py-1.5 text-sm border border-border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              >
+                <option value="">{$_('seo.ga4Config.notSelected')}</option>
+                {#each ga4Properties as property (property.propertyId)}
+                  <option value={property.propertyId}>
+                    {property.displayName}{property.account ? ` · ${property.account}` : ''}
+                  </option>
+                {/each}
+              </select>
+              <button
+                on:click={saveGa4Property}
+                disabled={ga4Saving || !ga4PropertyId}
+                class="px-3 py-1.5 bg-gray-800 text-white rounded-lg text-sm font-medium hover:bg-gray-900 transition-colors duration-150 disabled:opacity-40 cursor-pointer whitespace-nowrap"
+              >
+                {ga4Saving ? $_('common.loading') : $_('seo.gscConfig.save')}
+              </button>
+            </div>
           {/if}
         </div>
 

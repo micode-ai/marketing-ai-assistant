@@ -241,4 +241,140 @@ describe('GoogleIntegrationsService', () => {
       expect(raw.accessToken).toBe('token123');
     });
   });
+
+  describe('saveIntegration', () => {
+    function prismaMock() {
+      return (service as any).prisma;
+    }
+
+    function storedRow(config: Record<string, unknown>, scopes: string[]) {
+      return {
+        id: 'row_1',
+        scopes,
+        encryptedKey: Buffer.from(JSON.stringify(config)).toString('base64'),
+      };
+    }
+
+    function savedPayload(): Record<string, unknown> {
+      const call = prismaMock().projectApiKey.update.mock.calls[0][0];
+      return JSON.parse(Buffer.from(call.data.encryptedKey, 'base64').toString('utf-8'));
+    }
+
+    it('keeps the tokens and the other integration when saving one of them', async () => {
+      // Saving a GA4 property used to replace the whole payload, taking the
+      // access token, refresh token and siteUrl with it — Search Console would
+      // have needed a fresh OAuth round.
+      prismaMock().projectApiKey.findUnique.mockResolvedValue(storedRow(MOCK_CONFIG, ['gsc']));
+
+      await service.saveIntegration('proj_1', 'ga4', { propertyId: '123456' });
+
+      const payload = savedPayload();
+      expect(payload.accessToken).toBe('token123');
+      expect(payload.refreshToken).toBe('refresh123');
+      expect(payload.siteUrl).toBe('https://example.com/');
+      expect(payload.propertyId).toBe('123456');
+    });
+
+    it('unions the scopes instead of collapsing them to the last one', async () => {
+      prismaMock().projectApiKey.findUnique.mockResolvedValue(storedRow(MOCK_CONFIG, ['gsc']));
+
+      await service.saveIntegration('proj_1', 'ga4', { propertyId: '123456' });
+
+      const call = prismaMock().projectApiKey.update.mock.calls[0][0];
+      expect(call.data.scopes.sort()).toEqual(['ga4', 'gsc']);
+    });
+
+    it('does not duplicate a scope that is already recorded', async () => {
+      prismaMock().projectApiKey.findUnique.mockResolvedValue(
+        storedRow(MOCK_CONFIG, ['gsc', 'ga4']),
+      );
+
+      await service.saveIntegration('proj_1', 'gsc', { siteUrl: 'https://other.com/' });
+
+      const call = prismaMock().projectApiKey.update.mock.calls[0][0];
+      expect(call.data.scopes.sort()).toEqual(['ga4', 'gsc']);
+      expect(savedPayload().siteUrl).toBe('https://other.com/');
+    });
+
+    it('creates a fresh row when nothing is stored yet', async () => {
+      prismaMock().projectApiKey.findUnique.mockResolvedValue(null);
+
+      await service.saveIntegration('proj_1', 'gsc', { siteUrl: 'https://example.com/' });
+
+      const call = prismaMock().projectApiKey.create.mock.calls[0][0];
+      expect(call.data.scopes).toEqual(['gsc']);
+    });
+  });
+
+  describe('listGa4Properties', () => {
+    // This suite's `fetchSpy` spies on fetchSearchConsoleData, not on global
+    // fetch, so these tests stub fetch directly.
+    let realFetch: typeof global.fetch;
+    let httpMock: jest.Mock;
+
+    beforeEach(() => {
+      realFetch = global.fetch;
+      httpMock = jest.fn();
+      global.fetch = httpMock as unknown as typeof global.fetch;
+    });
+
+    afterEach(() => {
+      global.fetch = realFetch;
+    });
+
+    it('flattens accounts into properties with bare numeric ids', async () => {
+      // The API returns "properties/123456"; report calls want "123456".
+      httpMock.mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          accountSummaries: [
+            {
+              displayName: 'MiCode',
+              propertySummaries: [
+                { property: 'properties/123456', displayName: 'mi-code.pl' },
+                { property: 'properties/789', displayName: 'app' },
+              ],
+            },
+          ],
+        }),
+      } as any);
+
+      const properties = await service.listGa4Properties('token123');
+
+      expect(properties).toEqual([
+        { propertyId: '123456', displayName: 'mi-code.pl', account: 'MiCode' },
+        { propertyId: '789', displayName: 'app', account: 'MiCode' },
+      ]);
+    });
+
+    it('skips entries with no usable property id', async () => {
+      httpMock.mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          accountSummaries: [{ displayName: 'Acc', propertySummaries: [{ displayName: 'broken' }] }],
+        }),
+      } as any);
+
+      expect(await service.listGa4Properties('token123')).toEqual([]);
+    });
+
+    it('returns an empty list rather than throwing when Google refuses', async () => {
+      httpMock.mockResolvedValue({ ok: false, text: async () => 'PERMISSION_DENIED' } as any);
+
+      expect(await service.listGa4Properties('token123')).toEqual([]);
+    });
+
+    it('falls back to the id when a property has no display name', async () => {
+      httpMock.mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          accountSummaries: [{ propertySummaries: [{ property: 'properties/42' }] }],
+        }),
+      } as any);
+
+      expect(await service.listGa4Properties('token123')).toEqual([
+        { propertyId: '42', displayName: '42', account: '' },
+      ]);
+    });
+  });
 });
