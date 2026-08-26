@@ -28,6 +28,42 @@ export class GooglePlayMetricsService {
   constructor(private prisma: PrismaService) {}
 
   /**
+   * Whether app figures are still being collected, and when they last were.
+   *
+   * The hourly sync skips FREE plans outright, so a project can hold months of
+   * data that simply stops. Nothing said so, and the dashboard kept rendering
+   * the last stored rows as if they were today's. `syncEnabled` mirrors the
+   * cron's own rule rather than guessing from the data, because "no new rows"
+   * and "collection is off" call for different messages.
+   */
+  async getFreshness(projectId: string): Promise<{
+    syncEnabled: boolean;
+    plan: string | null;
+    lastMeasuredAt: string | null;
+  }> {
+    const [project, newest] = await Promise.all([
+      this.prisma.project.findUnique({
+        where: { id: projectId },
+        select: { organization: { select: { subscription: { select: { plan: true } } } } },
+      }),
+      this.prisma.appStoreMetrics.findFirst({
+        where: { projectId },
+        orderBy: { date: 'desc' },
+        select: { date: true },
+      }),
+    ]);
+
+    const plan = project?.organization?.subscription?.plan ?? null;
+
+    return {
+      // Same condition as google-play-sync.service.ts: FREE is skipped.
+      syncEnabled: plan !== null && plan !== 'FREE',
+      plan,
+      lastMeasuredAt: newest?.date ? newest.date.toISOString().slice(0, 10) : null,
+    };
+  }
+
+  /**
    * Query AppStoreMetrics for a project within a date range.
    */
   async getMetrics(projectId: string, startDate: string, endDate: string) {

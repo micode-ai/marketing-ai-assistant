@@ -1697,7 +1697,9 @@
         "noAccess": "Brak dostępu do Google Play Console",
         "syncFailed": "Synchronizacja nie powiodła się. Automatyczna ponowna próba.",
         "revoked": "Dostęp odwołany. Połącz ponownie."
-      }
+      },
+      "syncOff": "Synchronizacja wyłączona w Twoim planie — dane nie są aktualizowane",
+      "syncOffSince": "Synchronizacja wyłączona w Twoim planie — dane z {date}"
     },
     "reviews": {
       "title": "Recenzje",

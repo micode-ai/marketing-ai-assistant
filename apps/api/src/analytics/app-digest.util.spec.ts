@@ -147,6 +147,56 @@ describe('buildAppDigest', () => {
     expect(digest.netInstalls).toBe(0);
   });
 
+  it('says when the levels were last measured', () => {
+    // A level reaches back past the window, so it can be any age. Without the
+    // date the model states a month-old install base as today's.
+    const digest = buildAppDigest({
+      periodRows: [],
+      levelRows: [
+        row({ date: '2026-07-28', activeDeviceInstalls: 15 }),
+        row({ date: '2026-07-29' }),
+      ],
+      reviews: [],
+      connected: true,
+    });
+
+    expect(digest.activeDeviceInstalls).toBe(15);
+    expect(digest.lastMeasuredAt).toBe('2026-07-29');
+  });
+
+  it('accepts Date objects as well as strings', () => {
+    const digest = buildAppDigest({
+      periodRows: [],
+      levelRows: [row({ date: new Date('2026-08-01T00:00:00Z'), activeDeviceInstalls: 9 })],
+      reviews: [],
+      connected: true,
+    });
+
+    expect(digest.lastMeasuredAt).toBe('2026-08-01');
+  });
+
+  it('reports a null date when no row carries one', () => {
+    const digest = buildAppDigest({
+      periodRows: [row()],
+      levelRows: [row()],
+      reviews: [],
+      connected: true,
+    });
+
+    expect(digest.lastMeasuredAt).toBeNull();
+  });
+
+  it('ignores an unparseable date rather than emitting garbage', () => {
+    const digest = buildAppDigest({
+      periodRows: [],
+      levelRows: [row({ date: '2026-07-01' }), row({ date: 'not a date' })],
+      reviews: [],
+      connected: true,
+    });
+
+    expect(digest.lastMeasuredAt).toBe('2026-07-01');
+  });
+
   it('summarises reviews and counts the unanswered ones', () => {
     const digest = buildAppDigest({ periodRows: [], levelRows: [], reviews: [
         { starRating: 5, isReplied: true },
