@@ -21,6 +21,8 @@
  */
 
 export interface AppMetricsRow {
+  /** YYYY-MM-DD; only the level rows need it, to say how old a level is. */
+  date?: Date | string | null;
   installs: number;
   uninstalls: number;
   activeDeviceInstalls: number;
@@ -55,6 +57,15 @@ export interface AppDigest {
     unanswered: number;
     avgRating: number | null;
   };
+  /**
+   * When the levels were last measured, YYYY-MM-DD.
+   *
+   * A level reaches back past the reporting window to find its last real value
+   * (#182), which is right — but it means a figure can be any age. Shipping the
+   * date alongside is the same honesty the gsc block gets from `lagDays`: the
+   * model can state the number without implying it describes today.
+   */
+  lastMeasuredAt: string | null;
 }
 
 export const EMPTY_APP_DIGEST: AppDigest = {
@@ -70,6 +81,7 @@ export const EMPTY_APP_DIGEST: AppDigest = {
   averageRating: null,
   totalRatings: null,
   reviews: { total: 0, unanswered: 0, avgRating: null },
+  lastMeasuredAt: null,
 };
 
 /** Newest row where the field carries a real measurement. */
@@ -86,7 +98,21 @@ function latest(rows: AppMetricsRow[], field: keyof AppMetricsRow): number | nul
 }
 
 function sum(rows: AppMetricsRow[], field: keyof AppMetricsRow): number {
-  return rows.reduce((acc, row) => acc + (row[field] ?? 0), 0);
+  return rows.reduce((acc, row) => {
+    const value = row[field];
+    return acc + (typeof value === 'number' ? value : 0);
+  }, 0);
+}
+
+/** Date of the newest row that carries one, as YYYY-MM-DD. */
+function newestDate(rows: AppMetricsRow[]): string | null {
+  for (let i = rows.length - 1; i >= 0; i -= 1) {
+    const raw = rows[i]?.date;
+    if (!raw) continue;
+    const date = raw instanceof Date ? raw : new Date(raw);
+    if (!Number.isNaN(date.getTime())) return date.toISOString().slice(0, 10);
+  }
+  return null;
 }
 
 /**
@@ -139,5 +165,6 @@ export function buildAppDigest(args: {
     averageRating: latest(levelRows, 'averageRating'),
     totalRatings: latest(levelRows, 'totalRatings'),
     reviews: reviewBlock,
+    lastMeasuredAt: newestDate(levelRows),
   };
 }

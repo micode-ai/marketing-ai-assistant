@@ -195,6 +195,15 @@
           <span class="text-xs text-ink-subtle">· {$_('googlePlay.connection.lastSync', { values: { time: lastSyncLabel } })}</span>
         {/if}
       </div>
+      {#if status.syncEnabled === false}
+        <!-- The hourly sync skips FREE plans, so the figures below stop moving.
+             Rendering them without saying so reads as "the app has no activity". -->
+        <p class="text-xs text-amber-500 mt-2">
+          {status.lastMeasuredAt
+            ? $_('googlePlay.connection.syncOffSince', { values: { date: status.lastMeasuredAt } })
+            : $_('googlePlay.connection.syncOff')}
+        </p>
+      {/if}
     </div>
     <div class="flex items-center gap-3">
       <button

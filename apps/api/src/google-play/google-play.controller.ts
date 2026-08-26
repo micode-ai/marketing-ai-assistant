@@ -106,7 +106,10 @@ export class GooglePlayController {
   @ApiOperation({ summary: 'Get Google Play connection status' })
   async getStatus(@Query('projectId') projectId: string) {
     try {
-      const config = await this.authService.getConfig(projectId);
+      const [config, freshness] = await Promise.all([
+        this.authService.getConfig(projectId),
+        this.metricsService.getFreshness(projectId),
+      ]);
       return {
         connected: true,
         authMethod: config.authMethod,
@@ -115,6 +118,11 @@ export class GooglePlayController {
         initialSyncCompleted: config.initialSyncCompleted,
         consecutiveFailures: config.consecutiveFailures || 0,
         gcsBucketUri: config.gcsBucketUri || null,
+        // So the dashboard can say the figures are frozen instead of implying
+        // they are current.
+        syncEnabled: freshness.syncEnabled,
+        plan: freshness.plan,
+        lastMeasuredAt: freshness.lastMeasuredAt,
       };
     } catch {
       return { connected: false };

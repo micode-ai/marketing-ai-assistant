@@ -51,6 +51,11 @@ export interface GooglePlayStatusDto {
   consecutiveFailures: number;
   status: 'OK' | 'ERROR' | 'SYNCING' | null;
   gcsBucketUri?: string | null;
+  /** False when the plan disables the sync — figures are frozen, not current. */
+  syncEnabled?: boolean;
+  plan?: string | null;
+  /** Date of the newest measurement, YYYY-MM-DD. */
+  lastMeasuredAt?: string | null;
 }
 
 export interface GooglePlayMetricsQuery {
