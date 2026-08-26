@@ -164,6 +164,85 @@ describe('buildChannelDigest', () => {
       comments: 3,
       shares: 1,
       avgEngagementRate: 3.8,
+      bestPosts: [
+        { label: '(no caption)', url: null, views: 900, engagementRate: 3.8 },
+      ],
+      worstPosts: [],
+    });
+  });
+
+  describe('named posts', () => {
+    const post = (label: string, engagementRate: number, views: number, url?: string) => ({
+      label,
+      url: url ?? null,
+      views,
+      engagementRate,
+    });
+
+    it('names the best and worst posts so advice can point at one', () => {
+      const digest = buildChannelDigest({
+        accounts: 1,
+        snapshots: [],
+        posts: [
+          post('Launch day', 1.2, 100),
+          post('Behind the scenes', 8.4, 900, 'https://x/1'),
+          post('Pricing update', 4.0, 400),
+        ],
+      });
+
+      expect(digest.bestPosts.map((p) => p.label)).toEqual(['Behind the scenes', 'Pricing update']);
+      expect(digest.bestPosts[0].url).toBe('https://x/1');
+      expect(digest.worstPosts.map((p) => p.label)).toEqual(['Launch day']);
+    });
+
+    it('never lists the same post as both best and worst', () => {
+      // A channel with two posts used to report each one twice.
+      const digest = buildChannelDigest({
+        accounts: 1,
+        snapshots: [],
+        posts: [post('One', 5, 10), post('Two', 1, 5)],
+      });
+
+      const best = digest.bestPosts.map((p) => p.label);
+      const worst = digest.worstPosts.map((p) => p.label);
+      expect(best).toEqual(['One', 'Two']);
+      expect(worst.some((l) => best.includes(l))).toBe(false);
+    });
+
+    it('skips posts with no engagement rate rather than ranking them as zero', () => {
+      const digest = buildChannelDigest({
+        accounts: 1,
+        snapshots: [],
+        posts: [post('Rated', 3, 10), { label: 'Unrated', views: 999 }],
+      });
+
+      expect(digest.bestPosts.map((p) => p.label)).toEqual(['Rated']);
+      expect(digest.worstPosts).toEqual([]);
+    });
+
+    it('trims a long caption and collapses whitespace', () => {
+      const digest = buildChannelDigest({
+        accounts: 1,
+        snapshots: [],
+        posts: [post(`Line one
+
+   line two ${'x'.repeat(200)}`, 3, 10)],
+      });
+
+      const label = digest.bestPosts[0].label;
+      expect(label.length).toBeLessThanOrEqual(120);
+      expect(label).toContain('Line one line two');
+      expect(label.endsWith('…')).toBe(true);
+    });
+
+    it('falls back to a placeholder when a post has no words at all', () => {
+      const digest = buildChannelDigest({
+        accounts: 1,
+        snapshots: [],
+        posts: [{ engagementRate: 2, views: 5, label: '   ' }],
+      });
+
+      expect(digest.bestPosts[0].label).toBe('(no caption)');
     });
   });
 });

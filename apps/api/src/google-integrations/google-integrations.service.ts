@@ -60,6 +60,10 @@ export class GoogleIntegrationsService {
 
   /** In-memory cache: key → { data, fetchedAt } */
   private readonly summaryCache = new Map<string, { data: GSCSummary; fetchedAt: number }>();
+  // Insights cost five Google queries of up to 2000 rows. The SEO page
+  // recomputed them on every visit, and the recommendations digest could not
+  // afford them at all until they were cached.
+  private readonly insightsCache = new Map<string, { data: GscInsightsResult; fetchedAt: number }>();
   private readonly CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
 
   constructor(
@@ -460,6 +464,12 @@ export class GoogleIntegrationsService {
     projectId: string,
     params: { days: number; type?: string; filters?: GscFilter[] },
   ): Promise<GscInsightsResult> {
+    const cacheKey = `${projectId}:${params.days}:${params.type ?? ''}:${JSON.stringify(params.filters ?? [])}`;
+    const cached = this.insightsCache.get(cacheKey);
+    if (cached && Date.now() - cached.fetchedAt < this.CACHE_TTL_MS) {
+      return cached.data;
+    }
+
     const config = await this.getIntegration(projectId);
     if (!config?.accessToken || !config?.siteUrl) {
       throw Object.assign(new Error('GSC_NOT_CONFIGURED'), { code: 'GSC_NOT_CONFIGURED' });
@@ -477,13 +487,16 @@ export class GoogleIntegrationsService {
       this.fetchSearchConsoleData(accessToken, siteUrl, startDate, endDate, ['query', 'page'], 2000, opts),
     ]);
 
-    return {
+    const result: GscInsightsResult = {
       strikingDistance: strikingDistance(curQueries),
       lowCtr: lowCtr(curQueries),
       cannibalization: cannibalization(queryPages),
       moversQueries: movers(curQueries, prevQueries),
       moversPages: movers(curPages, prevPages),
     };
+
+    this.insightsCache.set(cacheKey, { data: result, fetchedAt: Date.now() });
+    return result;
   }
 
   /**

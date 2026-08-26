@@ -6,13 +6,23 @@ const input: AnalyticsRecommendationsInput = {
     funnel: [], topUtm: [],
     gsc: { connected: true, clicks: 412, impressions: 9540, ctr: 4.32, avgPosition: 18.4,
       topQueries: [{ query: 'crm software', clicks: 90, impressions: 1200, position: 4.2 }],
+      topPages: [{ page: '/pricing', clicks: 120, impressions: 3000, position: 6.4 }],
+      strikingDistance: [{ query: 'faktura online', impressions: 900, position: 13.4 }],
+      lowCtr: [{ query: 'crm dla firm', position: 3.2, missedClicks: 84 }],
+      cannibalization: [{ query: 'crm software', pages: ['/crm', '/blog/crm-guide'] }],
+      movers: { gainers: [{ query: 'invoicing app', clicks: 40 }], losers: [] },
       lagDays: 2 },
     instagram: { connected: true, accounts: 1, followers: 1080, followerChange: 80,
-      postsInPeriod: 2, views: 6000, likes: 300, comments: 15, shares: 6, avgEngagementRate: 4 },
+      postsInPeriod: 2, views: 6000, likes: 300, comments: 15, shares: 6, avgEngagementRate: 4,
+      bestPosts: [{ label: 'Behind the scenes', url: 'https://ig/2', views: 5000, engagementRate: 8.6 }],
+      worstPosts: [{ label: 'Quiet Tuesday', url: 'https://ig/1', views: 100, engagementRate: 0.4 }] },
     threads: { connected: false, accounts: 0, followers: null, followerChange: null,
-      postsInPeriod: 0, views: null, likes: null, comments: null, shares: null, avgEngagementRate: null },
+      postsInPeriod: 0, views: null, likes: null, comments: null, shares: null, avgEngagementRate: null,
+      bestPosts: [], worstPosts: [] },
     tiktok: { connected: true, accounts: 1, followers: 12, followerChange: null,
-      postsInPeriod: 1, views: 812, likes: 9, comments: 1, shares: 0, avgEngagementRate: 1.23 },
+      postsInPeriod: 1, views: 812, likes: 9, comments: 1, shares: 0, avgEngagementRate: 1.23,
+      bestPosts: [{ label: '#ai #budget', url: 'https://tt/1', views: 812, engagementRate: 1.23 }],
+      worstPosts: [] },
     seo: { keywords: 12, tracked: 10, ranked: 8, top3: 1, top10: 3, top50: 7,
       avgRank: 18.4, improved: 2, declined: 1,
       topMovers: [{ keyword: 'crm software', rank: 4, change: 16 }] },
@@ -21,6 +31,7 @@ const input: AnalyticsRecommendationsInput = {
       activeDeviceInstalls: null, storeListingVisitors: null, storeConversionRate: null,
       crashRate: null, anrRate: null, averageRating: null, totalRatings: null,
       reviews: { total: 0, unanswered: 0, avgRating: null } },
+    competitors: [{ name: 'Fakturownia', websiteUrl: 'https://fakturownia.pl' }],
     projectType: 'WEBSITE',
     counts: { content: 4, contentPublished: 4, campaigns: 1, keywords: 0, competitors: 0, emailLists: 0 } },
 };
@@ -87,6 +98,35 @@ describe('buildRecommendationsPrompt', () => {
     // no users, and the advice tells the user to launch what is already live.
     expect(systemPrompt.toLowerCase()).toContain('before the period started');
     expect(systemPrompt).toContain('the app has no users');
+  });
+
+  it('demands every recommendation be anchored to a named entity', () => {
+    const { systemPrompt } = buildRecommendationsPrompt(input);
+
+    // The old prompt shipped a literal list of cards to produce, which is why
+    // every project got the same four.
+    expect(systemPrompt).not.toContain('recommend what to set up first');
+    expect(systemPrompt.toLowerCase()).toContain('anchored to something named');
+    expect(systemPrompt).toContain('strikingDistance');
+    expect(systemPrompt).toContain('bestPosts');
+    expect(systemPrompt.toLowerCase()).toContain('are failures');
+  });
+
+  it('prefers fewer deeper cards over one per channel', () => {
+    const { systemPrompt } = buildRecommendationsPrompt(input);
+
+    expect(systemPrompt).toContain('2 to 5 recommendations');
+    expect(systemPrompt.toLowerCase()).toContain('do not try to cover every channel');
+    expect(systemPrompt.toLowerCase()).toContain('do not pad the list');
+  });
+
+  it('passes the named findings through to the model', () => {
+    const { userPrompt } = buildRecommendationsPrompt(input);
+
+    expect(userPrompt).toContain('faktura online');   // striking distance
+    expect(userPrompt).toContain('84');               // missed clicks
+    expect(userPrompt).toContain('Behind the scenes'); // best post
+    expect(userPrompt).toContain('Fakturownia');       // competitor
   });
 
   it('warns that Search Console lags behind today', () => {

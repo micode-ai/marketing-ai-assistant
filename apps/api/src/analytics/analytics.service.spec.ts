@@ -23,6 +23,7 @@ function makePrisma() {
     },
     competitor: {
       count: jest.fn().mockResolvedValue(0),
+      findMany: jest.fn().mockResolvedValue([]),
     },
     emailList: {
       count: jest.fn().mockResolvedValue(0),
@@ -94,6 +95,23 @@ function makeGoogle() {
       topQueries: [
         { query: 'crm software', clicks: 90, impressions: 1200, ctr: 0.075, position: 4.2 },
       ],
+      topPages: [{ page: '/pricing', clicks: 120, impressions: 3000, ctr: 0.04, position: 6.4 }],
+    }),
+    computeGscInsights: jest.fn().mockResolvedValue({
+      strikingDistance: [{ key: 'faktura online', clicks: 3, impressions: 900, position: 13.4 }],
+      lowCtr: [{ key: 'crm dla firm', clicks: 10, impressions: 4000, position: 3.2, missedClicks: 84 }],
+      cannibalization: [
+        {
+          query: 'crm software',
+          totalImpressions: 2000,
+          pages: [
+            { page: '/crm', clicks: 20, impressions: 1200, position: 8.1 },
+            { page: '/blog/crm-guide', clicks: 4, impressions: 800, position: 14.6 },
+          ],
+        },
+      ],
+      moversQueries: { gainers: [{ key: 'invoicing app', clicks: 40 }], losers: [] },
+      moversPages: { gainers: [], losers: [] },
     }),
   };
 }
@@ -348,6 +366,42 @@ describe('AnalyticsService', () => {
       expect(body.data.gsc.topQueries[0].query).toBe('crm software');
     });
 
+    it('carries the named search findings, not just the averages', async () => {
+      prisma.projectApiKey.findFirst.mockResolvedValue({ id: 'gkey' });
+      const mockFetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ recommendations: [] }),
+      });
+      global.fetch = mockFetch as any;
+
+      await service.generateRecommendations('proj_1', 'en', 28);
+
+      expect(google.computeGscInsights).toHaveBeenCalledWith('proj_1', { days: 28 });
+      const gsc = JSON.parse((mockFetch.mock.calls[0] as any)[1].body).data.gsc;
+      // "average position 25.1" cannot be acted on; these can.
+      expect(gsc.strikingDistance[0].query).toBe('faktura online');
+      expect(gsc.lowCtr[0]).toMatchObject({ query: 'crm dla firm', missedClicks: 84 });
+      expect(gsc.cannibalization[0].pages).toEqual(['/crm', '/blog/crm-guide']);
+      expect(gsc.movers.gainers[0].query).toBe('invoicing app');
+      expect(gsc.topPages[0].page).toBe('/pricing');
+    });
+
+    it('keeps the averages when only the insights call fails', async () => {
+      prisma.projectApiKey.findFirst.mockResolvedValue({ id: 'gkey' });
+      google.computeGscInsights.mockRejectedValue(new Error('500 from Google'));
+      const mockFetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ recommendations: [] }),
+      });
+      global.fetch = mockFetch as any;
+
+      await service.generateRecommendations('proj_1', 'en');
+
+      const gsc = JSON.parse((mockFetch.mock.calls[0] as any)[1].body).data.gsc;
+      expect(gsc.clicks).toBe(412);
+      expect(gsc.strikingDistance).toEqual([]);
+    });
+
     it('keeps the digest when Search Console fails', async () => {
       // A Google outage must not fail the endpoint, and must not read as zero
       // search traffic either.
@@ -445,6 +499,59 @@ describe('AnalyticsService', () => {
         comments: 15,
         avgEngagementRate: 4,
       });
+    });
+
+    it('names competitors instead of counting them', async () => {
+      prisma.competitor.findMany.mockResolvedValue([
+        { name: 'Fakturownia', websiteUrl: 'https://fakturownia.pl' },
+        { name: 'inFakt', websiteUrl: 'https://infakt.pl' },
+      ]);
+      const mockFetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ recommendations: [] }),
+      });
+      global.fetch = mockFetch as any;
+
+      await service.generateRecommendations('proj_1', 'en');
+
+      const data = JSON.parse((mockFetch.mock.calls[0] as any)[1].body).data;
+      expect(data.competitors).toEqual([
+        { name: 'Fakturownia', websiteUrl: 'https://fakturownia.pl' },
+        { name: 'inFakt', websiteUrl: 'https://infakt.pl' },
+      ]);
+      // The old count still travels for anything that relied on it.
+      expect(data.counts.competitors).toBe(2);
+    });
+
+    it('names the best and worst posts of a channel', async () => {
+      prisma.projectSocialAccount.findMany.mockResolvedValue([
+        { socialAccount: { id: 'ig_1', platform: 'INSTAGRAM' } },
+      ]);
+      prisma.instagramMedia.findMany.mockResolvedValue([
+        { views: 100, likeCount: 1, commentsCount: 0, shares: 0, engagementRate: 0.4,
+          caption: 'Quiet Tuesday post', permalink: 'https://ig/1' },
+        { views: 5000, likeCount: 400, commentsCount: 30, shares: 12, engagementRate: 8.6,
+          caption: 'Behind the scenes of our release', permalink: 'https://ig/2' },
+        // A third post, because with only two every post is a "best" one and
+        // nothing is left to name as weakest.
+        { views: 800, likeCount: 20, commentsCount: 1, shares: 0, engagementRate: 2.5,
+          caption: 'Pricing update', permalink: 'https://ig/3' },
+      ]);
+      const mockFetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ recommendations: [] }),
+      });
+      global.fetch = mockFetch as any;
+
+      await service.generateRecommendations('proj_1', 'en');
+
+      const ig = JSON.parse((mockFetch.mock.calls[0] as any)[1].body).data.instagram;
+      expect(ig.bestPosts[0]).toMatchObject({
+        label: 'Behind the scenes of our release',
+        url: 'https://ig/2',
+        engagementRate: 8.6,
+      });
+      expect(ig.worstPosts[0].label).toBe('Quiet Tuesday post');
     });
 
     it('includes TikTok in the digest', async () => {
