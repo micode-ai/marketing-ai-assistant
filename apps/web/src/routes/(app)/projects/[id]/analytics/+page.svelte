@@ -350,7 +350,7 @@
     ]);
     appConnected = play.status === 'fulfilled' && !!play.value?.connected;
     gscConnected =
-      gsc.status === 'fulfilled' && !!(gsc.value?.accessToken && gsc.value?.siteUrl);
+      gsc.status === 'fulfilled' && !!(gsc.value?.connected && gsc.value?.siteUrl);
     igConnected = ig.status === 'fulfilled' && !!ig.value?.connected;
     threadsConnected = threads.status === 'fulfilled' && !!threads.value?.connected;
     tiktokConnected = tiktok.status === 'fulfilled' && !!tiktok.value?.connected;

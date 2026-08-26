@@ -307,6 +307,31 @@ export class GoogleIntegrationsService {
   }
 
   /**
+   * What the browser is allowed to know about the integration.
+   *
+   * `getIntegration` returns the raw payload because server-side callers need
+   * the tokens. This endpoint-facing view exists because the client needed only
+   * to know whether a connection exists — it used `accessToken` as a truthiness
+   * flag — and shipping an access and refresh token to every browser that opens
+   * the analytics page bought nothing in exchange.
+   */
+  async getIntegrationView(projectId: string): Promise<{
+    connected: boolean;
+    siteUrl: string | null;
+    propertyId: string | null;
+    expiresAt: string | null;
+  }> {
+    const config = await this.getIntegration(projectId);
+
+    return {
+      connected: Boolean(config?.accessToken),
+      siteUrl: (config?.siteUrl as string) ?? null,
+      propertyId: (config?.propertyId as string) ?? null,
+      expiresAt: (config?.expiresAt as string) ?? null,
+    };
+  }
+
+  /**
    * Delete Google integration for a project
    */
   async deleteIntegration(projectId: string) {

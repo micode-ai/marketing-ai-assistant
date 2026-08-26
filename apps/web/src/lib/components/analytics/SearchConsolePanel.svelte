@@ -99,7 +99,7 @@
       integrationLoading = false;
     }
 
-    if (integration?.accessToken && integration?.siteUrl) {
+    if (integration?.connected && integration?.siteUrl) {
       await loadSummary();
     }
   }
@@ -254,7 +254,9 @@
     return dir === 'asc' ? '↑' : '↓';
   }
 
-  $: isConnected = !!(integration?.accessToken && integration?.siteUrl);
+  // The endpoint reports connectivity as a boolean; it no longer hands the
+  // browser an access token to infer it from.
+  $: isConnected = !!(integration?.connected && integration?.siteUrl);
   $: settingsUrl = `/projects/${projectId}/settings`;
 </script>
 

@@ -184,4 +184,61 @@ describe('GoogleIntegrationsService', () => {
       expect(fetchSpy.mock.calls.length).toBeGreaterThan(0);
     });
   });
+
+  describe('getIntegrationView', () => {
+    function storeConfig(config: Record<string, unknown> | null) {
+      const prisma = (service as any).prisma;
+      prisma.projectApiKey.findUnique.mockResolvedValue(
+        config
+          ? { encryptedKey: Buffer.from(JSON.stringify(config)).toString('base64') }
+          : null,
+      );
+    }
+
+    it('never returns the tokens', async () => {
+      // The endpoint used to hand the browser an access AND refresh token so the
+      // client could check a boolean.
+      storeConfig(MOCK_CONFIG);
+
+      const view = await service.getIntegrationView('proj_1');
+
+      expect(view).toEqual({
+        connected: true,
+        siteUrl: 'https://example.com/',
+        propertyId: null,
+        expiresAt: MOCK_CONFIG.expiresAt,
+      });
+      expect(JSON.stringify(view)).not.toContain('token123');
+      expect(JSON.stringify(view)).not.toContain('refresh123');
+    });
+
+    it('reports not connected when nothing is stored', async () => {
+      storeConfig(null);
+
+      expect(await service.getIntegrationView('proj_1')).toEqual({
+        connected: false,
+        siteUrl: null,
+        propertyId: null,
+        expiresAt: null,
+      });
+    });
+
+    it('reports not connected when the config carries no access token', async () => {
+      storeConfig({ siteUrl: 'https://example.com/' });
+
+      const view = await service.getIntegrationView('proj_1');
+
+      expect(view.connected).toBe(false);
+      expect(view.siteUrl).toBe('https://example.com/');
+    });
+
+    it('still exposes the raw config to server-side callers', async () => {
+      // getIntegration keeps the tokens on purpose — the fetchers need them.
+      storeConfig(MOCK_CONFIG);
+
+      const raw = await service.getIntegration('proj_1');
+
+      expect(raw.accessToken).toBe('token123');
+    });
+  });
 });
