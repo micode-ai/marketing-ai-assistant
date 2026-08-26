@@ -42,9 +42,17 @@ describe('CampaignsService', () => {
           { id: 'ec1', status: 'draft' },
           { id: 'ec2', status: 'sent' },
         ],
+        // findOne flattens this relation; omitting it made the service throw
+        // rather than fail an assertion (#173).
+        documents: [{ document: { id: 'd1', title: 'Launch brief' } }],
       });
 
       const result = await service.findOne('c1');
+
+      // The relation is flattened from { document } wrappers to documents; the
+      // spec stopped covering it, so the service could read a field the mock
+      // never supplied and nobody noticed for months.
+      expect(result.documents).toEqual([{ id: 'd1', title: 'Launch brief' }]);
 
       expect(mockPrisma.campaign.findUnique).toHaveBeenCalledWith({
         where: { id: 'c1' },
@@ -77,7 +85,7 @@ describe('CampaignsService', () => {
     it('attaches project-scoped content whose projectId matches', async () => {
       mockPrisma.campaign.findUnique
         .mockResolvedValueOnce(baseCampaign)
-        .mockResolvedValueOnce({ ...baseCampaign, project: null, content: [], emailCampaigns: [] });
+        .mockResolvedValueOnce({ ...baseCampaign, project: null, content: [], emailCampaigns: [], documents: [] });
       mockPrisma.content.findMany.mockResolvedValue([
         { id: 'ct1', projectId: 'p1', organizationId: 'o1', campaignId: null },
         { id: 'ct2', projectId: 'p1', organizationId: 'o1', campaignId: null },
@@ -114,7 +122,7 @@ describe('CampaignsService', () => {
     it('only detaches rows currently attached to this campaign', async () => {
       mockPrisma.campaign.findUnique
         .mockResolvedValueOnce({ id: 'c1', projectId: 'p1', organizationId: 'o1', scope: 'PROJECT' })
-        .mockResolvedValueOnce({ id: 'c1', projectId: 'p1', organizationId: 'o1', scope: 'PROJECT', project: null, content: [], emailCampaigns: [] });
+        .mockResolvedValueOnce({ id: 'c1', projectId: 'p1', organizationId: 'o1', scope: 'PROJECT', project: null, content: [], emailCampaigns: [], documents: [] });
       mockPrisma.content.updateMany.mockResolvedValue({ count: 1 });
 
       await service.detachContent('c1', ['ct1']);
@@ -132,7 +140,7 @@ describe('CampaignsService', () => {
     it('attaches emails whose list.projectId matches', async () => {
       mockPrisma.campaign.findUnique
         .mockResolvedValueOnce(baseCampaign)
-        .mockResolvedValueOnce({ ...baseCampaign, project: null, content: [], emailCampaigns: [] });
+        .mockResolvedValueOnce({ ...baseCampaign, project: null, content: [], emailCampaigns: [], documents: [] });
       mockPrisma.emailCampaign.findMany.mockResolvedValue([
         { id: 'e1', campaignId: null, list: { projectId: 'p1', organizationId: 'o1' } },
       ]);
@@ -167,7 +175,7 @@ describe('CampaignsService', () => {
     it('only detaches rows currently attached to this campaign', async () => {
       mockPrisma.campaign.findUnique
         .mockResolvedValueOnce({ id: 'c1', projectId: 'p1', organizationId: 'o1', scope: 'PROJECT' })
-        .mockResolvedValueOnce({ id: 'c1', projectId: 'p1', organizationId: 'o1', scope: 'PROJECT', project: null, content: [], emailCampaigns: [] });
+        .mockResolvedValueOnce({ id: 'c1', projectId: 'p1', organizationId: 'o1', scope: 'PROJECT', project: null, content: [], emailCampaigns: [], documents: [] });
       mockPrisma.emailCampaign.updateMany.mockResolvedValue({ count: 1 });
 
       await service.detachEmails('c1', ['e1']);
