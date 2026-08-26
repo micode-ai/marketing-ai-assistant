@@ -91,9 +91,11 @@ jobs:
       - name: Generate Prisma client
         run: pnpm db:generate
 
+      # No continue-on-error: with it the job reported success whatever the
+      # tests did, and five campaigns tests failed unnoticed from #59 until
+      # #173. A gate that cannot fail is not a gate.
       - name: Run tests
         run: pnpm test
-        continue-on-error: true
 
   deploy:
     name: Deploy to Hetzner VPS
