@@ -12,15 +12,17 @@ import { buildSeoDigest, SeoDigest } from './seo-digest.util';
 import { buildEmailDigest, EmailDigest } from './email-digest.util';
 import { buildAppDigest, AppDigest, EMPTY_APP_DIGEST } from './app-digest.util';
 import { buildGscDigest, GscDigest, EMPTY_GSC_DIGEST } from './gsc-digest.util';
+import { buildGa4Digest, Ga4Digest, EMPTY_GA4_DIGEST, Ga4Row } from './ga4-digest.util';
 import { GoogleIntegrationsService } from '../google-integrations/google-integrations.service';
 
 /**
- * How long the recommendations wait for Search Console. The summary is six
- * parallel Google queries behind a one-hour cache, so a cold call is the
- * slowest thing in the digest and an outage would otherwise hold the whole
- * endpoint open. Past this we ship the digest without the figures.
+ * How long the recommendations wait for any single Google call — Search Console
+ * or Analytics. These are the only digest sources that leave the building, and
+ * a cold Search Console summary is six parallel queries, so an outage would
+ * otherwise hold the whole endpoint open. Past this we ship the digest without
+ * that source's figures.
  */
-const GSC_TIMEOUT_MS = 8000;
+const GOOGLE_TIMEOUT_MS = 8000;
 
 /**
  * How far back the app levels may look for their last real reading. Bounded so
@@ -314,7 +316,7 @@ export class AnalyticsService {
         .filter((l: any) => l.socialAccount?.platform === platform)
         .map((l: any) => l.socialAccount.id as string);
 
-    const [social, extra, gsc] = await Promise.all([
+    const [social, extra, gsc, ga4] = await Promise.all([
       this.loadSocialDigests(
         projectId,
         {
@@ -326,6 +328,7 @@ export class AnalyticsService {
       ),
       this.loadOwnedDigests(projectId, periodDays),
       this.loadGscDigest(projectId, periodDays, gscConnected),
+      this.loadGa4Digest(projectId, periodDays),
     ]);
 
     const digest = {
@@ -334,6 +337,9 @@ export class AnalyticsService {
       funnel: funnelSteps,
       topUtm,
       gsc,
+      // Analytics measures the same site as `web` above, differently. Both
+      // travel under their own names; see ga4-digest.util.ts.
+      ga4,
       instagram: social.instagram,
       threads: social.threads,
       tiktok: social.tiktok,
@@ -425,12 +431,12 @@ export class AnalyticsService {
     // so losing one does not blank the other — and the insights are the half
     // that makes the advice specific, so they are worth their own attempt.
     const [summary, insights] = await Promise.all([
-      this.withGscTimeout(
+      this.withGoogleTimeout(
         () => this.google!.fetchSearchConsoleSummary(projectId, periodDays),
         projectId,
         'figures',
       ),
-      this.withGscTimeout(
+      this.withGoogleTimeout(
         () => this.google!.computeGscInsights(projectId, { days: periodDays }),
         projectId,
         'insights',
@@ -447,11 +453,71 @@ export class AnalyticsService {
   }
 
   /**
-   * Runs one Search Console call under a deadline, mapping every outcome to
-   * something the digest can use: the value, `null` for "tried and failed", or
+   * Loads the Google Analytics block, for the account *this* project connected.
+   *
+   * Every project holds its own Google grant — ProjectApiKey is unique per
+   * (projectId, platform) — so the token, the property and therefore the figures
+   * are all per-project. Nothing here is shared between projects, and the
+   * caches upstream are keyed by project for the same reason.
+   *
+   * Four reports rather than one: the breakdowns need their own dimension, and
+   * `keyEvents` is not populated on every property — GA4 rejects an entire
+   * report over one unsupported metric, so it is asked for separately and is
+   * allowed to fail alone.
+   */
+  private async loadGa4Digest(projectId: string, periodDays: number): Promise<Ga4Digest> {
+    if (!this.google) return { ...EMPTY_GA4_DIGEST };
+
+    const config = await this.google.getIntegration(projectId);
+    const propertyId = config?.propertyId as string | undefined;
+    // No property means Analytics was never configured for this project, which
+    // is not the same as a property that reports nothing.
+    if (!config?.accessToken || !propertyId) return { ...EMPTY_GA4_DIGEST };
+
+    const end = new Date();
+    const start = new Date(end.getTime() - (periodDays - 1) * 24 * 60 * 60 * 1000);
+    const iso = (d: Date) => d.toISOString().slice(0, 10);
+
+    const report = (dimensions: string[], metrics: string[]) =>
+      this.withGoogleTimeout(
+        () =>
+          this.google!.fetchGA4Report(
+            config.accessToken as string,
+            propertyId,
+            iso(start),
+            iso(end),
+            dimensions,
+            metrics,
+          ),
+        projectId,
+        `ga4 ${dimensions.join('+') || 'totals'}`,
+      );
+
+    const [totals, keyEvents, sources, landingPages] = await Promise.all([
+      report([], ['sessions', 'totalUsers', 'newUsers', 'screenPageViews', 'engagementRate']),
+      report([], ['keyEvents']),
+      report(['sessionDefaultChannelGroup'], ['sessions']),
+      report(['landingPage'], ['sessions']),
+    ]);
+
+    const rows = (value: unknown): Ga4Row[] | null =>
+      Array.isArray(value) ? (value as Ga4Row[]) : null;
+
+    return buildGa4Digest({
+      connected: true,
+      totals: rows(totals),
+      keyEvents: rows(keyEvents),
+      sources: rows(sources),
+      landingPages: rows(landingPages),
+    });
+  }
+
+  /**
+   * Runs one Google call under a deadline, mapping every outcome to something
+   * the digest can use: the value, `null` for "tried and failed", or
    * `'not-configured'` for "there is nothing to try".
    */
-  private async withGscTimeout<T>(
+  private async withGoogleTimeout<T>(
     call: () => Promise<T>,
     projectId: string,
     label: string,
@@ -463,8 +529,8 @@ export class AnalyticsService {
         call(),
         new Promise<never>((_, reject) => {
           timer = setTimeout(
-            () => reject(new Error(`GSC_TIMEOUT after ${GSC_TIMEOUT_MS}ms`)),
-            GSC_TIMEOUT_MS,
+            () => reject(new Error(`GSC_TIMEOUT after ${GOOGLE_TIMEOUT_MS}ms`)),
+            GOOGLE_TIMEOUT_MS,
           );
         }),
       ]);

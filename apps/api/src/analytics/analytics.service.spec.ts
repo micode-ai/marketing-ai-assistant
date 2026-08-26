@@ -97,6 +97,10 @@ function makeGoogle() {
       ],
       topPages: [{ page: '/pricing', clicks: 120, impressions: 3000, ctr: 0.04, position: 6.4 }],
     }),
+    // No propertyId by default: Analytics is configured per project, and most
+    // projects have not configured it.
+    getIntegration: jest.fn().mockResolvedValue({ accessToken: 'tok' }),
+    fetchGA4Report: jest.fn().mockResolvedValue([]),
     computeGscInsights: jest.fn().mockResolvedValue({
       strikingDistance: [{ key: 'faktura online', clicks: 3, impressions: 900, position: 13.4 }],
       lowCtr: [{ key: 'crm dla firm', clicks: 10, impressions: 4000, position: 3.2, missedClicks: 84 }],
@@ -364,6 +368,83 @@ describe('AnalyticsService', () => {
         lagDays: 2,
       });
       expect(body.data.gsc.topQueries[0].query).toBe('crm software');
+    });
+
+    it('leaves Analytics disconnected when no property is configured', async () => {
+      const mockFetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ recommendations: [] }),
+      });
+      global.fetch = mockFetch as any;
+
+      await service.generateRecommendations('proj_1', 'en');
+
+      const body = JSON.parse((mockFetch.mock.calls[0] as any)[1].body);
+      expect(body.data.ga4.connected).toBe(false);
+      expect(google.fetchGA4Report).not.toHaveBeenCalled();
+    });
+
+    it('reads Analytics with this project own token and property', async () => {
+      // Each project holds its own Google grant, so the token and the property
+      // must come from the project being reported on.
+      google.getIntegration.mockResolvedValue({
+        accessToken: 'tok-for-proj-1',
+        propertyId: '123456',
+      });
+      google.fetchGA4Report.mockImplementation(
+        (_token: string, _property: string, _start: string, _end: string, dims: string[]) =>
+          Promise.resolve(
+            dims.length === 0
+              ? [{
+                  dimensions: {},
+                  metrics: {
+                    sessions: 1240, totalUsers: 980, newUsers: 610,
+                    screenPageViews: 3100, engagementRate: 0.6428, keyEvents: 47,
+                  },
+                }]
+              : [{ dimensions: { [dims[0]]: 'Organic Search' }, metrics: { sessions: 700 } }],
+          ),
+      );
+      const mockFetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ recommendations: [] }),
+      });
+      global.fetch = mockFetch as any;
+
+      await service.generateRecommendations('proj_1', 'en', 14);
+
+      expect(google.fetchGA4Report).toHaveBeenCalledWith(
+        'tok-for-proj-1', '123456', expect.any(String), expect.any(String),
+        [], expect.arrayContaining(['sessions']),
+      );
+      const ga4 = JSON.parse((mockFetch.mock.calls[0] as any)[1].body).data.ga4;
+      expect(ga4).toMatchObject({ connected: true, sessions: 1240, users: 980 });
+      // Stated as a percent, like every other rate in the digest.
+      expect(ga4.engagementRate).toBe(64.3);
+      expect(ga4.topSources[0]).toEqual({ source: 'Organic Search', sessions: 700 });
+    });
+
+    it('keeps the rest of Analytics when one of its reports fails', async () => {
+      google.getIntegration.mockResolvedValue({ accessToken: 'tok', propertyId: '123456' });
+      google.fetchGA4Report.mockImplementation(
+        (_t: string, _p: string, _s: string, _e: string, _d: string[], metrics: string[]) =>
+          metrics.includes('keyEvents')
+            ? Promise.reject(new Error('metric not supported by this property'))
+            : Promise.resolve([{ dimensions: {}, metrics: { sessions: 50 } }]),
+      );
+      const mockFetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ recommendations: [] }),
+      });
+      global.fetch = mockFetch as any;
+
+      await service.generateRecommendations('proj_1', 'en');
+
+      const ga4 = JSON.parse((mockFetch.mock.calls[0] as any)[1].body).data.ga4;
+      expect(ga4.sessions).toBe(50);
+      // GA4 rejects a whole report over one unsupported metric, which is why
+      // key events are asked for separately.
+      expect(ga4.keyEvents).toBeNull();
     });
 
     it('carries the named search findings, not just the averages', async () => {

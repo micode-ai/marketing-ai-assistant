@@ -30,7 +30,11 @@ const input: AnalyticsRecommendationsInput = {
     app: { connected: false, installs: null, uninstalls: null, netInstalls: null,
       activeDeviceInstalls: null, storeListingVisitors: null, storeConversionRate: null,
       crashRate: null, anrRate: null, averageRating: null, totalRatings: null,
-      reviews: { total: 0, unanswered: 0, avgRating: null } },
+      reviews: { total: 0, unanswered: 0, avgRating: null }, lastMeasuredAt: null },
+    ga4: { connected: true, sessions: 1240, users: 980, newUsers: 610, pageViews: 3100,
+      engagementRate: 64.3, keyEvents: 47,
+      topSources: [{ source: 'Organic Search', sessions: 700 }],
+      topLandingPages: [{ page: '/pricing', sessions: 210 }] },
     competitors: [{ name: 'Fakturownia', websiteUrl: 'https://fakturownia.pl' }],
     projectType: 'WEBSITE',
     counts: { content: 4, contentPublished: 4, campaigns: 1, keywords: 0, competitors: 0, emailLists: 0 } },
@@ -127,6 +131,27 @@ describe('buildRecommendationsPrompt', () => {
     expect(userPrompt).toContain('84');               // missed clicks
     expect(userPrompt).toContain('Behind the scenes'); // best post
     expect(userPrompt).toContain('Fakturownia');       // competitor
+  });
+
+  it('forbids stating a frozen app figure as today', () => {
+    const { systemPrompt } = buildRecommendationsPrompt(input);
+
+    // Levels reach back past the window, so without this a month-old install
+    // base is reported as the current one.
+    expect(systemPrompt).toContain('lastMeasuredAt');
+    expect(systemPrompt.toLowerCase()).toContain('frozen');
+    expect(systemPrompt.toLowerCase()).toContain('no recent measurement');
+  });
+
+  it('keeps our tracker and Analytics apart instead of merging them', () => {
+    const { systemPrompt, userPrompt } = buildRecommendationsPrompt(input);
+
+    // Two measurements of one website. Added together they are nonsense; used
+    // interchangeably they contradict each other.
+    expect(systemPrompt.toLowerCase()).toContain('never add them together');
+    expect(systemPrompt.toLowerCase()).toContain('our own tracking script');
+    expect(systemPrompt).toContain('keyEvents');
+    expect(userPrompt).toContain('Organic Search');
   });
 
   it('warns that Search Console lags behind today', () => {

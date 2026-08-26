@@ -90,6 +90,18 @@ export interface AnalyticsDigest {
     emailsSent: number | null;
     openTracking: boolean;
   };
+  ga4: {
+    connected: boolean;
+    sessions: number | null;
+    users: number | null;
+    newUsers: number | null;
+    pageViews: number | null;
+    /** Percent of engaged sessions. */
+    engagementRate: number | null;
+    keyEvents: number | null;
+    topSources: Array<{ source: string; sessions: number }>;
+    topLandingPages: Array<{ page: string; sessions: number }>;
+  };
   competitors: Array<{ name: string; websiteUrl: string }>;
   app: {
     connected: boolean;
@@ -104,6 +116,8 @@ export interface AnalyticsDigest {
     averageRating: number | null;
     totalRatings: number | null;
     reviews: { total: number; unanswered: number; avgRating: number | null };
+    /** When the levels were last measured, YYYY-MM-DD. */
+    lastMeasuredAt: string | null;
   };
   counts: {
     content: number;
@@ -162,6 +176,14 @@ How to read the seo block:
 - "ranked" counts keywords holding any position; "keywords" minus "ranked" are not found in the results at all. top3/top10/top50 are cumulative, so a keyword at position 2 is counted in all three.
 - avgRank covers only the ranked keywords — unranked ones are excluded rather than counted as zero.
 
+How to read the ga4 block (Google Analytics 4), and how it relates to "web":
+- "web" and "ga4" measure the same website by different means. "web" is our own tracking script; "ga4" is Google Analytics, which filters bots, counts sessions by its own rules and only sees pages carrying its tag. They will NOT agree, and that is expected — never add them together, and never present one as correcting the other.
+- When ga4.connected is true, prefer ga4 for traffic and behaviour: it is the measurement the user already trusts elsewhere. Use "web" for conversions and funnel steps, which are ours and which ga4 may not track.
+- If the two disagree sharply, that is itself worth a recommendation — a tag missing from part of the site, or tracking that was never finished.
+- "engagementRate" is a percent. "keyEvents" is GA4's conversion count and is null when the property does not populate it — that means not measured, not zero conversions.
+- "topSources" are channel groups (Organic Search, Direct, Referral…), not individual referrers. "topLandingPages" is where sessions started, which is where to act.
+- ga4.connected false means no Analytics property is configured for this project. Recommending that it be connected is fair, but do not state any Analytics figures.
+
 How to read the gsc block (Google Search Console):
 - "strikingDistance": queries ranking 11-20 with real impressions. These are the cheapest wins available — they need on-page work on an existing page, not a new one.
 - "lowCtr": queries already in the top 10 earning fewer clicks than that position should give, with "missedClicks" quantifying the loss. This is a title and description problem, not a ranking one.
@@ -185,6 +207,7 @@ How to read the email block:
 How to read the app block (Google Play):
 - "connected": false means the project has no Play integration — say nothing about app performance in that case.
 - installs, uninstalls and storeListingVisitors are period totals. netInstalls can be negative. activeDeviceInstalls, averageRating and totalRatings are the current levels, not sums. crashRate and anrRate are the latest measured rates, and a lower rate is better.
+- "lastMeasuredAt" is the date the levels were last measured. If it is well before the end of the period, the app figures are frozen: state them as of that date, never as today's, and treat "no recent installs" as possibly "no recent measurement". A frozen channel is itself worth raising — collection may be off.
 - A level may have been measured before the period started — it is the most recent reading we have, not a figure for the window. So an app can show an install base with null installs for the period: that means the app exists and gained nothing recently, or that Play reported nothing recently. Never read null installs as "the app has no users" when activeDeviceInstalls says otherwise.
 - "reviews.unanswered" is directly actionable: unanswered store reviews are visible to every future installer.
 
