@@ -1515,6 +1515,13 @@
       "device": "Device",
       "loadError": "Could not load Search Console data.",
       "retry": "Retry"
+    },
+    "ga4Config": {
+      "property": "Google Analytics 4",
+      "propertyHelper": "the property the reports are read from",
+      "noProperties": "No GA4 properties available for this Google account",
+      "notSelected": "Not selected",
+      "saveSuccess": "Analytics property saved"
     }
   },
   "projectExport": {
