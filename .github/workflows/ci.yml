@@ -5,6 +5,16 @@ on:
     branches: [main, development]
   pull_request:
     branches: [main, development]
+  # Manual trigger, because a merge that produces no run leaves development
+  # deployed one commit behind with no way to re-run: a run that was never
+  # created cannot be retried, and the only other option is an empty commit.
+  # Happened on 2026-08-26 — the push for f9f7507 produced no run at all.
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Why this run was started by hand'
+        required: false
+        default: 'redeploy'
 
 # Cancel superseded checks on the same ref — but only where nothing is
 # deployed. Workflow-level cancellation kills the whole run including a
@@ -101,7 +111,10 @@ jobs:
     name: Deploy to Hetzner VPS
     runs-on: ubuntu-latest
     needs: build
-    if: github.ref == 'refs/heads/development' && github.event_name == 'push'
+    # workflow_dispatch counts: a manual run exists precisely to deploy what a
+    # missing push run left behind. Without it the button would build and test
+    # and then skip the only job worth pressing it for.
+    if: github.ref == 'refs/heads/development' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     environment: staging
 
     # One deploy at a time. Merging several PRs in a row used to start a deploy
