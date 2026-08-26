@@ -2,6 +2,11 @@ import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { TikTokSyncService } from './tiktok-sync.service';
 import { TikTokAccount } from './tiktok-token.service';
+import {
+  resolveProjectSocialAccount,
+  listProjectSocialAccounts,
+  toAccountOptions,
+} from '../common/resolve-social-account.util';
 
 /** Analytics needs both scopes: profile counters and the video list. */
 const STATS_SCOPES = ['user.info.stats', 'video.list'];
@@ -28,43 +33,30 @@ export class TikTokService {
    * ProjectSocialAccount. ProjectAccessGuard has already authorized the caller
    * for the project; the account is still filtered by the project's org.
    */
-  private async resolveAccount(projectId: string): Promise<ResolvedAccount | null> {
-    const project = await this.prisma.project.findUnique({
-      where: { id: projectId },
-      select: { organizationId: true },
-    });
-    if (!project) return null;
-
-    const links = await this.prisma.projectSocialAccount.findMany({
-      where: { projectId },
-      include: {
-        socialAccount: {
-          select: {
-            id: true,
-            organizationId: true,
-            platform: true,
-            accountName: true,
-            accountId: true,
-            encryptedTokens: true,
-            scopes: true,
-          },
-        },
-      },
-    });
-
-    const link = links.find(
-      (l) =>
-        l.socialAccount.platform === 'TIKTOK' &&
-        l.socialAccount.organizationId === project.organizationId,
-    );
-
-    return link ? (link.socialAccount as ResolvedAccount) : null;
+  private async resolveAccount(
+    projectId: string,
+    accountId?: string,
+  ): Promise<ResolvedAccount | null> {
+    return (await resolveProjectSocialAccount(
+      this.prisma,
+      projectId,
+      'TIKTOK',
+      accountId,
+    )) as ResolvedAccount | null;
   }
 
-  async getStatus(projectId: string) {
-    const account = await this.resolveAccount(projectId);
+  /** Accounts of this channel linked to the project, for the dashboard switcher. */
+  private async listAccounts(projectId: string) {
+    return toAccountOptions(await listProjectSocialAccounts(this.prisma, projectId, 'TIKTOK'));
+  }
+
+  async getStatus(projectId: string, accountId?: string) {
+    const account = await this.resolveAccount(projectId, accountId);
+    const accounts = await this.listAccounts(projectId);
     if (!account) {
-      return { connected: false, statsGranted: false };
+      // accounts still travels: a request naming an account that is not linked
+      // must let the dashboard recover, not just say "not connected".
+      return { connected: false, statsGranted: false, accounts, selectedAccountId: null };
     }
 
     return {
@@ -73,6 +65,9 @@ export class TikTokService {
       accountId: account.accountId,
       lastSyncAt: await this.getLastSyncAt(account.id),
       statsGranted: STATS_SCOPES.every((s) => account.scopes?.includes(s)),
+      accounts,
+      // Our SocialAccount id, not the platform's — that one is accountId above.
+      selectedAccountId: account.id,
     };
   }
 
@@ -84,8 +79,8 @@ export class TikTokService {
    * cumulative snapshot, so the client derives period figures as last − first —
    * summing the rows would count the same lifetime views once per day.
    */
-  async getMetrics(projectId: string, days: number) {
-    const account = await this.resolveAccount(projectId);
+  async getMetrics(projectId: string, days: number, accountId?: string) {
+    const account = await this.resolveAccount(projectId, accountId);
     if (!account) {
       return { account: [], topPosts: [], worstPosts: [] };
     }
@@ -135,8 +130,8 @@ export class TikTokService {
     };
   }
 
-  async triggerSync(projectId: string) {
-    const account = await this.resolveAccount(projectId);
+  async triggerSync(projectId: string, accountId?: string) {
+    const account = await this.resolveAccount(projectId, accountId);
     if (!account) {
       throw new BadRequestException('TikTok not connected');
     }
@@ -164,8 +159,8 @@ export class TikTokService {
     return { skipped: false, ...result };
   }
 
-  async generateAdvice(projectId: string, language: string) {
-    const account = await this.resolveAccount(projectId);
+  async generateAdvice(projectId: string, language: string, accountId?: string) {
+    const account = await this.resolveAccount(projectId, accountId);
     if (!account) {
       throw new BadRequestException('TikTok not connected');
     }

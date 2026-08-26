@@ -21,8 +21,11 @@ export class InstagramController {
 
   @Get('status')
   @ApiOperation({ summary: 'Get Instagram connection status for a project' })
-  getStatus(@Query('projectId') projectId: string) {
-    return this.service.getStatus(projectId);
+  getStatus(
+    @Query('projectId') projectId: string,
+    @Query('accountId') accountId?: string,
+  ) {
+    return this.service.getStatus(projectId, accountId);
   }
 
   @Get('metrics')
@@ -30,15 +33,19 @@ export class InstagramController {
   getMetrics(
     @Query('projectId') projectId: string,
     @Query('days', new DefaultValuePipe(28), ParseIntPipe) days: number,
+    @Query('accountId') accountId?: string,
   ) {
     const clamped = Math.min(90, Math.max(7, days));
-    return this.service.getMetrics(projectId, clamped);
+    return this.service.getMetrics(projectId, clamped, accountId);
   }
 
   @Post('sync')
   @ApiOperation({ summary: 'Trigger a manual Instagram sync' })
-  triggerSync(@Query('projectId') projectId: string) {
-    return this.service.triggerSync(projectId);
+  triggerSync(
+    @Query('projectId') projectId: string,
+    @Query('accountId') accountId?: string,
+  ) {
+    return this.service.triggerSync(projectId, accountId);
   }
 
   @Post('advice')
@@ -46,8 +53,9 @@ export class InstagramController {
   generateAdvice(
     @Query('projectId') projectId: string,
     @Body() body: { language?: string },
+    @Query('accountId') accountId?: string,
   ) {
-    return this.service.generateAdvice(projectId, body?.language || 'en');
+    return this.service.generateAdvice(projectId, body?.language || 'en', accountId);
   }
 
   @Get('advice')

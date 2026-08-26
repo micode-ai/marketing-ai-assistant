@@ -65,6 +65,56 @@ describe('TikTokService', () => {
       });
     });
 
+    it('lists every linked account so the dashboard can offer a switcher', async () => {
+      prisma.projectSocialAccount.findMany.mockResolvedValue([
+        linkedAccount({ id: 'acc1', accountName: 'brand' }),
+        linkedAccount({ id: 'acc2', accountName: 'side-project' }),
+      ]);
+
+      const status = await service.getStatus('p1');
+
+      expect(status.accounts).toEqual([
+        { id: 'acc1', accountName: 'brand', accountId: 'oid1' },
+        { id: 'acc2', accountName: 'side-project', accountId: 'oid1' },
+      ]);
+      // Default is the oldest link, and it is stated rather than implied.
+      expect(status.selectedAccountId).toBe('acc1');
+      expect(status.accountName).toBe('brand');
+    });
+
+    it('reports the account that was asked for', async () => {
+      // Before this, the second account of a channel was silently unreachable.
+      prisma.projectSocialAccount.findMany.mockResolvedValue([
+        linkedAccount({ id: 'acc1', accountName: 'brand' }),
+        linkedAccount({ id: 'acc2', accountName: 'side-project' }),
+      ]);
+
+      const status = await service.getStatus('p1', 'acc2');
+
+      expect(status.accountName).toBe('side-project');
+      expect(status.selectedAccountId).toBe('acc2');
+    });
+
+    it('reports disconnected — with the account list — for an id that is not linked', async () => {
+      prisma.projectSocialAccount.findMany.mockResolvedValue([
+        linkedAccount({ id: 'acc1', accountName: 'brand' }),
+      ]);
+
+      const status = await service.getStatus('p1', 'someone-elses');
+
+      expect(status.connected).toBe(false);
+      // The list travels anyway, so the dashboard can fall back to a real one.
+      expect(status.accounts).toHaveLength(1);
+    });
+
+    it('asks the database for a stable order', async () => {
+      await service.getStatus('p1');
+
+      expect(prisma.projectSocialAccount.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ orderBy: { createdAt: 'asc' } }),
+      );
+    });
+
     it('reports disconnected when the project has no TikTok account', async () => {
       prisma.projectSocialAccount.findMany.mockResolvedValue([
         linkedAccount({ platform: 'THREADS' }),
@@ -73,6 +123,8 @@ describe('TikTokService', () => {
       await expect(service.getStatus('p1')).resolves.toEqual({
         connected: false,
         statsGranted: false,
+        accounts: [],
+        selectedAccountId: null,
       });
     });
 

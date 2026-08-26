@@ -5,6 +5,11 @@ import { InstagramSyncService } from './instagram-sync.service';
 import { decryptData } from '../common/crypto.util';
 import { fetchAccountInsightsTotals, AccountInsights } from './instagram-graph.util';
 import { buildStoriesBlock, StoryMetricRow } from './stories.util';
+import {
+  resolveProjectSocialAccount,
+  listProjectSocialAccounts,
+  toAccountOptions,
+} from '../common/resolve-social-account.util';
 
 const INSIGHTS_SCOPE = 'instagram_business_manage_insights';
 const SKIP_IF_RECENT_MS = 10 * 60 * 1000; // 10 minutes
@@ -36,43 +41,28 @@ export class InstagramService {
    */
   private async resolveAccount(
     projectId: string,
+    accountId?: string,
   ): Promise<ResolvedAccount | null> {
-    const project = await this.prisma.project.findUnique({
-      where: { id: projectId },
-      select: { organizationId: true },
-    });
-    if (!project) return null;
-
-    const links = await this.prisma.projectSocialAccount.findMany({
-      where: { projectId },
-      include: {
-        socialAccount: {
-          select: {
-            id: true,
-            organizationId: true,
-            platform: true,
-            accountName: true,
-            accountId: true,
-            encryptedTokens: true,
-            scopes: true,
-          },
-        },
-      },
-    });
-
-    const link = links.find(
-      (l) =>
-        l.socialAccount.platform === 'INSTAGRAM' &&
-        l.socialAccount.organizationId === project.organizationId,
-    );
-
-    return link ? (link.socialAccount as ResolvedAccount) : null;
+    return (await resolveProjectSocialAccount(
+      this.prisma,
+      projectId,
+      'INSTAGRAM',
+      accountId,
+    )) as ResolvedAccount | null;
   }
 
-  async getStatus(projectId: string) {
-    const account = await this.resolveAccount(projectId);
+  /** Accounts of this channel linked to the project, for the dashboard switcher. */
+  private async listAccounts(projectId: string) {
+    return toAccountOptions(await listProjectSocialAccounts(this.prisma, projectId, 'INSTAGRAM'));
+  }
+
+  async getStatus(projectId: string, accountId?: string) {
+    const account = await this.resolveAccount(projectId, accountId);
+    const accounts = await this.listAccounts(projectId);
     if (!account) {
-      return { connected: false, insightsGranted: false };
+      // accounts still travels: a request naming an account that is not linked
+      // must let the dashboard recover, not just say "not connected".
+      return { connected: false, insightsGranted: false, accounts, selectedAccountId: null };
     }
 
     const lastSyncAt = await this.getLastSyncAt(account.id);
@@ -83,11 +73,14 @@ export class InstagramService {
       accountId: account.accountId,
       lastSyncAt,
       insightsGranted: account.scopes?.includes(INSIGHTS_SCOPE) ?? false,
+      accounts,
+      // Our SocialAccount id, not the platform's — that one is accountId above.
+      selectedAccountId: account.id,
     };
   }
 
-  async getMetrics(projectId: string, days: number) {
-    const account = await this.resolveAccount(projectId);
+  async getMetrics(projectId: string, days: number, accountId?: string) {
+    const account = await this.resolveAccount(projectId, accountId);
     if (!account) {
       return {
         account: [],
@@ -202,8 +195,8 @@ export class InstagramService {
     };
   }
 
-  async triggerSync(projectId: string) {
-    const account = await this.resolveAccount(projectId);
+  async triggerSync(projectId: string, accountId?: string) {
+    const account = await this.resolveAccount(projectId, accountId);
     if (!account) {
       throw new BadRequestException('Instagram not connected');
     }
@@ -243,8 +236,8 @@ export class InstagramService {
     return { skipped: false, ...result };
   }
 
-  async generateAdvice(projectId: string, language: string) {
-    const account = await this.resolveAccount(projectId);
+  async generateAdvice(projectId: string, language: string, accountId?: string) {
+    const account = await this.resolveAccount(projectId, accountId);
     if (!account) {
       throw new BadRequestException('Instagram not connected');
     }
