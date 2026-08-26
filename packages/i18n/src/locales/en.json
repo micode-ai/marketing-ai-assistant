@@ -991,7 +991,16 @@
       "notConnected": "No Analytics property is selected for this project.",
       "goToSettings": "Choose one in settings",
       "noData": "Analytics returned no data for this period — the property may be new or the tag may not be installed.",
-      "differsFromTracker": "These figures come from Google Analytics and will differ from the Website tab, which uses our own tracking script."
+      "differsFromTracker": "These figures come from Google Analytics and will differ from the Website tab, which uses our own tracking script.",
+      "sources": "Traffic sources",
+      "page": "Page",
+      "devices": "Devices",
+      "events": "Events",
+      "countries": "Countries",
+      "avgDuration": "Avg. session",
+      "fromZero": "from zero",
+      "keyEventsNotConfigured": "No key events are configured in this property — conversions are not being measured.",
+      "lag": "GA4 keeps revising the last {hours} hours."
     }
   },
   "instagram": {

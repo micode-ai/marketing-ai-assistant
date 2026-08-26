@@ -31,6 +31,9 @@ const GOOGLE_TIMEOUT_MS = 8000;
  */
 const APP_LEVEL_LOOKBACK_ROWS = 60;
 
+/** Matches the one-hour cache the Search Console summary already uses. */
+const GA4_CACHE_TTL_MS = 60 * 60 * 1000;
+
 /** Start of the reporting window, snapped to a UTC day boundary. */
 function periodStart(days: number): Date {
   const since = new Date();
@@ -42,6 +45,7 @@ function periodStart(days: number): Date {
 @Injectable()
 export class AnalyticsService {
   private readonly logger = new Logger(AnalyticsService.name);
+  private readonly ga4Cache = new Map<string, { data: Ga4Digest; fetchedAt: number }>();
 
   constructor(
     private prisma: PrismaService,
@@ -482,17 +486,31 @@ export class AnalyticsService {
   private async loadGa4Digest(projectId: string, periodDays: number): Promise<Ga4Digest> {
     if (!this.google) return { ...EMPTY_GA4_DIGEST };
 
+    const cacheKey = `${projectId}:${periodDays}`;
+    const cached = this.ga4Cache.get(cacheKey);
+    // The panel and the digest read the same reports; without this, opening the
+    // Analytics tab and pressing Refresh runs sixteen Google calls instead of
+    // eight.
+    if (cached && Date.now() - cached.fetchedAt < GA4_CACHE_TTL_MS) return cached.data;
+
     const config = await this.google.getIntegration(projectId);
     const propertyId = config?.propertyId as string | undefined;
     // No property means Analytics was never configured for this project, which
     // is not the same as a property that reports nothing.
     if (!config?.accessToken || !propertyId) return { ...EMPTY_GA4_DIGEST };
 
+    const day = 24 * 60 * 60 * 1000;
     const end = new Date();
-    const start = new Date(end.getTime() - (periodDays - 1) * 24 * 60 * 60 * 1000);
+    const start = new Date(end.getTime() - (periodDays - 1) * day);
+    const prevEnd = new Date(start.getTime() - day);
+    const prevStart = new Date(prevEnd.getTime() - (periodDays - 1) * day);
     const iso = (d: Date) => d.toISOString().slice(0, 10);
 
-    const report = (dimensions: string[], metrics: string[]) =>
+    const report = (
+      dimensions: string[],
+      metrics: string[],
+      opts: { orderByMetric?: string; limit?: number; compare?: boolean } = {},
+    ) =>
       this.withGoogleTimeout(
         () =>
           this.google!.fetchGA4Report(
@@ -502,28 +520,58 @@ export class AnalyticsService {
             iso(end),
             dimensions,
             metrics,
+            {
+              orderByMetric: opts.orderByMetric,
+              limit: opts.limit,
+              ...(opts.compare
+                ? { compareStartDate: iso(prevStart), compareEndDate: iso(prevEnd) }
+                : {}),
+            },
           ),
         projectId,
         `ga4 ${dimensions.join('+') || 'totals'}`,
       );
 
-    const [totals, keyEvents, sources, landingPages] = await Promise.all([
-      report([], ['sessions', 'totalUsers', 'newUsers', 'screenPageViews', 'engagementRate']),
-      report([], ['keyEvents']),
-      report(['sessionDefaultChannelGroup'], ['sessions']),
-      report(['landingPage'], ['sessions']),
-    ]);
+    // Eight reports. The breakdowns each need their own dimension, and
+    // `keyEvents` is asked for alone because GA4 rejects an entire report over
+    // one metric a property does not populate — which is also how we learn
+    // whether key events are configured at all.
+    const [totals, keyEvents, channels, sources, landingPages, devices, events, countries] =
+      await Promise.all([
+        report(
+          [],
+          ['sessions', 'totalUsers', 'newUsers', 'screenPageViews', 'engagementRate', 'averageSessionDuration'],
+          { compare: true },
+        ),
+        report([], ['keyEvents'], { compare: true }),
+        report(['sessionDefaultChannelGroup'], ['sessions'], { orderByMetric: 'sessions', limit: 6 }),
+        report(['sessionSource', 'sessionMedium'], ['sessions'], { orderByMetric: 'sessions', limit: 6 }),
+        report(['landingPage'], ['sessions', 'keyEvents', 'engagementRate'], {
+          orderByMetric: 'sessions',
+          limit: 8,
+        }),
+        report(['deviceCategory'], ['sessions', 'engagementRate'], { orderByMetric: 'sessions', limit: 5 }),
+        report(['eventName'], ['eventCount'], { orderByMetric: 'eventCount', limit: 6 }),
+        report(['country'], ['sessions'], { orderByMetric: 'sessions', limit: 4 }),
+      ]);
 
     const rows = (value: unknown): Ga4Row[] | null =>
       Array.isArray(value) ? (value as Ga4Row[]) : null;
 
-    return buildGa4Digest({
+    const digest = buildGa4Digest({
       connected: true,
       totals: rows(totals),
       keyEvents: rows(keyEvents),
+      channels: rows(channels),
       sources: rows(sources),
       landingPages: rows(landingPages),
+      devices: rows(devices),
+      events: rows(events),
+      countries: rows(countries),
     });
+
+    this.ga4Cache.set(cacheKey, { data: digest, fetchedAt: Date.now() });
+    return digest;
   }
 
   /**

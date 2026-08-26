@@ -31,10 +31,17 @@ const input: AnalyticsRecommendationsInput = {
       activeDeviceInstalls: null, storeListingVisitors: null, storeConversionRate: null,
       crashRate: null, anrRate: null, averageRating: null, totalRatings: null,
       reviews: { total: 0, unanswered: 0, avgRating: null }, lastMeasuredAt: null },
-    ga4: { connected: true, sessions: 1240, users: 980, newUsers: 610, pageViews: 3100,
-      engagementRate: 64.3, keyEvents: 47,
-      topSources: [{ source: 'Organic Search', sessions: 700 }],
-      topLandingPages: [{ page: '/pricing', sessions: 210 }] },
+    ga4: { connected: true, lagHours: 48, sessions: 1240, users: 980, newUsers: 610,
+      pageViews: 3100, engagementRate: 64.3, avgSessionDuration: 75,
+      keyEvents: 47, keyEventsConfigured: true,
+      previous: { sessions: 620, users: 500, keyEvents: 20 },
+      change: { sessions: 100, users: 96, keyEvents: 135 },
+      channels: [{ channel: 'Organic Search', sessions: 700 }],
+      sources: [{ source: 'google', medium: 'organic', sessions: 700 }],
+      landingPages: [{ page: '/pricing', sessions: 210, keyEvents: 0, engagementRate: 22.5 }],
+      devices: [{ device: 'mobile', sessions: 800, engagementRate: 18 }],
+      events: [{ event: 'page_view', count: 3100 }],
+      countries: [{ country: 'Poland', sessions: 900 }] },
     competitors: [{ name: 'Fakturownia', websiteUrl: 'https://fakturownia.pl' }],
     projectType: 'WEBSITE',
     counts: { content: 4, contentPublished: 4, campaigns: 1, keywords: 0, competitors: 0, emailLists: 0 } },
@@ -152,6 +159,31 @@ describe('buildRecommendationsPrompt', () => {
     expect(systemPrompt.toLowerCase()).toContain('our own tracking script');
     expect(systemPrompt).toContain('keyEvents');
     expect(userPrompt).toContain('Organic Search');
+  });
+
+  it('separates unconfigured conversions from zero conversions', () => {
+    const { systemPrompt } = buildRecommendationsPrompt(input);
+
+    // "keyEvents: 0" with tracking off is not a conversion problem, it is a
+    // measurement problem — and the more valuable recommendation.
+    expect(systemPrompt).toContain('keyEventsConfigured');
+    expect(systemPrompt.toLowerCase()).toContain('not zero conversions');
+  });
+
+  it('carries the depth GA4 actually offers', () => {
+    const { systemPrompt, userPrompt } = buildRecommendationsPrompt(input);
+
+    expect(userPrompt).toContain('google');      // real source, not the grouping
+    expect(userPrompt).toContain('mobile');      // device split
+    expect(userPrompt).toContain('page_view');   // what is measured at all
+    expect(systemPrompt.toLowerCase()).toContain('name the path');
+    expect(systemPrompt).toContain('lagHours');
+  });
+
+  it('forbids inventing a percentage for growth from zero', () => {
+    const { systemPrompt } = buildRecommendationsPrompt(input);
+
+    expect(systemPrompt.toLowerCase()).toContain('from zero');
   });
 
   it('warns that Search Console lags behind today', () => {
