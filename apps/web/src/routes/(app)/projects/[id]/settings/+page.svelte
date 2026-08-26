@@ -95,7 +95,7 @@
   let showDisconnectConfirm = false;
 
   // Google Search Console state
-  let gscConfig: { siteUrl?: string; accessToken?: string } | null = null;
+  let gscConfig: { siteUrl?: string; connected?: boolean; propertyId?: string } | null = null;
   let gscLoading = false;
   let gscSiteUrl = '';
   let gscSites: Array<{ siteUrl: string; permissionLevel: string }> = [];
@@ -374,7 +374,7 @@
       const result = await api.get<any>('/google/integration', { projectId });
       gscConfig = result;
       gscSiteUrl = result?.siteUrl || '';
-      if (result?.accessToken) {
+      if (result?.connected) {
         await fetchGscSites();
       }
     } catch {
@@ -668,7 +668,7 @@
           <div class="h-10 bg-surface-2 rounded-lg animate-pulse"></div>
         {/each}
       </div>
-    {:else if gscConfig?.accessToken}
+    {:else if gscConfig?.connected}
       <!-- Connected state -->
       <div class="space-y-4">
         <div class="flex items-center gap-2">

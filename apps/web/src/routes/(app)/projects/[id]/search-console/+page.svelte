@@ -35,7 +35,7 @@
     notConnected = false;
     try {
       const integration = await api.get<any>('/google/integration', { projectId });
-      notConnected = !(integration?.accessToken && integration?.siteUrl);
+      notConnected = !(integration?.connected && integration?.siteUrl);
       if (notConnected) return;
 
       const [totals, dated] = await Promise.all([

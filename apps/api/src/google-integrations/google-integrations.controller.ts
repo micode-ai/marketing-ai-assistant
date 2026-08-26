@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Delete, Body, Query, Res, BadRequestException, HttpException, HttpStatus, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
 import { GoogleIntegrationsService } from './google-integrations.service';
@@ -50,8 +50,9 @@ export class GoogleIntegrationsController {
   }
 
   @Get('integration')
+  @ApiOperation({ summary: 'Google integration status — never the tokens' })
   getIntegration(@Query('projectId') projectId: string) {
-    return this.googleService.getIntegration(projectId);
+    return this.googleService.getIntegrationView(projectId);
   }
 
   @Get('gsc/sites')
