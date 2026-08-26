@@ -13,6 +13,7 @@ import { buildEmailDigest, EmailDigest } from './email-digest.util';
 import { buildAppDigest, AppDigest, EMPTY_APP_DIGEST } from './app-digest.util';
 import { buildGscDigest, GscDigest, EMPTY_GSC_DIGEST } from './gsc-digest.util';
 import { buildGa4Digest, Ga4Digest, EMPTY_GA4_DIGEST, Ga4Row } from './ga4-digest.util';
+import { collectFindings } from './findings.util';
 import { GoogleIntegrationsService } from '../google-integrations/google-integrations.service';
 
 /**
@@ -363,6 +364,15 @@ export class AnalyticsService {
       projectType: project?.projectType ?? 'WEBSITE',
     };
 
+    // Ranked before it is sent. Handing over twenty blocks and asking the model
+    // to both spot what matters and phrase the advice makes it do the first job
+    // badly — see findings.util.ts.
+    const findings = collectFindings(digest);
+    this.logger.log(
+      `[recommendations] project=${projectId} findings=${findings.length}` +
+        (findings.length > 0 ? ` top=${findings[0].id}` : ''),
+    );
+
     const agentUrl = process.env.AI_AGENT_URL || 'http://localhost:3001';
 
     let response: Awaited<ReturnType<typeof fetch>>;
@@ -376,6 +386,7 @@ export class AnalyticsService {
           projectType: project?.projectType ?? null,
           language,
           data: digest,
+          findings,
         }),
       });
     } catch (error) {

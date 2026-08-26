@@ -145,12 +145,28 @@ export interface AnalyticsDigest {
   projectType: string;
 }
 
+/**
+ * One ranked observation, computed by the API before the prompt is built.
+ *
+ * The digest is still sent in full — the model needs the surrounding numbers to
+ * write a sensible "how" — but these say where to look. Spotting an anomaly is
+ * arithmetic and belongs on the server; turning a stated fact into an action is
+ * what the model is for.
+ */
+export interface Finding {
+  id: string;
+  severity: 'high' | 'medium' | 'low';
+  source: string;
+  fact: string;
+}
+
 export interface AnalyticsRecommendationsInput {
   projectName?: string;
   industry?: string;
   projectType?: string;
   language: string;
   data: AnalyticsDigest;
+  findings?: Finding[];
 }
 
 export function buildRecommendationsPrompt(input: AnalyticsRecommendationsInput): { systemPrompt: string; userPrompt: string } {
@@ -233,6 +249,13 @@ How to read the app block (Google Play):
 - A level may have been measured before the period started — it is the most recent reading we have, not a figure for the window. So an app can show an install base with null installs for the period: that means the app exists and gained nothing recently, or that Play reported nothing recently. Never read null installs as "the app has no users" when activeDeviceInstalls says otherwise.
 - "reviews.unanswered" is directly actionable: unanswered store reviews are visible to every future installer.
 
+The user prompt may open with a ranked list of findings. When it does:
+- Each finding is a fact the server computed from the data, with its numbers already in it. Build recommendations on these first, highest severity first, before looking for anything of your own.
+- Do not restate a finding as a recommendation. A finding says what is true; a recommendation says what to do about it and what changes if they do.
+- The full digest follows for context — use it to make the "how" concrete, and to check that what you advise is consistent with the rest of the picture.
+- You may still raise something the findings missed, but not at the cost of leaving a high-severity finding unaddressed.
+- An empty list means nothing crossed a threshold. Do not manufacture urgency; recommend the most useful next step for a project at this stage.
+
 Your job here is the cross-channel view. The user already gets separate per-channel advice inside each channel's own dashboard, so:
 - Prefer recommendations that only make sense across channels: move what works on the strongest channel to the weakest, reuse a high-engagement post as an ad or a landing page, connect a channel that is missing, align the website funnel with where the audience actually comes from.
 - Do not repeat what a single-channel dashboard would already say.
@@ -243,7 +266,17 @@ Your job here is the cross-channel view. The user already gets separate per-chan
   lines.push(`Project: ${projectName || 'N/A'}${industry ? `, industry: ${industry}` : ''}${projectType ? `, type: ${projectType}` : ''}`);
   lines.push(`Period: last ${data.periodDays} days`);
   lines.push('');
-  lines.push('Analytics digest:');
+
+  const findings = input.findings ?? [];
+  if (findings.length > 0) {
+    lines.push('Findings, already ranked — start here:');
+    for (const finding of findings) {
+      lines.push(`- [${finding.severity}] (${finding.source}) ${finding.fact}`);
+    }
+    lines.push('');
+  }
+
+  lines.push('Full analytics digest:');
   lines.push(JSON.stringify(data, null, 0));
 
   const userPrompt = lines.join('\n');
