@@ -12,6 +12,12 @@
  * - **Rates** (crash rate, ANR rate, store conversion) are already ratios.
  *   Summing is meaningless; the newest measured value is what matters, since a
  *   crash rate is a property of the current build.
+ *
+ * That distinction also decides *which rows* each figure may look at, and
+ * getting this wrong is what made the block report a zero install base for a
+ * live app. A period total is bounded by the window by definition. A level is
+ * not: it is the last thing we know, whenever we learned it. So sums read
+ * `periodRows` and levels read `levelRows`, which reaches back past the window.
  */
 
 export interface AppMetricsRow {
@@ -83,12 +89,19 @@ function sum(rows: AppMetricsRow[], field: keyof AppMetricsRow): number {
   return rows.reduce((acc, row) => acc + (row[field] ?? 0), 0);
 }
 
-/** `metrics` must be ordered by date ascending. */
-export function buildAppDigest(
-  metrics: AppMetricsRow[],
-  reviews: AppReviewRow[],
-  connected: boolean,
-): AppDigest {
+/**
+ * `periodRows` are the rows inside the reporting window; `levelRows` are the
+ * most recent rows regardless of the window. Both must be ordered by date
+ * ascending. Passing the same array for both is valid and means "no history
+ * beyond the window".
+ */
+export function buildAppDigest(args: {
+  periodRows: AppMetricsRow[];
+  levelRows: AppMetricsRow[];
+  reviews: AppReviewRow[];
+  connected: boolean;
+}): AppDigest {
+  const { periodRows, levelRows, reviews, connected } = args;
   if (!connected) return { ...EMPTY_APP_DIGEST, reviews: { total: 0, unanswered: 0, avgRating: null } };
 
   const ratings = reviews.map((r) => r.starRating).filter((r) => typeof r === 'number');
@@ -101,26 +114,30 @@ export function buildAppDigest(
         : Number((ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(2)),
   };
 
-  if (metrics.length === 0) {
+  if (periodRows.length === 0 && levelRows.length === 0) {
     return { ...EMPTY_APP_DIGEST, connected: true, reviews: reviewBlock };
   }
 
-  const installs = sum(metrics, 'installs');
-  const uninstalls = sum(metrics, 'uninstalls');
-  const visitors = sum(metrics, 'storeListingVisitors');
+  // Nothing in the window means no activity in the window — a real, reportable
+  // zero — but only if we have measurements at all. With no period rows the
+  // sums stay null so the model does not read "no installs this month" out of
+  // a gap in the data.
+  const measuredPeriod = periodRows.length > 0;
+  const installs = measuredPeriod ? sum(periodRows, 'installs') : null;
+  const uninstalls = measuredPeriod ? sum(periodRows, 'uninstalls') : null;
 
   return {
     connected: true,
     installs,
     uninstalls,
-    netInstalls: installs - uninstalls,
-    activeDeviceInstalls: latest(metrics, 'activeDeviceInstalls'),
-    storeListingVisitors: visitors,
-    storeConversionRate: latest(metrics, 'storeListingConversions'),
-    crashRate: latest(metrics, 'crashRate'),
-    anrRate: latest(metrics, 'anrRate'),
-    averageRating: latest(metrics, 'averageRating'),
-    totalRatings: latest(metrics, 'totalRatings'),
+    netInstalls: installs !== null && uninstalls !== null ? installs - uninstalls : null,
+    activeDeviceInstalls: latest(levelRows, 'activeDeviceInstalls'),
+    storeListingVisitors: measuredPeriod ? sum(periodRows, 'storeListingVisitors') : null,
+    storeConversionRate: latest(levelRows, 'storeListingConversions'),
+    crashRate: latest(levelRows, 'crashRate'),
+    anrRate: latest(levelRows, 'anrRate'),
+    averageRating: latest(levelRows, 'averageRating'),
+    totalRatings: latest(levelRows, 'totalRatings'),
     reviews: reviewBlock,
   };
 }
