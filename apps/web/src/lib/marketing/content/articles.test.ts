@@ -54,6 +54,10 @@ describe('buildArticles', () => {
     );
   });
 
+  it('rejects a slug with a character that would break a URL or the sitemap XML', () => {
+    expect(() => buildArticles({ '/src/content/blog/en/01-a.md': file({ slug: 'ai&content' }) })).toThrow(/slug/i);
+  });
+
   it('rejects an unknown language', () => {
     expect(() => buildArticles({ '/src/content/blog/de/01-a.md': file({ lang: 'de' }) })).toThrow(/language/i);
   });

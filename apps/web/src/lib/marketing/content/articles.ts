@@ -20,6 +20,8 @@ export interface Article {
 
 const MAX_DESCRIPTION = 155;
 const WORDS_PER_MINUTE = 200;
+/** Slugs end up in URLs and, unescaped, inside sitemap XML — so keep them to safe characters. */
+const SLUG = /^[a-z0-9-]+$/;
 
 /**
  * Turns raw markdown files (path -> contents) into the validated article set.
@@ -70,6 +72,11 @@ function toArticle(path: string, raw: string): Article {
     throw new Error(`${path}: unknown language "${lang}" — expected one of ${LANGS.join(', ')}`);
   }
 
+  const slug = text('slug');
+  if (!SLUG.test(slug)) {
+    throw new Error(`${path}: slug "${slug}" must be lowercase letters, digits and hyphens only`);
+  }
+
   const description = text('description');
   if (description.length > MAX_DESCRIPTION) {
     throw new Error(`${path}: description is ${description.length} characters, the limit is ${MAX_DESCRIPTION}`);
@@ -82,7 +89,7 @@ function toArticle(path: string, raw: string): Article {
   const words = body.split(/\s+/).filter(Boolean).length;
 
   return {
-    slug: text('slug'),
+    slug,
     lang: lang as Lang,
     pair: text('pair'),
     title: text('title'),
