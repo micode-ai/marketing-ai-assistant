@@ -51,4 +51,17 @@ describe('parseFrontmatter', () => {
   it('treats a document without frontmatter as pure body', () => {
     expect(parseFrontmatter('# Just markdown')).toEqual({ meta: {}, body: '# Just markdown' });
   });
+
+  it('only strips quotes when the same quote character opens and closes the value', () => {
+    const doc = `---
+title: Marketers'
+subtitle: "Quoted"
+---
+
+Body.
+`;
+    const { meta } = parseFrontmatter(doc);
+    expect(meta.title).toBe("Marketers'");
+    expect(meta.subtitle).toBe('Quoted');
+  });
 });

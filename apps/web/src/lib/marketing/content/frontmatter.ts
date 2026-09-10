@@ -68,5 +68,10 @@ export function parseFrontmatter(raw: string): ParsedMarkdown {
 }
 
 function unquote(value: string): string {
-  return value.trim().replace(/^['"]|['"]$/g, '').trim();
+  const trimmed = value.trim();
+  const quote = trimmed[0];
+  if ((quote === '"' || quote === "'") && trimmed.length >= 2 && trimmed[trimmed.length - 1] === quote) {
+    return trimmed.slice(1, -1).trim();
+  }
+  return trimmed;
 }
