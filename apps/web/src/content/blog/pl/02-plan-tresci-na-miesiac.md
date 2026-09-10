@@ -9,11 +9,11 @@ updated: 2026-09-10
 tags: [treści, planowanie, strategia]
 faq:
   - q: Na jak długo warto planować treści?
-    a: Miesiąc to sensowna jednostka. Kwartał jest zbyt odległy, żeby przewidzieć, co będzie ważne dla rynku, a tydzień jest za krótki, żeby zauważyć, że nie napisałeś nic o produkcie.
+    a: Miesiąc to sensowna jednostka planowania treści. Kwartał jest zbyt odległy, żeby przewidzieć, co będzie ważne dla rynku, a tydzień jest za krótki, żeby zauważyć, że nie napisałeś nic o produkcie.
   - q: Ile postów miesięcznie wystarczy?
-    a: Tyle, ile udźwigniesz w najgorszym tygodniu miesiąca, a nie w najlepszym. Dla większości małych zespołów to dwa–trzy posty tygodniowo na kanał, a regularność liczy się bardziej niż liczba.
+    a: Właściwa liczba postów w miesiącu to tyle, ile udźwigniesz w najgorszym tygodniu, a nie w najlepszym. Dla większości małych zespołów to dwa–trzy posty tygodniowo na kanał, a regularność liczy się bardziej niż liczba.
   - q: Co zrobić, kiedy plan sypie się w połowie miesiąca?
-    a: Tnij zakres, nie jakość: usuń najmniej ważny temat, utrzymaj częstotliwość na głównym kanale i wykorzystaj ponownie starszy pomysł, który zadziałał, zamiast publikować coś napisanego w pośpiechu.
+    a: Kiedy plan treści sypie się w połowie miesiąca, tnij zakres, nie jakość: usuń najmniej ważny temat, utrzymaj częstotliwość na głównym kanale i wykorzystaj ponownie starszy pomysł, który zadziałał, zamiast publikować coś napisanego w pośpiechu.
 ---
 
 Zacznij od tego, co już masz, a nie od pustego kalendarza. Zrób audyt minionego miesiąca, wybierz trzy albo cztery tematy przewodnie powiązane z tym, co faktycznie sprzedajesz, ustaw częstotliwość, którą wytrzymasz w najgorszym tygodniu, a potem przypisz każdemu kanałowi formaty, które ten kanał nagradza, i uzupełnij puste sloty. Zaplanowanie miesiąca zajmuje jedno popołudnie, a jego produkcja mniej więcej jeden dzień roboczy — pod warunkiem, że planowanie było pierwsze.
@@ -61,7 +61,7 @@ Każdy kanał nagradza inny kształt, a ten sam pomysł powinien przybrać w ka�
 | Facebook | Rozmowę i lokalny kontekst | Krótki post plus jedna grafika | 2–3 tygodniowo |
 | Instagram | Wizualny dowód, zapisy postów | Karuzela z krokami albo jedno mocne zdjęcie | 3–4 tygodniowo |
 | Threads | Szybkie, rozmowne opinie | Jedno–dwa zdania i pytanie na końcu | Codziennie, jeśli dasz radę |
-| TikTok | Tylko wideo — nie ma tam postu samym tekstem | 20–40 sekund pokazu albo post ze zdjęciami | 1–3 tygodniowo |
+| TikTok | Tylko wideo — nie ma tam postów wyłącznie tekstowych | 20–40 sekund pokazu albo post ze zdjęciami | 1–3 tygodniowo |
 | Telegram | Głębię dla tych, którzy już obserwują | Dłuższa notka, linki mile widziane | 1–2 tygodniowo |
 
 Zwróć uwagę na wiersz z TikTokiem. To ograniczenie najczęściej rozsypuje plan zbudowany w arkuszu: jeśli nie zaplanowałeś nagrania, nie opublikujesz tam nic.

@@ -9,11 +9,11 @@ updated: 2026-09-10
 tags: [analytics, social media, reporting]
 faq:
   - q: Which social media metric actually matters?
-    a: One per channel, chosen to match the job that channel does. Reach for awareness channels, saves and replies for consideration, clicks for channels meant to move people to your site.
+    a: One metric per channel, chosen to match the job that channel does. Reach for awareness channels, saves and replies for consideration, clicks for channels meant to move people to your site.
   - q: Why do my follower and view counts not match the growth I see?
     a: Most platform APIs return lifetime totals — every view a video has ever had. Growth for a period is the latest total minus the total at the start of the period, never the sum of the numbers you see.
   - q: Can I get historical analytics for a period before I connected the account?
-    a: Usually not. Platforms serve a limited window and some metrics have no daily history at all, so your data starts on the day you connect. Connect early, even if you are not ready to read it.
+    a: Analytics from before you connected an account are usually unavailable: platforms serve a limited window and some metrics have no daily history at all, so the data starts on the day you connect. Connect your accounts early, even if you are not ready to read the numbers yet.
 ---
 
 Choose one number per channel that matches the job that channel does, read it as a change over a fixed period rather than as a total, and write two sentences about why it moved. That is a report. Everything beyond it — the deck, the tab of formulas, the month-on-month table nobody reads — is work that produces no decision.
@@ -28,7 +28,7 @@ A dashboard with forty numbers hides the two that matter. Assign each channel a 
 | --- | --- | --- |
 | Instagram | Reach for awareness, saves for usefulness | Whether reach came from followers or the explore feed |
 | Threads | Replies per post | Anything about who is reading without replying |
-| TikTok | Views per video, and the share that finish | Where the views came from, or who they were |
+| TikTok | Views per video, and shares per view | Where the views came from, or who they were |
 | LinkedIn | Comments from people outside your company | How many decision-makers saw it and said nothing |
 | Facebook | Reach and link clicks | Whether the click had any intent behind it |
 | Telegram | Views per post against subscriber count | Which subscribers are active |

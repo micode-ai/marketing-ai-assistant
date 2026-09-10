@@ -9,9 +9,9 @@ updated: 2026-09-10
 tags: [content, social media, ai]
 faq:
   - q: Can AI write social media posts that sound human?
-    a: Yes, when it is given the brand voice, the audience and real product details. Generic prompts produce generic posts.
+    a: AI writes social posts that sound human when it is given the brand voice, the audience and real product details. Generic prompts produce generic posts.
   - q: How much editing does an AI draft need?
-    a: Expect to rewrite the opening line and the call to action; the middle of a well-briefed draft usually survives intact.
+    a: An AI draft of a social post usually needs its opening line and its call to action rewritten by hand; the middle of a well-briefed draft survives intact.
   - q: Does AI content hurt reach on social platforms?
     a: Platforms rank engagement, not authorship. A post that reads well and gets replies performs the same regardless of who drafted it.
 ---

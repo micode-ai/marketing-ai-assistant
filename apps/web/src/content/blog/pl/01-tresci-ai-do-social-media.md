@@ -9,9 +9,9 @@ updated: 2026-09-10
 tags: [treści, social media, ai]
 faq:
   - q: Czy AI potrafi pisać posty, które brzmią naturalnie?
-    a: Tak, jeśli dostanie ton marki, opis odbiorcy i prawdziwe szczegóły produktu. Ogólny prompt daje ogólny post — to zwykle problem briefu, nie modelu.
+    a: AI pisze posty, które brzmią naturalnie, jeśli dostanie ton marki, opis odbiorcy i prawdziwe szczegóły produktu. Ogólny prompt daje ogólny post — to zwykle problem briefu, nie modelu.
   - q: Ile pracy wymaga poprawienie szkicu z AI?
-    a: Załóż, że przepiszesz pierwsze zdanie i wezwanie do działania. Środek dobrze zbriefowanego szkicu zwykle zostaje bez większych zmian.
+    a: Szkic posta z AI zwykle wymaga ręcznego przepisania pierwszego zdania i wezwania do działania; środek dobrze zbriefowanego szkicu zostaje bez większych zmian.
   - q: Czy treści pisane przez AI obniżają zasięgi?
     a: Platformy oceniają zaangażowanie, a nie autora. Post, który dobrze się czyta i zbiera komentarze, działa tak samo niezależnie od tego, kto napisał pierwszą wersję.
 ---
@@ -57,7 +57,7 @@ Jest jeszcze czwarta, mniej oczywista: decyzja, o czym w ogóle pisać. Model po
 
 ## Jak utrzymać ton marki przy kilkudziesięciu postach
 
-Ton przeżywa wtedy, gdy jest zapisany jako ograniczenia, a nie jako przymiotniki. „Przyjaźnie, ale profesjonalnie” nic nie mówi modelowi — szczerze mówiąc, człowiekowi też niewiele. Działa krótka lista reguł mechanicznych: długość zdań, forma „ty” albo „Państwo”, czy używasz myślników, jakie słowa są zakazane, czy zaczynasz od pytania, jak nazywasz własny produkt.
+Ton przetrwa tylko wtedy, gdy zapiszesz go jako ograniczenia, a nie jako przymiotniki. „Przyjaźnie, ale profesjonalnie” nic nie mówi modelowi — szczerze mówiąc, człowiekowi też niewiele. Działa krótka lista reguł mechanicznych: długość zdań, forma „ty” albo „Państwo”, czy używasz myślników, jakie słowa są zakazane, czy zaczynasz od pytania, jak nazywasz własny produkt.
 
 Trzymaj tę listę w kontekście projektu, żeby obowiązywała przy każdej generacji, i aktualizuj ją, kiedy złapiesz się na poprawianiu tego samego po raz trzeci. Jeśli z każdego szkicu wykreślasz „dedykowany”, dopisz to słowo do listy zakazów zamiast wykreślać je po raz czwarty.
 

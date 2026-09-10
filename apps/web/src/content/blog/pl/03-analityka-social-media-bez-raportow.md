@@ -9,11 +9,11 @@ updated: 2026-09-10
 tags: [analityka, social media, raporty]
 faq:
   - q: Który wskaźnik w social mediach naprawdę ma znaczenie?
-    a: Jeden na kanał, dobrany do zadania, które ten kanał wykonuje. Zasięg tam, gdzie budujesz świadomość, zapisy i odpowiedzi tam, gdzie budujesz rozważanie zakupu, kliknięcia tam, gdzie prowadzisz ruch na stronę.
+    a: Jeden wskaźnik na kanał, dobrany do zadania, które ten kanał wykonuje. Zasięg tam, gdzie budujesz świadomość, zapisy i odpowiedzi tam, gdzie budujesz rozważanie zakupu, kliknięcia tam, gdzie prowadzisz ruch na stronę.
   - q: Dlaczego liczba wyświetleń i obserwujących nie zgadza się z widocznym wzrostem?
     a: Większość API zwraca sumy od początku istnienia konta lub posta. Wzrost w okresie to najnowsza suma minus suma z początku okresu — nigdy suma kolejnych odczytów.
   - q: Czy da się pobrać analitykę sprzed podłączenia konta?
-    a: Zwykle nie. Platformy udostępniają ograniczone okno, a część wskaźników w ogóle nie ma historii dziennej, więc dane zaczynają się w dniu podłączenia. Podłącz konta wcześnie, nawet jeśli jeszcze nie zamierzasz ich czytać.
+    a: Analityka sprzed podłączenia konta zwykle nie jest dostępna: platformy udostępniają ograniczone okno, a część wskaźników w ogóle nie ma historii dziennej, więc dane zaczynają się w dniu podłączenia. Podłącz konta wcześnie, nawet jeśli nie zamierzasz jeszcze czytać tych liczb.
 ---
 
 Wybierz jedną liczbę na kanał, dopasowaną do zadania, które ten kanał wykonuje, czytaj ją jako zmianę w ustalonym okresie, a nie jako sumę od początku, i dopisz dwa zdania o tym, dlaczego się zmieniła. To jest raport. Wszystko poza tym — prezentacja, zakładka z formułami, tabela miesiąc do miesiąca, której nikt nie czyta — to praca, z której nie wynika żadna decyzja.
@@ -28,7 +28,7 @@ Panel z czterdziestoma liczbami ukrywa te dwie, które mają znaczenie. Przypisz
 | --- | --- | --- |
 | Instagram | Zasięg przy świadomości, zapisy przy użyteczności | Czy zasięg przyszedł od obserwujących, czy z eksploruj |
 | Threads | Odpowiedzi pod postem | Nic o tych, którzy czytają i milczą |
-| TikTok | Wyświetlenia wideo i udział obejrzeń do końca | Skąd przyszły wyświetlenia i kto za nimi stoi |
+| TikTok | Wyświetlenia wideo i liczba udostępnień na wyświetlenie | Skąd przyszły wyświetlenia i kto za nimi stoi |
 | LinkedIn | Komentarze osób spoza Twojej firmy | Ilu decydentów zobaczyło post i nic nie napisało |
 | Facebook | Zasięg i kliknięcia w link | Czy za kliknięciem stała jakakolwiek intencja |
 | Telegram | Wyświetlenia posta wobec liczby subskrybentów | Którzy subskrybenci są aktywni |
@@ -56,7 +56,7 @@ Znajomość tych luk oszczędza szukania danych, których nie ma.
 
 **Nie każdy wskaźnik ma serię dzienną.** Często jeden wskaźnik — zwykle zasięg — wraca jako szereg dzień po dniu, a polubienia, wyświetlenia i interakcje tylko jako jedna suma dla zadanego okresu. Wykresu tego drugiego rodzaju nie da się zbudować, a narzędzie, które go rysuje, rysuje zera.
 
-**Na TikToku nie ma postu samym tekstem.** To platforma medialna również w API, co ma znaczenie przy planowaniu obecności tak samo jak przy czytaniu wyników.
+**Na TikToku nie ma postów wyłącznie tekstowych.** To platforma medialna również w API, co ma znaczenie przy planowaniu obecności tak samo jak przy czytaniu wyników.
 
 **Zero i „nie zmierzono” to dwie różne rzeczy.** Dzień bez pomiaru nie jest dniem bez zasięgu. Narysowanie brakującego dnia jako zera tworzy urwisko, którego nigdy nie było — i jest to najczęstszy sposób, w jaki panel wprowadza marketera w błąd.
 

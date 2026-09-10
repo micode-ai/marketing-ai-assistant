@@ -9,11 +9,11 @@ updated: 2026-09-10
 tags: [content, planning, strategy]
 faq:
   - q: How far ahead should a content plan go?
-    a: One month is the useful unit. A quarter is too far to predict what your market cares about, and a week is too short to spot that you have published nothing about your product.
+    a: One month is the useful planning unit for content. A quarter is too far ahead to predict what your market cares about, and a week is too short to spot that you have published nothing about your product.
   - q: How many posts a month is enough?
-    a: Enough is the number you can sustain in your worst week of the month, not your best. For most small teams that is two or three posts a week per channel, and consistency beats volume.
+    a: The right number of posts per month is the number you can sustain in your worst week, not your best. For most small teams that is two or three posts a week per channel, and consistency beats volume.
   - q: What do I do when the plan falls apart mid-month?
-    a: Cut scope rather than quality: drop the lowest-priority theme, keep the cadence, and reuse an older post that performed well instead of publishing something rushed.
+    a: When a content plan falls apart mid-month, cut scope rather than quality: drop the lowest-priority theme, keep the cadence, and reuse an older post that performed well instead of publishing something rushed.
 ---
 
 Start from what you already have, not from an empty calendar. Audit last month, pick three or four themes that connect to what you actually sell, set a cadence you could sustain in your worst week, then map each channel to the formats it rewards and fill the remaining slots. A month of content takes an afternoon to plan and roughly one working day a month to produce, provided the planning happens first.
