@@ -233,6 +233,15 @@ Content agent supports **multilingual generation**: pass `languages: ['en', 'pl'
 - Context mapping in `+layout.svelte`: route regex → doc slug (e.g., `/checklists` → `03-ai-features`).
 - Help link at bottom of Sidebar with `?` icon.
 
+### Marketing Landing & Blog
+- Public, prerendered pages live in `apps/web/src/routes/(marketing)/` — `+layout.ts` sets `ssr=true, prerender=true, csr=false, trailingSlash='always'`, overriding the app-wide CSR default in the root `+layout.ts`.
+- `/` is the English landing; `/pl/` and `/ru/` are the translations. Articles are `/blog/<lang>/<slug>/`.
+- Landing copy: `apps/web/src/lib/marketing/copy/{en,pl,ru}.ts` — plain objects, **not** `svelte-i18n` (client-side i18n would leave the prerendered HTML empty). A test asserts the three dictionaries share one key structure.
+- Articles: markdown in `apps/web/src/content/blog/<lang>/*.md`, loaded via `import.meta.glob` and validated at build time (`content/articles.ts`); a broken article fails the build. `pair` links translations and drives hreflang.
+- SEO: `Seo.svelte` owns the head; `seo/jsonld.ts` builds the `@graph`; `seo/alternates.ts` builds hreflang; `/sitemap.xml`, `/llms.txt` and `/llms-full.txt` are prerendered endpoints. No `offers` and no ratings in the markup — deliberate.
+- `<html lang>` is filled by `transformPageChunk` in `hooks.server.ts` (the `%lang%` placeholder in `app.html`).
+- The i18n gate lives in `$lib/i18n/I18nGate.svelte` and is applied by the `(app)` and `(auth)` layouts — never by the root layout.
+
 ## Claude Code Slash Commands
 
 Custom commands for the team. Use as `/command <args>` in Claude Code.
