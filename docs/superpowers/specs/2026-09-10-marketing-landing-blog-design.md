@@ -123,8 +123,10 @@ That paragraph is what an AI answer quotes.
 ```
 
 Loading: `import.meta.glob('/src/content/blog/**/*.md', { query: '?raw', eager: true })` at build
-time, parsed by `frontmatter.ts`, rendered with `marked` and sanitized with `DOMPurify` — both are
-already dependencies of `apps/web`.
+time, parsed by `frontmatter.ts` and rendered with `marked`, which `apps/web` already depends on.
+No `DOMPurify` pass: the markdown is our own reviewed repository content, not user input, and
+`DOMPurify` needs a DOM it does not have during prerendering. This matches the existing help page,
+which also renders trusted markdown with `marked` alone.
 
 Publishing an article is a pull request plus a deploy, which gives the text a review for free.
 
@@ -144,15 +146,18 @@ Validated by tests, not by eye:
 - `robots: index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1`.
 - A complete `hreflang` set (`en`, `pl`, `ru`) plus `x-default` pointing at English — on landings
   and on articles, where the pairs come from the frontmatter `pair` key.
-- Open Graph (`og:type`, `og:locale`, `og:locale:alternate`, `og:image` 1200x630) and
-  `twitter:card=summary_large_image`.
+- Open Graph (`og:type`, `og:locale`, `og:locale:alternate`, `og:image`) and a Twitter card. The
+  interim `og:image` is the existing 512x512 `static/icon-512.png` with `twitter:card=summary`; a
+  designed 1200x630 card and `summary_large_image` are a follow-up.
 - `<html lang>` matching the page language.
 
 ### JSON-LD
 
 Landing pages emit an `@graph` with `WebSite`, `Organization`, `SoftwareApplication`, `FAQPage` and
 `BreadcrumbList`. `Organization` is MICODE sp. z o.o. with `url: https://mi-code.pl/` and a
-`sameAs` list covering the product social profiles, `ai-budget.pl` and `eksiegowyai.pl`.
+`sameAs` list of the product social profiles. The sibling products are *not* in `sameAs` — that
+property means identity pages for the same entity, and `ai-budget.pl` is a different product; they
+are dofollow links in the page body, which is what the backlinks actually need.
 
 Article pages emit `Article` (`headline`, `description`, `datePublished`, `dateModified`,
 `inLanguage`, `author`, `publisher`, `mainEntityOfPage`, `image`), `BreadcrumbList`, and `FAQPage`
@@ -267,4 +272,6 @@ refactor broke nothing.
 
 - Product social profile URLs (Facebook, LinkedIn, X, other). Until they are supplied, the footer
   slots and the `sameAs` array stay empty rather than guessed.
-- Which articles ship first, and in which languages.
+- ~~Which articles ship first, and in which languages.~~ Decided 2026-09-10: three topics, each in
+  all three languages (nine files) — AI content generation for social media, building a monthly
+  content plan, and social analytics without manual reports.
