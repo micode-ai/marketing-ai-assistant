@@ -9,7 +9,7 @@ export const pl: LandingCopy = {
   nav: { blog: 'Blog', login: 'Zaloguj się', start: 'Zacznij za darmo', skipToContent: 'Przejdź do treści' },
   hero: {
     h1: 'Asystent marketingowy AI dla małych zespołów',
-    sub: 'Marketing AI Assistant pisze treści, publikuje je w Twoich kanałach i mówi, co zadziałało — po polsku, angielsku i rosyjsku, z jednego miejsca pracy.',
+    sub: 'Marketing AI Assistant pisze treści, publikuje je w Twoich kanałach i mówi, co zadziałało — po polsku, angielsku i rosyjsku, z jednego miejsca.',
     primaryCta: 'Zacznij za darmo',
     secondaryCta: 'Zobacz, jak to działa',
   },
@@ -69,15 +69,15 @@ export const pl: LandingCopy = {
     items: [
       {
         q: 'Czym jest Marketing AI Assistant?',
-        a: 'To aplikacja webowa, która planuje, pisze i publikuje treści marketingowe dla małego zespołu, a potem raportuje, jak te treści zadziałały. Agenci AI przygotowują treść; Ty ją zatwierdzasz i publikujesz.',
+        a: 'Marketing AI Assistant to aplikacja webowa, która planuje, pisze i publikuje treści marketingowe dla małego zespołu, a potem raportuje, jak te treści zadziałały. Agenci AI przygotowują treść; Ty ją zatwierdzasz i publikujesz.',
       },
       {
         q: 'W jakich językach pisze?',
-        a: 'Po polsku, angielsku i rosyjsku. Jedno żądanie może od razu wygenerować wszystkie trzy wersje, każdą pod swoją grupę odbiorców.',
+        a: 'Marketing AI Assistant pisze po polsku, angielsku i rosyjsku. Jedno żądanie może od razu wygenerować wszystkie trzy wersje, każdą pod swoją grupę odbiorców.',
       },
       {
         q: 'W jakich kanałach może publikować?',
-        a: 'Facebook, Instagram, Threads, TikTok, LinkedIn i Telegram. Instagram i Threads dodatkowo przekazują dane analityczne z powrotem do aplikacji.',
+        a: 'Marketing AI Assistant publikuje w kanałach: Facebook, Instagram, Threads, TikTok, LinkedIn i Telegram. Instagram i Threads dodatkowo przekazują dane analityczne z powrotem do aplikacji.',
       },
       {
         q: 'Czy muszę podłączyć konta, żeby wypróbować?',

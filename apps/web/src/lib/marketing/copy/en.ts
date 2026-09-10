@@ -69,15 +69,15 @@ export const en: LandingCopy = {
     items: [
       {
         q: 'What is Marketing AI Assistant?',
-        a: 'It is a web application that plans, writes and publishes marketing content for a small team, and then reports on how that content performed. AI agents do the drafting; you approve and publish.',
+        a: 'Marketing AI Assistant is a web application that plans, writes and publishes marketing content for a small team, and then reports on how that content performed. AI agents do the drafting; you approve and publish.',
       },
       {
         q: 'Which languages does it write in?',
-        a: 'English, Polish and Russian. A single request can produce all three versions at once, each written for its own audience.',
+        a: 'Marketing AI Assistant writes in English, Polish and Russian. A single request can produce all three versions at once, each written for its own audience.',
       },
       {
         q: 'Which channels can it publish to?',
-        a: 'Facebook, Instagram, Threads, TikTok, LinkedIn and Telegram. Instagram and Threads also report analytics back into the app.',
+        a: 'Marketing AI Assistant publishes to Facebook, Instagram, Threads, TikTok, LinkedIn and Telegram. Instagram and Threads also report analytics back into the app.',
       },
       {
         q: 'Do I need to connect my accounts to try it?',
