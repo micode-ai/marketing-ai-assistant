@@ -57,6 +57,16 @@ export function pairSlugs(articles: Article[], pair: string): Partial<Record<Lan
   return result;
 }
 
+/**
+ * The most recent `updated` date among a set of articles, or `undefined` if there are
+ * none. Dates are ISO `YYYY-MM-DD`, so a lexicographic sort is also a chronological one.
+ * Shared by the sitemap's blog-index `lastmod` and the blog index page's visible
+ * "last updated" line, so the two never disagree.
+ */
+export function newestUpdated(articles: Article[]): string | undefined {
+  return articles.map((article) => article.updated).sort().pop();
+}
+
 function toArticle(path: string, raw: string): Article {
   const { meta, body } = parseFrontmatter(raw);
   const text = (key: string): string => {

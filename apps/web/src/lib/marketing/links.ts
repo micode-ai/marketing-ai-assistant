@@ -2,6 +2,14 @@ import type { Lang } from './content/articles';
 
 export const SITE = 'https://emarketingai.pl';
 
+/**
+ * The date the landing copy was last reviewed. Used as both the sitemap `lastmod` for
+ * the three landing pages and the visible "last updated" line in the marketing footer —
+ * one source of truth instead of a build-date `lastmod` that re-dates every deploy even
+ * when nothing changed. Bump it by hand whenever the landing copy actually changes.
+ */
+export const CONTENT_REVIEWED = '2026-09-10';
+
 export const COMPANY = {
   name: 'MICODE sp. z o.o.',
   url: 'https://mi-code.pl/',

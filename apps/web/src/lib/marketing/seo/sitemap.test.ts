@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { sitemapEntries, renderSitemap } from './sitemap';
 import { buildArticles } from '../content/articles';
+import { CONTENT_REVIEWED } from '../links';
 
 const articles = buildArticles({
   '/src/content/blog/en/01-a.md':
@@ -8,7 +9,9 @@ const articles = buildArticles({
 });
 
 describe('sitemapEntries', () => {
-  const entries = sitemapEntries(articles, '2026-09-10');
+  // `today` deliberately differs from CONTENT_REVIEWED so a landing lastmod that leaked
+  // the build date instead of the constant would fail the test below.
+  const entries = sitemapEntries(articles, '2026-12-25');
 
   it('lists the three landings and the three blog indexes', () => {
     const locs = entries.map((entry) => entry.loc);
@@ -21,6 +24,16 @@ describe('sitemapEntries', () => {
 
   it('lists every article with its own updated date', () => {
     expect(entries).toContainEqual({ loc: 'https://emarketingai.pl/blog/en/ai-content/', lastmod: '2026-09-05' });
+  });
+
+  it('dates the landings from CONTENT_REVIEWED, not the build date', () => {
+    expect(entries).toContainEqual({ loc: 'https://emarketingai.pl/', lastmod: CONTENT_REVIEWED });
+    expect(entries).toContainEqual({ loc: 'https://emarketingai.pl/pl/', lastmod: CONTENT_REVIEWED });
+    expect(entries).toContainEqual({ loc: 'https://emarketingai.pl/ru/', lastmod: CONTENT_REVIEWED });
+  });
+
+  it('dates a blog index from its newest article, not CONTENT_REVIEWED', () => {
+    expect(entries).toContainEqual({ loc: 'https://emarketingai.pl/blog/en/', lastmod: '2026-09-05' });
   });
 
   it('never lists the noindex language chooser', () => {

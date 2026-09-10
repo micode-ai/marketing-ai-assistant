@@ -1,6 +1,7 @@
 import { error } from '@sveltejs/kit';
 import type { EntryGenerator, PageLoad } from './$types';
-import { ARTICLES, articleBy, pairSlugs, type Lang } from '$lib/marketing/content';
+import { ARTICLES, LANGS, articleBy, pairSlugs, type Lang } from '$lib/marketing/content';
+import { articlePath, blogIndexPath } from '$lib/marketing/links';
 
 // 'auto' (not the group's usual forced `true`): with no markdown files yet, entries()
 // below returns nothing and the route is never crawled, which SvelteKit's default
@@ -14,5 +15,15 @@ export const entries: EntryGenerator = () => ARTICLES.map((article) => ({ lang: 
 export const load: PageLoad = ({ params }) => {
   const article = articleBy(ARTICLES, params.lang as Lang, params.slug);
   if (!article) throw error(404, 'Article not found');
-  return { article, alternateSlugs: pairSlugs(ARTICLES, article.pair) };
+  const alternateSlugs = pairSlugs(ARTICLES, article.pair);
+  // The language switcher should follow the article, not reset to the home page: link to
+  // the translated article where one exists, and fall back to that language's blog index
+  // for a language this article was never translated into.
+  const langHrefs: Partial<Record<Lang, string>> = Object.fromEntries(
+    LANGS.map((lang) => {
+      const slug = alternateSlugs[lang];
+      return [lang, slug ? articlePath(lang, slug) : blogIndexPath(lang)];
+    }),
+  );
+  return { article, alternateSlugs, langHrefs };
 };

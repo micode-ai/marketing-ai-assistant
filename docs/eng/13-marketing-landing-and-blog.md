@@ -22,6 +22,8 @@ Shipped as issue [#206](https://github.com/micode-ai/marketing-ai-assistant/issu
 
 `/` used to redirect into the authenticated app; it does not any more. It is a real, indexable page.
 
+`apps/web/src/app.html` has no hardcoded `<meta name="description">` of its own — it used to, and because it sits before `%sveltekit.head%`, it silently shadowed the per-language description every marketing page renders (search engines take the first occurrence). The authenticated app doesn't need a fallback description: those routes are `noindex`-equivalent by being disallowed in `robots.txt`.
+
 **Key files:**
 
 | Path | Purpose |
@@ -236,17 +238,41 @@ The organization node must travel with every graph that references it by `@id` �
 
 **What's deliberately absent:** no `offers` and no `aggregateRating` on the `SoftwareApplication` node (there is no price to advertise and no review data to back a rating — inventing either would be structured-data spam), and no invented social profiles in `sameAs` (`SOCIALS` in `links.ts` is an empty array with a comment explaining why: "an invented profile in `sameAs` is worse than no `sameAs` at all"). `jsonld.test.ts` pins both of these ("never advertises a price or a rating").
 
+**`/blog/` is `noindex` and self-canonical.** `canonicalUrl` on the chooser is `canonical('/blog/')`, i.e. its own URL, not `blogIndexPath('en')`. A `noindex` page whose canonical points somewhere else asks Google to fold the two together — which here would mean folding a `noindex` page onto `/blog/en/`, a real, indexable page that's in the sitemap. Self-canonical plus `noindex,follow` avoids that; `follow` is what actually gets the three blog indexes crawled from here. The chooser also links each language by its own name written in that language — "English", "Polski", "Русский" — via a small local `LANG_NAMES` map in `blog/+page.svelte` rather than a new copy key, since this page has no single "current" language for the three-language copy system to key off.
+
+### The language switcher follows the content
+
+`(marketing)/+layout.svelte`'s per-language links (`en` / `pl` / `ru` in the header) used to always point at `landingPath(code)` — so switching language from a blog index or an article sent the reader to that language's home page, even when hreflang on the same page said the translated content existed. They now read `$page.data.langHrefs`, falling back to `landingPath(code)` when a page doesn't provide one:
+
+- The blog index's `load` returns `blogIndexPath(lang)` for all three languages (an index always exists per language, even an empty one).
+- The article's `load` returns `articlePath(lang, slug)` for every language present in `pairSlugs(article.pair)`, and `blogIndexPath(lang)` for a language the article was never translated into — so the switcher never links to a 404.
+- Landing pages don't set `langHrefs`; the layout's fallback (`landingPath(code)`) is exactly right for them.
+
+`App.PageData` (`apps/web/src/app.d.ts`) declares `langHrefs?: Partial<Record<Lang, string>>` and `lastUpdated?: string` so these per-page fields type-check across the group.
+
+### Visible "last updated" dates and `CONTENT_REVIEWED`
+
+The GEO/AEO goal from the design doc is that every page carries a visible last-updated date, not just a `<meta>` one. Articles already showed this inline (`copy.blog.updatedOn` + `data.article.updated`, at the top of the article body); the three landings and three blog indexes did not, and the landings' sitemap `lastmod` was the build date — which re-dates all three on every deploy even when the copy hasn't changed, a signal Google learns to distrust.
+
+Both are fixed from one constant, `CONTENT_REVIEWED` in `links.ts` (bump it by hand when the landing copy actually changes):
+
+- `sitemapEntries()` uses `CONTENT_REVIEWED` as the landings' `lastmod` (blog indexes keep deriving theirs from the newest article via `newestUpdated()`, unchanged).
+- Each landing's `load` (`(marketing)/+page.ts`, `[lang=mlang]/+page.ts`) and the blog index's `load` return `lastUpdated` — `CONTENT_REVIEWED` for landings, `newestUpdated(articlesForLang) ?? CONTENT_REVIEWED` for a blog index (matching its own sitemap `lastmod`).
+- `(marketing)/+layout.svelte`'s footer renders a `{copy.blog.updatedOn} {lastUpdated}` line whenever `$page.data.lastUpdated` is set. It's absent on article pages (already shown inline) and the `/blog/` chooser (no single date applies).
+
+`newestUpdated()` (`content/articles.ts`) is the one place that computes "the latest `updated` among a set of articles" — shared by the sitemap and the blog index loader so the two never disagree.
+
 ---
 
 ## Sitemap, `llms.txt`, `llms-full.txt` and `robots.txt`
 
 All three text endpoints live under `(marketing)` as `+server.ts` files with `export const prerender = true`, and all use SvelteKit's `text()` helper rather than `new Response(...)` — the repo's ESLint config has no `Response` global configured, so a raw `new Response()` would be a lint error there.
 
-**`/sitemap.xml`** (`seo/sitemap.ts`) lists every indexable URL: the three landing pages, the three blog indexes, and every article, each with a `<lastmod>`. The blog *index* uses the newest `updated` date among that language's articles (falling back to "today" if there are none yet); an article uses its own `updated`. `/blog/` — the noindex language chooser — is deliberately absent from the sitemap: listing a page you tell robots not to index would be contradictory.
+**`/sitemap.xml`** (`seo/sitemap.ts`) lists every indexable URL: the three landing pages, the three blog indexes, and every article, each with a `<lastmod>`. A *landing* page uses `CONTENT_REVIEWED` (see "Visible 'last updated' dates" above) — not the build date. The blog *index* uses the newest `updated` date among that language's articles (falling back to "today" if there are none yet); an article uses its own `updated`. `/blog/` — the noindex language chooser — is deliberately absent from the sitemap: listing a page you tell robots not to index would be contradictory.
 
 **`/llms.txt`** is a short, structured Markdown summary aimed at AI crawlers: the site description, links to all three landing pages, and a link + one-line description for every article in every language. It is meant to be read in full by something building a picture of the site, not humans browsing it.
 
-**`/llms-full.txt`** is the same idea taken further: for each language, the entire landing page copy (hero, features, how-it-works, FAQ) followed by every article's *original Markdown body* (from `RAW_BODIES`, not the rendered HTML), concatenated. This is the "give a language model the whole corpus" endpoint.
+**`/llms-full.txt`** is the same idea taken further: for each language, the entire landing page copy (hero, features, how-it-works, FAQ) followed by every article's *original Markdown body* (from `RAW_BODIES`, not the rendered HTML), concatenated. This is the "give a language model the whole corpus" endpoint. Articles sit under one `## Articles` heading, each titled `### <title>` with its canonical URL on the line right after — one level below the landing sections' `##`, so an article's own `##` subheadings don't read as siblings of "Articles", and a model quoting a passage has a URL to cite.
 
 **`robots.txt`** (a static file at `apps/web/static/robots.txt`, not a route) disallows every authenticated app path (`/dashboard`, `/projects`, `/settings`, …) and auth internals (`/auth/`, `/forgot-password`), explicitly allows `/blog/`, and points at `/sitemap.xml`. It does not need an explicit `Allow: /` for the landing pages — disallow rules are the only thing that removes default-allowed access, and none of them touch `/`, `/pl/` or `/ru/`. JS/CSS under `/_app/` is intentionally *not* blocked, because Googlebot needs to fetch it to render the authenticated app's pages that *are* allowed — but note the marketing pages have no `/_app/*.js` to fetch in the first place (see below).
 

@@ -8,6 +8,15 @@
   $: lang = langFromPath($page.url.pathname);
   $: copy = copyFor(lang);
   $: year = new Date().getFullYear();
+  // Per-page override for the language switcher: a blog index or article page's `load`
+  // supplies the other languages' actual URLs (falling back to that language's blog index
+  // when it has no translation), so switching language keeps the reader on the same
+  // content instead of bouncing them to the home page. Landing pages don't supply one.
+  $: langHrefs = $page.data.langHrefs ?? {};
+  // The visible "last updated" date in the footer, supplied per-page: the constant for
+  // landings, the newest article date for blog indexes. Absent on article pages (which
+  // already show their own date) and the /blog/ chooser.
+  $: lastUpdated = $page.data.lastUpdated;
 </script>
 
 <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:rounded focus:bg-surface focus:px-3 focus:py-2 focus:text-ink">{copy.nav.skipToContent}</a>
@@ -21,7 +30,7 @@
         <div class="flex items-center gap-2">
           {#each LANGS as code (code)}
             <a
-              href={landingPath(code)}
+              href={langHrefs[code] ?? landingPath(code)}
               hreflang={code}
               class="uppercase {code === lang ? 'text-ink font-semibold' : 'text-ink-subtle hover:text-ink'}"
               >{code}</a
@@ -70,6 +79,11 @@
         </ul>
       {/if}
     </div>
+    {#if lastUpdated}
+      <p class="mx-auto max-w-6xl px-4 pb-2 text-xs text-ink-subtle">
+        <time datetime={lastUpdated}>{copy.blog.updatedOn} {lastUpdated}</time>
+      </p>
+    {/if}
     <!-- COMPANY.name ends in a full stop ("sp. z o.o."), so it supplies its own separator. -->
     <p class="mx-auto max-w-6xl px-4 pb-8 text-xs text-ink-subtle">
       © {year} {COMPANY.name} {copy.footer.rights}

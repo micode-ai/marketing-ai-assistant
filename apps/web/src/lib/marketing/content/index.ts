@@ -21,5 +21,5 @@ export const RAW_BODIES: Record<string, string> = Object.fromEntries(
   }),
 );
 
-export { LANGS, articlesFor, articleBy, pairSlugs } from './articles';
+export { LANGS, articlesFor, articleBy, pairSlugs, newestUpdated } from './articles';
 export type { Lang, Article } from './articles';
