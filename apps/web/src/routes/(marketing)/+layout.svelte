@@ -34,7 +34,7 @@
     </nav>
   </header>
 
-  <main id="main"><slot /></main>
+  <main id="main" tabindex="-1"><slot /></main>
 
   <footer class="border-t border-border bg-surface">
     <div class="mx-auto grid max-w-6xl gap-8 px-4 py-10 text-sm text-ink-muted md:grid-cols-3">
