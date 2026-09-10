@@ -2,7 +2,7 @@
   import { page } from '$app/stores';
   import { langFromPath } from '$lib/marketing/lang-from-path';
   import { copyFor } from '$lib/marketing/copy';
-  import { landingPath, blogIndexPath, COMPANY, SOCIALS } from '$lib/marketing/links';
+  import { landingPath, blogIndexPath, COMPANY, PRODUCTS, SOCIALS } from '$lib/marketing/links';
   import { LANGS } from '$lib/marketing/content/articles';
 
   $: lang = langFromPath($page.url.pathname);
@@ -37,7 +37,11 @@
   <main id="main" tabindex="-1"><slot /></main>
 
   <footer class="border-t border-border bg-surface">
-    <div class="mx-auto grid max-w-6xl gap-8 px-4 py-10 text-sm text-ink-muted md:grid-cols-3">
+    <div
+      class="mx-auto grid max-w-6xl gap-8 px-4 py-10 text-sm text-ink-muted {SOCIALS.length > 0
+        ? 'md:grid-cols-4'
+        : 'md:grid-cols-3'}"
+    >
       <div>
         <a href={COMPANY.url} rel="noopener" class="font-display text-base font-semibold text-ink">{COMPANY.name}</a>
         <p class="mt-2">{copy.footer.about}</p>
@@ -48,6 +52,14 @@
           <li><a href="/privacy.html" class="hover:text-ink">{copy.footer.privacy}</a></li>
           <li><a href="/terms.html" class="hover:text-ink">{copy.footer.terms}</a></li>
           <li><a href={blogIndexPath(lang)} class="hover:text-ink">{copy.footer.blog}</a></li>
+        </ul>
+      </div>
+      <div>
+        <p class="font-medium text-ink">{copy.products.heading}</p>
+        <ul class="mt-2 space-y-1">
+          {#each PRODUCTS as product (product.key)}
+            <li><a href={product.url} rel="noopener" class="hover:text-ink">{product.name}</a></li>
+          {/each}
         </ul>
       </div>
       {#if SOCIALS.length > 0}
