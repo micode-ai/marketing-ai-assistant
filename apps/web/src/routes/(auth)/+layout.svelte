@@ -2,25 +2,28 @@
   import { isAuthenticated } from '$lib/stores/auth';
   import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
+  import I18nGate from '$lib/i18n/I18nGate.svelte';
 
   onMount(() => {
     if ($isAuthenticated) goto('/dashboard');
   });
 </script>
 
-<div class="min-h-screen bg-gradient-to-br from-slate-900 via-primary-900 to-violet-950 flex items-center justify-center p-4 relative overflow-hidden">
-  <!-- Subtle dot-grid pattern for depth -->
-  <div class="auth-dot-grid absolute inset-0 opacity-[0.04] pointer-events-none"></div>
+<I18nGate>
+  <div class="min-h-screen bg-gradient-to-br from-slate-900 via-primary-900 to-violet-950 flex items-center justify-center p-4 relative overflow-hidden">
+    <!-- Subtle dot-grid pattern for depth -->
+    <div class="auth-dot-grid absolute inset-0 opacity-[0.04] pointer-events-none"></div>
 
-  <!-- Decorative blurred blobs for ambient glow -->
-  <div class="absolute top-1/4 left-1/4 w-80 h-80 bg-primary-600 rounded-full filter blur-[120px] opacity-20 pointer-events-none"></div>
-  <div class="absolute bottom-1/4 right-1/4 w-80 h-80 bg-violet-600 rounded-full filter blur-[120px] opacity-20 pointer-events-none"></div>
+    <!-- Decorative blurred blobs for ambient glow -->
+    <div class="absolute top-1/4 left-1/4 w-80 h-80 bg-primary-600 rounded-full filter blur-[120px] opacity-20 pointer-events-none"></div>
+    <div class="absolute bottom-1/4 right-1/4 w-80 h-80 bg-violet-600 rounded-full filter blur-[120px] opacity-20 pointer-events-none"></div>
 
-  <!-- Content above decorative elements -->
-  <div class="relative z-10 w-full flex items-center justify-center">
-    <slot />
+    <!-- Content above decorative elements -->
+    <div class="relative z-10 w-full flex items-center justify-center">
+      <slot />
+    </div>
   </div>
-</div>
+</I18nGate>
 
 <style>
   .auth-dot-grid {

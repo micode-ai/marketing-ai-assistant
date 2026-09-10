@@ -10,6 +10,7 @@
   import InvitationsBanner from '$lib/components/layout/InvitationsBanner.svelte';
   import HelpDrawer from '$lib/components/HelpDrawer.svelte';
   import { helpSlugForPath } from '$lib/help/help-context-map';
+  import I18nGate from '$lib/i18n/I18nGate.svelte';
 
   let sidebarOpen = true;
   let appReady = false;
@@ -87,44 +88,46 @@
 
 <svelte:window bind:innerWidth />
 
-{#if appReady}
-  <div class="flex h-screen bg-canvas overflow-hidden">
-    <!-- Mobile backdrop overlay -->
-    {#if isMobile && sidebarOpen}
-      <!-- svelte-ignore a11y-click-events-have-key-events -->
-      <!-- svelte-ignore a11y-no-static-element-interactions -->
-      <div
-        class="fixed inset-0 bg-black/50 z-30 transition-opacity duration-200"
-        on:click={() => sidebarOpen = false}
-      ></div>
-    {/if}
+<I18nGate>
+  {#if appReady}
+    <div class="flex h-screen bg-canvas overflow-hidden">
+      <!-- Mobile backdrop overlay -->
+      {#if isMobile && sidebarOpen}
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <!-- svelte-ignore a11y-no-static-element-interactions -->
+        <div
+          class="fixed inset-0 bg-black/50 z-30 transition-opacity duration-200"
+          on:click={() => sidebarOpen = false}
+        ></div>
+      {/if}
 
-    <Sidebar bind:open={sidebarOpen} {isMobile} />
-    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
-      <Header bind:sidebarOpen />
-      <InvitationsBanner />
-      <main class="flex-1 overflow-auto">
-        <slot />
-      </main>
+      <Sidebar bind:open={sidebarOpen} {isMobile} />
+      <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <Header bind:sidebarOpen />
+        <InvitationsBanner />
+        <main class="flex-1 overflow-auto">
+          <slot />
+        </main>
+      </div>
+
+      <!-- Floating help button -->
+      {#if !isHelpPage}
+        <button
+          on:click={() => showHelpDrawer = true}
+          class="fixed bottom-6 right-6 z-40 w-10 h-10 bg-brand text-brand-fg rounded-full glow-brand hover:brightness-110 transition-all duration-200 flex items-center justify-center cursor-pointer"
+          title="Help"
+        >
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" />
+          </svg>
+        </button>
+      {/if}
+
+      <HelpDrawer bind:show={showHelpDrawer} slug={helpSlug} />
     </div>
-
-    <!-- Floating help button -->
-    {#if !isHelpPage}
-      <button
-        on:click={() => showHelpDrawer = true}
-        class="fixed bottom-6 right-6 z-40 w-10 h-10 bg-brand text-brand-fg rounded-full glow-brand hover:brightness-110 transition-all duration-200 flex items-center justify-center cursor-pointer"
-        title="Help"
-      >
-        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" />
-        </svg>
-      </button>
-    {/if}
-
-    <HelpDrawer bind:show={showHelpDrawer} slug={helpSlug} />
-  </div>
-{:else}
-  <div class="flex items-center justify-center h-screen bg-canvas">
-    <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-brand"></div>
-  </div>
-{/if}
+  {:else}
+    <div class="flex items-center justify-center h-screen bg-canvas">
+      <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-brand"></div>
+    </div>
+  {/if}
+</I18nGate>
