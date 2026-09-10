@@ -27,14 +27,16 @@ const WORDS_PER_MINUTE = 200;
  * shipping a page with a missing title or a one-way hreflang link.
  */
 export function buildArticles(files: Record<string, string>): Article[] {
-  const articles = Object.entries(files)
+  const entries = Object.entries(files)
     .sort(([a], [b]) => a.localeCompare(b))
-    .map(([path, raw]) => toArticle(path, raw));
+    .map(([path, raw]) => ({ path, article: toArticle(path, raw) }));
 
-  assertUniqueSlugs(articles);
-  assertOnePairPerLanguage(articles);
+  assertUniqueSlugs(entries);
+  assertOnePairPerLanguage(entries);
 
-  return articles.sort((a, b) => b.date.localeCompare(a.date) || a.slug.localeCompare(b.slug));
+  return entries
+    .map(({ article }) => article)
+    .sort((a, b) => b.date.localeCompare(a.date) || a.slug.localeCompare(b.slug));
 }
 
 export function articlesFor(articles: Article[], lang: Lang): Article[] {
@@ -101,22 +103,35 @@ function isoDate(path: string, key: string, value: string): string {
   return value;
 }
 
-function assertUniqueSlugs(articles: Article[]): void {
-  const seen = new Set<string>();
-  for (const article of articles) {
+interface PathedArticle {
+  path: string;
+  article: Article;
+}
+
+function assertUniqueSlugs(entries: PathedArticle[]): void {
+  const seen = new Map<string, string>();
+  for (const { path, article } of entries) {
     const key = `${article.lang}/${article.slug}`;
-    if (seen.has(key)) throw new Error(`duplicate slug "${article.slug}" in language "${article.lang}"`);
-    seen.add(key);
+    const earlier = seen.get(key);
+    if (earlier) {
+      throw new Error(
+        `duplicate slug "${article.slug}" in language "${article.lang}": ${earlier} and ${path}`,
+      );
+    }
+    seen.set(key, path);
   }
 }
 
-function assertOnePairPerLanguage(articles: Article[]): void {
-  const seen = new Set<string>();
-  for (const article of articles) {
+function assertOnePairPerLanguage(entries: PathedArticle[]): void {
+  const seen = new Map<string, string>();
+  for (const { path, article } of entries) {
     const key = `${article.pair}/${article.lang}`;
-    if (seen.has(key)) {
-      throw new Error(`pair "${article.pair}" has more than one "${article.lang}" article`);
+    const earlier = seen.get(key);
+    if (earlier) {
+      throw new Error(
+        `pair "${article.pair}" has more than one "${article.lang}" article: ${earlier} and ${path}`,
+      );
     }
-    seen.add(key);
+    seen.set(key, path);
   }
 }

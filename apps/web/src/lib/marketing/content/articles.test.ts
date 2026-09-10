@@ -33,13 +33,19 @@ describe('buildArticles', () => {
     expect(articles.map((a) => a.slug)).toEqual(['new', 'old']);
   });
 
-  it('rejects a duplicate slug within one language', () => {
-    expect(() =>
+  it('rejects a duplicate slug within one language, naming both files', () => {
+    let error: Error | undefined;
+    try {
       buildArticles({
         '/src/content/blog/en/01-a.md': file(),
         '/src/content/blog/en/02-b.md': file(),
-      }),
-    ).toThrow(/duplicate slug/i);
+      });
+    } catch (e) {
+      error = e as Error;
+    }
+    expect(error?.message).toMatch(/duplicate slug/i);
+    expect(error?.message).toContain('/src/content/blog/en/01-a.md');
+    expect(error?.message).toContain('/src/content/blog/en/02-b.md');
   });
 
   it('rejects a description longer than 155 characters', () => {
@@ -52,13 +58,19 @@ describe('buildArticles', () => {
     expect(() => buildArticles({ '/src/content/blog/de/01-a.md': file({ lang: 'de' }) })).toThrow(/language/i);
   });
 
-  it('rejects two articles of the same language sharing one pair', () => {
-    expect(() =>
+  it('rejects two articles of the same language sharing one pair, naming both files', () => {
+    let error: Error | undefined;
+    try {
       buildArticles({
         '/src/content/blog/en/01-a.md': file({ slug: 'a' }),
         '/src/content/blog/en/02-b.md': file({ slug: 'b' }),
-      }),
-    ).toThrow(/pair/i);
+      });
+    } catch (e) {
+      error = e as Error;
+    }
+    expect(error?.message).toMatch(/pair/i);
+    expect(error?.message).toContain('/src/content/blog/en/01-a.md');
+    expect(error?.message).toContain('/src/content/blog/en/02-b.md');
   });
 
   it('rejects updated earlier than date', () => {
