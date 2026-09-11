@@ -35,4 +35,7 @@ Disallow: /templates
 Disallow: /auth/
 Disallow: /forgot-password
 
+# Marketing pages and the blog are meant to be crawled.
+Allow: /blog/
+
 Sitemap: https://emarketingai.pl/sitemap.xml

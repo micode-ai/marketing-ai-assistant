@@ -1,4 +1,5 @@
 import type { Handle } from '@sveltejs/kit';
+import { langFromPath } from '$lib/marketing/lang-from-path';
 
 export const handle: Handle = async ({ event, resolve }) => {
   const accessToken = event.cookies.get('accessToken');
@@ -21,5 +22,9 @@ export const handle: Handle = async ({ event, resolve }) => {
     event.locals.user = null;
   }
 
-  return resolve(event);
+  // %lang% is a placeholder in app.html; SvelteKit only substitutes %sveltekit.*%,
+  // so the page language is filled in here. This also runs during prerendering.
+  return resolve(event, {
+    transformPageChunk: ({ html }) => html.replace('%lang%', langFromPath(event.url.pathname)),
+  });
 };
