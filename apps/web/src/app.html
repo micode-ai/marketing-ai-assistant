@@ -19,6 +19,179 @@
         }
       })();
     </script>
+    <!--
+      Google Analytics 4 with Consent Mode v2.
+
+      All measurement lives in this one script so it can be audited in one place.
+      Three rules it enforces:
+
+        1. Consent defaults to denied, so no analytics cookie is written before the
+           visitor accepts. In the EU that is a requirement, not a preference.
+        2. It runs only on the public pages (landing, blog, log in, register) and
+           only on the production host, so the application's own screens and every
+           local or preview build stay out of the property.
+        3. The banner is built here rather than in a Svelte component: these pages
+           are prerendered with no client bundle, and building it at runtime also
+           keeps it out of the HTML crawlers index.
+
+      G-TRW80SRBNV is a public measurement ID — it is visible in the page source of
+      every site that uses GA — so it is not a secret and does not need an env var.
+    -->
+    <script>
+      (function () {
+        var MEASUREMENT_ID = 'G-TRW80SRBNV';
+        var HOST = 'emarketingai.pl';
+        var STORAGE_KEY = 'consent-analytics';
+
+        var path = location.pathname;
+        var isPublicPage =
+          path === '/' ||
+          path === '/pl' || path === '/pl/' ||
+          path === '/ru' || path === '/ru/' ||
+          path.indexOf('/blog') === 0 ||
+          path === '/login' ||
+          path === '/register';
+        if (!isPublicPage || location.hostname !== HOST) return;
+
+        function storedDecision() {
+          try {
+            return localStorage.getItem(STORAGE_KEY);
+          } catch (e) {
+            return null;
+          }
+        }
+
+        function remember(value) {
+          try {
+            localStorage.setItem(STORAGE_KEY, value);
+          } catch (e) {
+            // Private mode or blocked storage: the choice simply lasts for this page.
+          }
+        }
+
+        window.dataLayer = window.dataLayer || [];
+        function gtag() {
+          dataLayer.push(arguments);
+        }
+        window.gtag = gtag;
+
+        gtag('consent', 'default', {
+          ad_storage: 'denied',
+          ad_user_data: 'denied',
+          ad_personalization: 'denied',
+          analytics_storage: 'denied',
+          wait_for_update: 500
+        });
+
+        var decision = storedDecision();
+        if (decision === 'granted') {
+          gtag('consent', 'update', { analytics_storage: 'granted' });
+        }
+
+        gtag('js', new Date());
+        gtag('config', MEASUREMENT_ID);
+
+        var library = document.createElement('script');
+        library.async = true;
+        library.src = 'https://www.googletagmanager.com/gtag/js?id=' + MEASUREMENT_ID;
+        document.head.appendChild(library);
+
+        if (decision) return;
+
+        var TEXT = {
+          en: {
+            body: 'We use cookies to measure traffic. Analytics only — no advertising. ',
+            accept: 'Accept',
+            decline: 'Decline',
+            privacy: 'Privacy Policy'
+          },
+          pl: {
+            body: 'Używamy plików cookie do pomiaru ruchu. Wyłącznie analityka — bez reklam. ',
+            accept: 'Akceptuję',
+            decline: 'Odrzuć',
+            privacy: 'Polityka prywatności'
+          },
+          ru: {
+            body: 'Мы используем файлы cookie для измерения трафика. Только аналитика — без рекламы. ',
+            accept: 'Принять',
+            decline: 'Отклонить',
+            privacy: 'Политика конфиденциальности'
+          }
+        };
+        // On the marketing pages the server-rendered <html lang> is authoritative.
+        // /login and /register are always rendered as English, so there the visitor's
+        // own stored locale is the better signal.
+        var pageLang = document.documentElement.lang;
+        if (path === '/login' || path === '/register') {
+          try {
+            pageLang = localStorage.getItem('locale') || pageLang;
+          } catch (e) {
+            // Blocked storage: fall back to the rendered language.
+          }
+        }
+        var text = TEXT[pageLang] || TEXT.en;
+
+        function showBanner() {
+          var bar = document.createElement('div');
+          bar.setAttribute('role', 'region');
+          bar.setAttribute('aria-label', text.privacy);
+          bar.style.cssText =
+            'position:fixed;left:16px;right:16px;bottom:16px;z-index:9999;max-width:720px;margin:0 auto;' +
+            'display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;' +
+            'padding:14px 16px;border-radius:12px;border:1px solid rgb(var(--border-strong));' +
+            'background:rgb(var(--surface));color:rgb(var(--text));' +
+            'box-shadow:0 18px 50px -22px rgba(0,0,0,.55);font:400 14px/1.45 Inter,system-ui,sans-serif';
+
+          var message = document.createElement('p');
+          message.style.cssText = 'margin:0;flex:1 1 260px';
+          message.appendChild(document.createTextNode(text.body));
+
+          var link = document.createElement('a');
+          link.href = '/privacy.html';
+          link.textContent = text.privacy;
+          link.style.cssText = 'color:rgb(var(--brand));text-decoration:underline';
+          message.appendChild(link);
+
+          var actions = document.createElement('div');
+          actions.style.cssText = 'display:flex;gap:8px;flex:0 0 auto';
+
+          var decline = document.createElement('button');
+          decline.type = 'button';
+          decline.textContent = text.decline;
+          decline.style.cssText =
+            'cursor:pointer;padding:8px 14px;border-radius:8px;border:1px solid rgb(var(--border-strong));' +
+            'background:transparent;color:rgb(var(--text-muted));font:inherit';
+          decline.addEventListener('click', function () {
+            remember('denied');
+            bar.remove();
+          });
+
+          var accept = document.createElement('button');
+          accept.type = 'button';
+          accept.textContent = text.accept;
+          accept.style.cssText =
+            'cursor:pointer;padding:8px 14px;border-radius:8px;border:0;' +
+            'background:rgb(var(--brand));color:rgb(var(--brand-fg));font:inherit;font-weight:600';
+          accept.addEventListener('click', function () {
+            remember('granted');
+            gtag('consent', 'update', { analytics_storage: 'granted' });
+            bar.remove();
+          });
+
+          actions.appendChild(decline);
+          actions.appendChild(accept);
+          bar.appendChild(message);
+          bar.appendChild(actions);
+          document.body.appendChild(bar);
+        }
+
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', showBanner);
+        } else {
+          showBanner();
+        }
+      })();
+    </script>
     <div style="display: contents">%sveltekit.body%</div>
   </body>
 </html>

@@ -300,6 +300,48 @@ return resolve(event, {
 
 ---
 
+## Analytics and cookie consent
+
+Traffic is measured with Google Analytics 4: property `emarketingai.pl` (measurement ID
+`G-TRW80SRBNV`, web stream `emarketingai.pl web`, stream ID `15757937313`, account
+`perevetkinma`). Everything about measurement lives in one inline script in
+`apps/web/src/app.html`, and that is deliberate: the marketing pages are prerendered with no
+client bundle, `/login` and `/register` are client-rendered application pages, and `app.html` is
+the only file both share. Keeping it in one place also means the whole tracking surface can be
+audited by reading a single script.
+
+Three rules the script enforces:
+
+- **Consent first.** Consent Mode v2 defaults are `denied` for `analytics_storage`, `ad_storage`,
+  `ad_user_data` and `ad_personalization`, set before `gtag.js` is requested, so no analytics
+  cookie exists until the visitor accepts. The decision is stored in `localStorage` under
+  `consent-analytics` (`granted` / `denied`) and replayed with `gtag('consent', 'update', ...)` on
+  later visits.
+- **Public pages only.** The script returns immediately unless the path is `/`, `/pl/`, `/ru/`,
+  anything under `/blog`, `/login` or `/register`. Authenticated application screens are never
+  measured — their URLs carry project identifiers that have no business in a Google property.
+- **Production only.** It also returns unless `location.hostname === 'emarketingai.pl'`, so local
+  development and preview builds cannot pollute the property.
+
+The banner is built by the script rather than rendered by Svelte. That keeps it out of the
+prerendered HTML (so crawlers never index it), avoids adding copy keys to the three dictionaries —
+and therefore leaves the key-structure test alone — and works identically on prerendered and
+client-rendered pages. Its text follows `<html lang>` on the marketing pages; on `/login` and
+`/register`, which are always rendered as English, it follows the visitor's stored `locale`
+instead. Colours come from the Iris CSS variables, so it is correct in both themes. With
+JavaScript disabled there is no banner and no measurement, which is the right outcome rather than
+a gap.
+
+Known limits: a client-side navigation inside the application shell (`/login` to `/register`)
+fires no second `page_view`, because GA only sees the initial load; every arrival from the
+marketing pages is a full page load, so the landing-to-register funnel stays intact. A handful of
+`localhost` events from the installation check sit in the property's history.
+
+`apps/web/static/privacy.html` documents the analytics cookie and names Google Analytics as a
+sub-processor. Keep the two in step if the measurement setup changes.
+
+---
+
 ## How to verify the prerendered output
 
 After `corepack pnpm --filter @marketing-ai/web build`, the marketing pages land under `apps/web/.svelte-kit/output/prerendered/pages/`: `index.html`, `pl/index.html`, `ru/index.html`, `blog/index.html`, `blog/<lang>/index.html` for each language, `blog/<lang>/<slug>/index.html` for each article, plus `sitemap.xml`, `llms.txt` and `llms-full.txt` as plain files (19 files total for the shipped 3 landings + 1 chooser + 3 blog indexes + 9 articles + 3 text endpoints).

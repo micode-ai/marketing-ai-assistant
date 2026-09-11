@@ -241,6 +241,7 @@ Content agent supports **multilingual generation**: pass `languages: ['en', 'pl'
 - SEO: `Seo.svelte` owns the head; `seo/jsonld.ts` builds the `@graph`; `seo/alternates.ts` builds hreflang; `/sitemap.xml`, `/llms.txt` and `/llms-full.txt` are prerendered endpoints. No `offers` and no ratings in the markup — deliberate.
 - `<html lang>` is filled by `transformPageChunk` in `hooks.server.ts` (the `%lang%` placeholder in `app.html`).
 - The i18n gate lives in `$lib/i18n/I18nGate.svelte` and is applied by the `(app)` and `(auth)` layouts — never by the root layout.
+- **Analytics:** GA4 property `emarketingai.pl`, measurement ID `G-TRW80SRBNV`. One inline script in `apps/web/src/app.html` owns it all — Consent Mode v2 defaults to `denied` (no cookie before the banner is accepted; decision in `localStorage.consent-analytics`), and the script runs only on `/`, `/pl/`, `/ru/`, `/blog/*`, `/login`, `/register` **and** only when `location.hostname === 'emarketingai.pl'`. App screens and local builds are never measured. The consent banner is built by that script (not Svelte), so it stays out of the prerendered HTML and needs no copy keys.
 
 ## Claude Code Slash Commands
 
