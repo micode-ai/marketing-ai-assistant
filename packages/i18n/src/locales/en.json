@@ -889,7 +889,9 @@
       "noAccount": "No TikTok account is linked to this profile.",
       "accessDenied": "You declined the TikTok authorization request.",
       "draftsMode": "TikTok posts are sent to your TikTok drafts, where you finish and publish them in the app. Direct publishing turns on once this app passes TikTok's content posting review."
-    }
+    },
+    "analyticsReauthDescription": "The token has expired, so analytics and publishing are paused. Reconnect keeps all collected history — do not disconnect.",
+    "disconnectHistoryWarning": "All analytics history collected for this account (daily metrics, posts, stories) will be permanently deleted. To fix an expired token, use Reconnect instead."
   },
   "analytics": {
     "title": "Analytics",

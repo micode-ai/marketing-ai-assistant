@@ -28,6 +28,11 @@
   let telegramSaving = false;
 
   let disconnectingId: string | null = null;
+  // Channels whose analytics history lives on the account row and is deleted with it.
+  const HISTORY_PLATFORMS = ['INSTAGRAM', 'THREADS', 'TIKTOK'];
+  $: disconnectingHasHistory = HISTORY_PLATFORMS.includes(
+    accounts.find((a) => a.id === disconnectingId)?.platform ?? '',
+  );
 
   // TikTok publishing capability of this deployment: until the TikTok posting
   // audit is passed, posts land in the creator's drafts instead of going live,
@@ -504,7 +509,8 @@
       </div>
       <div class="flex flex-col gap-2">
         {#each accounts.filter(a => a.platform === 'INSTAGRAM') as account}
-          <div class="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-lg border border-border bg-surface-2/50">
+          <div class="flex flex-col gap-2 p-2.5 rounded-lg border {account.status === 'REAUTH_REQUIRED' ? 'border-orange-300 bg-orange-500/12' : 'border-border bg-surface-2/50'}">
+          <div class="flex flex-wrap items-center justify-between gap-2">
             <div class="flex items-center gap-2 min-w-0">
               {#if account.profileImageUrl}
                 <img src={account.profileImageUrl} alt={account.accountName} class="w-7 h-7 rounded-full flex-shrink-0" />
@@ -512,7 +518,11 @@
               <div class="flex flex-col min-w-0">
                 <div class="flex items-center gap-2">
                   <span class="text-sm text-ink font-medium truncate" title={account.accountName}>{account.accountName}</span>
-                  <span class="text-xs px-2 py-0.5 bg-green-500/20 text-green-700 rounded-full flex-shrink-0">{$_('social.connected')}</span>
+                  {#if account.status === 'REAUTH_REQUIRED'}
+                    <span class="text-xs px-2 py-0.5 bg-orange-500/20 text-orange-700 rounded-full flex-shrink-0">{$_('social.reauthRequired.badge')}</span>
+                  {:else}
+                    <span class="text-xs px-2 py-0.5 bg-green-500/20 text-green-700 rounded-full flex-shrink-0">{$_('social.connected')}</span>
+                  {/if}
                 </div>
                 <span class="text-xs text-ink-muted font-mono truncate" title={account.accountId}>{account.accountId}</span>
               </div>
@@ -528,10 +538,23 @@
                 <option value="pl">Polski</option>
                 <option value="ru">Русский</option>
               </select>
+              <!-- Reconnect goes through OAuth again, which upserts the SAME row
+                   (org + platform + accountId) and keeps its analytics history.
+                   Without this button the only way to "reconnect" was Disconnect,
+                   which deletes the row and, by cascade, all of that history. -->
+              {#if account.status === 'REAUTH_REQUIRED'}
+                <button on:click={connectInstagram} class="text-xs px-3 py-1.5 border border-orange-400 text-orange-700 bg-orange-500/20 rounded-lg font-medium transition-colors duration-150 cursor-pointer">
+                  {$_('social.reauthRequired.cta')}
+                </button>
+              {/if}
               <button on:click={() => disconnectingId = account.id} class="text-xs px-3 py-1.5 border border-red-500/30 text-red-500 rounded-lg hover:bg-red-500/12 transition-colors duration-150 cursor-pointer bg-surface">
                 {$_('social.disconnect')}
               </button>
             </div>
+          </div>
+          {#if account.status === 'REAUTH_REQUIRED'}
+            <p class="text-xs text-orange-800">{$_('social.analyticsReauthDescription')}</p>
+          {/if}
           </div>
         {/each}
         <button on:click={connectInstagram} class="text-sm px-4 py-2 bg-[#E1306C] text-white rounded-lg hover:bg-[#c1255a] transition-colors duration-150 cursor-pointer font-medium self-start mt-1">
@@ -553,7 +576,8 @@
       </div>
       <div class="flex flex-col gap-2">
         {#each accounts.filter(a => a.platform === 'THREADS') as account}
-          <div class="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-lg border border-border bg-surface-2/50">
+          <div class="flex flex-col gap-2 p-2.5 rounded-lg border {account.status === 'REAUTH_REQUIRED' ? 'border-orange-300 bg-orange-500/12' : 'border-border bg-surface-2/50'}">
+          <div class="flex flex-wrap items-center justify-between gap-2">
             <div class="flex items-center gap-2 min-w-0">
               {#if account.profileImageUrl}
                 <img src={account.profileImageUrl} alt={account.accountName} class="w-7 h-7 rounded-full flex-shrink-0" />
@@ -561,7 +585,11 @@
               <div class="flex flex-col min-w-0">
                 <div class="flex items-center gap-2">
                   <span class="text-sm text-ink font-medium truncate" title={account.accountName}>{account.accountName}</span>
-                  <span class="text-xs px-2 py-0.5 bg-green-500/20 text-green-700 rounded-full flex-shrink-0">{$_('social.connected')}</span>
+                  {#if account.status === 'REAUTH_REQUIRED'}
+                    <span class="text-xs px-2 py-0.5 bg-orange-500/20 text-orange-700 rounded-full flex-shrink-0">{$_('social.reauthRequired.badge')}</span>
+                  {:else}
+                    <span class="text-xs px-2 py-0.5 bg-green-500/20 text-green-700 rounded-full flex-shrink-0">{$_('social.connected')}</span>
+                  {/if}
                 </div>
                 <span class="text-xs text-ink-muted font-mono truncate" title={account.accountId}>{account.accountId}</span>
               </div>
@@ -577,10 +605,23 @@
                 <option value="pl">Polski</option>
                 <option value="ru">Русский</option>
               </select>
+              <!-- Reconnect goes through OAuth again, which upserts the SAME row
+                   (org + platform + accountId) and keeps its analytics history.
+                   Without this button the only way to "reconnect" was Disconnect,
+                   which deletes the row and, by cascade, all of that history. -->
+              {#if account.status === 'REAUTH_REQUIRED'}
+                <button on:click={connectThreads} class="text-xs px-3 py-1.5 border border-orange-400 text-orange-700 bg-orange-500/20 rounded-lg font-medium transition-colors duration-150 cursor-pointer">
+                  {$_('social.reauthRequired.cta')}
+                </button>
+              {/if}
               <button on:click={() => disconnectingId = account.id} class="text-xs px-3 py-1.5 border border-red-500/30 text-red-500 rounded-lg hover:bg-red-500/12 transition-colors duration-150 cursor-pointer bg-surface">
                 {$_('social.disconnect')}
               </button>
             </div>
+          </div>
+          {#if account.status === 'REAUTH_REQUIRED'}
+            <p class="text-xs text-orange-800">{$_('social.analyticsReauthDescription')}</p>
+          {/if}
           </div>
         {/each}
         <button on:click={connectThreads} class="text-sm px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors duration-150 cursor-pointer font-medium self-start mt-1">
@@ -981,7 +1022,11 @@
         </svg>
       </div>
       <h2 class="text-lg font-semibold text-ink mb-1">{$_('social.disconnectConfirm')}</h2>
-      <p class="text-sm text-ink-muted mb-6">{$_('social.disconnectDesc')}</p>
+      <p class="text-sm text-ink-muted {disconnectingHasHistory ? 'mb-3' : 'mb-6'}">{$_('social.disconnectDesc')}</p>
+      {#if disconnectingHasHistory}
+        <!-- Deleting the account cascades to every stored analytics row. -->
+        <p class="text-sm text-red-600 bg-red-500/10 border border-red-500/30 rounded-lg p-2.5 mb-6">{$_('social.disconnectHistoryWarning')}</p>
+      {/if}
       <div class="flex gap-3">
         <button
           on:click={() => disconnectAccount(disconnectingId!)}

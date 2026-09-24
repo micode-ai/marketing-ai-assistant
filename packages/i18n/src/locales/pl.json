@@ -869,7 +869,9 @@
       "noAccount": "Żadne konto TikTok nie jest połączone z tym profilem.",
       "accessDenied": "Odrzuciłeś prośbę o autoryzację TikTok.",
       "draftsMode": "Posty TikTok trafiają do wersji roboczych w aplikacji TikTok, gdzie je kończysz i publikujesz. Publikowanie bezpośrednie włączy się po przejściu weryfikacji publikowania treści przez TikTok."
-    }
+    },
+    "analyticsReauthDescription": "Token wygasł, więc analityka i publikowanie są wstrzymane. Ponowne połączenie zachowuje całą zebraną historię — nie odłączaj konta.",
+    "disconnectHistoryWarning": "Cała zebrana historia analityki tego konta (dzienne metryki, posty, relacje) zostanie trwale usunięta. Aby naprawić wygasły token, użyj opcji Połącz ponownie."
   },
   "analytics": {
     "title": "Analityka",
