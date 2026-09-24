@@ -122,14 +122,27 @@ export interface DailyThreadsInsightRow extends DailyThreadsInsightValues {
   date: string; // YYYY-MM-DD (UTC)
 }
 
+// `views` is deliberately absent from both total_value maps below. Threads
+// serves views only as a daily time series; asked for a total_value it answers
+// 0 — on prod a 28-day window came back as views 0 next to likes 35, while the
+// daily series for the same days summed to well over a hundred. Views come from
+// fetchThreadsAccountInsightsRange instead.
+
 // API metric name → ThreadsAccountInsights key.
 const ACCOUNT_METRIC_KEYS: Record<string, keyof ThreadsAccountInsights> = {
-  views: 'views',
   likes: 'likes',
   replies: 'replies',
   reposts: 'reposts',
   quotes: 'quotes',
   followers_count: 'followersCount',
+};
+
+// Period totals (total_value over since/until): no views, no followers_count.
+const TOTAL_METRIC_KEYS: Record<string, keyof DailyThreadsInsightValues> = {
+  likes: 'likes',
+  replies: 'replies',
+  reposts: 'reposts',
+  quotes: 'quotes',
 };
 
 // Metric names used exclusively for time-series range fetches (no followers_count).
@@ -256,12 +269,11 @@ export async function fetchThreadsProfile(
 
 /**
  * GET {GRAPH}/{threadsUserId}/threads_insights
- *   ?metric=views,likes,replies,reposts,quotes,followers_count
+ *   ?metric=likes,replies,reposts,quotes,followers_count
  *   &period=day&metric_type=total_value
  *
- * followers_count arrives as total_value.value (lifetime metric).
- * The engagement metrics (views/likes/replies/reposts/quotes) are time-series;
- * readInsightValue takes total_value first, then values[0] as fallback.
+ * followers_count arrives as total_value.value (lifetime metric). No views —
+ * see the note above ACCOUNT_METRIC_KEYS.
  */
 export async function fetchThreadsAccountInsights(
   threadsUserId: string,
@@ -278,11 +290,12 @@ export async function fetchThreadsAccountInsights(
 
 /**
  * GET {GRAPH}/{threadsUserId}/threads_insights
- *   ?metric=views,likes,replies,reposts,quotes
+ *   ?metric=likes,replies,reposts,quotes
  *   &period=day&metric_type=total_value&since=<sinceUnix>&until=<untilUnix>
  *
  * Returns the aggregate totals for the requested time window. Does NOT
- * include followers_count (that metric is not supported with since/until).
+ * include followers_count (not supported with since/until) or views (always
+ * 0 as a total_value — the caller sums the daily series instead).
  * Uses the same per-metric tolerance as the other insight helpers (batch →
  * individual retry on non-auth failure; auth errors always propagate).
  */
@@ -295,7 +308,7 @@ export async function fetchThreadsAccountInsightsTotals(
   return fetchInsightsWithTolerance<DailyThreadsInsightValues>(
     threadsUserId,
     token,
-    RANGE_METRIC_KEYS,
+    TOTAL_METRIC_KEYS,
     {
       period: 'day',
       metric_type: 'total_value',
