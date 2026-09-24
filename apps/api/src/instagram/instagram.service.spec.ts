@@ -72,6 +72,7 @@ function igLink(overrides: Partial<any> = {}) {
       accountId: '17841400000000000',
       encryptedTokens: 'enc',
       scopes: ['instagram_business_basic', 'instagram_business_manage_insights'],
+      status: 'ACTIVE',
       ...overrides,
     },
   };
@@ -485,6 +486,47 @@ describe('InstagramService', () => {
       const result = await service.getStoredAdvice('p1');
 
       expect(result).toEqual({ advice: null, contextSummary: null, generatedAt: null });
+    });
+  });
+
+  // A REAUTH_REQUIRED account used to look connected: the tab showed frozen
+  // charts, /sync called the platform with the dead token and answered 500.
+  describe('account needing reauthentication', () => {
+    beforeEach(() => {
+      prisma.projectSocialAccount.findMany.mockResolvedValue([
+        igLink({ status: 'REAUTH_REQUIRED' }),
+      ]);
+      (decryptData as jest.Mock).mockReturnValue({ accessToken: 'dead_tok', igUserId: 'uid' });
+    });
+
+    it('getStatus reports reauthRequired', async () => {
+      const status = await service.getStatus('p1');
+
+      expect(status.connected).toBe(true);
+      expect(status.reauthRequired).toBe(true);
+    });
+
+    it('getStatus reports reauthRequired false for an ACTIVE account', async () => {
+      prisma.projectSocialAccount.findMany.mockResolvedValue([igLink()]);
+
+      const status = await service.getStatus('p1');
+
+      expect(status.reauthRequired).toBe(false);
+    });
+
+    it('triggerSync skips without touching the platform', async () => {
+      const result = await service.triggerSync('p1');
+
+      expect(result).toEqual({ skipped: true, reason: 'REAUTH_REQUIRED' });
+      expect(syncService.syncAccount).not.toHaveBeenCalled();
+      expect(syncService.backfillAccount).not.toHaveBeenCalled();
+    });
+
+    it('getMetrics serves stored history without a live Instagram call', async () => {
+      const metrics = await service.getMetrics('p1', 28);
+
+      expect(fetchAccountInsightsTotals).not.toHaveBeenCalled();
+      expect(metrics.periodTotals).toEqual({});
     });
   });
 });

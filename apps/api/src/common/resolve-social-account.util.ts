@@ -20,6 +20,7 @@ export interface ResolvedSocialAccount {
   accountId: string;
   encryptedTokens: string | null;
   scopes: string[];
+  status: string;
 }
 
 export interface SocialAccountOption {
@@ -73,6 +74,7 @@ export async function listProjectSocialAccounts(
           accountId: true,
           encryptedTokens: true,
           scopes: true,
+          status: true,
         },
       },
     },
@@ -103,6 +105,16 @@ export async function resolveProjectSocialAccount(
   if (accounts.length === 0) return null;
   if (!accountId) return accounts[0];
   return accounts.find((a) => a.id === accountId) ?? null;
+}
+
+/**
+ * True when the account's token can no longer be used — the syncs skip it (the
+ * crons only take ACTIVE accounts) and any live platform call would fail. The
+ * dashboards need this to say "reconnect" instead of showing history that has
+ * silently stopped growing.
+ */
+export function needsReauth(account: Pick<ResolvedSocialAccount, 'status'>): boolean {
+  return account.status !== 'ACTIVE';
 }
 
 /** The account list a dashboard needs to offer a switcher. */

@@ -1001,6 +1001,11 @@
       "fromZero": "from zero",
       "keyEventsNotConfigured": "No key events are configured in this property — conversions are not being measured.",
       "lag": "GA4 keeps revising the last {hours} hours."
+    },
+    "reauth": {
+      "title": "{channel} needs to be reconnected",
+      "description": "The access token has expired, so new data is no longer being collected. The charts below show history up to the last successful sync.",
+      "cta": "Reconnect"
     }
   },
   "instagram": {

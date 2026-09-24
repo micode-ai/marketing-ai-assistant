@@ -13,6 +13,8 @@ export interface TikTokStatus {
   lastSyncAt?: string | Date | null;
   /** Both user.info.stats and video.list were granted. */
   statsGranted: boolean;
+  /** The token is dead (e.g. expired): history is shown, but nothing new arrives until the account is reconnected. */
+  reauthRequired?: boolean;
 }
 
 export type TikTokDashboardView = 'loading' | 'hidden' | 'reconnect' | 'connected';
