@@ -3,7 +3,8 @@
   import { onMount, onDestroy, tick, createEventDispatcher } from 'svelte';
   import { api } from '$lib/api/client';
   import InfoTooltip from '$lib/components/InfoTooltip.svelte';
-  import { buildSummaryCards, type SummaryCard } from './overview-summary';
+  import { buildSummaryCards, readGscSummary, readThreadsEngagement, type SummaryCard } from './overview-summary';
+  import { lastKnown } from './instagram-dashboard-state';
 
   export let projectId: string;
   export let days: number = 30;
@@ -110,18 +111,10 @@
       if (connected.gsc) {
         const r = results[idx++];
         if (r.status === 'fulfilled' && r.value) {
-          const v = r.value;
-          gscData = {
-            connected: true,
-            clicks: v.clicks ?? v.totalClicks ?? 0,
-            clicksChange: v.clicksChange ?? v.change?.clicks ?? 0,
-          };
-          // Try to extract daily GSC series for combo chart
-          if (Array.isArray(v.daily)) {
-            gscDailySeries = v.daily.map((d: any) => ({ date: d.date, clicks: d.clicks ?? 0 }));
-          } else {
-            gscDailySeries = null;
-          }
+          const gsc = readGscSummary(r.value);
+          // The summary has no previous-period comparison, so no change figure.
+          gscData = { connected: true, clicks: gsc.clicks, clicksChange: 0 };
+          gscDailySeries = gsc.daily;
           channelStats.gsc = formatNumber(gscData.clicks ?? 0) + ' ' + $_('analytics.gscClicks');
         }
       }
@@ -133,8 +126,9 @@
         if (r.status === 'fulfilled' && r.value) {
           const v = r.value;
           const account: any[] = Array.isArray(v.account) ? v.account : [];
-          const latest = account.length > 0 ? account[account.length - 1] : null;
-          const followers = latest?.followersCount ?? 0;
+          // The newest row can lack followers (a backfilled day), so take the
+          // last day that has them rather than reading 0.
+          const followers = lastKnown(account.map((a) => a.followersCount));
           igData = { connected: true, followers, followersChange: 0 };
           channelStats.instagram = formatNumber(followers) + ' ' + $_('instagram.followers');
         }
@@ -145,22 +139,8 @@
       if (connected.threads) {
         const r = results[idx++];
         if (r.status === 'fulfilled' && r.value) {
-          const v = r.value;
-          // Sum interactions from posts array or use summary field
-          let engagement = 0;
-          if (typeof v.totalInteractions === 'number') {
-            engagement = v.totalInteractions;
-          } else if (Array.isArray(v.posts)) {
-            engagement = (v.posts as any[]).reduce(
-              (sum: number, p: any) => sum + (p.likeCount ?? 0) + (p.replyCount ?? 0) + (p.repostCount ?? 0),
-              0
-            );
-          }
-          threadsData = {
-            connected: true,
-            engagement,
-            engagementChange: v.engagementChange ?? 0,
-          };
+          const engagement = readThreadsEngagement(r.value);
+          threadsData = { connected: true, engagement, engagementChange: 0 };
           channelStats.threads = formatNumber(engagement) + ' ' + $_('threads.engagement');
         }
       }

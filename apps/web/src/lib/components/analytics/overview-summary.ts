@@ -1,6 +1,8 @@
 // Pure aggregator for the cross-channel analytics overview strip.
 // No DOM/fetch dependencies — fully unit-testable.
 
+import { pickTotal } from './pick-total';
+
 export interface SummaryCard {
   key: string;
   labelKey: string;
@@ -107,4 +109,39 @@ export function buildSummaryCards(input: BuildSummaryCardsInput): SummaryCard[] 
   }
 
   return cards;
+}
+
+/* eslint-disable @typescript-eslint/no-explicit-any -- raw endpoint bodies */
+
+/**
+ * GET /google/search-console/summary → the clicks card and the chart series.
+ * The body is `{ totals: { clicks }, byDate: [{ date, clicks }] }`.
+ */
+export function readGscSummary(body: any): {
+  clicks: number;
+  daily: { date: string; clicks: number }[] | null;
+} {
+  const clicks = typeof body?.totals?.clicks === 'number' ? body.totals.clicks : 0;
+  const daily = Array.isArray(body?.byDate)
+    ? body.byDate.map((d: any) => ({ date: d.date, clicks: d.clicks ?? 0 }))
+    : null;
+  return { clicks, daily };
+}
+
+const THREADS_ENGAGEMENT_KEYS = ['likes', 'replies', 'reposts', 'quotes'] as const;
+
+/**
+ * GET /threads/metrics → interactions over the period: likes + replies +
+ * reposts + quotes. Each metric is the period total when Threads gave one,
+ * else the sum of the daily rows — the same rule the Threads tab uses, so the
+ * two never disagree. Views are reach, not engagement, and are left out.
+ */
+export function readThreadsEngagement(body: any): number {
+  const rows: any[] = Array.isArray(body?.account) ? body.account : [];
+  const totals = body?.periodTotals ?? {};
+  return THREADS_ENGAGEMENT_KEYS.reduce(
+    (sum, key) =>
+      sum + pickTotal(totals[key], rows.reduce((s, r) => s + (r?.[key] ?? 0), 0)),
+    0,
+  );
 }
