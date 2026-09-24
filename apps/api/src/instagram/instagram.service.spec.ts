@@ -339,6 +339,18 @@ describe('InstagramService', () => {
   });
 
   describe('triggerSync', () => {
+    it('does not skip right after a backfill, though its rows look freshly created', async () => {
+      prisma.projectSocialAccount.findMany.mockResolvedValue([igLink()]);
+      prisma.instagramAccountMetrics.count.mockResolvedValue(0);
+      prisma.instagramAccountMetrics.findFirst.mockResolvedValue({ createdAt: new Date() });
+
+      const result = await service.triggerSync('p1');
+
+      expect(syncService.backfillAccount).toHaveBeenCalled();
+      expect(syncService.syncAccount).toHaveBeenCalled();
+      expect(result.skipped).toBe(false);
+    });
+
     it('throws when Instagram not connected', async () => {
       prisma.projectSocialAccount.findMany.mockResolvedValue([]);
 

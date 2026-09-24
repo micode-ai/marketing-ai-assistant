@@ -184,10 +184,15 @@ export class ThreadsService {
     const have = await this.prisma.threadsAccountMetrics.count({
       where: { socialAccountId: account.id },
     });
-    if (have < ThreadsSyncService.BACKFILL_THRESHOLD_DAYS) {
+    const backfilled = have < ThreadsSyncService.BACKFILL_THRESHOLD_DAYS;
+    if (backfilled) {
       await this.syncService.backfillAccount(account, 90);
     }
 
+    // The backfill rows were created a moment ago, so right after one the
+    // createdAt check below would call the account "just synced" and skip —
+    // leaving a freshly connected account with no followers, no today row and
+    // no posts until the cron came round.
     const newest = await this.prisma.threadsAccountMetrics.findFirst({
       where: { socialAccountId: account.id },
       orderBy: { createdAt: 'desc' },
@@ -195,6 +200,7 @@ export class ThreadsService {
     });
 
     if (
+      !backfilled &&
       newest?.createdAt &&
       Date.now() - new Date(newest.createdAt).getTime() < SKIP_IF_RECENT_MS
     ) {

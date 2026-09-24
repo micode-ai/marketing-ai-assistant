@@ -179,7 +179,7 @@ describe('threads-graph.util', () => {
   });
 
   describe('fetchThreadsAccountInsightsTotals', () => {
-    it('reads metric_type=total_value over the range and maps views/likes/replies/reposts/quotes', async () => {
+    it('reads metric_type=total_value over the range and maps likes/replies/reposts/quotes', async () => {
       global.fetch = (jest.fn(async (_url: string) => ({
         ok: true,
         json: async () => ({
@@ -194,7 +194,9 @@ describe('threads-graph.util', () => {
       })) as unknown as typeof fetch);
 
       const t = await fetchThreadsAccountInsightsTotals('tid1', 'tok', 1000, 2000);
-      expect(t.views).toBe(5000);
+      // A views total_value is always 0 on Threads, so it is never read — even
+      // when a response happens to carry one.
+      expect(t.views).toBeUndefined();
       expect(t.likes).toBe(300);
       expect(t.replies).toBe(100);
       expect(t.reposts).toBe(50);
@@ -217,7 +219,7 @@ describe('threads-graph.util', () => {
       expect(url).toContain('until=2000');
       expect(url).toContain('metric_type=total_value');
       expect(url).toContain('period=day');
-      expect(new URL(url).searchParams.get('metric')).toContain('views');
+      expect(new URL(url).searchParams.get('metric')).toBe('likes,replies,reposts,quotes');
     });
 
     it('throws ThreadsAuthError on HTTP 401', async () => {
@@ -238,7 +240,7 @@ describe('threads-graph.util', () => {
         if (metric.includes(',')) {
           return Promise.resolve({ ok: false, status: 400, text: async () => 'error' });
         }
-        if (metric === 'views') {
+        if (metric === 'reposts') {
           return Promise.resolve({ ok: false, status: 400, text: async () => 'error' });
         }
         return Promise.resolve({
@@ -249,7 +251,7 @@ describe('threads-graph.util', () => {
       global.fetch = fetchMock as unknown as typeof fetch;
 
       const result = await fetchThreadsAccountInsightsTotals('tid1', 'tok', 1, 2);
-      expect(result.views).toBeUndefined();
+      expect(result.reposts).toBeUndefined();
       expect(result.likes).toBe(1);
       expect(result.replies).toBe(1);
     });

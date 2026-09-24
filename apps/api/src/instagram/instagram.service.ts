@@ -225,10 +225,15 @@ export class InstagramService {
     const have = await this.prisma.instagramAccountMetrics.count({
       where: { socialAccountId: account.id },
     });
-    if (have < InstagramSyncService.BACKFILL_THRESHOLD_DAYS) {
+    const backfilled = have < InstagramSyncService.BACKFILL_THRESHOLD_DAYS;
+    if (backfilled) {
       await this.syncService.backfillAccount(account, 90);
     }
 
+    // The backfill rows were created a moment ago, so right after one the
+    // createdAt check below would call the account "just synced" and skip —
+    // leaving a freshly connected account with no followers, no today row and
+    // no posts until the cron came round.
     const newest = await this.prisma.instagramAccountMetrics.findFirst({
       where: { socialAccountId: account.id },
       orderBy: { createdAt: 'desc' },
@@ -236,6 +241,7 @@ export class InstagramService {
     });
 
     if (
+      !backfilled &&
       newest?.createdAt &&
       Date.now() - new Date(newest.createdAt).getTime() < SKIP_IF_RECENT_MS
     ) {

@@ -107,6 +107,7 @@ describe('ThreadsSyncService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockFetchThreadsAccountInsightsRange.mockResolvedValue([]);
     prisma = makePrisma();
     config = makeConfig();
     notifier = makeNotifier();
@@ -124,7 +125,6 @@ describe('ThreadsSyncService', () => {
         username: 'brand',
       });
       mockFetchThreadsAccountInsights.mockResolvedValue({
-        views: 12000,
         likes: 400,
         replies: 150,
         reposts: 80,
@@ -141,16 +141,43 @@ describe('ThreadsSyncService', () => {
       expect(arg.create).toMatchObject({
         socialAccountId: 'acc_1',
         followersCount: 2500,
-        views: 12000,
         likes: 400,
         replies: 150,
         reposts: 80,
         quotes: 30,
       });
+      // views never come from the total_value call (it answers 0 for them).
+      expect(arg.create).not.toHaveProperty('views');
+      expect(arg.update).not.toHaveProperty('views');
       // date truncated to midnight UTC
       const d: Date = arg.create.date;
       expect(d.getUTCHours()).toBe(0);
       expect(d.getUTCMinutes()).toBe(0);
+    });
+
+    it('writes views from the daily series for the last few days, touching only views', async () => {
+      mockFetchThreadsProfile.mockResolvedValue({ followersCount: 10 });
+      mockFetchThreadsAccountInsights.mockResolvedValue({ likes: 5 });
+      mockFetchThreadsMediaList.mockResolvedValue([]);
+      mockFetchThreadsAccountInsightsRange.mockResolvedValue([
+        { date: '2026-09-22', views: 10 },
+        { date: '2026-09-23', views: 26 },
+        { date: '2026-09-24' }, // no views for the day yet → not written
+      ]);
+
+      await service.syncAccount(makeAccount(), false);
+
+      const [, , since, until] = mockFetchThreadsAccountInsightsRange.mock.calls[0];
+      expect(until - since).toBe(3 * 86400);
+      // 1 upsert for today's snapshot + 2 for the days that carry views.
+      const calls = prisma.threadsAccountMetrics.upsert.mock.calls.map((c) => c[0]);
+      expect(calls).toHaveLength(3);
+      expect(calls[1]).toEqual({
+        where: { socialAccountId_date: { socialAccountId: 'acc_1', date: new Date('2026-09-22') } },
+        create: { socialAccountId: 'acc_1', date: new Date('2026-09-22'), views: 10 },
+        update: { views: 10 },
+      });
+      expect(calls[2].update).toEqual({ views: 26 });
     });
 
     it('upserts media with computed engagementRate when withMedia', async () => {

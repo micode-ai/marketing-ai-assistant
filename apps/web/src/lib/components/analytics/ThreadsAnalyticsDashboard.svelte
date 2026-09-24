@@ -13,6 +13,7 @@
     type ThreadsStatus,
   } from './threads-dashboard-state';
   import { pickTotal } from './pick-total';
+  import { lastKnown } from './instagram-dashboard-state';
 
   export let projectId: string;
   export let days: number = 30;
@@ -210,10 +211,15 @@
       type: 'line',
       data: {
         labels,
+        // null, not 0, for a day that was not measured: followers and likes only
+        // exist from daily snapshots, so every day before the first sync (all of
+        // the backfilled history) has none. Drawn as 0 they read as a collapse.
+        // `spanGaps` keeps the line continuous across them.
         datasets: [
           {
             label: $_('threads.followers'),
-            data: metrics.account.map((d) => d.followersCount ?? 0),
+            data: metrics.account.map((d) => d.followersCount ?? null),
+            spanGaps: true,
             borderColor: '#1C1C1E',
             backgroundColor: 'rgba(28, 28, 30, 0.1)',
             fill: true,
@@ -223,7 +229,8 @@
           },
           {
             label: $_('threads.views'),
-            data: metrics.account.map((d) => d.views ?? 0),
+            data: metrics.account.map((d) => d.views ?? null),
+            spanGaps: true,
             borderColor: '#3B82F6',
             backgroundColor: 'rgba(59, 130, 246, 0.1)',
             fill: false,
@@ -232,7 +239,8 @@
           },
           {
             label: $_('threads.likes'),
-            data: metrics.account.map((d) => d.likes ?? 0),
+            data: metrics.account.map((d) => d.likes ?? null),
+            spanGaps: true,
             borderColor: '#EF4444',
             backgroundColor: 'rgba(239, 68, 68, 0.1)',
             fill: false,
@@ -256,9 +264,7 @@
   }
 
   // --- KPIs ---
-  $: currentFollowers = metrics.account.length
-    ? metrics.account[metrics.account.length - 1].followersCount ?? 0
-    : 0;
+  $: currentFollowers = lastKnown(metrics.account.map((d) => d.followersCount));
   $: totalViews    = pickTotal(metrics.periodTotals?.views,   metrics.account.reduce((s, d) => s + (d.views    ?? 0), 0));
   $: totalLikes    = pickTotal(metrics.periodTotals?.likes,   metrics.account.reduce((s, d) => s + (d.likes    ?? 0), 0));
   $: totalReplies  = pickTotal(metrics.periodTotals?.replies, metrics.account.reduce((s, d) => s + (d.replies  ?? 0), 0));

@@ -16,6 +16,13 @@ import {
 
 const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
 
+/**
+ * Days of the daily views series re-read on every sync. Views exist only as a
+ * time series, and the latest days keep growing after they are first written,
+ * so a short trailing window is refreshed rather than just today.
+ */
+const RECENT_VIEWS_DAYS = 3;
+
 export interface SyncAccountResult {
   accountSynced: boolean;
   mediaSynced: number;
@@ -85,15 +92,23 @@ export class ThreadsSyncService {
 
     try {
       // --- Account metrics ---
-      const [profile, insights] = await Promise.all([
+      const nowUnix = Math.floor(Date.now() / 1000);
+      const [profile, insights, recentViews] = await Promise.all([
         fetchThreadsProfile(threadsUserId, accessToken),
         fetchThreadsAccountInsights(threadsUserId, accessToken),
+        fetchThreadsAccountInsightsRange(
+          threadsUserId,
+          accessToken,
+          nowUnix - RECENT_VIEWS_DAYS * 86400,
+          nowUnix,
+        ),
       ]);
 
       const today = this.truncateToDate(new Date());
+      // No views here: the total_value call cannot provide them (it answers 0).
+      // They are written from the daily series just below.
       const accountData = {
         followersCount: profile.followersCount ?? insights.followersCount ?? null,
-        views: insights.views ?? null,
         likes: insights.likes ?? null,
         replies: insights.replies ?? null,
         reposts: insights.reposts ?? null,
@@ -107,6 +122,16 @@ export class ThreadsSyncService {
         create: { socialAccountId: account.id, date: today, ...accountData },
         update: accountData,
       });
+
+      for (const row of recentViews) {
+        if (typeof row.views !== 'number') continue;
+        const date = new Date(row.date);
+        await this.prisma.threadsAccountMetrics.upsert({
+          where: { socialAccountId_date: { socialAccountId: account.id, date } },
+          create: { socialAccountId: account.id, date, views: row.views },
+          update: { views: row.views },
+        });
+      }
 
       let mediaSynced = 0;
 

@@ -348,6 +348,18 @@ describe('ThreadsService', () => {
       );
     });
 
+    it('does not skip right after a backfill, though its rows look freshly created', async () => {
+      prisma.projectSocialAccount.findMany.mockResolvedValue([threadsLink()]);
+      prisma.threadsAccountMetrics.count.mockResolvedValue(0);
+      prisma.threadsAccountMetrics.findFirst.mockResolvedValue({ createdAt: new Date() });
+
+      const result = await service.triggerSync('p1');
+
+      expect(syncService.backfillAccount).toHaveBeenCalled();
+      expect(syncService.syncAccount).toHaveBeenCalled();
+      expect(result.skipped).toBe(false);
+    });
+
     it('calls syncAccount when there are no prior metrics at all', async () => {
       prisma.projectSocialAccount.findMany.mockResolvedValue([threadsLink()]);
       prisma.threadsAccountMetrics.findFirst.mockResolvedValue(null);
