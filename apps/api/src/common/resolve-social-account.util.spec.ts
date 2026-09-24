@@ -4,6 +4,7 @@ import {
   listProjectSocialAccounts,
   resolveProjectSocialAccount,
   toAccountOptions,
+  needsReauth,
   ResolvedSocialAccount,
 } from './resolve-social-account.util';
 
@@ -15,6 +16,7 @@ const account = (over: Partial<ResolvedSocialAccount> = {}): ResolvedSocialAccou
   accountId: 'ig_1',
   encryptedTokens: 'enc',
   scopes: [],
+  status: 'ACTIVE',
   ...over,
 });
 
@@ -180,5 +182,24 @@ describe('toAccountOptions', () => {
 
     expect(options).toEqual([{ id: 'a', accountName: 'micode', accountId: 'ig_1' }]);
     expect(JSON.stringify(options)).not.toContain('enc');
+  });
+});
+
+describe('needsReauth', () => {
+  it('is false only for ACTIVE accounts', () => {
+    expect(needsReauth(account())).toBe(false);
+    for (const status of ['REAUTH_REQUIRED', 'EXPIRED', 'ERROR', 'INACTIVE']) {
+      expect(needsReauth(account({ status }))).toBe(true);
+    }
+  });
+
+  it('selects status, so the services can tell', async () => {
+    const prisma = makePrisma([account()]);
+    await listProjectSocialAccounts(prisma, 'p1', 'INSTAGRAM');
+    expect(prisma.projectSocialAccount.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        include: { socialAccount: { select: expect.objectContaining({ status: true }) } },
+      }),
+    );
   });
 });

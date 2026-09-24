@@ -15,6 +15,7 @@ describe('TikTokService', () => {
       accountId: 'oid1',
       encryptedTokens: 'iv:blob',
       scopes: ['user.info.basic', 'user.info.stats', 'video.list', 'video.publish'],
+      status: 'ACTIVE',
       ...overrides,
     },
   });
@@ -302,6 +303,30 @@ describe('TikTokService', () => {
 
       await expect(service.generateAdvice('p1', 'en')).rejects.toBeInstanceOf(BadRequestException);
       global.fetch = originalFetch;
+    });
+  });
+
+  describe('account needing reauthentication', () => {
+    it('getStatus reports reauthRequired', async () => {
+      prisma.projectSocialAccount.findMany.mockResolvedValue([
+        linkedAccount({ status: 'REAUTH_REQUIRED' }),
+      ]);
+
+      const status = await service.getStatus('p1');
+
+      expect(status.connected).toBe(true);
+      expect(status.reauthRequired).toBe(true);
+    });
+
+    it('triggerSync skips without touching TikTok', async () => {
+      prisma.projectSocialAccount.findMany.mockResolvedValue([
+        linkedAccount({ status: 'REAUTH_REQUIRED' }),
+      ]);
+
+      const result = await service.triggerSync('p1');
+
+      expect(result).toEqual({ skipped: true, reason: 'REAUTH_REQUIRED' });
+      expect(syncService.syncAccount).not.toHaveBeenCalled();
     });
   });
 });

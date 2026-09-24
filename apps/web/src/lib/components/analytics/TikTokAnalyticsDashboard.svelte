@@ -6,6 +6,7 @@
   import DOMPurify from 'dompurify';
   import { api } from '$lib/api/client';
   import AccountSwitcher from './AccountSwitcher.svelte';
+  import AnalyticsReauthBanner from './AnalyticsReauthBanner.svelte';
   import {
     resolveTikTokView,
     isSyncStale,
@@ -99,8 +100,12 @@
       await tick();
       renderChart();
       loadStoredAdvice();
-      syncInterval = setInterval(syncAndRefresh, SYNC_INTERVAL_MS);
-      if (isSyncStale(status?.lastSyncAt)) syncAndRefresh();
+      // A dead token cannot sync; polling would only repeat a request the
+      // API refuses. The banner tells the user what to do instead.
+      if (!status?.reauthRequired) {
+        syncInterval = setInterval(syncAndRefresh, SYNC_INTERVAL_MS);
+        if (isSyncStale(status?.lastSyncAt)) syncAndRefresh();
+      }
     } else {
       loading = false;
     }
@@ -387,6 +392,7 @@
   </div>
 {:else}
   <!-- Connected with analytics scopes -->
+  {#if status?.reauthRequired}<AnalyticsReauthBanner channel="TikTok" />{/if}
   <div class="bg-surface rounded-xl border border-border overflow-hidden mb-6">
     <!-- Header -->
     <div class="flex items-center justify-between px-5 py-4 border-b border-border">

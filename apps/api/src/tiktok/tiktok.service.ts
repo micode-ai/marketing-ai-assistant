@@ -6,6 +6,7 @@ import {
   resolveProjectSocialAccount,
   listProjectSocialAccounts,
   toAccountOptions,
+  needsReauth,
 } from '../common/resolve-social-account.util';
 
 /** Analytics needs both scopes: profile counters and the video list. */
@@ -17,6 +18,7 @@ interface ResolvedAccount extends TikTokAccount {
   accountName: string;
   accountId: string;
   scopes: string[];
+  status: string;
 }
 
 @Injectable()
@@ -65,6 +67,7 @@ export class TikTokService {
       accountId: account.accountId,
       lastSyncAt: await this.getLastSyncAt(account.id),
       statsGranted: STATS_SCOPES.every((s) => account.scopes?.includes(s)),
+      reauthRequired: needsReauth(account),
       accounts,
       // Our SocialAccount id, not the platform's — that one is accountId above.
       selectedAccountId: account.id,
@@ -134,6 +137,12 @@ export class TikTokService {
     const account = await this.resolveAccount(projectId, accountId);
     if (!account) {
       throw new BadRequestException('TikTok not connected');
+    }
+
+    // A dead token cannot sync — calling the platform would only fail (and used
+    // to surface as a 500). The dashboard reads reauthRequired from /status.
+    if (needsReauth(account)) {
+      return { skipped: true, reason: 'REAUTH_REQUIRED' as const };
     }
 
     // getLastSyncAt, not the snapshot's createdAt: there is one snapshot row per

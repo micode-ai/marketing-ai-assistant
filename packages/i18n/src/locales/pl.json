@@ -981,6 +981,11 @@
       "fromZero": "z zera",
       "keyEventsNotConfigured": "W tej usłudze nie skonfigurowano zdarzeń kluczowych — konwersje nie są mierzone.",
       "lag": "GA4 koryguje dane z ostatnich {hours} godzin."
+    },
+    "reauth": {
+      "title": "{channel} wymaga ponownego połączenia",
+      "description": "Token dostępu wygasł, więc nowe dane nie są już zbierane. Poniższe wykresy pokazują historię do ostatniej udanej synchronizacji.",
+      "cta": "Połącz ponownie"
     }
   },
   "instagram": {

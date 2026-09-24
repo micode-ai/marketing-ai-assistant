@@ -69,6 +69,7 @@ function threadsLink(overrides: Partial<any> = {}) {
       accountId: '12345678900000000',
       encryptedTokens: 'enc',
       scopes: ['threads_basic', 'threads_manage_insights'],
+      status: 'ACTIVE',
       ...overrides,
     },
   };
@@ -436,6 +437,47 @@ describe('ThreadsService', () => {
       const result = await service.getStoredAdvice('p1');
 
       expect(result).toEqual({ advice: null, contextSummary: null, generatedAt: null });
+    });
+  });
+
+  // A REAUTH_REQUIRED account used to look connected: the tab showed frozen
+  // charts, /sync called the platform with the dead token and answered 500.
+  describe('account needing reauthentication', () => {
+    beforeEach(() => {
+      prisma.projectSocialAccount.findMany.mockResolvedValue([
+        threadsLink({ status: 'REAUTH_REQUIRED' }),
+      ]);
+      (decryptData as jest.Mock).mockReturnValue({ accessToken: 'dead_tok', threadsUserId: 'uid' });
+    });
+
+    it('getStatus reports reauthRequired', async () => {
+      const status = await service.getStatus('p1');
+
+      expect(status.connected).toBe(true);
+      expect(status.reauthRequired).toBe(true);
+    });
+
+    it('getStatus reports reauthRequired false for an ACTIVE account', async () => {
+      prisma.projectSocialAccount.findMany.mockResolvedValue([threadsLink()]);
+
+      const status = await service.getStatus('p1');
+
+      expect(status.reauthRequired).toBe(false);
+    });
+
+    it('triggerSync skips without touching the platform', async () => {
+      const result = await service.triggerSync('p1');
+
+      expect(result).toEqual({ skipped: true, reason: 'REAUTH_REQUIRED' });
+      expect(syncService.syncAccount).not.toHaveBeenCalled();
+      expect(syncService.backfillAccount).not.toHaveBeenCalled();
+    });
+
+    it('getMetrics serves stored history without a live Threads call', async () => {
+      const metrics = await service.getMetrics('p1', 28);
+
+      expect(fetchThreadsAccountInsightsTotals).not.toHaveBeenCalled();
+      expect(metrics.periodTotals).toEqual({});
     });
   });
 });

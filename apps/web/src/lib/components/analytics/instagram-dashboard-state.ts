@@ -11,6 +11,8 @@ export interface InstagramStatus {
   accountId?: string;
   lastSyncAt?: string | Date | null;
   insightsGranted: boolean;
+  /** The token is dead (e.g. expired): history is shown, but nothing new arrives until the account is reconnected. */
+  reauthRequired?: boolean;
 }
 
 export type InstagramDashboardView = 'loading' | 'hidden' | 'reconnect' | 'connected';

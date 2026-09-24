@@ -9,6 +9,7 @@ import {
   resolveProjectSocialAccount,
   listProjectSocialAccounts,
   toAccountOptions,
+  needsReauth,
 } from '../common/resolve-social-account.util';
 
 const INSIGHTS_SCOPE = 'instagram_business_manage_insights';
@@ -21,6 +22,7 @@ interface ResolvedAccount {
   accountId: string;
   encryptedTokens: string;
   scopes: string[];
+  status: string;
 }
 
 @Injectable()
@@ -73,6 +75,7 @@ export class InstagramService {
       accountId: account.accountId,
       lastSyncAt,
       insightsGranted: account.scopes?.includes(INSIGHTS_SCOPE) ?? false,
+      reauthRequired: needsReauth(account),
       accounts,
       // Our SocialAccount id, not the platform's — that one is accountId above.
       selectedAccountId: account.id,
@@ -152,14 +155,15 @@ export class InstagramService {
     const stories = buildStoriesBlock(storyRows as StoryMetricRow[]);
 
     // Fetch aggregate period totals (metric_type=total_value over the window).
-    // Any failure is swallowed — periodTotals is supplementary data.
+    // Any failure is swallowed — periodTotals is supplementary data. Skipped
+    // outright for a dead token: the call cannot succeed.
     let periodTotals: AccountInsights = {};
     try {
       const tokens = decryptData(
         account.encryptedTokens,
         this.config.get<string>('ENCRYPTION_KEY', ''),
       );
-      if (tokens?.accessToken && tokens?.igUserId) {
+      if (!needsReauth(account) && tokens?.accessToken && tokens?.igUserId) {
         const now = new Date();
         const until = Math.floor(
           Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()) / 1000,
@@ -199,6 +203,12 @@ export class InstagramService {
     const account = await this.resolveAccount(projectId, accountId);
     if (!account) {
       throw new BadRequestException('Instagram not connected');
+    }
+
+    // A dead token cannot sync — calling the platform would only fail (and used
+    // to surface as a 500). The dashboard reads reauthRequired from /status.
+    if (needsReauth(account)) {
+      return { skipped: true, reason: 'REAUTH_REQUIRED' as const };
     }
 
     // Apply the same plan throttle as the cron: FREE pulls account metrics only.
