@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import * as crypto from 'crypto';
+import { assertPublicUrl } from '../common/ssrf.util';
 
 @Injectable()
 export class WebhooksService {
@@ -16,6 +17,7 @@ export class WebhooksService {
   }
 
   async create(dto: { organizationId: string; url: string; events: string[] }) {
+    await assertPublicUrl(dto.url);
     const secret = crypto.randomBytes(32).toString('hex');
     return this.prisma.webhook.create({
       data: {
@@ -28,7 +30,13 @@ export class WebhooksService {
   }
 
   async update(id: string, dto: { url?: string; events?: string[]; isActive?: boolean }) {
-    return this.prisma.webhook.update({ where: { id }, data: dto });
+    if (dto.url !== undefined) await assertPublicUrl(dto.url);
+    // Only the editable fields — the raw body must not move a webhook to another organization.
+    const data: { url?: string; events?: string[]; isActive?: boolean } = {};
+    if (dto.url !== undefined) data.url = dto.url;
+    if (dto.events !== undefined) data.events = dto.events;
+    if (dto.isActive !== undefined) data.isActive = dto.isActive;
+    return this.prisma.webhook.update({ where: { id }, data });
   }
 
   async delete(id: string) {
@@ -62,6 +70,7 @@ export class WebhooksService {
           .update(body)
           .digest('hex');
 
+        await assertPublicUrl(webhook.url);
         const response = await fetch(webhook.url, {
           method: 'POST',
           headers: {
@@ -102,6 +111,7 @@ export class WebhooksService {
       .update(body)
       .digest('hex');
 
+    await assertPublicUrl(webhook.url);
     const response = await fetch(webhook.url, {
       method: 'POST',
       headers: {

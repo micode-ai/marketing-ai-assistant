@@ -1,3 +1,4 @@
+import { TenantResource } from '../common/decorators/tenant-resource.decorator';
 import {
   Controller, Get, Post, Put, Delete, Body, Param, Query,
   UseInterceptors, UploadedFile, BadRequestException,
@@ -47,6 +48,7 @@ function isAllowedFile(mimetype: string, originalname: string): boolean {
 
 @ApiTags('documents')
 @ApiBearerAuth()
+@TenantResource({ id: 'document' })
 @Controller('documents')
 export class DocumentsController {
   constructor(private documentsService: DocumentsService) {}
@@ -78,6 +80,7 @@ export class DocumentsController {
     return this.documentsService.createDocumentType(orgId, label);
   }
 
+  @TenantResource({ id: 'documentType' })
   @Delete('types/:id')
   deleteDocumentType(@Param('id') id: string, @CurrentUser() user: any) {
     const orgId = user.memberships?.[0]?.organizationId;

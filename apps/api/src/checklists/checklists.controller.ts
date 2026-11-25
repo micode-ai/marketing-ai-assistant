@@ -1,3 +1,4 @@
+import { TenantResource } from '../common/decorators/tenant-resource.decorator';
 import { Controller, Get, Post, Put, Delete, Body, Param, Query, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ChecklistsService } from './checklists.service';
@@ -10,6 +11,7 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @ApiTags('checklists')
 @ApiBearerAuth()
+@TenantResource({ id: 'checklist', itemId: 'checklistItem' })
 @Controller('checklists')
 export class ChecklistsController {
   constructor(private checklistsService: ChecklistsService) {}

@@ -1,3 +1,4 @@
+import { TenantResource } from '../common/decorators/tenant-resource.decorator';
 import { Controller, Get, Post, Delete, Body, Param, Query, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { EmailService } from './email.service';
@@ -19,11 +20,13 @@ export class EmailController {
     return this.emailService.createAccount(organizationId, dto);
   }
 
+  @TenantResource({ id: 'emailAccount' })
   @Delete('accounts/:id')
   deleteAccount(@Param('id') id: string) {
     return this.emailService.deleteAccount(id);
   }
 
+  @TenantResource({ id: 'emailAccount' })
   @Post('accounts/:id/test')
   @ApiOperation({ summary: 'Test email account connection' })
   testConnection(@Param('id') id: string) {
@@ -48,21 +51,25 @@ export class EmailController {
     return this.emailService.createList(dto);
   }
 
+  @TenantResource({ id: 'emailList' })
   @Delete('lists/:id')
   deleteList(@Param('id') id: string) {
     return this.emailService.deleteList(id);
   }
 
+  @TenantResource({ listId: 'emailList' })
   @Get('lists/:listId/subscribers')
   getSubscribers(@Param('listId') listId: string, @Query('all') all?: string) {
     return this.emailService.getSubscribers(listId, all === 'true');
   }
 
+  @TenantResource({ listId: 'emailList' })
   @Post('lists/:listId/subscribers')
   addSubscriber(@Param('listId') listId: string, @Body() dto: any) {
     return this.emailService.addSubscriber(listId, dto);
   }
 
+  @TenantResource({ listId: 'emailList', subscriberId: 'emailSubscriber' })
   @Delete('lists/:listId/subscribers/:subscriberId')
   removeSubscriber(
     @Param('listId') listId: string,
@@ -83,6 +90,7 @@ export class EmailController {
     return this.emailService.findCampaignsByProject(projectId);
   }
 
+  @TenantResource({ 'body.emailAccountId': 'emailAccount', 'body.listId': 'emailList', 'body.campaignId': 'campaign' })
   @Post('campaigns/send')
   sendCampaign(@Body() dto: any) {
     return this.emailService.sendCampaign(dto);

@@ -1,9 +1,11 @@
+import { TenantResource } from '../common/decorators/tenant-resource.decorator';
 import { Controller, Get, Post, Put, Patch, Delete, Body, Param, Query, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { CampaignsService } from './campaigns.service';
 
 @ApiTags('campaigns')
 @ApiBearerAuth()
+@TenantResource({ id: 'campaign' })
 @Controller('campaigns')
 export class CampaignsController {
   constructor(private campaignsService: CampaignsService) {}
@@ -41,21 +43,25 @@ export class CampaignsController {
     return this.campaignsService.delete(id);
   }
 
+  @TenantResource({ id: 'campaign', 'body.contentIds': 'content' })
   @Patch(':id/attach-content')
   attachContent(@Param('id') id: string, @Body() body: { contentIds: string[] }) {
     return this.campaignsService.attachContent(id, body.contentIds ?? []);
   }
 
+  @TenantResource({ id: 'campaign', 'body.contentIds': 'content' })
   @Patch(':id/detach-content')
   detachContent(@Param('id') id: string, @Body() body: { contentIds: string[] }) {
     return this.campaignsService.detachContent(id, body.contentIds ?? []);
   }
 
+  @TenantResource({ id: 'campaign', 'body.emailIds': 'emailCampaign' })
   @Patch(':id/attach-emails')
   attachEmails(@Param('id') id: string, @Body() body: { emailIds: string[] }) {
     return this.campaignsService.attachEmails(id, body.emailIds ?? []);
   }
 
+  @TenantResource({ id: 'campaign', 'body.emailIds': 'emailCampaign' })
   @Patch(':id/detach-emails')
   detachEmails(@Param('id') id: string, @Body() body: { emailIds: string[] }) {
     return this.campaignsService.detachEmails(id, body.emailIds ?? []);
@@ -71,11 +77,13 @@ export class CampaignsController {
     return this.campaignsService.availableEmails(id, search);
   }
 
+  @TenantResource({ id: 'campaign', 'body.documentIds': 'document' })
   @Patch(':id/attach-documents')
   attachDocuments(@Param('id') id: string, @Body() body: { documentIds: string[] }) {
     return this.campaignsService.attachDocuments(id, body.documentIds ?? []);
   }
 
+  @TenantResource({ id: 'campaign', 'body.documentIds': 'document' })
   @Patch(':id/detach-documents')
   detachDocuments(@Param('id') id: string, @Body() body: { documentIds: string[] }) {
     return this.campaignsService.detachDocuments(id, body.documentIds ?? []);

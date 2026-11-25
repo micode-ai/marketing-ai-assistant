@@ -1,9 +1,11 @@
+import { TenantResource } from '../common/decorators/tenant-resource.decorator';
 import { Controller, Get, Post, Put, Delete, Body, Param, Query, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ABTestingService } from './ab-testing.service';
 
 @ApiTags('ab-testing')
 @ApiBearerAuth()
+@TenantResource({ id: 'abTest', variantId: 'abTestVariant' })
 @Controller('ab-tests')
 export class ABTestingController {
   constructor(private abTestingService: ABTestingService) {}
@@ -41,6 +43,7 @@ export class ABTestingController {
     return this.abTestingService.pauseTest(id);
   }
 
+  @TenantResource({ id: 'abTest', 'body.winnerVariantId': 'abTestVariant' })
   @Put(':id/complete')
   completeTest(@Param('id') id: string, @Body() dto: { winnerVariantId?: string }) {
     return this.abTestingService.completeTest(id, dto.winnerVariantId);

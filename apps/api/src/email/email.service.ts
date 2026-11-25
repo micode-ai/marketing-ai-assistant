@@ -4,6 +4,7 @@ import * as nodemailer from 'nodemailer';
 import { Resend } from 'resend';
 import { PrismaService } from '../database/prisma.service';
 import * as crypto from 'crypto';
+import { assertPublicHost } from '../common/ssrf.util';
 
 @Injectable()
 export class EmailService {
@@ -14,10 +15,13 @@ export class EmailService {
   }
 
   async findAllAccounts(organizationId: string) {
-    return this.prisma.emailAccount.findMany({ where: { organizationId } });
+    // Never return encryptedCredentials to the client.
+    return this.prisma.emailAccount.findMany({ where: { organizationId }, omit: { encryptedCredentials: true } });
   }
 
   async createAccount(organizationId: string, dto: any) {
+    if (dto.provider !== 'RESEND' && dto.smtpHost) await assertPublicHost(dto.smtpHost);
+    if (dto.imapHost) await assertPublicHost(dto.imapHost);
     const encrypted = this.encryptCredentials({ user: dto.smtpUser || '', password: dto.smtpPassword || dto.apiKey || '' });
     return this.prisma.emailAccount.create({
       data: {
@@ -52,6 +56,7 @@ export class EmailService {
         throw new Error(`Resend API key is invalid: ${err.message}`);
       }
     } else {
+      await assertPublicHost(account.smtpHost);
       const creds = this.decryptCredentials(account.encryptedCredentials || '');
       const transporter = nodemailer.createTransport({
         host: account.smtpHost || '',
@@ -231,6 +236,7 @@ export class EmailService {
             html,
           });
         } else {
+          await assertPublicHost(account.smtpHost);
           const creds = this.decryptCredentials(account.encryptedCredentials || '');
           const transporter = nodemailer.createTransport({
             host: account.smtpHost || '',
