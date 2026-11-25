@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { PrismaService } from '../database/prisma.service';
@@ -9,6 +9,35 @@ export class AgentService {
     private prisma: PrismaService,
     @InjectQueue('agent') private agentQueue: Queue,
   ) {}
+
+  /** Throws unless `user` (the JWT user, with memberships) belongs to the project's organization. */
+  async assertProjectAccess(user: any, projectId: string | undefined): Promise<void> {
+    if (!projectId || typeof projectId !== 'string') throw new BadRequestException('projectId is required');
+    if (!user) throw new ForbiddenException('Not authenticated');
+    const project = await this.prisma.project.findUnique({ where: { id: projectId }, select: { organizationId: true } });
+    if (!project) throw new NotFoundException('Project not found');
+    const member = user.memberships?.some((m: any) => m.organizationId === project.organizationId);
+    if (!member) throw new ForbiddenException('No access to this project');
+  }
+
+  /** Same check for a bare user id (the internal chat-agent path, which has no JWT user). */
+  async assertUserIdProjectAccess(userId: string | undefined, projectId: string | undefined): Promise<void> {
+    if (!userId || typeof userId !== 'string') throw new BadRequestException('userId is required');
+    if (!projectId || typeof projectId !== 'string') throw new BadRequestException('projectId is required');
+    const project = await this.prisma.project.findUnique({ where: { id: projectId }, select: { organizationId: true } });
+    if (!project) throw new NotFoundException('Project not found');
+    const membership = await this.prisma.organizationMember.findFirst({
+      where: { userId, organizationId: project.organizationId },
+      select: { id: true },
+    });
+    if (!membership) throw new ForbiddenException('No access to this project');
+  }
+
+  async assertScheduleAccess(user: any, scheduleId: string): Promise<void> {
+    const schedule = await this.prisma.agentSchedule.findUnique({ where: { id: scheduleId }, select: { projectId: true } });
+    if (!schedule) throw new NotFoundException('Schedule not found');
+    await this.assertProjectAccess(user, schedule.projectId);
+  }
 
   async runAgent(dto: { projectId: string; agentType: string; input: Record<string, unknown>; userId?: string }) {
     const input = dto.userId ? { ...dto.input, userId: dto.userId } : dto.input;
@@ -71,9 +100,14 @@ export class AgentService {
   }
 
   async updateSchedule(id: string, dto: { cronExpression?: string; isActive?: boolean; config?: Record<string, unknown> }) {
+    // Only the editable fields — never spread the raw body (projectId, nextRunAt, … must not be writable).
+    const data: Record<string, unknown> = {};
+    if (dto?.cronExpression !== undefined) data.cronExpression = dto.cronExpression;
+    if (dto?.isActive !== undefined) data.isActive = dto.isActive;
+    if (dto?.config !== undefined) data.config = dto.config;
     return this.prisma.agentSchedule.update({
       where: { id },
-      data: dto as any,
+      data: data as any,
     });
   }
 
