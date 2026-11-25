@@ -1,3 +1,4 @@
+import { TenantResource } from '../common/decorators/tenant-resource.decorator';
 import { Controller, Get, Post, Put, Delete, Body, Param, Query, Res } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { Response } from 'express';
@@ -9,6 +10,7 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @ApiTags('projects')
 @ApiBearerAuth()
+@TenantResource({ id: 'project' })
 @Controller('projects')
 export class ProjectsController {
   constructor(

@@ -1,3 +1,4 @@
+import { TenantResource } from '../common/decorators/tenant-resource.decorator';
 import { Controller, Get, Post, Put, Delete, Body, Param, Query, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ContentService } from './content.service';
@@ -7,6 +8,7 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @ApiTags('content')
 @ApiBearerAuth()
+@TenantResource({ id: 'content' })
 @Controller('content')
 export class ContentController {
   constructor(private contentService: ContentService) {}

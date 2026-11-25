@@ -1,3 +1,4 @@
+import { TenantResource } from '../common/decorators/tenant-resource.decorator';
 import { Controller, Get, Put, Post, Delete, Body, Param } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { OrganizationsService } from './organizations.service';
@@ -7,6 +8,7 @@ import { InviteMemberDto } from './dto/invite-member.dto';
 
 @ApiTags('organizations')
 @ApiBearerAuth()
+@TenantResource({ id: 'organization' })
 @Controller('organizations')
 export class OrganizationsController {
   constructor(private orgsService: OrganizationsService) {}

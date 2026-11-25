@@ -16,7 +16,7 @@ export class AgentService {
     if (!user) throw new ForbiddenException('Not authenticated');
     const project = await this.prisma.project.findUnique({ where: { id: projectId }, select: { organizationId: true } });
     if (!project) throw new NotFoundException('Project not found');
-    const member = user.memberships?.some((m: any) => m.organizationId === project.organizationId);
+    const member = user.memberships?.some((m: any) => m.organizationId === project.organizationId && m.joinedAt != null);
     if (!member) throw new ForbiddenException('No access to this project');
   }
 
@@ -27,7 +27,7 @@ export class AgentService {
     const project = await this.prisma.project.findUnique({ where: { id: projectId }, select: { organizationId: true } });
     if (!project) throw new NotFoundException('Project not found');
     const membership = await this.prisma.organizationMember.findFirst({
-      where: { userId, organizationId: project.organizationId },
+      where: { userId, organizationId: project.organizationId, joinedAt: { not: null } },
       select: { id: true },
     });
     if (!membership) throw new ForbiddenException('No access to this project');

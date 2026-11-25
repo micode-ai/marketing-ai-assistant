@@ -31,7 +31,7 @@ export class ProjectAccessGuard implements CanActivate {
 
     // TODO: type RequestUser with membership shape
     const membership = user.memberships?.find(
-      (m: any) => m.organizationId === project.organizationId,
+      (m: any) => m.organizationId === project.organizationId && m.joinedAt != null,
     );
     if (!membership) throw new ForbiddenException('No access to this project');
 

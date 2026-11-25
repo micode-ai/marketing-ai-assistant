@@ -1,3 +1,4 @@
+import { TenantResource } from '../common/decorators/tenant-resource.decorator';
 import {
   Controller,
   Get,
@@ -58,6 +59,7 @@ export class FinancesController {
     return this.financesService.createCategory(dto, this.getOrgId(user));
   }
 
+  @TenantResource({ id: 'financeCategory' })
   @Put('categories/:id')
   @ApiOperation({ summary: 'Update a finance category' })
   updateCategory(
@@ -68,6 +70,7 @@ export class FinancesController {
     return this.financesService.updateCategory(id, dto, this.getOrgId(user));
   }
 
+  @TenantResource({ id: 'financeCategory' })
   @Delete('categories/:id')
   @ApiOperation({ summary: 'Delete a finance category' })
   deleteCategory(@Param('id') id: string, @CurrentUser() user: any) {
@@ -135,6 +138,7 @@ export class FinancesController {
     return this.financesService.createRecord(dto, this.getOrgId(user));
   }
 
+  @TenantResource({ id: 'financeRecord' })
   @Put(':id')
   @ApiOperation({ summary: 'Update a finance record' })
   updateRecord(
@@ -145,6 +149,7 @@ export class FinancesController {
     return this.financesService.updateRecord(id, dto, this.getOrgId(user));
   }
 
+  @TenantResource({ id: 'financeRecord' })
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a finance record' })
   deleteRecord(@Param('id') id: string, @CurrentUser() user: any) {

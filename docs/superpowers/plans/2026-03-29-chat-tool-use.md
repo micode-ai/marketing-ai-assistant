@@ -36,7 +36,7 @@
 
 Add to the root `.env` file:
 ```
-AGENT_SECRET=chat-agent-internal-secret-key
+AGENT_SECRET=<generate: openssl rand -hex 32 — never commit the real value>
 ```
 
 - [ ] **Step 2: Commit**
@@ -503,7 +503,7 @@ git commit -m "MAS-25 Rewrite chat agent with LangGraph tool-calling loop"
 
 Ensure root `.env` has:
 ```
-AGENT_SECRET=chat-agent-internal-secret-key
+AGENT_SECRET=<generate: openssl rand -hex 32 — never commit the real value>
 ```
 
 - [ ] **Step 2: Start services**

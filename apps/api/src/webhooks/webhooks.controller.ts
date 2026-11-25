@@ -1,9 +1,11 @@
+import { TenantResource } from '../common/decorators/tenant-resource.decorator';
 import { Controller, Get, Post, Put, Delete, Body, Param, Query } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { WebhooksService } from './webhooks.service';
 
 @ApiTags('webhooks')
 @ApiBearerAuth()
+@TenantResource({ id: 'webhook' })
 @Controller('webhooks')
 export class WebhooksController {
   constructor(private webhooksService: WebhooksService) {}

@@ -1,9 +1,11 @@
+import { TenantResource } from '../common/decorators/tenant-resource.decorator';
 import { Controller, Get, Post, Put, Delete, Body, Param, Query, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { EmailSequencesService } from './email-sequences.service';
 
 @ApiTags('email-sequences')
 @ApiBearerAuth()
+@TenantResource({ id: 'emailSequence' })
 @Controller('email-sequences')
 export class EmailSequencesController {
   constructor(private emailSequencesService: EmailSequencesService) {}
@@ -51,11 +53,13 @@ export class EmailSequencesController {
     return this.emailSequencesService.delete(id);
   }
 
+  @TenantResource({ id: 'emailSequence', 'body.subscriberId': 'emailSubscriber' })
   @Post(':id/enroll')
   enrollSubscriber(@Param('id') id: string, @Body() dto: { subscriberId: string }) {
     return this.emailSequencesService.enrollSubscriber(id, dto.subscriberId);
   }
 
+  @TenantResource({ id: 'emailSequence', 'body.subscriberId': 'emailSubscriber' })
   @Post(':id/unenroll')
   unenrollSubscriber(@Param('id') id: string, @Body() dto: { subscriberId: string }) {
     return this.emailSequencesService.unenrollSubscriber(id, dto.subscriberId);

@@ -3,6 +3,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { TenantScopeGuard } from './guards/tenant-scope.guard';
 import { CronFailureNotifier } from './cron-failure-notifier.service';
 
 @Global()
@@ -20,6 +21,11 @@ import { CronFailureNotifier } from './cron-failure-notifier.service';
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
+    },
+    // Must stay after JwtAuthGuard: it reads req.user.memberships.
+    {
+      provide: APP_GUARD,
+      useClass: TenantScopeGuard,
     },
     CronFailureNotifier,
   ],

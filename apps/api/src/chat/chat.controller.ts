@@ -1,3 +1,4 @@
+import { TenantResource } from '../common/decorators/tenant-resource.decorator';
 import { Controller, Get, Post, Put, Delete, Body, Param, Query } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { ChatService } from './chat.service';
@@ -5,6 +6,7 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @ApiTags('chat')
 @ApiBearerAuth()
+@TenantResource({ id: 'chatSession', messageId: 'chatMessage' })
 @Controller('chat')
 export class ChatController {
   constructor(private chatService: ChatService) {}
